@@ -1,2 +1,3 @@
 # MocoLoco
-Bozza punto 1.1 progetto MocoLoco
+
+Point 1.1 MocoLoco project
