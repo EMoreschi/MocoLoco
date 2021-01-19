@@ -1,4 +1,3 @@
 # MocoLoco
 
-## Point 1.1 MocoLoco project
-
+### Point 1.1 MocoLoco project
