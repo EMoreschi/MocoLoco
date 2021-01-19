@@ -15,7 +15,7 @@ class genomic_position { //creation public class of genomic_position type
 };
 
 int main(){
-	std::ifstream myfile ("imp_file.txt"); //open file in lecture mode// it must not to be hard-coded!!!!
+	std::ifstream myfile ("BED_di_prova.BED"); //open file in lecture mode// it must not to be hard-coded!!!!
 	std::vector<genomic_position> GEP; // defining vector
 	std::string chr; //defining string
         unsigned int start;  // defining start coordinate variable
