@@ -50,7 +50,7 @@ class genomic_position { //creation public class of genomic_position type
 
 
 int main(){
-	ifstream myfile ("imp_file.txt"); //Opening file in lecture mode// it must not be hard-coded!!!!
+	ifstream myfile ("BED_di_prova.BED"); //Opening file in lecture mode// it must not be hard-coded!!!!
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
 	vector<string> x;		//defining string vector x	
 	string line; 			//defining line string
