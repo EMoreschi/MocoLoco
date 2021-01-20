@@ -50,15 +50,13 @@ class genomic_position { //creation public class of genomic_position type
 
 
 int main(){
-	ifstream myfile ("BED_di_prova.BED"); //Opening file in lecture mode// it must not be hard-coded!!!!
+	ifstream myfile ("NCBI Homo sapiens Updated Annotation Release 109.20201120 on GRCh38.p13.BED"); //Opening file in lecture mode// it must not be hard-coded!!!!
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
 	vector<string> x;		//defining string vector x	
 	string line; 			//defining line string
 	string token;			//defining token string
 	genomic_position prova();	//initialization of class prova of genomic_position type using the default constructor
- 	int i = 0;
-	int n_arg = 3;			//number of columns in file (feature, args)
-
+ 	
         while(getline(myfile,line)){  //reading input file line by line with getline function
   	     if (line.empty())		   //CONTROL: if line is empty pass to next line
 		     continue;
@@ -71,14 +69,14 @@ int main(){
 		
 		x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
 		}
-		unsigned int s = stoul(x[i+1]);  //The word corrisponding to start coordinate converted from string to unsigned int
-		unsigned int e = stoul(x[i+2]);	//The word corrisponding to end coordinate converted from string to unsigned int
-		genomic_position prova(x[i],s,e);  //modifiyng genomic_position class prova (inizialized as default before)
+		unsigned int s = stoul(x[1]);  //The word corrisponding to start coordinate converted from string to unsigned int
+		unsigned int e = stoul(x[2]);	//The word corrisponding to end coordinate converted from string to unsigned int
+		genomic_position prova(x[0],s,e);  //modifiyng genomic_position class prova (inizialized as default before)
 						   //with the corrisponding data from the current file line
 		
 		GEP.push_back(genomic_position{prova});	//put the class prova in GAP (vector of classes of type genomic_position)
+		x.clear();				//Restore empty x vector
 		
-		i = i + n_arg;	//increase i of narg value to slide in the correct way the string vector x 
 	}
 
 	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
@@ -86,6 +84,5 @@ int main(){
 		}
 
 }
-
 
 
