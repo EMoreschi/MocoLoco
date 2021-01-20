@@ -99,7 +99,7 @@ int main(){
 			GEP.push_back(genomic_position{prova});	//put the class prova in GAP (vector of classes of type genomic_position)
 		}
 		else {		
-			cout << "WARNING: the line " << n_line << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
+			cerr << "WARNING: the line " << n_line << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
 			//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
 		}
 
