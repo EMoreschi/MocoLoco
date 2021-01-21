@@ -6,10 +6,10 @@ int main(int argc, char *argv[]){
 	
 	ifstream myfile (argv[1]); //Opening file in lecture mode// it must not be hard-coded!!!!
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
-	vector<string> x;		//defining string vector x	
+	vector<string> bed_words;		//defining string vector x	
 	string line; 			//defining line string
 	string token;			//defining token string
-	genomic_position prova();	//initialization of class prova of genomic_position type using the default constructor 	
+	genomic_position bed_line();	//initialization of class bed_line of genomic_position type using the default constructor 	
 
 	int n_line = 0;			//line counter initialization
         while(getline(myfile,line)){  //reading input file line by line with getline function
@@ -22,23 +22,23 @@ int main(int argc, char *argv[]){
 	      
 		while(my_stream >> token){	//put every word in token string while words in the line are not finished
 		
-		x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
+		bed_words.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
 		}
-		unsigned int s = stoul(x[1]);  //The word corrisponding to start coordinate converted from string to unsigned int
-		unsigned int e = stoul(x[2]);	//The word corrisponding to end coordinate converted from string to unsigned int
-		genomic_position prova(x[0],s,e);  //modifiyng genomic_position class prova (inizialized as default before)
+		unsigned int s = stoul(bed_words[1]);  //The word corrisponding to start coordinate converted from string to unsigned int
+		unsigned int e = stoul(bed_words[2]);	//The word corrisponding to end coordinate converted from string to unsigned int
+		genomic_position bed_line(bed_words[0],s,e);  //modifiyng genomic_position class bed_line (inizialized as default before)
 						   //with the corrisponding data from the current file line
 		
-		if(prova.get_flag() == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+		if(bed_line.get_flag() == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
 
-			GEP.push_back(genomic_position{prova});	//put the class prova in GAP (vector of classes of type genomic_position)
+			GEP.push_back(genomic_position{bed_line});	//put the class bed_line in GAP (vector of classes of type genomic_position)
 		}
 		else {		
 			cerr << "WARNING: the line " << n_line << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
 			//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
 		}
 
-		x.clear();				//Restore empty x vector
+		bed_words.clear();				//Restore empty x vector
 		n_line = n_line + 1;			//pass to next line 
 	}
 
