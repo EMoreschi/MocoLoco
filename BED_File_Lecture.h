@@ -9,6 +9,8 @@
 
 using namespace std;
 
+string BED_FILE;
+
 class genomic_position { //creation public class of genomic_position type        
 	        
 		private:	//definition private field
@@ -67,4 +69,5 @@ class genomic_position { //creation public class of genomic_position type
 		}
 };
 
-
+void command_line_parser(int, char **);
+void display_help();
