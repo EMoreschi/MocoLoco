@@ -1,4 +1,4 @@
-#include "BED_File_Lecture.h.cpp"
+#include "BED_File_Lecture.h"
 
 
 int main(int argc, char *argv[]){
