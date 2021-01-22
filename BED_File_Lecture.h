@@ -10,10 +10,11 @@
 using namespace std;
 
 string BED_FILE;
+int parameter = 150; //default parameter 150
 
 class genomic_position { //creation public class of genomic_position type        
 	        
-		private:	//definition private field
+		public:	//definition private field
 				
 		string chr;
 		unsigned int start;
@@ -22,7 +23,7 @@ class genomic_position { //creation public class of genomic_position type
 		
 		
 
-		public:			//definition public field
+		//public:			//definition public field
 		
 
 		//CONSTRUCTORS:
@@ -69,5 +70,6 @@ class genomic_position { //creation public class of genomic_position type
 		}
 };
 
+void centering_function (unsigned int*, unsigned int*, int);
 void command_line_parser(int, char **);
 void display_help();
