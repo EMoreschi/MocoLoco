@@ -10,7 +10,7 @@ int main(int argc, char *argv[]){
 	command_line_parser(argc, argv); //parser function called to handle aguments
 	
 	
-	ifstream myfile (argv[1]); //Opening file in lecture mode// it must not be hard-coded!!!!
+	ifstream myfile (BED_FILE); //Opening file in lecture mode// it must not be hard-coded!!!!
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
 	string line; 			//defining line string
 	string token;			//defining token string
@@ -88,7 +88,8 @@ for(int i = 1; i < argc; i++){
 
 void display_help()
 {
-	cerr << "\n Here will be the Help ]" << endl;
+	cerr << "\n --help: show this message" << endl;
+	cerr << "\n --BED -B <file_bed>: input bed file" << endl;
 	cerr << endl;
 	
 	exit(EXIT_SUCCESS);
