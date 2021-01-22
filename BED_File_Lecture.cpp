@@ -1,4 +1,4 @@
-#include "BED_File_Lecture.h.cpp"
+#include "BED_File_Lecture.h"
 
 
 int main(int argc, char *argv[]){
@@ -88,14 +88,7 @@ for(int i = 1; i < argc; i++){
 
 void display_help()
 {
-	cerr << "\nSynopsis: aScan --rna rnaseq_bamfile --vcf vcf_file --gtf gtf_file [-nt transcript/gene_correspondence_file] [-p thread_num] [--filter filter_key_word]" << endl;
-	cerr << "\n--rna rnaseq_bamfile\nBAM file containing RNA-Seq reads mapped to a reference genome. The BAM file does not need to be sorted. Please notice that aScan does not currently support reads mapped to the reference transcriptome." << endl;
-	cerr << "\n--vcf vcf_file\nVCF file with genomic variants from the same individual as the RNA-Seq data. Please notice that aScan currently does not support multi-VCF files. aScan considers only single nucleotide\nsubstitutions. aScan can work both with phased or unphased VCF files." << endl;
-	cerr << "\n--gtf gtf_file GTF file with reference transcripts annotation.\nPlease notice that aScan will consider only \"exon\" named features. The attribute column of the GTF file must include a transcript_id value for each exon." << endl;
-	cerr << "\n-nt, --nametable transcript/gene_correspondence_file.\nA tab-separated tabular file associating transcript IDs (first column) to gene names or gene IDs (second column)." << endl;
-	cerr << "\n-p threadnum\nThe number of threads to use (default 1). While aScan supports multithreading, the execution speed bottleneck is usually represented by the drive read bandwidth,\nmeaning that normally the benefits of using more than 2 or 3 threads are minimal." << endl;
-	cerr << "\n--filter filter_key_word\nUsing this option, all the variants flagged with filter_key_word in the FILTER field of the VCF file will be ignored. Use this option to discard low-quality variant calls." << endl;
-	
+	cerr << "\n Here will be the Help ]" << endl;
 	cerr << endl;
 	
 	exit(EXIT_SUCCESS);
