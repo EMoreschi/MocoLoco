@@ -6,20 +6,21 @@
 #include <vector>
 #include <typeinfo> 
 #include <sstream>
+#include "../TwoBit/twobit.h"
 
 using namespace std;
-
 string BED_FILE;
 int parameter = 150; //default parameter 150
-
+const char * filename;
 class genomic_position { //creation public class of genomic_position type        
 
 	public:	//definition private field
 
 		string chr_coord;
-		unsigned int start_coord;
-		unsigned int end_coord;
+		 int start_coord;
+		 int end_coord;
 		bool flag;
+		string sequence;
 
 
 
@@ -35,8 +36,7 @@ class genomic_position { //creation public class of genomic_position type
 			flag = 0;	
 		} 
 
-
-		bool flag_control(unsigned int st, unsigned int en){ //function which controls that start coordinates are < then end coordinates
+		bool flag_control( int st,  int en){ //function which controls that start coordinates are < then end coordinates
 
 			if(st > en){		//if start coordinates are > then end coordinates, flag is setted to 0
 				return 0;
@@ -49,6 +49,6 @@ class genomic_position { //creation public class of genomic_position type
 		}
 };
 
-void centering_function (unsigned int*, unsigned int*, int);
+void centering_function ( int*,  int*, int);
 void command_line_parser(int, char **);
 void display_help();

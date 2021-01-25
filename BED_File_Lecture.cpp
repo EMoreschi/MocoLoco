@@ -33,16 +33,27 @@ int main(int argc, char *argv[]){
 			x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
 		}
 		new_class.chr_coord = x[0];
-		new_class.start_coord = stoul(x[1]);  //The word corrisponding to start coordinate converted from string to unsigned int
-		new_class.end_coord = stoul(x[2]);	//The word corrisponding to end coordinate converted from string to unsigned int
+		new_class.start_coord = stoul(x[1]);  //The word corrisponding to start coordinate converted from string to  int
+		new_class.end_coord = stoul(x[2]);	//The word corrisponding to end coordinate converted from string to  int
 		new_class.flag = new_class.flag_control(new_class.start_coord, new_class.end_coord);
 
 
 
 		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-
 			centering_function(&new_class.start_coord, &new_class.end_coord, parameter); //function to center the coordinates
+			const char * filename;
+			TwoBit * tb;
+			tb = twobit_open("hg38.2bit");
+			if (tb == NULL) {
+				fprintf(stderr, "Failed to open: %s\n", filename);
+				return EXIT_FAILURE;
+			}
+			//const char * chrom = new_class.chr_coord.c_str();
+		//	cout << chrom<<"\n";
+			new_class.sequence = twobit_sequence(tb,"chr1",new_class.start_coord,new_class.end_coord);
+			cout << new_class.sequence << "\n";
 			GEP.push_back(genomic_position{new_class});	//put the class prova in GAP (vector of classes of type genomic_position)
+
 		}
 		else {		
 			cerr << "WARNING: the line " << n_line << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
@@ -56,15 +67,15 @@ int main(int argc, char *argv[]){
 
 	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
 
-		cout<< GEP[i].chr_coord << "\n" << GEP[i].start_coord << "\n" << GEP[i].end_coord << "\n" << GEP[i].get_flag() << "\n\n"; //control print
+		cout<< GEP[i].chr_coord << "\n" << GEP[i].start_coord << "\n" << GEP[i].end_coord << "\n" << GEP[i].get_flag() << GEP[i].sequence << "\n\n"; //control print
 	}
 
 }
 
-void centering_function (unsigned int *start, unsigned int *end, int p){
+void centering_function ( int *start,  int *end, int p){
 
-	unsigned int overhead = 25;
-	unsigned int centro = (*start + *end)/2;
+	 int overhead = 25;
+	 int centro = (*start + *end)/2;
 	*start = centro - p -overhead;
 	*end = centro + p +overhead;
 
@@ -102,6 +113,15 @@ void command_line_parser(int argc, char **argv){
 				continue;
 			}
 		}
+		if(buf == "--twobit" || buf == "-tb"){
+
+			if(i < argc - 1){
+
+				filename = argv[++i];
+
+				continue;
+			}
+		}
 
 
 	}
@@ -119,5 +139,6 @@ void display_help()
 
 	exit(EXIT_SUCCESS);
 }
+
 
 
