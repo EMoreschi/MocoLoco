@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
 	string line; 			//defining line string
 	string token;			//defining token string
-	genomic_position new_class();	//initialization of class prova of genomic_position type using the default constructor 	
+	genomic_position new_class;	//initialization of class prova of genomic_position type using the default constructor 	
 
 	int n_line = 0;			//line counter initialization
 
@@ -32,18 +32,16 @@ int main(int argc, char *argv[]){
 
 			x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
 		}
-
-		unsigned int s = stoul(x[1]);  //The word corrisponding to start coordinate converted from string to unsigned int
-		unsigned int e = stoul(x[2]);	//The word corrisponding to end coordinate converted from string to unsigned int
-
-
-		genomic_position new_class(x[0],s,e);  //modifiyng genomic_position class prova (inizialized as default before)
-		//with the corrisponding data from the current file line
+		new_class.chr_coord = x[0];
+		new_class.start_coord = stoul(x[1]);  //The word corrisponding to start coordinate converted from string to unsigned int
+		new_class.end_coord = stoul(x[2]);	//The word corrisponding to end coordinate converted from string to unsigned int
+		new_class.flag = new_class.flag_control(new_class.start_coord, new_class.end_coord);
 
 
-		if(new_class.get_flag() == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
 
-			centering_function(&new_class.start, &new_class.end, parameter); //function to center the coordinates
+		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+
+			centering_function(&new_class.start_coord, &new_class.end_coord, parameter); //function to center the coordinates
 			GEP.push_back(genomic_position{new_class});	//put the class prova in GAP (vector of classes of type genomic_position)
 		}
 		else {		
@@ -58,7 +56,7 @@ int main(int argc, char *argv[]){
 
 	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
 
-		cout<< GEP[i].chr << "\n" << GEP[i].start << "\n" << GEP[i].end << "\n" << GEP[i].get_flag() << "\n\n"; //control print
+		cout<< GEP[i].chr_coord << "\n" << GEP[i].start_coord << "\n" << GEP[i].end_coord << "\n" << GEP[i].get_flag() << "\n\n"; //control print
 	}
 
 }
