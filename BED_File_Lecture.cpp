@@ -33,8 +33,8 @@ while(getline(myfile,line)){  //reading input file line by line with getline fun
 		x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
 	}
 	new_class.chr_coord = x[0];
-	new_class.start_coord = stoul(x[1]);  //The word corrisponding to start coordinate converted from string to  int
-	new_class.end_coord = stoul(x[2]);	//The word corrisponding to end coordinate converted from string to  int
+	new_class.start_coord = stoul(x[1])-1;  //The word corrisponding to start coordinate converted from string to  int
+	new_class.end_coord = stoul(x[2])-1;	//The word corrisponding to end coordinate converted from string to  int -1 because ucsc count from 1
 	new_class.flag = new_class.flag_control(new_class.start_coord, new_class.end_coord);
 
 
@@ -67,7 +67,9 @@ while(getline(myfile,line)){  //reading input file line by line with getline fun
 
 
 	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
-
+                 cout<< ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
+                 cerr<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
+		 cout << GEP[i].sequence<<"\n";
 		//cout<< GEP[i].sequence; //control print
 	}
 
