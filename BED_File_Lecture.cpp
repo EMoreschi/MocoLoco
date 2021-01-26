@@ -33,8 +33,8 @@ int main(int argc, char *argv[]){
 			x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
 		}
 		new_class.chr_coord = x[0];
-		new_class.start_coord = stoul(x[1]);  //The word corrisponding to start coordinate converted from string to  int
-		new_class.end_coord = stoul(x[2]);	//The word corrisponding to end coordinate converted from string to  int
+		new_class.start_coord = stoul(x[1])-1;  //The word corrisponding to start coordinate converted from string to  int ucsc count from 1 so -1
+		new_class.end_coord = stoul(x[2])-1;	//The word corrisponding to end coordinate converted from string to  int
 		new_class.flag = new_class.flag_control(new_class.start_coord, new_class.end_coord);
 
 
