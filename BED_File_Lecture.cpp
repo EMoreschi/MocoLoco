@@ -41,16 +41,17 @@ int main(int argc, char *argv[]){
 
 		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
 			centering_function(&new_class.start_coord, &new_class.end_coord, parameter); //function to center the coordinates
-			const char * filename;
+	                const char * chrom;
 			TwoBit * tb;
-			tb = twobit_open("hg38.2bit");
-			if (tb == NULL) {
-				fprintf(stderr, "Failed to open: %s\n", filename);
-				return EXIT_FAILURE;
-			}
-			//const char * chrom = new_class.chr_coord.c_str();
-		//	cout << chrom<<"\n";
-			new_class.sequence = twobit_sequence(tb,"chr1",new_class.start_coord,new_class.end_coord);
+			tb = twobit_open(filename);
+//			if (tb == NULL) {
+//				fprintf(stderr, "Failed to open: %s\n", filename);
+//				return EXIT_FAILURE;
+//			}
+//			char* c = &*str.begin();
+		        chrom = &*new_class.chr_coord.begin();
+			cout << chrom<<"\n";
+			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord);
 			cout << new_class.sequence << "\n";
 			GEP.push_back(genomic_position{new_class});	//put the class prova in GAP (vector of classes of type genomic_position)
 
