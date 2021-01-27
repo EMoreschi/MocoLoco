@@ -51,7 +51,7 @@ while(getline(myfile,line)){  //reading input file line by line with getline fun
 //			char* c = &*str.begin();
 		        chrom = &*new_class.chr_coord.begin();
 			//cout << chrom<<"\n";
-			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord);
+			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord-1);
 			//cout << new_class.sequence << "\n";
 			GEP.push_back(genomic_position{new_class});	//put the class prova in GAP (vector of classes of type genomic_position)
 
@@ -68,7 +68,7 @@ while(getline(myfile,line)){  //reading input file line by line with getline fun
 
 	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
                  cout<< ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
-                 cerr<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
+                 //cout<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
 		 cout << GEP[i].sequence<<"\n";
 		//cout<< GEP[i].sequence; //control print
 	}
