@@ -31,6 +31,6 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
-        run: g++ -o test $GITHUB_WORKSPACE/*.cpp 
+        run: g++ -o test -fpermissive -Wwrite-strings $GITHUB_WORKSPACE/*.cpp 
       
         

@@ -6,7 +6,8 @@
 #include <vector>
 #include <typeinfo> 
 #include <sstream>
-#include "../Dev_branch/twobit.h"
+#include "./TwoBit/twobit.h"
+#include "./TwoBit/twobit.c"
 
 using namespace std;
 string BED_FILE;
