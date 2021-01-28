@@ -10,9 +10,9 @@
 #include "./TwoBit/twobit.c"
 
 using namespace std;
-string BED_FILE;
+const char * BED_FILE;
 int parameter = 150; //default parameter 150
-const char * filename;
+const char * TWOBIT_FILE;
 class genomic_position { //creation public class of genomic_position type        
 
 	public:	//definition private field
@@ -50,6 +50,7 @@ class genomic_position { //creation public class of genomic_position type
 		}
 };
 
+void GEP_objects_creation(const char*, const char*);
 void centering_function ( int*,  int*, int);
 void command_line_parser(int, char **);
 void display_help();
