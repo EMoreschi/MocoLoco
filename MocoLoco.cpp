@@ -9,45 +9,58 @@ if(argc == 1){             //If arguments number is 1 means that no input file h
 
 command_line_parser(argc, argv); //parser function called to handle aguments
 
-ifstream myfile (BED_FILE); //Opening file in lecture mode// it must not be hard-coded!!!!
-vector<genomic_position> GEP;	 //defining vector of genomic_position datas
-string line; 			//defining line string
-string token;			//defining token string
-genomic_position new_class;	//initialization of class prova of genomic_position type using the default constructor 	
-
-int n_line = 0;			//line counter initialization
-
-while(getline(myfile,line)){  //reading input file line by line with getline function
-
-	vector<string> x;		//defining string vector x
-
-	if (line.empty())		   //CONTROL: if line is empty pass to next line
-		continue;
-	if (line[0] == '#')	//CONTROL: if line starts with # (possible headers or comments) pass to next line
-		continue;
-
-	istringstream my_stream(line); //istringstream function to split each line word by word	
-
-	while(my_stream >> token){	//put every word in token string while words in the line are not finished
-
-		x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
-	}
-	new_class.chr_coord = x[0];
-	new_class.start_coord = stoul(x[1])-1;  //The word corrisponding to start coordinate converted from string to  int
-	new_class.end_coord = stoul(x[2])-1;	//The word corrisponding to end coordinate converted from string to  int -1 because ucsc count from 1
-	new_class.flag = new_class.flag_control(new_class.start_coord, new_class.end_coord);
+GEP_objects_creation(BED_FILE, TWOBIT_FILE);
 
 
+}
 
-	if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		centering_function(&new_class.start_coord, &new_class.end_coord, parameter); //function to center the coordinates
-		const char * chrom;
-			TwoBit * tb;
-			tb = twobit_open(filename);
+void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
+	
+	ifstream myfile (Bed_file); //Opening file in lecture mode// it must not be hard-coded!!!!
+	const char * chrom;
+	TwoBit * tb;
+	tb = twobit_open(Twobit_file);
+
+	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
+	string line; 			//defining line string
+	string token;			//defining token string
+	genomic_position new_class;	//initialization of class prova of genomic_position type using the default constructor 	
+	int n_line = 0;			//line counter initialization
+	
+	while(getline(myfile,line)){  //reading input file line by line with getline function
+		
+		vector<string> x;		//defining string vector x
+		
+		if (line.empty())		   //CONTROL: if line is empty pass to next line
+			
+			continue;
+	
+		if (line[0] == '#')	//CONTROL: if line starts with # (possible headers or comments) pass to next line
+			
+			continue;
+		
+		istringstream my_stream(line); //istringstream function to split each line word by word	
+		
+		while(my_stream >> token){	//put every word in token string while words in the line are not finished
+			
+			x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
+		}
+	
+		new_class.chr_coord = x[0];
+		new_class.start_coord = stoul(x[1])-1;  //The word corrisponding to start coordinate converted from string to  int
+		new_class.end_coord = stoul(x[2])-1;	//The word corrisponding to end coordinate converted from string to  int -1 because ucsc count from 1
+		new_class.flag = new_class.flag_control(new_class.start_coord, new_class.end_coord);
+		
+		
+		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+			
+			centering_function(&new_class.start_coord, &new_class.end_coord, parameter); //function to center the coordinates
+//			
 //			if (tb == NULL) {
 //				fprintf(stderr, "Failed to open: %s\n", filename);
 //				return EXIT_FAILURE;
 //			}
+//			
 //			char* c = &*str.begin();
 		        chrom = &*new_class.chr_coord.begin();
 			//cout << chrom<<"\n";
@@ -56,6 +69,7 @@ while(getline(myfile,line)){  //reading input file line by line with getline fun
 			GEP.push_back(genomic_position{new_class});	//put the class prova in GAP (vector of classes of type genomic_position)
 
 		}
+
 		else {		
 			cerr << "WARNING: the line " << n_line << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
 			//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
@@ -124,7 +138,7 @@ void command_line_parser(int argc, char **argv){
 
 			if(i < argc - 1){
 
-				filename = argv[++i];
+				TWOBIT_FILE = argv[++i];
 				control_twobit = 1;
 				continue;
 			}
