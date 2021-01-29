@@ -4,7 +4,7 @@
 
 #### How to compile
 
-`g++ -o test -fpermissive -Wwrite-strings MocoLoco.cpp`
+`g++ -o test -Wwrite-strings MocoLoco.cpp`
 
 #### How to run 
 

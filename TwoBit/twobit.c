@@ -1,5 +1,4 @@
 #include "twobit.h"
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -162,7 +161,7 @@ TwoBit * twobit_open(const char * filename) {
   }
 
   /* mmap file */
-  data = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  data = (char*)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (data == MAP_FAILED) {
     perror("mmap failed");
     return NULL;
@@ -222,7 +221,7 @@ char byte_to_base(unsigned char byte, int offset) {
   int rev_offset = 3 - offset;
   unsigned char mask = 3 << (rev_offset * 2);
   int idx = (byte & mask) >> (rev_offset * 2);
-  char * bases = "TCAG";
+  const char * bases = "TCAG";
 
   return bases[idx];
 }
