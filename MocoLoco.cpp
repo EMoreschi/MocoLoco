@@ -16,7 +16,7 @@ GEP_objects_creation(BED_FILE, TWOBIT_FILE);
 
 void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 	
-	ifstream myfile (Bed_file); //Opening file in lecture mode// it must not be hard-coded!!!!
+	ifstream in(Bed_file); //Opening file in lecture mode// it must not be hard-coded!!!!
 	const char * chrom;
 	TwoBit * tb;
 	tb = twobit_open(Twobit_file);
@@ -29,33 +29,17 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
 	string line; 			//defining line string
-	string token;			//defining token string
-	genomic_position new_class();	//initialization of class prova of genomic_position type using the default constructor 	
 	int n_line = 0;			//line counter initialization
 	
-	while(getline(myfile,line)){  //reading input file line by line with getline function
+	while(getline(in,line)){  //reading input file line by line with getline function
 		
-		vector<string> x;		//defining string vector x
-		
-		if (line.empty())		   //CONTROL: if line is empty pass to next line
-			
-			continue;
-	
-		if (line[0] == '#')	//CONTROL: if line starts with # (possible headers or comments) pass to next line
-			
-			continue;
-		
-		istringstream my_stream(line); //istringstream function to split each line word by word	
-		
-		while(my_stream >> token){	//put every word in token string while words in the line are not finished
-			
-			x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
-		}
+		istringstream mystream(line); //istringstream function to split each line word by word	
+		string chr;
+		int start, end;
 
-		int s = stoul(x[1])-1;  //The word corrisponding to start coordinate converted from string to  int
-		int e = stoul(x[2])-1;	//The word corrisponding to end coordinate converted from string to  int -1 because ucsc count from 
-
-		genomic_position new_class(x[0],s,e,parameter);
+		mystream >> chr >> start >> end;
+		
+		genomic_position new_class(chr,start,end,parameter);
 		
 		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
 		        chrom = &*new_class.chr_coord.begin();
@@ -77,7 +61,8 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
                  cout<< ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
                  //cout<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
 		 cout << GEP[i].sequence<<"\n";
-		//cout<< GEP[i].sequence; //control print
+	
+	 	 //cout<< GEP[i].sequence; //control print
 	}
 
 }
