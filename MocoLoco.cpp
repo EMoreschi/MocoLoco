@@ -20,11 +20,17 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 	const char * chrom;
 	TwoBit * tb;
 	tb = twobit_open(Twobit_file);
+	
+	//if (tb == NULL) {
+	//	
+	//	fprintf(stderr, "Failed to open: %s\n", TWOBIT_FILE);
+	//	return EXIT_FAILURE;
+	//}
 
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
 	string line; 			//defining line string
 	string token;			//defining token string
-	genomic_position new_class;	//initialization of class prova of genomic_position type using the default constructor 	
+	genomic_position new_class();	//initialization of class prova of genomic_position type using the default constructor 	
 	int n_line = 0;			//line counter initialization
 	
 	while(getline(myfile,line)){  //reading input file line by line with getline function
@@ -45,29 +51,16 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 			
 			x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
 		}
-	
-		new_class.chr_coord = x[0];
-		new_class.start_coord = stoul(x[1])-1;  //The word corrisponding to start coordinate converted from string to  int
-		new_class.end_coord = stoul(x[2])-1;	//The word corrisponding to end coordinate converted from string to  int -1 because ucsc count from 1
-		new_class.flag = new_class.flag_control(new_class.start_coord, new_class.end_coord);
-		
+
+		int s = stoul(x[1])-1;  //The word corrisponding to start coordinate converted from string to  int
+		int e = stoul(x[2])-1;	//The word corrisponding to end coordinate converted from string to  int -1 because ucsc count from 
+
+		genomic_position new_class(x[0],s,e,parameter);
 		
 		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-			
-			centering_function(&new_class.start_coord, &new_class.end_coord, parameter); //function to center the coordinates
-//			
-//			if (tb == NULL) {
-//				fprintf(stderr, "Failed to open: %s\n", filename);
-//				return EXIT_FAILURE;
-//			}
-//			
-//			char* c = &*str.begin();
 		        chrom = &*new_class.chr_coord.begin();
-			//cout << chrom<<"\n";
 			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord-1);
-			//cout << new_class.sequence << "\n";
 			GEP.push_back(genomic_position{new_class});	//put the class prova in GAP (vector of classes of type genomic_position)
-
 		}
 
 		else {		
@@ -86,15 +79,6 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 		 cout << GEP[i].sequence<<"\n";
 		//cout<< GEP[i].sequence; //control print
 	}
-
-}
-
-void centering_function ( int *start,  int *end, int p){
-
-	 int overhead = 25;
-	 int centro = (*start + *end)/2;
-	*start = centro - p -overhead;
-	*end = centro + p +overhead;
 
 }
 
