@@ -3,13 +3,13 @@
 int main(int argc, char *argv[]){
 
 
-if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
-	display_help();
-}
+	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
+		display_help();
+	}
 
-command_line_parser(argc, argv); //parser function called to handle aguments
+	command_line_parser(argc, argv); //parser function called to handle aguments
 
-GEP_objects_creation(BED_FILE, TWOBIT_FILE);
+	GEP_objects_creation(BED_FILE, TWOBIT_FILE);
 
 
 }
@@ -91,9 +91,10 @@ void command_line_parser(int argc, char **argv){
 				BED_FILE = argv[++i];
 				control_bed = 1;
 				
-				bool bed_check = exist_test0(BED_FILE);
+				bool bed_check = is_file_exist(BED_FILE);
 				if(bed_check == 0){
-					cout << "File BED does mot exist, please insert a BED file as input. \n";
+					cout << "File BED does not exist, please insert a BED file as input. \n";
+					cout << "FATAL ERROR \n";
 					exit(EXIT_SUCCESS);
 				}
 				continue;
@@ -116,6 +117,13 @@ void command_line_parser(int argc, char **argv){
 
 				TWOBIT_FILE = argv[++i];
 				control_twobit = 1;
+
+				bool two_bit_check = is_file_exist(TWOBIT_FILE);
+				if(two_bit_check == 0){
+					cout << "File 2bit does not exist, please insert a 2bit file as input. \n";
+					cout << "FATAL ERROR \n";
+					exit(EXIT_SUCCESS);
+				}
 				continue;
 			}
 		}
@@ -157,12 +165,11 @@ void command_line_parser(int argc, char **argv){
 	}
 }
 
-inline bool exists_test0 (const char* bed_file){
-
-	    ifstream f(bed_file);
-	        return f.good();
+bool is_file_exist(const char *fileName)
+{
+	std::ifstream infile(fileName);
+	return infile.good();
 }
-
 
 void display_help()
 {
