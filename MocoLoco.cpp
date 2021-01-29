@@ -35,7 +35,8 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 		
 		istringstream mystream(line); //istringstream function to split each line word by word	
 		string chr;
-		int start, end;
+		int start;
+		int end;
 
 		mystream >> chr >> start >> end;
 		
@@ -58,7 +59,7 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 
 
 	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
-                 cout<< ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
+                 cout << ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
                  //cout<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
 		 cout << GEP[i].sequence<<"\n";
 	
