@@ -8,6 +8,8 @@
 #include <sstream>
 #include "./TwoBit/twobit.h"
 #include "./TwoBit/twobit.c"
+#include <sys/stat.h>
+#include <unistd.h>
 
 using namespace std;
 const char * BED_FILE;
@@ -76,3 +78,4 @@ void GEP_objects_creation(const char*, const char*);
 void centering_function ( int*,  int*, int, int);
 void command_line_parser(int, char **);
 void display_help();
+bool exist_test0(const char*);

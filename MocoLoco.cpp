@@ -90,6 +90,12 @@ void command_line_parser(int argc, char **argv){
 
 				BED_FILE = argv[++i];
 				control_bed = 1;
+				
+				bool bed_check = exist_test0(BED_FILE);
+				if(bed_check == 0){
+					cout << "File BED does mot exist, please insert a BED file as input. \n";
+					exit(EXIT_SUCCESS);
+				}
 				continue;
 			
 			}
@@ -151,6 +157,11 @@ void command_line_parser(int argc, char **argv){
 	}
 }
 
+inline bool exists_test0 (const char* bed_file){
+
+	    ifstream f(bed_file);
+	        return f.good();
+}
 
 
 void display_help()
