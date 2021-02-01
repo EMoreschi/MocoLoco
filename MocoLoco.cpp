@@ -1,5 +1,9 @@
 #include "MocoLoco.h"
 
+const char * BED_FILE;
+int parameter = 150; //default parameter 150
+const char * TWOBIT_FILE;
+
 int main(int argc, char *argv[]){
 
 
@@ -14,8 +18,32 @@ int main(int argc, char *argv[]){
 
 }
 
+void genomic_position::read_line(string line){
+
+	istringstream mystream(line);
+	mystream >> chr_coord >> start_coord >> end_coord;
+
+}
+
+void genomic_position::centering_function ( int start,  int end, int p){
+
+	int overhead = 25;
+	int centro = (start + end)/2;
+	start_coord = centro - p -overhead;
+	end_coord = centro + p +overhead;
+}
+
+
+void genomic_position::flag_control( int start,  int end){ //function which controls that start coordinates are < then end coordinates
+
+	if(start > end || start == end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
+		flag = 0;
+	}
+	else{ flag = 1;}
+}
+
 void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
-	
+
 	ifstream in(Bed_file); //Opening file in lecture mode
 	const char * chrom;   //Initializing a const char pointer called chrom 
 	TwoBit * tb;		//Creating a TwoBit* variable called tb
@@ -24,15 +52,15 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
 	string line; 			//defining line string
 	int n_line = 0;			//line counter initialization
-	
+
 	while(getline(in,line)){  //reading input file line by line with getline function
-		
+
 		//mettere controllo che linea non sia vuota o commentata
-	
+
 		genomic_position new_class(parameter,line);  //Called the object constructor passing the Bed line and p
-		
+
 		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		        chrom = &*new_class.chr_coord.begin(); //Put in chrom the string of chr_coord
+			chrom = &*new_class.chr_coord.begin(); //Put in chrom the string of chr_coord
 			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord-1); //Extract the sequence from the object with the twobit_sequence function
 			GEP.emplace_back(new_class);	//put the current object in GAP (vector of objects of genomic_position class)
 		}
@@ -48,11 +76,11 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 
 
 	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
-                 cout << ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
-                 //cout<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
-		 cout << GEP[i].sequence<<"\n";
-	
-	 	 //cout<< GEP[i].sequence; //control print
+		cout << ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
+		//cout<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
+		cout << GEP[i].sequence<<"\n";
+
+		//cout<< GEP[i].sequence; //control print
 	}
 
 }
@@ -79,7 +107,7 @@ void command_line_parser(int argc, char **argv){
 
 				BED_FILE = argv[++i];
 				control_bed = 1;
-				
+
 				bool bed_check = is_file_exist(BED_FILE);
 				if(bed_check == 0){
 					cout << "File BED does not exist, please insert a BED file as input. \n";
@@ -87,7 +115,7 @@ void command_line_parser(int argc, char **argv){
 					exit(EXIT_SUCCESS);
 				}
 				continue;
-			
+
 			}
 		}
 
@@ -121,19 +149,19 @@ void command_line_parser(int argc, char **argv){
 	}
 
 	if(control_bed == 0 && control_twobit == 0){
-		
+
 		cout << "BED file and TwoBit file missed or wrong parameters calling!\n";
 		cout << "Please insert as input a BED file using -B or --BED annotation before it.\n";
 		cout << "Please insert as input a Twobit file using -tb or --twobit annotation before it.\n";
-		
+
 		exit(EXIT_SUCCESS);
 	}
-		
+
 	if(control_bed == 0){
-		
+
 		cout << "Wrong BED file immission or BED file missed!\n ";
 		cout << "Please insert as input a BED file using -B or --BED annotation before it.\n";
-		
+
 		exit(EXIT_SUCCESS);
 	}
 
@@ -150,7 +178,7 @@ void command_line_parser(int argc, char **argv){
 
 		cout << "WARNING: Sequence length parameter not inserted --> Default parameter is 150.\n";
 		cout << "To put a parameter as input write -p or --param before parameter value.";
-	
+
 	}
 }
 
