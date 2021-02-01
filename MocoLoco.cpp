@@ -9,23 +9,17 @@ int main(int argc, char *argv[]){
 
 	command_line_parser(argc, argv); //parser function called to handle aguments
 
-	GEP_objects_creation(BED_FILE, TWOBIT_FILE);
+	GEP_objects_creation(BED_FILE, TWOBIT_FILE); //function to read BED e 2Bit files and create GEP objects vector
 
 
 }
 
 void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 	
-	ifstream in(Bed_file); //Opening file in lecture mode// it must not be hard-coded!!!!
-	const char * chrom;
-	TwoBit * tb;
-	tb = twobit_open(Twobit_file);
-	
-	//if (tb == NULL) {
-	//	
-	//	fprintf(stderr, "Failed to open: %s\n", TWOBIT_FILE);
-	//	return EXIT_FAILURE;
-	//}
+	ifstream in(Bed_file); //Opening file in lecture mode
+	const char * chrom;   //Initializing a const char pointer called chrom 
+	TwoBit * tb;		//Creating a TwoBit* variable called tb
+	tb = twobit_open(Twobit_file); //Opening 2Bit file with twobit_open function and saved in tb 
 
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
 	string line; 			//defining line string
@@ -33,19 +27,14 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 	
 	while(getline(in,line)){  //reading input file line by line with getline function
 		
-		istringstream mystream(line); //istringstream function to split each line word by word	
-		string chr;
-		int start;
-		int end;
-
-		mystream >> chr >> start >> end;
-		
-		genomic_position new_class(chr,start,end,parameter);
+		//mettere controllo che linea non sia vuota o commentata
+	
+		genomic_position new_class(parameter,line);  //Called the object constructor passing the Bed line and p
 		
 		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		        chrom = &*new_class.chr_coord.begin();
-			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord-1);
-			GEP.push_back(genomic_position{new_class});	//put the class prova in GAP (vector of classes of type genomic_position)
+		        chrom = &*new_class.chr_coord.begin(); //Put in chrom the string of chr_coord
+			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord-1); //Extract the sequence from the object with the twobit_sequence function
+			GEP.push_back(genomic_position{new_class});	//put the current object in GAP (vector of objects of genomic_position class)
 		}
 
 		else {		

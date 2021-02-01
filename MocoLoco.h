@@ -13,6 +13,7 @@ using namespace std;
 const char * BED_FILE;
 int parameter = 150; //default parameter 150
 const char * TWOBIT_FILE;
+
 class genomic_position { //creation public class of genomic_position type        
 
 	public:	//definition private field
@@ -38,19 +39,28 @@ class genomic_position { //creation public class of genomic_position type
 		
 		}
 
-		genomic_position(string chr, int start, int end, int p){
+		genomic_position(int p, string line){
 		
+			
+			chr_coord;
+			start_coord;
+			end_coord;
+				
+			read_line(line, &chr_coord, &start_coord, &end_coord);
 
-			flag = flag_control(start,end);
-			chr_coord = chr;
+			flag = flag_control(start_coord,end_coord);
+			centering_function(&start_coord, &end_coord, p); //function to center the coordinates
 
-			centering_function(&start, &end, p); //function to center the coordinates
-
-			start_coord = start;
-			end_coord = end;
 
 		}
-		
+
+		void read_line(string line, string* chr_c,  int* start_c, int* end_c){
+			
+			istringstream mystream(line);
+			mystream >> *chr_c >> *start_c >> *end_c;
+	
+		}
+	
 		void centering_function ( int *start,  int *end, int p){
 	       
 			int overhead = 25;
@@ -78,3 +88,4 @@ void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(const char*);
 bool is_file_exist(const char *fileName);
+void read_line(string, string*, int*, int*);
