@@ -13,7 +13,9 @@ int main(int argc, char *argv[]){
 
 	command_line_parser(argc, argv); //parser function called to handle aguments
 
-	GEP_creation(BED_FILE, TWOBIT_FILE); //function to read BED e 2Bit files and create GEP objects vector
+	vector<genomic_position> GEP = GEP_creation(BED_FILE, TWOBIT_FILE); //function to read BED e 2Bit files and create GEP objects vector
+
+	stamp_debug(GEP); //print vector (debug only)
 
 
 }
@@ -42,10 +44,9 @@ void genomic_position::flag_control( int start,  int end){ //function which cont
 	else{ flag = 1;}
 }
 
-void GEP_creation(const char* Bed_file, const char* Twobit_file){
+vector<genomic_position> GEP_creation(const char* Bed_file, const char* Twobit_file){
 
 	ifstream in(Bed_file); //Opening file in lecture mode
-	//const char * chrom;   //Initializing a const char pointer called chrom 
 	TwoBit * tb;		//Creating a TwoBit* variable called tb
 	tb = twobit_open(Twobit_file); //Opening 2Bit file with twobit_open function and saved in tb 
 	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
@@ -56,35 +57,35 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file){
 
 		//mettere controllo che linea non sia vuota o commentata
 
-		genomic_position new_class(parameter,line,tb);  //Called the object constructor passing the Bed line and p
+		genomic_position new_class(parameter,line,tb, n_line);  //Called the object constructor passing the Bed line and p
 		GEP.emplace_back(new_class);
 
-
 		n_line = n_line + 1;			//pass to next line 
-		
+
 	}
+	return GEP;
+}
 
+void stamp_debug( vector<genomic_position> pippo){
 
+	for (int i=0; i<pippo.size(); ++i){    // from 0 to GEP vector length
+		cout << ">" << pippo[i].chr_coord <<":"<< pippo[i].start_coord << "-" << pippo[i].end_coord << "\n";
+		cout << pippo[i].sequence<<"\n";
 
-	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
-		cout << ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
-		//cout<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
-		cout << GEP[i].sequence<<"\n";
-
-		//cout<< GEP[i].sequence; //control print
 	}
 
 }
-void genomic_position::extract_seq(TwoBit* tb){
 
-		if(flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+void genomic_position::extract_seq(TwoBit* tb, int n_line){
+
+	if(flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
 		const char* chrom = chr_coord.c_str(); //Put in chrom the string of chr_coord
-			sequence = twobit_sequence(tb,chrom,start_coord,end_coord-1); //Extract the sequence from the object with the twobit_sequence function
-		}
-		else {		
-			cerr << "WARNING: the line " << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
-			//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
-		}
+		sequence = twobit_sequence(tb,chrom,start_coord,end_coord-1); //Extract the sequence from the object with the twobit_sequence function
+	}
+	else {		
+		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
+		//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
+	}
 }
 
 void command_line_parser(int argc, char **argv){

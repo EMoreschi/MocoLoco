@@ -23,7 +23,7 @@ class genomic_position { //creation public class of genomic_position type
 		void centering_function(int start, int end, int p);
 		void read_line(string line);
 		void flag_control(int start, int end);
-                void extract_seq(TwoBit* tb);
+                void extract_seq(TwoBit* tb, int n_line);
 
 
 		//public:			//definition public field
@@ -39,13 +39,13 @@ class genomic_position { //creation public class of genomic_position type
 
 		}
 
-		genomic_position(int p, string line, TwoBit* tb){
+		genomic_position(int p, string line, TwoBit* tb,int n_line){
 
 
 			read_line(line);
 			flag_control(start_coord,end_coord);
 			centering_function(start_coord, end_coord, p); //function to center the coordinates
-			extract_seq(tb);
+			extract_seq(tb, n_line);
 				
 
 
@@ -53,7 +53,8 @@ class genomic_position { //creation public class of genomic_position type
 
 };
 
-void GEP_creation(const char*, const char*);
+vector<genomic_position> GEP_creation(const char*, const char*);
+void stamp_debug(vector<genomic_position> gep);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(const char*);
