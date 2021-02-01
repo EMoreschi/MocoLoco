@@ -34,7 +34,7 @@ void GEP_objects_creation(const char* Bed_file, const char* Twobit_file){
 		if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
 		        chrom = &*new_class.chr_coord.begin(); //Put in chrom the string of chr_coord
 			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord-1); //Extract the sequence from the object with the twobit_sequence function
-			GEP.push_back(genomic_position{new_class});	//put the current object in GAP (vector of objects of genomic_position class)
+			GEP.emplace_back(new_class);	//put the current object in GAP (vector of objects of genomic_position class)
 		}
 
 		else {		
