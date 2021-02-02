@@ -1,8 +1,8 @@
 #include "MocoLoco.h"
 
-const char * BED_FILE;
-int parameter = 150; //default parameter 150
-const char * TWOBIT_FILE;
+const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading
+int parameter = 150; 		//default parameter 150
+const char * TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 
 int main(int argc, char *argv[]){
 
@@ -11,32 +11,32 @@ int main(int argc, char *argv[]){
 		display_help();
 	}
 
-	command_line_parser(argc, argv); //parser function called to handle aguments
+	command_line_parser(argc, argv);					//parser function called to handle aguments
 
-	vector<genomic_position> GEP = GEP_creation(BED_FILE, TWOBIT_FILE); //function to read BED e 2Bit files and create GEP objects vector
+	vector<genomic_position> GEP = GEP_creation(BED_FILE, TWOBIT_FILE); 	//function to read BED and 2Bit files and create GEP objects vector
 
-	stamp_debug(GEP); //print vector (debug only)
+	stamp_debug(GEP); 							//print vector function (debug only)
 
-
-}
-
-void genomic_position::read_line(string line){
-
-	istringstream mystream(line);
-	mystream >> chr_coord >> start_coord >> end_coord;
 
 }
 
-void genomic_position::centering_function ( int start,  int end, int p){
+void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
 
+	istringstream mystream(line);					//Split the line word by word and extract chromosome coordinates (chr, start, end)
+	mystream >> chr_coord >> start_coord >> end_coord;		
+
+}
+
+void genomic_position::centering_function ( int start,  int end, int p){	//Centering function: in takes start and end coordinate and re-sets them -
+										//following an input parameter value (overhead added)
 	int overhead = 25;
-	int centro = (start + end)/2;
+	int centro = (start + end)/2;						
 	start_coord = centro - p -overhead;
 	end_coord = centro + p +overhead;
 }
 
 
-void genomic_position::flag_control( int start,  int end){ //function which controls that start coordinates are < then end coordinates
+void genomic_position::flag_control( int start,  int end){ 	//Flag control function: start coordinates must be < then end coordinates
 
 	if(start > end || start == end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
 		flag = 0;
@@ -44,43 +44,47 @@ void genomic_position::flag_control( int start,  int end){ //function which cont
 	else{ flag = 1;}
 }
 
-vector<genomic_position> GEP_creation(const char* Bed_file, const char* Twobit_file){
+vector<genomic_position> GEP_creation(const char* Bed_file, const char* Twobit_file){		//Function to read BED and 2Bit files and create GEP object vector
 
-	ifstream in(Bed_file); //Opening file in lecture mode
-	TwoBit * tb;		//Creating a TwoBit* variable called tb
-	tb = twobit_open(Twobit_file); //Opening 2Bit file with twobit_open function and saved in tb 
-	vector<genomic_position> GEP;	 //defining vector of genomic_position datas
-	string line; 			//defining line string
-	int n_line = 0;			//line counter initialization
+	ifstream in(Bed_file); 						//Opening file in lecture mode
+	TwoBit * tb;							//Creating a TwoBit* variable called tb
+	tb = twobit_open(Twobit_file);					//Opening 2Bit file with twobit_open function and saved in tb 
+	vector<genomic_position> GEP;	 				//defining vector of genomic_position datas
+	string line; 							//defining line string
+	int n_line = 0;							//line counter initialization
 
-	while(getline(in,line)){  //reading input file line by line with getline function
+	while(getline(in,line)){  					//reading input file line by line with getline function
 
-		//mettere controllo che linea non sia vuota o commentata
+		if(line.empty())   					//if line is empty or commented --> continue
+			continue;
+		if(line[0]=='#')
+			continue;
+		
+		genomic_position new_class(parameter,line,tb, n_line);  //Called the object constructor passing the Bed line, parameter P, twobit file tb, and the line counter n_line
+		GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
 
-		genomic_position new_class(parameter,line,tb, n_line);  //Called the object constructor passing the Bed line and p
-		GEP.emplace_back(new_class);
-
-		n_line = n_line + 1;			//pass to next line 
-
-	}
-	return GEP;
-}
-
-void stamp_debug( vector<genomic_position> pippo){
-
-	for (int i=0; i<pippo.size(); ++i){    // from 0 to GEP vector length
-		cout << ">" << pippo[i].chr_coord <<":"<< pippo[i].start_coord << "-" << pippo[i].end_coord << "\n";
-		cout << pippo[i].sequence<<"\n";
+		n_line = n_line + 1;					//pass to next line 
 
 	}
+	return GEP;							//Return GEP vector to print it in debug function
+}
+
+void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
+
+	for (int i=0; i<GEP_print.size(); ++i){    			// from 0 to GEP vector length
+
+		cout << ">" << GEP_print[i].chr_coord <<":"<< GEP_print[i].start_coord << "-" << GEP_print[i].end_coord << "\n";	//print chr,start,end
+		cout << GEP_print[i].sequence<<"\n";											//print DNA sequence
+
+	}
 
 }
 
-void genomic_position::extract_seq(TwoBit* tb, int n_line){
-
-	if(flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		const char* chrom = chr_coord.c_str(); //Put in chrom the string of chr_coord
-		sequence = twobit_sequence(tb,chrom,start_coord,end_coord-1); //Extract the sequence from the object with the twobit_sequence function
+void genomic_position::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
+										//extracted from Bed line
+	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+		const char* chrom = chr_coord.c_str(); 				//Put in chrom the string of chr_coord
+		sequence = twobit_sequence(tb,chrom,start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
 	}
 	else {		
 		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
@@ -90,7 +94,7 @@ void genomic_position::extract_seq(TwoBit* tb, int n_line){
 
 void command_line_parser(int argc, char **argv){
 
-	int control_bed = 0;
+	int control_bed = 0;		
 	int control_twobit = 0;
 	int control_p = 0;
 
@@ -185,13 +189,13 @@ void command_line_parser(int argc, char **argv){
 	}
 }
 
-bool is_file_exist(const char *fileName)
+bool is_file_exist(const char *fileName)		//Input files existence control
 {
 	std::ifstream infile(fileName);
 	return infile.good();
 }
 
-void display_help()
+void display_help() 						//Display help function
 {
 	cerr << "\n --help: show this message" << endl;
 	cerr << "\n --BED -B <file_bed>: input bed file" << endl;

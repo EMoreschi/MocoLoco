@@ -25,11 +25,6 @@ class genomic_position { //creation public class of genomic_position type
 		void flag_control(int start, int end);
                 void extract_seq(TwoBit* tb, int n_line);
 
-
-		//public:			//definition public field
-
-
-		//CONSTRUCTORSstart_coord :
 		genomic_position(){	//default constructor
 
 			chr_coord = "";
@@ -41,14 +36,11 @@ class genomic_position { //creation public class of genomic_position type
 
 		genomic_position(int p, string line, TwoBit* tb,int n_line){
 
-
-			read_line(line);
-			flag_control(start_coord,end_coord);
-			centering_function(start_coord, end_coord, p); //function to center the coordinates
-			extract_seq(tb, n_line);
+			read_line(line);					//reading bed line
+			flag_control(start_coord,end_coord);			//controlling coordinates
+			centering_function(start_coord, end_coord, p);		//centering the coordinates
+			extract_seq(tb, n_line);				//extracting the sequence
 				
-
-
 		}
 
 };
