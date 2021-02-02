@@ -12,10 +12,11 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//parser function called to handle aguments
+	
+	vector<genomic_position> GEP;
+	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//function to read BED and 2Bit files and create GEP objects vector
 
-	vector<genomic_position> GEP = GEP_creation(BED_FILE, TWOBIT_FILE); 	//function to read BED and 2Bit files and create GEP objects vector
-
-	stamp_debug(GEP); 							//print vector function (debug only)
+	stamp_debug(GEP); 	 						//print vector function (debug only)
 
 
 }
@@ -31,8 +32,8 @@ void genomic_position::centering_function ( int start,  int end, int p){	//Cente
 										//following an input parameter value (overhead added)
 	int overhead = 25;
 	int centro = (start + end)/2;						
-	start_coord = centro - p -overhead;
-	end_coord = centro + p +overhead;
+	start_coord = centro - p;			//no overhead for start
+	end_coord = centro + p +overhead;		//overhead for end
 }
 
 
@@ -44,12 +45,11 @@ void genomic_position::flag_control( int start,  int end){ 	//Flag control funct
 	else{ flag = 1;}
 }
 
-vector<genomic_position> GEP_creation(const char* Bed_file, const char* Twobit_file){		//Function to read BED and 2Bit files and create GEP object vector
+void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_position> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
 	ifstream in(Bed_file); 						//Opening file in lecture mode
 	TwoBit * tb;							//Creating a TwoBit* variable called tb
 	tb = twobit_open(Twobit_file);					//Opening 2Bit file with twobit_open function and saved in tb 
-	vector<genomic_position> GEP;	 				//defining vector of genomic_position datas
 	string line; 							//defining line string
 	int n_line = 0;							//line counter initialization
 
@@ -66,7 +66,6 @@ vector<genomic_position> GEP_creation(const char* Bed_file, const char* Twobit_f
 		n_line = n_line + 1;					//pass to next line 
 
 	}
-	return GEP;							//Return GEP vector to print it in debug function
 }
 
 void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
@@ -203,4 +202,3 @@ void display_help() 						//Display help function
 
 	exit(EXIT_SUCCESS);
 }
-

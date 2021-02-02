@@ -13,7 +13,7 @@ using namespace std;
 
 class genomic_position { //creation public class of genomic_position type        
 
-	public:	//definition private field
+	public:	//field definition
 
 		string chr_coord;
 		int start_coord;
@@ -45,8 +45,8 @@ class genomic_position { //creation public class of genomic_position type
 
 };
 
-vector<genomic_position> GEP_creation(const char*, const char*);
-void stamp_debug(vector<genomic_position> gep);
+void GEP_creation(const char*, const char*, vector<genomic_position>&);
+void stamp_debug(vector<genomic_position>);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(const char*);
