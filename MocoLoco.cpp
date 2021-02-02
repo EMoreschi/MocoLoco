@@ -1,92 +1,100 @@
 #include "MocoLoco.h"
 
+const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading
+int parameter = 150; 		//default parameter 150
+const char * TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
+
 int main(int argc, char *argv[]){
 
 
-if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
-	display_help();
-}
-
-command_line_parser(argc, argv); //parser function called to handle aguments
-
-ifstream myfile (BED_FILE); //Opening file in lecture mode// it must not be hard-coded!!!!
-vector<genomic_position> GEP;	 //defining vector of genomic_position datas
-string line; 			//defining line string
-string token;			//defining token string
-genomic_position new_class;	//initialization of class prova of genomic_position type using the default constructor 	
-
-int n_line = 0;			//line counter initialization
-
-while(getline(myfile,line)){  //reading input file line by line with getline function
-
-	vector<string> x;		//defining string vector x
-
-	if (line.empty())		   //CONTROL: if line is empty pass to next line
-		continue;
-	if (line[0] == '#')	//CONTROL: if line starts with # (possible headers or comments) pass to next line
-		continue;
-
-	istringstream my_stream(line); //istringstream function to split each line word by word	
-
-	while(my_stream >> token){	//put every word in token string while words in the line are not finished
-
-		x.push_back(string{token});	//put every word in string vector called x until the words in the line are finished	
-	}
-	new_class.chr_coord = x[0];
-	new_class.start_coord = stoul(x[1])-1;  //The word corrisponding to start coordinate converted from string to  int
-	new_class.end_coord = stoul(x[2])-1;	//The word corrisponding to end coordinate converted from string to  int -1 because ucsc count from 1
-	new_class.flag = new_class.flag_control(new_class.start_coord, new_class.end_coord);
-
-
-
-	if(new_class.flag == 1){	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		centering_function(&new_class.start_coord, &new_class.end_coord, parameter); //function to center the coordinates
-		const char * chrom;
-			TwoBit * tb;
-			tb = twobit_open(filename);
-//			if (tb == NULL) {
-//				fprintf(stderr, "Failed to open: %s\n", filename);
-//				return EXIT_FAILURE;
-//			}
-//			char* c = &*str.begin();
-		        chrom = &*new_class.chr_coord.begin();
-			//cout << chrom<<"\n";
-			new_class.sequence = twobit_sequence(tb,chrom,new_class.start_coord,new_class.end_coord-1);
-			//cout << new_class.sequence << "\n";
-			GEP.push_back(genomic_position{new_class});	//put the class prova in GAP (vector of classes of type genomic_position)
-
-		}
-		else {		
-			cerr << "WARNING: the line " << n_line << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
-			//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
-		}
-
-		n_line = n_line + 1;			//pass to next line 
+	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
+		display_help();
 	}
 
+	command_line_parser(argc, argv);					//parser function called to handle aguments
 
+	vector<genomic_position> GEP = GEP_creation(BED_FILE, TWOBIT_FILE); 	//function to read BED and 2Bit files and create GEP objects vector
 
-	for (int i=0; i<GEP.size(); ++i){    // from 0 to GEP vector length
-                 cout<< ">" << GEP[i].chr_coord <<":"<< GEP[i].start_coord << "-" << GEP[i].end_coord << "\n";
-                 //cout<< GEP[i].chr_coord <<"\t"<< GEP[i].start_coord << "\t" << GEP[i].end_coord << "\n";
-		 cout << GEP[i].sequence<<"\n";
-		//cout<< GEP[i].sequence; //control print
-	}
+	stamp_debug(GEP); 							//print vector function (debug only)
+
 
 }
 
-void centering_function ( int *start,  int *end, int p){
+void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
 
-	 int overhead = 25;
-	 int centro = (*start + *end)/2;
-	*start = centro - p -overhead;
-	*end = centro + p +overhead;
+	istringstream mystream(line);					//Split the line word by word and extract chromosome coordinates (chr, start, end)
+	mystream >> chr_coord >> start_coord >> end_coord;		
 
+}
+
+void genomic_position::centering_function ( int start,  int end, int p){	//Centering function: in takes start and end coordinate and re-sets them -
+										//following an input parameter value (overhead added)
+	int overhead = 25;
+	int centro = (start + end)/2;						
+	start_coord = centro - p -overhead;
+	end_coord = centro + p +overhead;
+}
+
+
+void genomic_position::flag_control( int start,  int end){ 	//Flag control function: start coordinates must be < then end coordinates
+
+	if(start > end || start == end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
+		flag = 0;
+	}
+	else{ flag = 1;}
+}
+
+vector<genomic_position> GEP_creation(const char* Bed_file, const char* Twobit_file){		//Function to read BED and 2Bit files and create GEP object vector
+
+	ifstream in(Bed_file); 						//Opening file in lecture mode
+	TwoBit * tb;							//Creating a TwoBit* variable called tb
+	tb = twobit_open(Twobit_file);					//Opening 2Bit file with twobit_open function and saved in tb 
+	vector<genomic_position> GEP;	 				//defining vector of genomic_position datas
+	string line; 							//defining line string
+	int n_line = 0;							//line counter initialization
+
+	while(getline(in,line)){  					//reading input file line by line with getline function
+
+		if(line.empty())   					//if line is empty or commented --> continue
+			continue;
+		if(line[0]=='#')
+			continue;
+		
+		genomic_position new_class(parameter,line,tb, n_line);  //Called the object constructor passing the Bed line, parameter P, twobit file tb, and the line counter n_line
+		GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
+
+		n_line = n_line + 1;					//pass to next line 
+
+	}
+	return GEP;							//Return GEP vector to print it in debug function
+}
+
+void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
+
+	for (int i=0; i<GEP_print.size(); ++i){    			// from 0 to GEP vector length
+
+		cout << ">" << GEP_print[i].chr_coord <<":"<< GEP_print[i].start_coord << "-" << GEP_print[i].end_coord << "\n";	//print chr,start,end
+		cout << GEP_print[i].sequence<<"\n";											//print DNA sequence
+
+	}
+
+}
+
+void genomic_position::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
+										//extracted from Bed line
+	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+		const char* chrom = chr_coord.c_str(); 				//Put in chrom the string of chr_coord
+		sequence = twobit_sequence(tb,chrom,start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
+	}
+	else {		
+		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
+		//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
+	}
 }
 
 void command_line_parser(int argc, char **argv){
 
-	int control_bed = 0;
+	int control_bed = 0;		
 	int control_twobit = 0;
 	int control_p = 0;
 
@@ -106,8 +114,15 @@ void command_line_parser(int argc, char **argv){
 
 				BED_FILE = argv[++i];
 				control_bed = 1;
+
+				bool bed_check = is_file_exist(BED_FILE);
+				if(bed_check == 0){
+					cout << "File BED does not exist, please insert a BED file as input. \n";
+					cout << "FATAL ERROR \n";
+					exit(EXIT_SUCCESS);
+				}
 				continue;
-			
+
 			}
 		}
 
@@ -124,8 +139,15 @@ void command_line_parser(int argc, char **argv){
 
 			if(i < argc - 1){
 
-				filename = argv[++i];
+				TWOBIT_FILE = argv[++i];
 				control_twobit = 1;
+
+				bool two_bit_check = is_file_exist(TWOBIT_FILE);
+				if(two_bit_check == 0){
+					cout << "File 2bit does not exist, please insert a 2bit file as input. \n";
+					cout << "FATAL ERROR \n";
+					exit(EXIT_SUCCESS);
+				}
 				continue;
 			}
 		}
@@ -134,19 +156,19 @@ void command_line_parser(int argc, char **argv){
 	}
 
 	if(control_bed == 0 && control_twobit == 0){
-		
+
 		cout << "BED file and TwoBit file missed or wrong parameters calling!\n";
 		cout << "Please insert as input a BED file using -B or --BED annotation before it.\n";
 		cout << "Please insert as input a Twobit file using -tb or --twobit annotation before it.\n";
-		
+
 		exit(EXIT_SUCCESS);
 	}
-		
+
 	if(control_bed == 0){
-		
+
 		cout << "Wrong BED file immission or BED file missed!\n ";
 		cout << "Please insert as input a BED file using -B or --BED annotation before it.\n";
-		
+
 		exit(EXIT_SUCCESS);
 	}
 
@@ -163,13 +185,17 @@ void command_line_parser(int argc, char **argv){
 
 		cout << "WARNING: Sequence length parameter not inserted --> Default parameter is 150.\n";
 		cout << "To put a parameter as input write -p or --param before parameter value.";
-	
+
 	}
 }
 
+bool is_file_exist(const char *fileName)		//Input files existence control
+{
+	std::ifstream infile(fileName);
+	return infile.good();
+}
 
-
-void display_help()
+void display_help() 						//Display help function
 {
 	cerr << "\n --help: show this message" << endl;
 	cerr << "\n --BED -B <file_bed>: input bed file" << endl;
