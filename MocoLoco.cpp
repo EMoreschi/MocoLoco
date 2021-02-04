@@ -3,6 +3,7 @@
 const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading
 int parameter = 150; 		//default parameter 150
 const char * TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
+const char * JASPAR_FILE;
 
 int main(int argc, char *argv[]){
 
@@ -15,7 +16,7 @@ int main(int argc, char *argv[]){
 	
 	vector<genomic_position> GEP;
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//function to read BED and 2Bit files and create GEP objects vector
-
+	read_JASPAR(JASPAR_FILE);
 	stamp_debug(GEP); 	 						//print vector function (debug only)
 
 
@@ -66,6 +67,94 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 		n_line = n_line + 1;					//pass to next line 
 
 	}
+}
+
+void read_JASPAR(const char* file_jaspar){
+
+	ifstream file(file_jaspar);
+	string line;
+	string testo;
+	int riga = 0;
+	string word;
+	int col = col_number(file_jaspar);
+	int number_words = 0;
+	double matrix[4][col-3];
+
+	while(getline(file,line)){
+
+		if(line[0]=='>'){
+
+			testo = line;
+
+		}
+
+	else{
+		istringstream mystream(line);
+	
+		for(int i = 0; i <(col-1); i++){
+
+			double a;	
+			char inutili;
+			
+			if(i == 0){
+				
+				mystream >> inutili;
+			}
+			else if(i == 1){
+				
+				mystream >> inutili;
+			}
+	
+			else {
+				
+				mystream >> a;
+				matrix[riga-1][i-2]=a;
+
+			}
+		}
+	}
+	riga = riga + 1;
+
+	
+	}
+
+	cout << testo << "\n";
+
+	for(int i = 0; i<4; i++){
+		for(int j=0; j<(col-3); j++){
+
+			cout << matrix[i][j]<< " ";
+		}
+		cout << "\n";
+	}
+	file.close();
+}
+
+int col_number(string file_s){
+
+	ifstream file(file_s);
+	string line;
+	string word;
+	int number_words = 0;
+	int colonne = 0;
+
+	while(getline(file,line)){
+
+		if(line[0]=='>')
+			continue;
+	
+		istringstream mystream(line);
+		
+		while(mystream >> word){
+		
+			number_words++;
+		}
+		colonne = number_words;
+		number_words = 0;
+	}
+	file.close();
+	return colonne;
+
 }
 
 void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
@@ -134,6 +223,23 @@ void command_line_parser(int argc, char **argv){
 				continue;
 			}
 		}
+		
+		if(buf == "--j" || buf == "-J"){
+
+			if(i < argc - 1){
+
+				JASPAR_FILE = argv[++i];
+
+				bool jaspar_check = is_file_exist(JASPAR_FILE);
+				if(jaspar_check == 0){
+					cout << "JASPAR matrix does not exist, please insert a JASPAR matrix as input. \n";
+					cout << "FATAL ERROR \n";
+					exit(EXIT_SUCCESS);
+				}
+				continue;
+			}
+		}
+		
 		if(buf == "--twobit" || buf == "-tb"){
 
 			if(i < argc - 1){

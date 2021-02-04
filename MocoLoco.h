@@ -45,9 +45,20 @@ class genomic_position { //creation public class of genomic_position type
 
 };
 
+class jaspar_PWM {
+
+	public: //field definition
+
+		string name;
+		vector<vector<double>> matrix;
+
+};
+
 void GEP_creation(const char*, const char*, vector<genomic_position>&);
 void stamp_debug(vector<genomic_position>);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(const char*);
 bool is_file_exist(const char *fileName);
+void read_JASPAR(const char *);
+int col_number(string);
