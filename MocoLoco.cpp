@@ -16,8 +16,8 @@ int main(int argc, char *argv[]){
 	
 	vector<genomic_position> GEP;
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//function to read BED and 2Bit files and create GEP objects vector
-	read_JASPAR(JASPAR_FILE);
-	stamp_debug(GEP); 	 						//print vector function (debug only)
+	jaspar_PWM JASPAR_MTX(JASPAR_FILE);
+	//stamp_debug(GEP); 	 						//print vector function (debug only)
 
 
 }
@@ -69,93 +69,52 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 	}
 }
 
-void read_JASPAR(const char* file_jaspar){
+void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 
 	ifstream file(file_jaspar);
 	string line;
-	string testo;
 	int riga = 0;
-	string word;
-	int col = col_number(file_jaspar);
-	int number_words = 0;
-	double matrix[4][col-3];
+	int col = 0;
+	int n_col = 0;
+	string a;	
 
 	while(getline(file,line)){
 
 		if(line[0]=='>'){
 
-			testo = line;
+			name = line;
 
 		}
 
 	else{
 		istringstream mystream(line);
-	
-		for(int i = 0; i <(col-1); i++){
+		cout << "\n";
+		mystream >> a;	
 
-			double a;	
-			char inutili;
-			
-			if(i == 0){
-				
-				mystream >> inutili;
-			}
-			else if(i == 1){
-				
-				mystream >> inutili;
-			}
-	
-			else {
-				
-				mystream >> a;
-				matrix[riga-1][i-2]=a;
-
-			}
+		while(a != "]"){
+			cout << a;
+			mystream >> a;
+			col = col +1;
 		}
+		n_col = col -3;
 	}
 	riga = riga + 1;
 
 	
 	}
 
-	cout << testo << "\n";
+	cout << "\n" << name << "\n";
 
-	for(int i = 0; i<4; i++){
-		for(int j=0; j<(col-3); j++){
-
-			cout << matrix[i][j]<< " ";
-		}
-		cout << "\n";
-	}
+//	for(int i = 0; i<4; i++){
+//		for(int j=0; j<(n_col-3); j++){
+//
+//			cout << matrix[i][j]<< " ";
+//		}
+//		cout << "\n";
+//	}
 	file.close();
 }
 
-int col_number(string file_s){
-
-	ifstream file(file_s);
-	string line;
-	string word;
-	int number_words = 0;
-	int colonne = 0;
-
-	while(getline(file,line)){
-
-		if(line[0]=='>')
-			continue;
-	
-		istringstream mystream(line);
-		
-		while(mystream >> word){
-		
-			number_words++;
-		}
-		colonne = number_words;
-		number_words = 0;
-	}
-	file.close();
-	return colonne;
-
-}
 
 void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
 
