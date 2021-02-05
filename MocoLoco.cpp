@@ -75,8 +75,9 @@ void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 	string line;
 	int riga = 0;
 	int col = 0;
-	int n_col = 0;
 	string a;	
+	double num;
+	char *p;
 
 	while(getline(file,line)){
 
@@ -89,24 +90,28 @@ void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 	else{
 		istringstream mystream(line);
 		cout << "\n";
-		mystream >> a;	
+		mystream.ignore() >> a;	
 
 		while(a != "]"){
-			cout << a;
+			if(a != "["){	
+				cout << a << " ";
+				num = stod(a);
+				//matrix.emplace_back(num);
+				col = col + 1;
+			}
 			mystream >> a;
-			col = col +1;
 		}
-		n_col = col -3;
 	}
 	riga = riga + 1;
 
 	
 	}
-
+	
 	cout << "\n" << name << "\n";
+	//cout << matrix[2][2];
 
-//	for(int i = 0; i<4; i++){
-//		for(int j=0; j<(n_col-3); j++){
+	//for(int i = 0; i<4; i++){
+	//	for(int j=0; j<(col); j++){
 //
 //			cout << matrix[i][j]<< " ";
 //		}
