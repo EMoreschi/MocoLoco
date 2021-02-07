@@ -13,11 +13,10 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//parser function called to handle aguments
-	
+
 	vector<genomic_position> GEP;
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//function to read BED and 2Bit files and create GEP objects vector
 	jaspar_PWM JASPAR_MTX(JASPAR_FILE);
-	//stamp_debug(GEP); 	 						//print vector function (debug only)
 
 
 }
@@ -30,7 +29,7 @@ void genomic_position::read_line(string line){				//Read line function: it takes
 }
 
 void genomic_position::centering_function ( int start,  int end, int p){	//Centering function: in takes start and end coordinate and re-sets them -
-										//following an input parameter value (overhead added)
+	//following an input parameter value (overhead added)
 	int overhead = 25;
 	int centro = (start + end)/2;						
 	start_coord = centro - p;			//no overhead for start
@@ -60,7 +59,7 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 			continue;
 		if(line[0]=='#')
 			continue;
-		
+
 		genomic_position new_class(parameter,line,tb, n_line);  //Called the object constructor passing the Bed line, parameter P, twobit file tb, and the line counter n_line
 		GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
 
@@ -72,40 +71,40 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 
 	ifstream file(file_jaspar);
-	string line;
-	string a;
-        #define ROW 4
-        #define COL col
+	string line, matrix_name, tf;
+#define ROW 4
+#define COL col
 	int col = 0;
-        vector<vector<double>> matrix;
+	vector<vector<double>> matrix;
 	char *p;
 	while(getline(file,line)){;
 
 		if(line[0]=='>'){
+			istringstream mystream(line);
+			mystream >> matrix_name >> tf;
 
-			name = line;
 
 		}
 
 		else{
 			line.erase(0,line.find('[') +1);
 			line.erase(line.end()-1);
-			vector<double> ciao;
+			vector<double> baseQ;
 			istringstream mystream(line);
 			for (double num; col = col +1, mystream >> num;){
-		          ciao.emplace_back(num);	
+				baseQ.emplace_back(num);	
 			}
-		          matrix.push_back(ciao);
+			matrix.push_back(baseQ);
+
+		}
 
 	}
-		
+	cout << "\n" << matrix_name << "\n" << tf <<  "\n";
+	for (int i = 0; i < matrix.size(); i++) {
+		for (int j = 0; j < matrix[i].size(); j++)
+			cout << matrix[i][j] << " ";
+		cout << endl;
 	}
-	cout << "\n" << name << "\n";
-	    for (int i = 0; i < matrix.size(); i++) {
-        for (int j = 0; j < matrix[i].size(); j++)
-            cout << matrix[i][j] << " ";
-        cout << endl;
-    }
 	file.close();
 }
 
@@ -123,7 +122,7 @@ void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print
 }
 
 void genomic_position::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
-										//extracted from Bed line
+	//extracted from Bed line
 	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
 		const char* chrom = chr_coord.c_str(); 				//Put in chrom the string of chr_coord
 		sequence = twobit_sequence(tb,chrom,start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
@@ -177,7 +176,7 @@ void command_line_parser(int argc, char **argv){
 				continue;
 			}
 		}
-		
+
 		if(buf == "--j" || buf == "-J"){
 
 			if(i < argc - 1){
@@ -193,7 +192,7 @@ void command_line_parser(int argc, char **argv){
 				continue;
 			}
 		}
-		
+
 		if(buf == "--twobit" || buf == "-tb"){
 
 			if(i < argc - 1){

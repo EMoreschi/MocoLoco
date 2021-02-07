@@ -23,7 +23,7 @@ class genomic_position { //creation public class of genomic_position type
 		void centering_function(int start, int end, int p);
 		void read_line(string line);
 		void flag_control(int start, int end);
-                void extract_seq(TwoBit* tb, int n_line);
+		void extract_seq(TwoBit* tb, int n_line);
 
 		genomic_position(){	//default constructor
 
@@ -40,7 +40,7 @@ class genomic_position { //creation public class of genomic_position type
 			flag_control(start_coord,end_coord);			//controlling coordinates
 			centering_function(start_coord, end_coord, p);		//centering the coordinates
 			extract_seq(tb, n_line);				//extracting the sequence
-				
+
 		}
 
 };
@@ -54,7 +54,7 @@ class jaspar_PWM {
 		void read_JASPAR(const char * file_jaspar);
 
 		jaspar_PWM(const char* file_jaspar){
-			
+
 			read_JASPAR(file_jaspar);
 
 		}
