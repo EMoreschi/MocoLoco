@@ -73,13 +73,13 @@ void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 
 	ifstream file(file_jaspar);
 	string line;
-	int riga = 0;
+	string a;
+        #define ROW 4
+        #define COL col
 	int col = 0;
-	string a;	
-	double num;
+        vector<vector<double>> matrix;
 	char *p;
-
-	while(getline(file,line)){
+	while(getline(file,line)){;
 
 		if(line[0]=='>'){
 
@@ -87,38 +87,28 @@ void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 
 		}
 
-	else{
-		istringstream mystream(line);
-		cout << "\n";
-		mystream.ignore() >> a;	
-
-		while(a != "]"){
-			if(a != "["){	
-				cout << a << " ";
-				num = stod(a);
-				//matrix.emplace_back(num);
-				col = col + 1;
+		else{
+			line.erase(0,line.find('[') +1);
+			line.erase(line.end()-1);
+			vector<double> ciao;
+			istringstream mystream(line);
+			for (double num; col = col +1, mystream >> num;){
+		          ciao.emplace_back(num);	
 			}
-			mystream >> a;
-		}
-	}
-	riga = riga + 1;
+		          matrix.push_back(ciao);
 
-	
 	}
-	
+		
+	}
 	cout << "\n" << name << "\n";
-	//cout << matrix[2][2];
-
-	//for(int i = 0; i<4; i++){
-	//	for(int j=0; j<(col); j++){
-//
-//			cout << matrix[i][j]<< " ";
-//		}
-//		cout << "\n";
-//	}
+	    for (int i = 0; i < matrix.size(); i++) {
+        for (int j = 0; j < matrix[i].size(); j++)
+            cout << matrix[i][j] << " ";
+        cout << endl;
+    }
 	file.close();
 }
+
 
 
 void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
