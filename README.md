@@ -4,7 +4,7 @@
 
 #### How to compile
 
-`g++ -o test -Wwrite-strings MocoLoco.cpp`
+`g++ -Wall -o test -Wwrite-strings MocoLoco.cpp`
 
 #### How to run 
 

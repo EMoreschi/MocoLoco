@@ -1,7 +1,7 @@
 #include "MocoLoco.h"
 
-const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading
-int parameter = 150; 		//default parameter 150
+const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading //FZ BASTA STRINGHE C, VI BUCO IL PALLONE SE NE VEDO ANCOORA //
+int parameter = 150; 		//default parameter 150 //FZ MA NESSUN PARAMETRO VA CHIAMATO PARAMETRO :D PARAMETRO E' UN NOME GENERIICO. DARE UN NOME SENSATO. DOVREBBE ESSERE UNA VARIABILE DI CLASSE DI TIPO STATIC E NON UNA VARIABILE GLOBALE //
 const char * TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 const char * JASPAR_FILE;
 
@@ -30,10 +30,10 @@ void genomic_position::read_line(string line){				//Read line function: it takes
 
 }
 
-void genomic_position::centering_function ( int start,  int end, int p){	//Centering function: in takes start and end coordinate and re-sets them -
+void genomic_position::centering_function ( int start,  int end, int p){	//Centering function: in takes start and end coordinate and re-set/s them - 
 	//following an input parameter value (overhead added)
-	int overhead = 25;
-	int centro = (start + end)/2;						
+	int overhead = 25;    //FZ L'OVERHEAD DEVE ESSERE UNA COSTANTE STATIC  DI CLASSE 
+	int centro = (start + end)/2; //FZ EVITARE NOMI VARIABILI IN ITALIANO						
 	start_coord = centro - p;			//no overhead for start
 	end_coord = centro + p +overhead;		//overhead for end
 }
@@ -41,7 +41,7 @@ void genomic_position::centering_function ( int start,  int end, int p){	//Cente
 
 void genomic_position::flag_control( int start,  int end){ 	//Flag control function: start coordinates must be < then end coordinates
 
-	if(start > end || start == end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
+	if(start > end || start == end){		//if start coordinates are > or == then end coordinates, flag is setted to 0 //FZ START == END E' LEGALE
 		flag = 0;
 	}
 	else{ flag = 1;}
@@ -53,7 +53,7 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 	TwoBit * tb;							//Creating a TwoBit* variable called tb
 	tb = twobit_open(Twobit_file);					//Opening 2Bit file with twobit_open function and saved in tb 
 	string line; 							//defining line string
-	int n_line = 0;							//line counter initialization
+	int n_line = 0;							//line counter initialization //FZ LA CONTA  DELLE LINEE DOVREBBE COMINCIARE DA 1 //
 
 	while(getline(in,line)){  					//reading input file line by line with getline function
 
@@ -97,7 +97,7 @@ void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 	file.close();
 }
 
-void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){
+void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){      
 
 	cout << "\n" << matrix_name << "\n" << tf <<  "\n";
 	for (int i = 0; i < matrix.size(); i++) {
@@ -250,7 +250,7 @@ bool is_file_exist(const char *fileName)		//Input files existence control
 	return infile.good();
 }
 
-void display_help() 						//Display help function
+void display_help() 						//Display help function //FZ AGGIORNARE E TENERE AGGIORNATO
 {
 	cerr << "\n --help: show this message" << endl;
 	cerr << "\n --BED -B <file_bed>: input bed file" << endl;
