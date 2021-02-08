@@ -72,11 +72,8 @@ void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 
 	ifstream file(file_jaspar);
 	string line, matrix_name, tf;
-#define ROW 4
-#define COL col
 	int col = 0;
 	vector<vector<double>> matrix;
-	char *p;
 	while(getline(file,line)){;
 
 		if(line[0]=='>'){
@@ -249,7 +246,7 @@ void command_line_parser(int argc, char **argv){
 
 bool is_file_exist(const char *fileName)		//Input files existence control
 {
-	std::ifstream infile(fileName);
+	ifstream infile(fileName);
 	return infile.good();
 }
 
