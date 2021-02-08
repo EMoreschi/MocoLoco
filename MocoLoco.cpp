@@ -18,9 +18,11 @@ int main(int argc, char *argv[]){
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//function to read BED and 2Bit files and create GEP objects vector
 	jaspar_PWM JASPAR_MTX(JASPAR_FILE);
 	JASPAR_MTX.stamp_debug_matrix(JASPAR_MTX);
-	stamp_debug(GEP);
-
-
+	
+	for(int i=0; i<GEP.size();i++){
+	
+	GEP[i].stamp_debug(GEP[i]);
+	}
 }
 
 void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -107,14 +109,10 @@ void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){
 	}
 }
 
-void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
+void genomic_position::stamp_debug(genomic_position){			//Debug function: Print the GEP vector to control the working flow
 
-	for (int i=0; i<GEP_print.size(); ++i){    			// from 0 to GEP vector length
-
-		cout << ">" << GEP_print[i].chr_coord <<":"<< GEP_print[i].start_coord << "-" << GEP_print[i].end_coord << "\n";	//print chr,start,end
-		cout << GEP_print[i].sequence<<"\n";											//print DNA sequence
-
-	}
+	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;
+	cout << sequence << endl;
 
 }
 

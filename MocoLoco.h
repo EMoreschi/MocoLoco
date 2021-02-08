@@ -13,17 +13,20 @@ using namespace std;
 
 class genomic_position { //creation public class of genomic_position type        
 
-	public:	//field definition
+	private:	//field definition
 
 		string chr_coord;
 		int start_coord;
 		int end_coord;
 		bool flag;
 		string sequence;
+
 		void centering_function(int start, int end, int p);
 		void read_line(string line);
 		void flag_control(int start, int end);
 		void extract_seq(TwoBit* tb, int n_line);
+
+	public:
 		genomic_position(){	//default constructor
 
 			chr_coord = "";
@@ -41,6 +44,7 @@ class genomic_position { //creation public class of genomic_position type
 			extract_seq(tb, n_line);				//extracting the sequence
 
 		}
+		void stamp_debug(genomic_position);
 
 };
 
@@ -63,7 +67,6 @@ class jaspar_PWM {
 
 void GEP_creation(const char*, const char*, vector<genomic_position>&);
 void command_line_parser(int, char **);
-void stamp_debug(vector<genomic_position>);
 void display_help();
 bool exist_test0(const char*);
 bool is_file_exist(const char *fileName);
