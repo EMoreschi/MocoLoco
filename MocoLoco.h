@@ -50,7 +50,7 @@ class genomic_position { //creation public class of genomic_position type
 			extract_seq(tb, n_line);				//extracting the sequence
 
 		}
-		void stamp_debug(genomic_position);
+		void print_debug_GEP(genomic_position);
 
 };
 
@@ -68,7 +68,7 @@ class jaspar_PWM {
 			read_JASPAR(file_jaspar);
 
 		}
-		void stamp_debug_matrix(jaspar_PWM);
+		void print_debug_matrix(jaspar_PWM);
 };
 
 void GEP_creation(const char*, const char*, vector<genomic_position>&);

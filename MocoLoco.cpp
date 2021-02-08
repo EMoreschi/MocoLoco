@@ -12,11 +12,11 @@ int main(int argc, char *argv[]){
 	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	jaspar_PWM JASPAR_MTX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
-	JASPAR_MTX.stamp_debug_matrix(JASPAR_MTX);			//Print the matrix for debugging
+	JASPAR_MTX.print_debug_matrix(JASPAR_MTX);			//Print the matrix for debugging
 	
 	for(int i=0; i<GEP.size();i++){
 	
-	GEP[i].stamp_debug(GEP[i]);					//Print GEP vector for debugging
+	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
 	}
 }
 
@@ -93,7 +93,7 @@ void jaspar_PWM::read_JASPAR(const char* file_jaspar){			//Function to read JASP
 	file.close();							//Closing file
 }
 
-void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){			//Debugging of matrix
+void jaspar_PWM::print_debug_matrix(jaspar_PWM){			//Debugging of matrix
 
 	cout << "\n" << matrix_name << "\n" << tf <<  "\n";		//Printing matrix_name and tf
 	for (int i = 0; i < matrix.size(); i++) {
@@ -103,7 +103,7 @@ void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){			//Debugging of matrix
 	}
 }
 
-void genomic_position::stamp_debug(genomic_position){			//Debug function: Print the GEP vector to control the working flow
+void genomic_position::print_debug_GEP(genomic_position){			//Debug function: Print the GEP vector to control the working flow
 
 	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;	//Printing chr, start and end coordinates
 	cout << sequence << endl;					//Printing sequence
