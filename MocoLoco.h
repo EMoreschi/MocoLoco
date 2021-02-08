@@ -24,7 +24,6 @@ class genomic_position { //creation public class of genomic_position type
 		void read_line(string line);
 		void flag_control(int start, int end);
 		void extract_seq(TwoBit* tb, int n_line);
-
 		genomic_position(){	//default constructor
 
 			chr_coord = "";
@@ -47,22 +46,24 @@ class genomic_position { //creation public class of genomic_position type
 
 class jaspar_PWM {
 
-	public: //field definition
+	private: //field definition
 
-		string name;
+		string matrix_name;
+		string tf;
 		vector<vector<double>> matrix;
 		void read_JASPAR(const char * file_jaspar);
-
+	public:
 		jaspar_PWM(const char* file_jaspar){
 
 			read_JASPAR(file_jaspar);
 
 		}
+		void stamp_debug_matrix(jaspar_PWM);
 };
 
 void GEP_creation(const char*, const char*, vector<genomic_position>&);
-void stamp_debug(vector<genomic_position>);
 void command_line_parser(int, char **);
+void stamp_debug(vector<genomic_position>);
 void display_help();
 bool exist_test0(const char*);
 bool is_file_exist(const char *fileName);

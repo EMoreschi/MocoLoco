@@ -17,6 +17,8 @@ int main(int argc, char *argv[]){
 	vector<genomic_position> GEP;
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//function to read BED and 2Bit files and create GEP objects vector
 	jaspar_PWM JASPAR_MTX(JASPAR_FILE);
+	JASPAR_MTX.stamp_debug_matrix(JASPAR_MTX);
+	stamp_debug(GEP);
 
 
 }
@@ -71,41 +73,39 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 void jaspar_PWM::read_JASPAR(const char* file_jaspar){
 
 	ifstream file(file_jaspar);
-	string line, matrix_name, tf;
-	int col = 0;
-	vector<vector<double>> matrix;
+	string line;
 	while(getline(file,line)){;
 
 		if(line[0]=='>'){
 			istringstream mystream(line);
 			mystream >> matrix_name >> tf;
-
-
 		}
 
 		else{
 			line.erase(0,line.find('[') +1);
-			line.erase(line.end()-1);
+			line.erase(line.find(']'));
 			vector<double> baseQ;
 			istringstream mystream(line);
-			for (double num; col = col +1, mystream >> num;){
+			for (double num; mystream >> num;){
 				baseQ.emplace_back(num);	
 			}
-			matrix.push_back(baseQ);
+			matrix.emplace_back(baseQ);
 
 		}
 
 	}
+	file.close();
+}
+
+void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){
+
 	cout << "\n" << matrix_name << "\n" << tf <<  "\n";
 	for (int i = 0; i < matrix.size(); i++) {
 		for (int j = 0; j < matrix[i].size(); j++)
 			cout << matrix[i][j] << " ";
 		cout << endl;
 	}
-	file.close();
 }
-
-
 
 void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
 
