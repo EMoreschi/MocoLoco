@@ -1,10 +1,5 @@
 #include "MocoLoco.h"
 
-const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading
-int parameter = 150; 		//default parameter 150
-const char * TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
-const char * JASPAR_FILE;
-
 int main(int argc, char *argv[]){
 
 
@@ -12,16 +7,16 @@ int main(int argc, char *argv[]){
 		display_help();
 	}
 
-	command_line_parser(argc, argv);					//parser function called to handle aguments
+	command_line_parser(argc, argv);					//Parser function called to handle aguments
 
-	vector<genomic_position> GEP;
-	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//function to read BED and 2Bit files and create GEP objects vector
-	jaspar_PWM JASPAR_MTX(JASPAR_FILE);
-	JASPAR_MTX.stamp_debug_matrix(JASPAR_MTX);
+	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
+	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
+	jaspar_PWM JASPAR_MTX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
+	JASPAR_MTX.stamp_debug_matrix(JASPAR_MTX);			//Print the matrix for debugging
 	
 	for(int i=0; i<GEP.size();i++){
 	
-	GEP[i].stamp_debug(GEP[i]);
+	GEP[i].stamp_debug(GEP[i]);					//Print GEP vector for debugging
 	}
 }
 
@@ -32,12 +27,11 @@ void genomic_position::read_line(string line){				//Read line function: it takes
 
 }
 
-void genomic_position::centering_function ( int start,  int end, int p){	//Centering function: in takes start and end coordinate and re-sets them -
+void genomic_position::centering_function ( int start,  int end, int p, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
 	//following an input parameter value (overhead added)
-	int overhead = 25;
-	int centro = (start + end)/2;						
-	start_coord = centro - p;			//no overhead for start
-	end_coord = centro + p +overhead;		//overhead for end
+	int center = (start + end)/2;						
+	start_coord = center - p;			//No overhead for start
+	end_coord = center + p +overhead;		//Overhead for end
 }
 
 
@@ -72,38 +66,38 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 	}
 }
 
-void jaspar_PWM::read_JASPAR(const char* file_jaspar){
+void jaspar_PWM::read_JASPAR(const char* file_jaspar){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
-	ifstream file(file_jaspar);
-	string line;
-	while(getline(file,line)){;
+	ifstream file(file_jaspar);					//opening JASPAR PWM file
+	string line;							
+	while(getline(file,line)){					//For each line of the file do:
 
-		if(line[0]=='>'){
-			istringstream mystream(line);
-			mystream >> matrix_name >> tf;
+		if(line[0]=='>'){					//If line start with ">"
+			istringstream mystream(line);			
+			mystream >> matrix_name >> tf;			//Extract the first two words and put into matrix_name string variable and tf string variable
 		}
 
-		else{
-			line.erase(0,line.find('[') +1);
-			line.erase(line.find(']'));
-			vector<double> baseQ;
-			istringstream mystream(line);
-			for (double num; mystream >> num;){
-				baseQ.emplace_back(num);	
+		else{							//Else, if line does not start with ">"
+			line.erase(0,line.find('[') +1);		//Take line charachters after "["...
+			line.erase(line.find(']'));			//...and line charachters before "]"
+			vector<double> baseQ;				//Initializing baseQ vector of double
+			istringstream mystream(line);			//Splitting the line in words
+			for (double num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
+				baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
 			}
-			matrix.emplace_back(baseQ);
+			matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
 
 		}
 
 	}
-	file.close();
+	file.close();							//Closing file
 }
 
-void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){
+void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){			//Debugging of matrix
 
-	cout << "\n" << matrix_name << "\n" << tf <<  "\n";
+	cout << "\n" << matrix_name << "\n" << tf <<  "\n";		//Printing matrix_name and tf
 	for (int i = 0; i < matrix.size(); i++) {
-		for (int j = 0; j < matrix[i].size(); j++)
+		for (int j = 0; j < matrix[i].size(); j++)		//Printing matrix
 			cout << matrix[i][j] << " ";
 		cout << endl;
 	}
@@ -111,8 +105,8 @@ void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){
 
 void genomic_position::stamp_debug(genomic_position){			//Debug function: Print the GEP vector to control the working flow
 
-	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;
-	cout << sequence << endl;
+	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;	//Printing chr, start and end coordinates
+	cout << sequence << endl;					//Printing sequence
 
 }
 
@@ -252,6 +246,9 @@ void display_help() 						//Display help function
 {
 	cerr << "\n --help: show this message" << endl;
 	cerr << "\n --BED -B <file_bed>: input bed file" << endl;
+	cerr << "\n --twobit -tb <file_twobit>: input twobit file" << endl;
+	cerr << "\n --j -J <JASPAR_file>: input JASPAR file" << endl;
+	cerr << "\n --param -p <parameter>: input parameter to select bases number to keep around the chip seq signal" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);

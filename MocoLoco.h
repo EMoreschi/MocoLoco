@@ -11,6 +11,12 @@
 
 using namespace std;
 
+const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading
+int parameter = 150; 		//default parameter 150
+const char * TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
+const char * JASPAR_FILE;
+const int overhead = 25;
+
 class genomic_position { //creation public class of genomic_position type        
 
 	private:	//field definition
@@ -21,7 +27,7 @@ class genomic_position { //creation public class of genomic_position type
 		bool flag;
 		string sequence;
 
-		void centering_function(int start, int end, int p);
+		void centering_function(int start, int end, int p, const int overhead);
 		void read_line(string line);
 		void flag_control(int start, int end);
 		void extract_seq(TwoBit* tb, int n_line);
@@ -40,7 +46,7 @@ class genomic_position { //creation public class of genomic_position type
 
 			read_line(line);					//reading bed line
 			flag_control(start_coord,end_coord);			//controlling coordinates
-			centering_function(start_coord, end_coord, p);		//centering the coordinates
+			centering_function(start_coord, end_coord, p, overhead);		//centering the coordinates
 			extract_seq(tb, n_line);				//extracting the sequence
 
 		}
