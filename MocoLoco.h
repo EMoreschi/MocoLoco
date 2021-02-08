@@ -54,21 +54,21 @@ class genomic_position { //creation public class of genomic_position type
 
 };
 
-class jaspar_PWM {
+class matrix_class {
 
 	private: //field definition
 
 		string matrix_name;
 		string tf;
 		vector<vector<double>> matrix;
-		void read_JASPAR(string file_jaspar);
+		void read_JASPAR(string JASPAR_FILE);
 	public:
-		jaspar_PWM(string file_jaspar){
+		matrix_class(string JASPAR_FILE){
 
-			read_JASPAR(file_jaspar);
+			read_JASPAR(JASPAR_FILE);
 
 		}
-		void print_debug_matrix(jaspar_PWM);
+		void print_debug_matrix(matrix_class);
 };
 
 void GEP_creation(string, string, vector<genomic_position>&);

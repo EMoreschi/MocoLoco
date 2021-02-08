@@ -11,8 +11,8 @@ int main(int argc, char *argv[]){
 
 	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
-	jaspar_PWM JASPAR_MTX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
-	JASPAR_MTX.print_debug_matrix(JASPAR_MTX);			//Print the matrix for debugging
+	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
+	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX);			//Print the matrix for debugging
 	
 	for(int i=0; i<GEP.size();i++){
 	
@@ -66,9 +66,9 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 	}
 }
 
-void jaspar_PWM::read_JASPAR(string file_jaspar){			//Function to read JASPAR PWM file, extract values and create a matrix class
+void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
-	ifstream file(file_jaspar);					//opening JASPAR PWM file
+	ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
 	string line;							
 	while(getline(file,line)){					//For each line of the file do:
 
@@ -93,7 +93,7 @@ void jaspar_PWM::read_JASPAR(string file_jaspar){			//Function to read JASPAR PW
 	file.close();							//Closing file
 }
 
-void jaspar_PWM::print_debug_matrix(jaspar_PWM){			//Debugging of matrix
+void matrix_class::print_debug_matrix(matrix_class){			//Debugging of matrix
 
 	cout << "\n" << matrix_name << "\n" << tf <<  "\n";		//Printing matrix_name and tf
 	for (int i = 0; i < matrix.size(); i++) {
