@@ -11,10 +11,10 @@
 
 using namespace std;
 
-const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading
+string BED_FILE; 		//initializing const char variarible for Bed_file input reading
 int parameter = 150; 		//default parameter 150
-const char * TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
-const char * JASPAR_FILE;
+string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
+string JASPAR_FILE;
 const int overhead = 25;
 
 class genomic_position { //creation public class of genomic_position type        
@@ -61,9 +61,9 @@ class jaspar_PWM {
 		string matrix_name;
 		string tf;
 		vector<vector<double>> matrix;
-		void read_JASPAR(const char * file_jaspar);
+		void read_JASPAR(string file_jaspar);
 	public:
-		jaspar_PWM(const char* file_jaspar){
+		jaspar_PWM(string file_jaspar){
 
 			read_JASPAR(file_jaspar);
 
@@ -71,8 +71,8 @@ class jaspar_PWM {
 		void print_debug_matrix(jaspar_PWM);
 };
 
-void GEP_creation(const char*, const char*, vector<genomic_position>&);
+void GEP_creation(string, string, vector<genomic_position>&);
 void command_line_parser(int, char **);
 void display_help();
-bool exist_test0(const char*);
-bool is_file_exist(const char *fileName);
+bool exist_test0(string);
+bool is_file_exist(string fileName);

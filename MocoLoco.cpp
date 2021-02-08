@@ -43,11 +43,11 @@ void genomic_position::flag_control( int start,  int end){ 	//Flag control funct
 	else{ flag = 1;}
 }
 
-void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_position> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
+void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
 	ifstream in(Bed_file); 						//Opening file in lecture mode
-	TwoBit * tb;							//Creating a TwoBit* variable called tb
-	tb = twobit_open(Twobit_file);					//Opening 2Bit file with twobit_open function and saved in tb 
+	TwoBit * tb;				//Creating a TwoBit* variable called tb
+	tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
 	string line; 							//defining line string
 	int n_line = 0;							//line counter initialization
 
@@ -66,7 +66,7 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 	}
 }
 
-void jaspar_PWM::read_JASPAR(const char* file_jaspar){			//Function to read JASPAR PWM file, extract values and create a matrix class
+void jaspar_PWM::read_JASPAR(string file_jaspar){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
 	ifstream file(file_jaspar);					//opening JASPAR PWM file
 	string line;							
@@ -113,8 +113,8 @@ void genomic_position::print_debug_GEP(genomic_position){			//Debug function: Pr
 void genomic_position::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
 	//extracted from Bed line
 	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		const char* chrom = chr_coord.c_str(); 				//Put in chrom the string of chr_coord
-		sequence = twobit_sequence(tb,chrom,start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
+		string chrom = chr_coord; 				//Put in chrom the string of chr_coord
+		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
 	}
 	else {		
 		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
@@ -236,7 +236,7 @@ void command_line_parser(int argc, char **argv){
 	}
 }
 
-bool is_file_exist(const char *fileName)		//Input files existence control
+bool is_file_exist(string fileName)		//Input files existence control
 {
 	ifstream infile(fileName);
 	return infile.good();
