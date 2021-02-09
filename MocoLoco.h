@@ -34,7 +34,7 @@ class genomic_position { //creation public class of genomic_position type
 		void flag_control(int, int);
 		void extract_seq(TwoBit*, int);
 
-	public:
+	public:				//field definition
 		genomic_position(){	//default constructor
 
 			chr_coord = "";

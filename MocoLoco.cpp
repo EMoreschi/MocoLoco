@@ -137,7 +137,6 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p)
 	
 		matrix_normalization(norm_matrix, 0);		//Recoursive calling of normalization function with p = 0 to differentiate it from the first normalization
 	}
-
 }
 
 void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Debugging of matrix
