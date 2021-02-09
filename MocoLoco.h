@@ -73,7 +73,7 @@ class matrix_class {
 			read_JASPAR(JASPAR_FILE);
 
 		}
-		void print_debug_matrix(matrix_class);
+		void print_debug_matrix(matrix_class, string matrix_type);
 };
 
 void GEP_creation(string, string, vector<genomic_position>&);

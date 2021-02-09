@@ -8,11 +8,14 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
+	string norm_matrix = "norm_matrix";
+	string matrix = "matrix"; 
 
 	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
-	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX);			//Print the matrix for debugging
+	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix);			//Print the matrix for debugging
+	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, norm_matrix);			//Print the matrix for debugging
 	//for(int i=0; i<GEP.size();i++){
 	
 	//GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
@@ -48,7 +51,7 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 	TwoBit * tb;				//Creating a TwoBit* variable called tb
 	tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
 	string line; 							//defining line string
-	int n_line = 0;							//line counter initialization
+	int n_line = 1;							//line counter initialization
 
 	while(getline(in,line)){  					//reading input file line by line with getline function
 
@@ -129,16 +132,6 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p)
 		}
 		
 	}
-	if(p == 0){
-	cout << "\n" << matrix_name << " " << tf << " NORMALIZED with pseudocount: \n";
-	}
-	else{cout << "\n" << matrix_name << " " << tf << " NORMALIZED: \n";}
-	for (int i = 0; i < norm_matrix.size(); i++) {
-		for (int j = 0; j < norm_matrix[i].size(); j++){		//Printing matrix
-			cout << norm_matrix[i][j] << " ";
-		}
-		cout << endl;
-	}
 
 	if(p != 0){
 	
@@ -147,16 +140,25 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p)
 
 }
 
-void matrix_class::print_debug_matrix(matrix_class){			//Debugging of matrix
-
+void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Debugging of matrix
 	cout << "\n" << matrix_name << " " << tf <<  "\n";		//Printing matrix_name and tf
-	for (int i = 0; i < matrix.size(); i++) {
-		for (int j = 0; j < matrix[i].size(); j++)		//Printing matrix
-			cout << matrix[i][j] << " ";
-		cout << endl;
+
+	if (matrix_type == "matrix"){ 
+		for (int i = 0; i < matrix.size(); i++) {
+			for (int j = 0; j < matrix[i].size(); j++)		//Printing matrix
+				cout << matrix[i][j] << " ";
+			cout << endl;
+		}
+	}
+	else if (matrix_type == "norm_matrix") {
+		for (int i = 0; i < norm_matrix.size(); i++) {
+			for (int j = 0; j < norm_matrix[i].size(); j++){		//Printing matrix
+				cout << norm_matrix[i][j] << " ";
+			}
+			cout << endl;
+		}
 	}
 }
-
 void genomic_position::print_debug_GEP(genomic_position){			//Debug function: Print the GEP vector to control the working flow
 
 	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;	//Printing chr, start and end coordinates
@@ -195,7 +197,7 @@ void command_line_parser(int argc, char **argv){
 		if(buf == "--BED" || buf == "-B"){
 
 			if(i < argc - 1){
-
+                                
 				BED_FILE = argv[++i];
 				control_bed = 1;
 
