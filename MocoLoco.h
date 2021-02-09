@@ -29,10 +29,10 @@ class genomic_position { //creation public class of genomic_position type
 		bool flag;
 		string sequence;
 
-		void centering_function(int start, int end, int p, const int overhead);
-		void read_line(string line);
-		void flag_control(int start, int end);
-		void extract_seq(TwoBit* tb, int n_line);
+		void centering_function(int, int, int, const int);
+		void read_line(string);
+		void flag_control(int, int);
+		void extract_seq(TwoBit*, int);
 
 	public:
 		genomic_position(){	//default constructor
@@ -65,7 +65,8 @@ class matrix_class {
 		vector<vector<double>> matrix;
 		vector<vector<double>> norm_matrix;
 
-		void read_JASPAR(string JASPAR_FILE);
+		void matrix_normalization(vector<vector<double>>, double);
+		void read_JASPAR(string);
 	public:
 		matrix_class(string JASPAR_FILE){
 
@@ -73,7 +74,6 @@ class matrix_class {
 
 		}
 		void print_debug_matrix(matrix_class);
-		void matrix_normalization(matrix_class);
 };
 
 void GEP_creation(string, string, vector<genomic_position>&);

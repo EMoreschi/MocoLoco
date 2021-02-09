@@ -17,7 +17,6 @@ int main(int argc, char *argv[]){
 	
 	//GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
 	//}
-	JASPAR_MATRIX.matrix_normalization(JASPAR_MATRIX);	
 }
 
 void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -90,10 +89,12 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 		}
 
 	}
-	file.close();							//Closing file
+	file.close();						//Closing file
+
+	matrix_normalization(matrix, 0.01);
 }
 
-void matrix_class::matrix_normalization(matrix_class){
+void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p){
 
 	vector<double> col_sum;
 	double sum = 0;
@@ -114,12 +115,24 @@ void matrix_class::matrix_normalization(matrix_class){
 		vector<double> baseQ;
 		for (int j = 0; j < matrix[i].size(); j++){
 			
+			if(p != 0){
 			norm = matrix[i][j]/col_sum[j];
-			baseQ.emplace_back(norm);
+			baseQ.emplace_back(norm + p);
+			}
+			else{
+			norm_matrix[i][j] = matrix[i][j]/col_sum[j];
+			}
 		}
-		norm_matrix.emplace_back(baseQ);
-	}
 
+		if(p != 0){
+			norm_matrix.emplace_back(baseQ);
+		}
+		
+	}
+	if(p == 0){
+	cout << "\n" << matrix_name << " " << tf << " NORMALIZED with pseudocount: \n";
+	}
+	else{cout << "\n" << matrix_name << " " << tf << " NORMALIZED: \n";}
 	for (int i = 0; i < norm_matrix.size(); i++) {
 		for (int j = 0; j < norm_matrix[i].size(); j++){		//Printing matrix
 			cout << norm_matrix[i][j] << " ";
@@ -127,12 +140,16 @@ void matrix_class::matrix_normalization(matrix_class){
 		cout << endl;
 	}
 
+	if(p != 0){
+	
+		matrix_normalization(norm_matrix, 0);
+	}
 
 }
 
 void matrix_class::print_debug_matrix(matrix_class){			//Debugging of matrix
 
-	cout << "\n" << matrix_name << "\n" << tf <<  "\n";		//Printing matrix_name and tf
+	cout << "\n" << matrix_name << " " << tf <<  "\n";		//Printing matrix_name and tf
 	for (int i = 0; i < matrix.size(); i++) {
 		for (int j = 0; j < matrix[i].size(); j++)		//Printing matrix
 			cout << matrix[i][j] << " ";
