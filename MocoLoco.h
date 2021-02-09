@@ -63,6 +63,8 @@ class matrix_class {
 		string matrix_name;
 		string tf;
 		vector<vector<double>> matrix;
+		vector<vector<double>> norm_matrix;
+
 		void read_JASPAR(string JASPAR_FILE);
 	public:
 		matrix_class(string JASPAR_FILE){
@@ -71,6 +73,7 @@ class matrix_class {
 
 		}
 		void print_debug_matrix(matrix_class);
+		void matrix_normalization(matrix_class);
 };
 
 void GEP_creation(string, string, vector<genomic_position>&);

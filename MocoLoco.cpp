@@ -13,11 +13,11 @@ int main(int argc, char *argv[]){
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX);			//Print the matrix for debugging
+	//for(int i=0; i<GEP.size();i++){
 	
-	for(int i=0; i<GEP.size();i++){
-	
-	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
-	}
+	//GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
+	//}
+	JASPAR_MATRIX.matrix_normalization(JASPAR_MATRIX);	
 }
 
 void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -91,6 +91,43 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 
 	}
 	file.close();							//Closing file
+}
+
+void matrix_class::matrix_normalization(matrix_class){
+
+	vector<double> col_sum;
+	double sum = 0;
+	double norm;
+
+	for (int i = 0; i < matrix[0].size(); i++) {
+		for (int j = 0; j < 4; j++){		//Printing matrix
+			
+			sum = sum + matrix[j][i];	
+		}
+
+	col_sum.emplace_back(sum);
+	sum = 0;
+	}
+	
+	for (int i = 0; i < matrix.size(); i++) {
+		
+		vector<double> baseQ;
+		for (int j = 0; j < matrix[i].size(); j++){
+			
+			norm = matrix[i][j]/col_sum[j];
+			baseQ.emplace_back(norm);
+		}
+		norm_matrix.emplace_back(baseQ);
+	}
+
+	for (int i = 0; i < norm_matrix.size(); i++) {
+		for (int j = 0; j < norm_matrix[i].size(); j++){		//Printing matrix
+			cout << norm_matrix[i][j] << " ";
+		}
+		cout << endl;
+	}
+
+
 }
 
 void matrix_class::print_debug_matrix(matrix_class){			//Debugging of matrix
