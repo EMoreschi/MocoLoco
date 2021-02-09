@@ -146,6 +146,11 @@ void command_line_parser(int argc, char **argv){
 				control_bed = 1;
 
 				bool bed_check = is_file_exist(BED_FILE);
+				bool dir = isDir(BED_FILE);
+				if(dir == 1){
+					cout << "ERROR: BED file inserted is a directory!\nPlease insert a BED file.\n!";
+					exit(EXIT_SUCCESS);
+				}
 				if(bed_check == 0){
 					cout << "File BED does not exist, please insert a BED file as input. \n";
 					cout << "FATAL ERROR \n";
@@ -173,6 +178,11 @@ void command_line_parser(int argc, char **argv){
 				JASPAR_FILE = argv[++i];
 
 				bool jaspar_check = is_file_exist(JASPAR_FILE);
+				bool dir = isDir(JASPAR_FILE);
+				if(dir == 1){
+					cout << "ERROR: JASPAR file inserted is a directory!\nPlease insert a JASPAR file.\n!";
+					exit(EXIT_SUCCESS);
+				}
 				if(jaspar_check == 0){
 					cout << "JASPAR matrix does not exist, please insert a JASPAR matrix as input. \n";
 					cout << "FATAL ERROR \n";
@@ -190,6 +200,11 @@ void command_line_parser(int argc, char **argv){
 				control_twobit = 1;
 
 				bool two_bit_check = is_file_exist(TWOBIT_FILE);
+				bool dir = isDir(TWOBIT_FILE);
+				if(dir == 1){
+					cout << "ERROR: TWOBIT file inserted is a directory!\nPlease insert a TWOBIT file.\n!";
+					exit(EXIT_SUCCESS);
+				}
 				if(two_bit_check == 0){
 					cout << "File 2bit does not exist, please insert a 2bit file as input. \n";
 					cout << "FATAL ERROR \n";
@@ -239,8 +254,25 @@ void command_line_parser(int argc, char **argv){
 bool is_file_exist(string fileName)		//Input files existence control
 {
 	ifstream infile(fileName);
-	return infile.good();
+	if(!infile)
+		return 0;
+	else{
+	return 1;
+	}
 }
+
+bool isDir(string filename){
+	
+	DIR *pDir;
+	bool exists = false;
+	pDir = opendir(filename.c_str());
+	if(pDir != 0){
+		exists = true;
+		(void)closedir(pDir);
+	}
+	return exists;
+}
+
 
 void display_help() 						//Display help function
 {

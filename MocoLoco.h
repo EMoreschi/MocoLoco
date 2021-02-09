@@ -2,7 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 #include <string>
+#include <dirent.h>
 #include <vector>
 #include <typeinfo> 
 #include <sstream>
@@ -76,3 +78,4 @@ void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(string);
 bool is_file_exist(string fileName);
+bool isDir(string);
