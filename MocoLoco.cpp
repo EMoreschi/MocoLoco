@@ -15,11 +15,11 @@ int main(int argc, char *argv[]){
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix);			//Print the matrix for debugging
-	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, norm_matrix);			//Print the matrix for debugging
-	//for(int i=0; i<GEP.size();i++){
+	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, norm_matrix);			//Print the nomalized matrix for debugging
+	for(int i=0; i<GEP.size();i++){
 	
-	//GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
-	//}
+	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
+	}
 }
 
 void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -94,56 +94,57 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 	}
 	file.close();						//Closing file
 
-	matrix_normalization(matrix, 0.01);
+	matrix_normalization(matrix, 0.01);			//Calling matrix normalization function
 }
 
-void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p){
+void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p){  
 
-	vector<double> col_sum;
-	double sum = 0;
-	double norm;
+	vector<double> col_sum;						//Vector of columns sum
+	double sum = 0;							//Sum initialized as 0
+	double norm;							//Norm variable initialized
 
-	for (int i = 0; i < matrix[0].size(); i++) {
-		for (int j = 0; j < 4; j++){		//Printing matrix
-			
-			sum = sum + matrix[j][i];	
+	for (int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
+		for (int j = 0; j < 4; j++){				//From 0 to 4 (line number)
+
+			sum = sum + matrix[j][i];			//Calculate the sum of columns
 		}
 
-	col_sum.emplace_back(sum);
-	sum = 0;
+	col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
+	sum = 0;						//Restore the sum to 0 for the next column
 	}
 	
-	for (int i = 0; i < matrix.size(); i++) {
+	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 		
-		vector<double> baseQ;
-		for (int j = 0; j < matrix[i].size(); j++){
+		vector<double> baseQ;				//baseQ vector to store the lines initialized
+		for (int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 			
-			if(p != 0){
-			norm = matrix[i][j]/col_sum[j];
-			baseQ.emplace_back(norm + p);
+			if(p != 0){				//If pseudocode is not 0 --> we are in the first normalization
+			norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
+			baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
 			}
-			else{
-			norm_matrix[i][j] = matrix[i][j]/col_sum[j];
+			else{						//Else, if p is 0, means that we are in the second normalization
+			norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
 			}
 		}
 
-		if(p != 0){
-			norm_matrix.emplace_back(baseQ);
+		if(p != 0){					//If we are in first normalization
+			norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
 		}
 		
 	}
 
-	if(p != 0){
+	if(p != 0){						//If we are in the first normalization
 	
-		matrix_normalization(norm_matrix, 0);
+		matrix_normalization(norm_matrix, 0);		//Recoursive calling of normalization function with p = 0 to differentiate it from the first normalization
 	}
 
 }
 
 void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Debugging of matrix
-	cout << "\n" << matrix_name << " " << tf <<  "\n";		//Printing matrix_name and tf
 
 	if (matrix_type == "matrix"){ 
+	cout << "\n" << matrix_name << " " << tf <<  ":\n";		//Printing matrix_name and tf
+
 		for (int i = 0; i < matrix.size(); i++) {
 			for (int j = 0; j < matrix[i].size(); j++)		//Printing matrix
 				cout << matrix[i][j] << " ";
@@ -151,14 +152,18 @@ void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Deb
 		}
 	}
 	else if (matrix_type == "norm_matrix") {
+	cout << "\n" << matrix_name << " " << tf <<  " NORMALIZED:\n";		//Printing matrix_name and tf
+
 		for (int i = 0; i < norm_matrix.size(); i++) {
-			for (int j = 0; j < norm_matrix[i].size(); j++){		//Printing matrix
+			for (int j = 0; j < norm_matrix[i].size(); j++){	//Printing normalized matrix
 				cout << norm_matrix[i][j] << " ";
 			}
 			cout << endl;
 		}
+		cout << endl;
 	}
 }
+
 void genomic_position::print_debug_GEP(genomic_position){			//Debug function: Print the GEP vector to control the working flow
 
 	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;	//Printing chr, start and end coordinates
