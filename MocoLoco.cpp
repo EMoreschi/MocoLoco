@@ -1,10 +1,5 @@
 #include "MocoLoco.h"
 
-const char * BED_FILE; 		//initializing const char variarible for Bed_file input reading //FZ BASTA STRINGHE C, VI BUCO IL PALLONE SE NE VEDO ANCOORA //
-int parameter = 150; 		//default parameter 150 //FZ MA NESSUN PARAMETRO VA CHIAMATO PARAMETRO :D PARAMETRO E' UN NOME GENERIICO. DARE UN NOME SENSATO. DOVREBBE ESSERE UNA VARIABILE DI CLASSE DI TIPO STATIC E NON UNA VARIABILE GLOBALE //
-const char * TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
-const char * JASPAR_FILE;
-
 int main(int argc, char *argv[]){
 
 
@@ -12,15 +7,19 @@ int main(int argc, char *argv[]){
 		display_help();
 	}
 
-	command_line_parser(argc, argv);					//parser function called to handle aguments
+	command_line_parser(argc, argv);					//Parser function called to handle aguments
+	string norm_matrix = "norm_matrix";
+	string matrix = "matrix"; 
 
-	vector<genomic_position> GEP;
-	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//function to read BED and 2Bit files and create GEP objects vector
-	jaspar_PWM JASPAR_MTX(JASPAR_FILE);
-	JASPAR_MTX.stamp_debug_matrix(JASPAR_MTX);
-	stamp_debug(GEP);
-
-
+	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
+	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
+	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
+	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix);			//Print the matrix for debugging
+	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, norm_matrix);			//Print the nomalized matrix for debugging
+	for(int i=0; i<GEP.size();i++){
+	
+	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
+	}
 }
 
 void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -30,12 +29,11 @@ void genomic_position::read_line(string line){				//Read line function: it takes
 
 }
 
-void genomic_position::centering_function ( int start,  int end, int p){	//Centering function: in takes start and end coordinate and re-set/s them - 
+void genomic_position::centering_function ( int start,  int end, int p, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
 	//following an input parameter value (overhead added)
-	int overhead = 25;    //FZ L'OVERHEAD DEVE ESSERE UNA COSTANTE STATIC  DI CLASSE 
-	int centro = (start + end)/2; //FZ EVITARE NOMI VARIABILI IN ITALIANO						
-	start_coord = centro - p;			//no overhead for start
-	end_coord = centro + p +overhead;		//overhead for end
+	int center = (start + end)/2;						
+	start_coord = center - p;			//No overhead for start
+	end_coord = center + p +overhead;		//Overhead for end
 }
 
 
@@ -47,13 +45,14 @@ void genomic_position::flag_control( int start,  int end){ 	//Flag control funct
 	else{ flag = 1;}
 }
 
-void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_position> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
+void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
 	ifstream in(Bed_file); 						//Opening file in lecture mode
-	TwoBit * tb;							//Creating a TwoBit* variable called tb
-	tb = twobit_open(Twobit_file);					//Opening 2Bit file with twobit_open function and saved in tb 
+	TwoBit * tb;				//Creating a TwoBit* variable called tb
+	tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
 	string line; 							//defining line string
-	int n_line = 0;							//line counter initialization //FZ LA CONTA  DELLE LINEE DOVREBBE COMINCIARE DA 1 //
+
+	int n_line = 1;							//line counter initialization
 
 	while(getline(in,line)){  					//reading input file line by line with getline function
 
@@ -70,59 +69,113 @@ void GEP_creation(const char* Bed_file, const char* Twobit_file, vector<genomic_
 	}
 }
 
-void jaspar_PWM::read_JASPAR(const char* file_jaspar){
+void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
-	ifstream file(file_jaspar);
-	string line;
-	while(getline(file,line)){;
+	ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
+	string line;							
+	while(getline(file,line)){					//For each line of the file do:
 
-		if(line[0]=='>'){
-			istringstream mystream(line);
-			mystream >> matrix_name >> tf;
+		if(line[0]=='>'){					//If line start with ">"
+			istringstream mystream(line);			
+			mystream >> matrix_name >> tf;			//Extract the first two words and put into matrix_name string variable and tf string variable
 		}
 
-		else{
-			line.erase(0,line.find('[') +1);
-			line.erase(line.find(']'));
-			vector<double> baseQ;
-			istringstream mystream(line);
-			for (double num; mystream >> num;){
-				baseQ.emplace_back(num);	
+		else{							//Else, if line does not start with ">"
+			line.erase(0,line.find('[') +1);		//Take line charachters after "["...
+			line.erase(line.find(']'));			//...and line charachters before "]"
+			vector<double> baseQ;				//Initializing baseQ vector of double
+			istringstream mystream(line);			//Splitting the line in words
+			for (double num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
+				baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
 			}
-			matrix.emplace_back(baseQ);
+			matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
 
 		}
 
 	}
-	file.close();
+	file.close();						//Closing file
+
+	matrix_normalization(matrix, 0.01);			//Calling matrix normalization function
 }
 
-void jaspar_PWM::stamp_debug_matrix(jaspar_PWM){      
+void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p){  
 
-	cout << "\n" << matrix_name << "\n" << tf <<  "\n";
-	for (int i = 0; i < matrix.size(); i++) {
-		for (int j = 0; j < matrix[i].size(); j++)
-			cout << matrix[i][j] << " ";
+	vector<double> col_sum;						//Vector of columns sum
+	double sum = 0;							//Sum initialized as 0
+	double norm;							//Norm variable initialized
+
+	for (int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
+		for (int j = 0; j < 4; j++){				//From 0 to 4 (line number)
+
+			sum = sum + matrix[j][i];			//Calculate the sum of columns
+		}
+
+	col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
+	sum = 0;						//Restore the sum to 0 for the next column
+	}
+	
+	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+		
+		vector<double> baseQ;				//baseQ vector to store the lines initialized
+		for (int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+			
+			if(p != 0){				//If pseudocode is not 0 --> we are in the first normalization
+			norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
+			baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
+			}
+			else{						//Else, if p is 0, means that we are in the second normalization
+			norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
+			}
+		}
+
+		if(p != 0){					//If we are in first normalization
+			norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
+		}
+		
+	}
+
+	if(p != 0){						//If we are in the first normalization
+	
+		matrix_normalization(norm_matrix, 0);		//Recoursive calling of normalization function with p = 0 to differentiate it from the first normalization
+	}
+}
+
+void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Debugging of matrix
+
+	if (matrix_type == "matrix"){ 
+	cout << "\n" << matrix_name << " " << tf <<  ":\n";		//Printing matrix_name and tf
+
+		for (int i = 0; i < matrix.size(); i++) {
+			for (int j = 0; j < matrix[i].size(); j++)		//Printing matrix
+				cout << matrix[i][j] << " ";
+			cout << endl;
+		}
+	}
+	else if (matrix_type == "norm_matrix") {
+	cout << "\n" << matrix_name << " " << tf <<  " NORMALIZED:\n";		//Printing matrix_name and tf
+
+		for (int i = 0; i < norm_matrix.size(); i++) {
+			for (int j = 0; j < norm_matrix[i].size(); j++){	//Printing normalized matrix
+				cout << norm_matrix[i][j] << " ";
+			}
+			cout << endl;
+		}
 		cout << endl;
 	}
 }
 
-void stamp_debug( vector<genomic_position> GEP_print){			//Debug function: Print the GEP vector to control the working flow
+void genomic_position::print_debug_GEP(genomic_position){			//Debug function: Print the GEP vector to control the working flow
 
-	for (int i=0; i<GEP_print.size(); ++i){    			// from 0 to GEP vector length
-
-		cout << ">" << GEP_print[i].chr_coord <<":"<< GEP_print[i].start_coord << "-" << GEP_print[i].end_coord << "\n";	//print chr,start,end
-		cout << GEP_print[i].sequence<<"\n";											//print DNA sequence
-
-	}
+	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;	//Printing chr, start and end coordinates
+	cout << sequence << endl;					//Printing sequence
 
 }
 
 void genomic_position::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
 	//extracted from Bed line
 	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		const char* chrom = chr_coord.c_str(); 				//Put in chrom the string of chr_coord
-		sequence = twobit_sequence(tb,chrom,start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
+		string chrom = chr_coord; 				//Put in chrom the string of chr_coord
+		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
 	}
 	else {		
 		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
@@ -149,11 +202,16 @@ void command_line_parser(int argc, char **argv){
 		if(buf == "--BED" || buf == "-B"){
 
 			if(i < argc - 1){
-
+                                
 				BED_FILE = argv[++i];
 				control_bed = 1;
 
 				bool bed_check = is_file_exist(BED_FILE);
+				bool dir = isDir(BED_FILE);
+				if(dir == 1){
+					cout << "ERROR: BED file inserted is a directory!\nPlease insert a BED file.\n!";
+					exit(EXIT_SUCCESS);
+				}
 				if(bed_check == 0){
 					cout << "File BED does not exist, please insert a BED file as input. \n";
 					cout << "FATAL ERROR \n";
@@ -181,6 +239,11 @@ void command_line_parser(int argc, char **argv){
 				JASPAR_FILE = argv[++i];
 
 				bool jaspar_check = is_file_exist(JASPAR_FILE);
+				bool dir = isDir(JASPAR_FILE);
+				if(dir == 1){
+					cout << "ERROR: JASPAR file inserted is a directory!\nPlease insert a JASPAR file.\n!";
+					exit(EXIT_SUCCESS);
+				}
 				if(jaspar_check == 0){
 					cout << "JASPAR matrix does not exist, please insert a JASPAR matrix as input. \n";
 					cout << "FATAL ERROR \n";
@@ -198,6 +261,11 @@ void command_line_parser(int argc, char **argv){
 				control_twobit = 1;
 
 				bool two_bit_check = is_file_exist(TWOBIT_FILE);
+				bool dir = isDir(TWOBIT_FILE);
+				if(dir == 1){
+					cout << "ERROR: TWOBIT file inserted is a directory!\nPlease insert a TWOBIT file.\n!";
+					exit(EXIT_SUCCESS);
+				}
 				if(two_bit_check == 0){
 					cout << "File 2bit does not exist, please insert a 2bit file as input. \n";
 					cout << "FATAL ERROR \n";
@@ -244,16 +312,36 @@ void command_line_parser(int argc, char **argv){
 	}
 }
 
-bool is_file_exist(const char *fileName)		//Input files existence control
+bool is_file_exist(string fileName)		//Input files existence control
 {
 	ifstream infile(fileName);
-	return infile.good();
+	if(!infile)
+		return 0;
+	else{
+	return 1;
+	}
 }
 
-void display_help() 						//Display help function //FZ AGGIORNARE E TENERE AGGIORNATO
+bool isDir(string filename){
+	
+	DIR *pDir;
+	bool exists = false;
+	pDir = opendir(filename.c_str());
+	if(pDir != 0){
+		exists = true;
+		(void)closedir(pDir);
+	}
+	return exists;
+}
+
+
+void display_help() 						//Display help function
 {
 	cerr << "\n --help: show this message" << endl;
 	cerr << "\n --BED -B <file_bed>: input bed file" << endl;
+	cerr << "\n --twobit -tb <file_twobit>: input twobit file" << endl;
+	cerr << "\n --j -J <JASPAR_file>: input JASPAR file" << endl;
+	cerr << "\n --param -p <parameter>: input parameter to select bases number to keep around the chip seq signal" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
