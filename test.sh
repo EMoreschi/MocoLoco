@@ -2,11 +2,6 @@
 
 g++ -o test MocoLoco.cpp;
 
-if [[ $2 == "clone" ]]; then
-
-	git clone https://github.com/EMoreschi/MocoLoco/tree/Test;
-fi
-
 Jaspar="JASPAR_MA/MA0002.2.jaspar JASPAR_MA/MA0042.2.jaspar JASPAR_MA/MA0071.1.jaspar JASPAR_MA/MA0093.3.jaspar"
 Twobit="hg38.2bit hg19.2bit"
 BED="baitedreagionsb38.bed nfy_hg19.bed"
