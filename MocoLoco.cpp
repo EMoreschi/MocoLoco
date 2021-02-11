@@ -39,7 +39,7 @@ void genomic_position::centering_function ( int start,  int end, int p, const in
 
 void genomic_position::flag_control( int start,  int end){ 	//Flag control function: start coordinates must be < then end coordinates
 
-	if(start > end || start == end){		//if start coordinates are > or == then end coordinates, flag is setted to 0 //FZ START == END E' LEGALE
+	if(start > end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
 		flag = 0;
 	}
 	else{ flag = 1;}
