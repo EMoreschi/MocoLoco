@@ -51,6 +51,7 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 	TwoBit * tb;				//Creating a TwoBit* variable called tb
 	tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
 	string line; 							//defining line string
+
 	int n_line = 1;							//line counter initialization
 
 	while(getline(in,line)){  					//reading input file line by line with getline function
