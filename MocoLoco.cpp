@@ -98,6 +98,7 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 	file.close();						//Closing file
 
 	matrix_normalization(matrix, 0.01);			//Calling matrix normalization function
+        inverse_matrix(norm_matrix);
 }
 
 void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p){  
@@ -139,9 +140,6 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p)
 	if(p != 0){						//If we are in the first normalization
 
 		matrix_normalization(norm_matrix, 0);		//Recoursive calling of normalization function with p = 0 to differentiate it from the first normalization
-	}
-	else{
-		inverse_matrix(norm_matrix);
 	}
 }
 
