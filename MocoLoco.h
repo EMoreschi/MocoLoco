@@ -70,6 +70,8 @@ class matrix_class {
 
 		void matrix_normalization(vector<vector<double>>, double);
 		void read_JASPAR(string);
+		void inverse_matrix(vector<vector<double>>);
+
 	public:
 		matrix_class(string JASPAR_FILE){
 
