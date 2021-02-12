@@ -64,9 +64,12 @@ class matrix_class {
 		string tf;
 		vector<vector<double>> matrix;
 		vector<vector<double>> norm_matrix;
+		vector<vector<double>> inverse_complement_matrix;
+		
 
 		void matrix_normalization(vector<vector<double>>, double);
 		void read_JASPAR(string);
+		void make_inverse_complement(vector<vector<double>>);
 	public:
 		matrix_class(string JASPAR_FILE){
 

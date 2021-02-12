@@ -8,18 +8,20 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	string norm_matrix = "norm_matrix";
 	string matrix = "matrix"; 
+	string norm_matrix = "norm_matrix";
+	string inverse_complement_matrix = "inverse_complement_matrix";
 
 	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix);			//Print the matrix for debugging
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, norm_matrix);			//Print the nomalized matrix for debugging
-	for(int i=0; i<GEP.size();i++){
+	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, inverse_complement_matrix);			//Print the nomalized matrix for debugging
+	//for(int i=0; i<GEP.size();i++){
 	
-	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
-	}
+	//GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
+	//}
 }
 
 void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -138,6 +140,23 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p)
 	
 		matrix_normalization(norm_matrix, 0);		//Recoursive calling of normalization function with p = 0 to differentiate it from the first normalization
 	}
+	else{
+	make_inverse_complement(norm_matrix);
+	}
+}
+
+void matrix_class::make_inverse_complement(vector<vector<double>> norm_matrix){
+	
+	for(int i = 4; i > 0; i--){
+		vector<double> baseQ;
+		for(int j = norm_matrix[0].size(); j > 0; j--){
+			
+			baseQ.emplace_back(norm_matrix[i-1][j-1]);
+		}
+
+		inverse_complement_matrix.emplace_back(baseQ);
+
+	}
 }
 
 void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Debugging of matrix
@@ -157,6 +176,17 @@ void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Deb
 		for (int i = 0; i < norm_matrix.size(); i++) {
 			for (int j = 0; j < norm_matrix[i].size(); j++){	//Printing normalized matrix
 				cout << norm_matrix[i][j] << " ";
+			}
+			cout << endl;
+		}
+		cout << endl;
+	}
+	else if (matrix_type == "inverse_complement_matrix") {
+	cout << "\n" << matrix_name << " " << tf <<  " INVERSE COMPLEMENT:\n";		//Printing matrix_name and tf
+
+		for (int i = 0; i < inverse_complement_matrix.size(); i++) {
+			for (int j = 0; j < inverse_complement_matrix[i].size(); j++){	//Printing normalized matrix
+				cout << inverse_complement_matrix[i][j] << " ";
 			}
 			cout << endl;
 		}

@@ -2,9 +2,9 @@
 
 g++ -o test MocoLoco.cpp;
 
-Jaspar="JASPAR_MA/MA0002.2.jaspar JASPAR_MA/MA0042.2.jaspar JASPAR_MA/MA0071.1.jaspar JASPAR_MA/MA0093.3.jaspar"
+Jaspar="Jaspar_2020/MA0002.2.jaspar Jaspar_2020/MA0042.2.jaspar Jaspar_2020/MA0071.1.jaspar Jaspar_2020/MA0093.3.jaspar"
 Twobit="hg38.2bit hg19.2bit"
-BED="baitedreagionsb38.bed nfy_hg19.bed"
+BED="Test_Bed/baitedregionsb38.bed Test_Bed/nfy_k562_hg19.bed"
 
 for a in $BED 
 do
