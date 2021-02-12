@@ -127,38 +127,31 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p)
 			}
 			else{						//Else, if p is 0, means that we are in the second normalization
 			norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
+			baseQ.emplace_back(matrix[i][j]/col_sum[j]);
 			}
 		}
 
 		if(p != 0){					//If we are in first normalization
 			norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
 		}
+		else{
+		reverse(baseQ.begin(), baseQ.end());
+		inverse_complement_matrix.emplace_back(baseQ);
+		}
 		
 	}
+
+	reverse(inverse_complement_matrix.begin(), inverse_complement_matrix.end());
 
 	if(p != 0){						//If we are in the first normalization
 	
 		matrix_normalization(norm_matrix, 0);		//Recoursive calling of normalization function with p = 0 to differentiate it from the first normalization
 	}
 	else{
-	make_inverse_complement(norm_matrix);
 	}
 }
 
-void matrix_class::make_inverse_complement(vector<vector<double>> norm_matrix){
 	
-	for(int i = 4; i > 0; i--){
-		vector<double> baseQ;
-		for(int j = norm_matrix[0].size(); j > 0; j--){
-			
-			baseQ.emplace_back(norm_matrix[i-1][j-1]);
-		}
-
-		inverse_complement_matrix.emplace_back(baseQ);
-
-	}
-}
-
 void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Debugging of matrix
 
 	if (matrix_type == "matrix"){ 

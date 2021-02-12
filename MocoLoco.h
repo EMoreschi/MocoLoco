@@ -6,6 +6,7 @@
 #include <string>
 #include <dirent.h>
 #include <vector>
+#include <algorithm>
 #include <typeinfo> 
 #include <sstream>
 #include "./TwoBit/twobit.h"
@@ -69,7 +70,6 @@ class matrix_class {
 
 		void matrix_normalization(vector<vector<double>>, double);
 		void read_JASPAR(string);
-		void make_inverse_complement(vector<vector<double>>);
 	public:
 		matrix_class(string JASPAR_FILE){
 
