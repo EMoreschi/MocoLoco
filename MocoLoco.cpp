@@ -96,9 +96,6 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 
 	}
 	file.close();						//Closing file
-
-	matrix_normalization(matrix, 0.01);			//Calling matrix normalization function
-        inverse_matrix(norm_matrix);
 }
 
 void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p){  

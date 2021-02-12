@@ -76,6 +76,8 @@ class matrix_class {
 		matrix_class(string JASPAR_FILE){
 
 			read_JASPAR(JASPAR_FILE);
+			matrix_normalization(matrix, 0.01);			//Calling matrix normalization function
+			inverse_matrix(norm_matrix);
 
 		}
 		void print_debug_matrix(matrix_class, string matrix_type);
