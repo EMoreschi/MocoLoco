@@ -76,7 +76,7 @@ class matrix_class {
 		matrix_class(string JASPAR_FILE){
 
 			read_JASPAR(JASPAR_FILE);
-			matrix_normalization(matrix, 0.01);			//Calling matrix normalization function
+			matrix_normalization(matrix, 0.01);			//Calling matrix normalization function //FZ Mai hardcodare valori, utilizzare sempre costanti
 			inverse_matrix(norm_matrix);
 
 		}
