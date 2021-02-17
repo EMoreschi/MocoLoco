@@ -5,6 +5,8 @@
 #include <cassert>
 #include <string>
 #include <dirent.h>
+#include <cmath>
+#include <valarray>
 #include <vector>
 #include <algorithm>
 #include <typeinfo> 
@@ -66,11 +68,17 @@ class matrix_class {
 		vector<vector<double>> matrix;
 		vector<vector<double>> norm_matrix;
 		vector<vector<double>> inverse_complement_matrix;
-		
+		vector<vector<double>> matrix_log;
+		vector<double> local_mins;	
+		vector<double> local_maxes;
+		double global_min;
+		double global_max;	
 
 		void matrix_normalization(vector<vector<double>>, double);
 		void read_JASPAR(string);
 		void inverse_matrix(vector<vector<double>>);
+		void find_minmax(vector<vector<double>>);
+		
 
 	public:
 		matrix_class(string JASPAR_FILE){
@@ -78,7 +86,7 @@ class matrix_class {
 			read_JASPAR(JASPAR_FILE);
 			matrix_normalization(matrix, 0.01);			//Calling matrix normalization function
 			inverse_matrix(norm_matrix);
-
+			find_minmax(matrix_log);		
 		}
 		void print_debug_matrix(matrix_class, string matrix_type);
 };

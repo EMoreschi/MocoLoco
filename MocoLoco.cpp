@@ -11,6 +11,7 @@ int main(int argc, char *argv[]){
 	string matrix = "matrix"; 
 	string norm_matrix = "norm_matrix";
 	string inverse_complement_matrix = "inverse_complement_matrix";
+	string matrix_log = "matrix_log";
 
 	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
@@ -18,6 +19,7 @@ int main(int argc, char *argv[]){
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix);			//Print the matrix for debugging
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, norm_matrix);			//Print the nomalized matrix for debugging
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, inverse_complement_matrix);			//Print the nomalized matrix for debugging
+	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix_log);			//Print the nomalized matrix for debugging
 	//for(int i=0; i<GEP.size();i++){
 
 	//GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
@@ -138,8 +140,21 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p)
 
 		matrix_normalization(norm_matrix, 0);		//Recoursive calling of normalization function with p = 0 to differentiate it from the first normalization
 	}
-}
+	
+	else{
+		for(int i=0; i < norm_matrix.size(); i++){
+			vector<double> baseQ;
+			double value_log;
 
+			for(int j=0; j < norm_matrix[i].size(); j++){
+			
+				value_log = log(norm_matrix[i][j]);
+				baseQ.emplace_back(value_log);
+			}
+			matrix_log.emplace_back(baseQ);
+		}
+	}
+}
 void matrix_class::inverse_matrix(vector<vector<double>> matrix){
 
 	inverse_complement_matrix = norm_matrix;
@@ -150,6 +165,35 @@ void matrix_class::inverse_matrix(vector<vector<double>> matrix){
 	}
 
 }
+
+void matrix_class::find_minmax(vector<vector<double>> matrix){
+
+	double min = 100;
+	double max = -100;
+	global_min = 0;
+	global_max = 0;
+
+	for(int i=0; i < matrix[0].size(); i++){
+		for(int j=0; j < matrix.size(); j++){
+			
+			if(matrix[j][i] < min){
+
+				min = matrix[j][i];
+			}
+
+			if(matrix[j][i] > max){
+			
+				max = matrix[j][i];
+			}
+		}
+		local_mins.emplace_back(min);
+		local_maxes.emplace_back(max);
+		global_min = global_min + min;
+		global_max = global_max + max;
+	}
+
+}	
+
 
 void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Debugging of matrix
 
@@ -184,7 +228,35 @@ void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Deb
 		}
 		cout << endl;
 	}
+	
+	else if (matrix_type == "matrix_log") {
+		cout << "\n" << matrix_name << " " << tf <<  " LOG MATRIX:\n";		//Printing matrix_name and tf
+
+		for (int i = 0; i < matrix_log.size(); i++) {
+			for (int j = 0; j < matrix_log[i].size(); j++){	//Printing normalized matrix
+				cout << matrix_log[i][j] << " ";
+			}
+			cout << endl;
+		}
+		cout << endl;
+	
+		for(int i=0; i < local_mins.size(); i++){
+
+		cout << local_mins[i] << " ";
+	}
+	cout << endl;
+	
+	for(int i=0; i < local_maxes.size(); i++){
+
+		cout  << local_maxes[i] << " ";
+	}
+	cout << endl;
+
+	cout << "The global min is: " << global_min << endl;
+	cout << "The global max is: " << global_max << endl;
+	}
 }
+
 
 void genomic_position::print_debug_GEP(genomic_position){			//Debug function: Print the GEP vector to control the working flow
 

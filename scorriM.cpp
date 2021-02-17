@@ -2,8 +2,13 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 #include <string>
+#include <dirent.h>
+#include <cmath>
+#include <valarray>
 #include <vector>
+#include <algorithm>
 #include <typeinfo> 
 #include <sstream>
 
