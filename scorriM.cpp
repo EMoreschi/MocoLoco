@@ -9,16 +9,19 @@
 
 using namespace std;
 
-void scorrimento(int mat[4][4], char seq[20], int p, int length, vector<int>&);
+void scorrimento(vector<vector<int>> mat, string seq, int p, int length, vector<int>&);
 
 int main(){
 	
 	vector<int> oligo;
-	int matrix [4][4] = {3,1,4,0,1,3,8,2,0,3,6,1,2,2,7,1};
-	char seq [20] = {'A','T','A','G','T','C','C','A','C','G','A','T','C','A','C','T','G','G','G','A'};
+//	int matrix [4][4] = {3,1,4,0,1,3,8,2,0,3,6,1,2,2,7,1};
+	vector<vector<int>> matrix = {{3,1,4,0},{1,3,8,2},{0,3,6,1},{2,2,7,1}};
+	string seq = "ATAGTCCACGATCACTGGGA";
 	int p = 0;
 	int l = 16;
 	int end = 4;
+
+	
 
 	scorrimento(matrix, seq, p, l, oligo);
 
@@ -27,11 +30,11 @@ int main(){
 	}
 }
 
-void scorrimento(int mat[4][4], char seq[20], int p, int l, vector<int> &oligo){
+void scorrimento(vector<vector<int>> mat, string seq, int p, int l, vector<int> &oligo){
 		
 	int sum_oligo = 0;
 	
-	if(p <= l){
+	if(p <= seq.size() -4 ) {
 
 	for(int i=0; i<4; i++){
 
