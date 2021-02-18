@@ -57,6 +57,7 @@ class genomic_position { //creation public class of genomic_position type
 
 		}
 		void print_debug_GEP(genomic_position);
+		string return_sequence(genomic_position);
 
 };
 
@@ -90,6 +91,7 @@ class matrix_class {
 			find_minmax(matrix_log);		
 		}
 		void print_debug_matrix(matrix_class, string matrix_type);
+                void scorrimento(string seq, int p, int length, vector<double>&);
 };
 
 void GEP_creation(string, string, vector<genomic_position>&);

@@ -8,11 +8,16 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
+	string test;
+	int p = 0;
+	int l = 16;
+	int end = 4;
+	vector<double> oligo;
 	string matrix = "matrix"; 
 	string norm_matrix = "norm_matrix";
 	string inverse_complement_matrix = "inverse_complement_matrix";
 	string matrix_log = "matrix_log";
-
+        genomic_position obj;
 	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
@@ -20,10 +25,26 @@ int main(int argc, char *argv[]){
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, norm_matrix);			//Print the nomalized matrix for debugging
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, inverse_complement_matrix);			//Print the nomalized matrix for debugging
 	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix_log);			//Print the nomalized matrix for debugging
-	//for(int i=0; i<GEP.size();i++){
 
-	//GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
-	//}
+//	for(int i=0; i<GEP.size();i++){
+//
+//         test = GEP[i].return_sequence(GEP[i]);					//Print GEP vector for debugging
+//	 JASPAR_MATRIX.scorrimento(test, p, l, oligo);
+//    
+//	}	
+//	JASPAR_MATRIX.scorrimento(test, p, l, oligo); 
+         test = GEP[1].return_sequence(GEP[1]);					//Print GEP vector for debugging
+	 cout << test << "\n";
+	 JASPAR_MATRIX.scorrimento(test, p, l, oligo);
+
+
+        for(int i=0; i<oligo.size(); i++){
+ 	cout << oligo[i] << "\n";
+ 	}
+//	for(int i=0; i<GEP.size();i++){
+
+//	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
+//	}
 }
 
 void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -71,6 +92,49 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 		n_line = n_line + 1;					//pass to next line 
 
 	}
+}
+
+void matrix_class::scorrimento(string seq, int p, int l, vector<double> &oligo){
+		
+	double sum_oligo = 0;
+	
+	if(p <= seq.size() - matrix_log[0].size() ) {
+
+	for(int i=0; i< matrix_log[0].size(); i++){
+
+			switch(seq[i+p]){
+
+				case 'A':
+				       
+					sum_oligo = sum_oligo + matrix_log[0][i];
+					break;
+
+				case 'C':
+				       
+					sum_oligo = sum_oligo + matrix_log[1][i];
+					break;
+
+				case 'G':
+				       
+					sum_oligo = sum_oligo + matrix_log[2][i];
+					break;
+
+				case 'T':
+				       
+					sum_oligo = sum_oligo + matrix_log[3][i];
+					break;
+
+		}
+	}
+	
+	oligo.emplace_back(sum_oligo);
+	scorrimento(seq, p+1, l, oligo);
+	}
+
+}
+
+string genomic_position::return_sequence(genomic_position){ 
+       return sequence;
 }
 
 void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
