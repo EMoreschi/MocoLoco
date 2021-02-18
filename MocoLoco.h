@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <typeinfo> 
 #include <sstream>
+#include <numeric>
 #include "./TwoBit/twobit.h"
 #include "./TwoBit/twobit.c"
 

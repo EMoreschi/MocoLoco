@@ -168,29 +168,22 @@ void matrix_class::inverse_matrix(vector<vector<double>> matrix){
 
 void matrix_class::find_minmax(vector<vector<double>> matrix){
 
-	double min = 100;
-	double max = -100;
-	global_min = 0;
-	global_max = 0;
 
 	for(int i=0; i < matrix[0].size(); i++){
+		double min;
+		double max;
+		vector<double> colum;		   	
 		for(int j=0; j < matrix.size(); j++){
-			
-			if(matrix[j][i] < min){
 
-				min = matrix[j][i];
-			}
+			colum.emplace_back(matrix[j][i]);
 
-			if(matrix[j][i] > max){
-			
-				max = matrix[j][i];
-			}
+
 		}
-		local_mins.emplace_back(min);
-		local_maxes.emplace_back(max);
-		global_min = global_min + min;
-		global_max = global_max + max;
+		local_mins.emplace_back(*min_element(colum.begin(),colum.end()));
+		local_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
 	}
+	global_min = accumulate(local_mins.begin(), local_mins.end(), 0.0);
+	global_max = accumulate(local_maxes.begin(), local_maxes.end(), 0.0);
 
 }	
 
