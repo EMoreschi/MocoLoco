@@ -169,11 +169,10 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 	file.close();						//Closing file
 }
 
-void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p){  
+void matrix_class::find_col_sum(vector<vector<double>> matrix){
 
 	vector<double> col_sum;						//Vector of columns sum
 	double sum = 0;							//Sum initialized as 0
-	double norm;							//Norm variable initialized
 
 	for (int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
 		for (int j = 0; j < 4; j++){				//From 0 to 4 (line number)
@@ -184,46 +183,53 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p)
 		col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
 		sum = 0;						//Restore the sum to 0 for the next column
 	}
+}
+
+void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p, vector<double> col_sum){  
+
+	double norm;							//Norm variable initialized
 
 	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
 		vector<double> baseQ;				//baseQ vector to store the lines initialized
 		for (int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
-			if(p != 0){				//If pseudocode is not 0 --> we are in the first normalization
 				norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
 				baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
-			}
-			else{						//Else, if p is 0, means that we are in the second normalization
-				norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
-			}
 		}
 
-		if(p != 0){					//If we are in first normalization
 			norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
-		}
-
 	}
+}
 
-	if(p != 0){						//If we are in the first normalization
+void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, vector<double> col_sum){
 
-		matrix_normalization(norm_matrix, 0);		//Recoursive calling of normalization function with p = 0 to differentiate it from the first normalization
-	}
-	
-	else{
-		for(int i=0; i < norm_matrix.size(); i++){
-			vector<double> baseQ;
-			double value_log;
+	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
-			for(int j=0; j < norm_matrix[i].size(); j++){
-			
-				value_log = log(norm_matrix[i][j]);
-				baseQ.emplace_back(value_log);
-			}
-			matrix_log.emplace_back(baseQ);
+		vector<double> baseQ;				//baseQ vector to store the lines initialized
+		for (int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+
+				norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
 		}
 	}
 }
+
+void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
+	
+	for(int i=0; i < matrix.size(); i++){
+		vector<double> baseQ;
+		double value_log;
+
+		for(int j=0; j < norm_matrix[i].size(); j++){
+			
+			value_log = log(norm_matrix[i][j]);
+			baseQ.emplace_back(value_log);
+		}
+		matrix_log.emplace_back(baseQ);
+	}
+}
+	
+
 void matrix_class::inverse_matrix(vector<vector<double>> matrix){
 
 	inverse_complement_matrix = norm_matrix;
@@ -284,6 +290,7 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 		for(int i=0; i < local_maxes.size(); i++){
 			
 			cout  << local_maxes[i] << " ";
+			cout  << local_mins[i] << " ";
 		}
 		
 		cout << endl;

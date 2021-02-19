@@ -22,6 +22,7 @@ int parameter = 150; 		//default parameter 150
 string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 string JASPAR_FILE;
 const int overhead = 25;
+const double pseudoc = 0.01;
 
 class genomic_position { //creation public class of genomic_position type        
 
@@ -74,19 +75,29 @@ class matrix_class {
 		vector<double> local_mins;	
 		vector<double> local_maxes;
 		double global_min;
-		double global_max;	
+		double global_max;
+		vector<double> col_sum;		
 
-		void matrix_normalization(vector<vector<double>>, double);
+
+		void matrix_normalization(vector<vector<double>>, double, vector<double> col_sum);
+		void matrix_normalization_pseudoc(vector<vector<double>>, vector<double>);
+		void matrix_logarithmic(vector<vector<double>>);
 		void read_JASPAR(string);
 		void inverse_matrix(vector<vector<double>>);
 		void find_minmax(vector<vector<double>>);
+		void find_col_sum(vector<vector<double>>);
+
 		
 
 	public:
 		matrix_class(string JASPAR_FILE){
 
 			read_JASPAR(JASPAR_FILE);
-			matrix_normalization(matrix, 0.01);			//Calling matrix normalization function
+			find_col_sum(matrix);
+			matrix_normalization(matrix, pseudoc, col_sum);			//Calling matrix normalization function
+			find_col_sum(norm_matrix);
+			matrix_normalization_pseudoc(norm_matrix, col_sum);
+			matrix_logarithmic(norm_matrix);
 			inverse_matrix(norm_matrix);
 			find_minmax(matrix_log);		
 		}
