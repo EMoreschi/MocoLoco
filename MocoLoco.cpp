@@ -13,18 +13,23 @@ int main(int argc, char *argv[]){
 	int l = 16;
 	int end = 4;
 	vector<double> oligo;
-	string matrix = "matrix"; 
-	string norm_matrix = "norm_matrix";
-	string inverse_complement_matrix = "inverse_complement_matrix";
-	string matrix_log = "matrix_log";
         genomic_position obj;
 	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
-	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix);			//Print the matrix for debugging
-	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, norm_matrix);			//Print the nomalized matrix for debugging
-	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, inverse_complement_matrix);			//Print the nomalized matrix for debugging
-	JASPAR_MATRIX.print_debug_matrix(JASPAR_MATRIX, matrix_log);			//Print the nomalized matrix for debugging
+	
+	vector<vector<double>> matrix;
+	matrix = JASPAR_MATRIX.return_matrix(1);
+	JASPAR_MATRIX.print_debug_matrix(matrix, " ");
+
+	matrix = JASPAR_MATRIX.return_norm_matrix(1);
+	JASPAR_MATRIX.print_debug_matrix(matrix, " NORMALIZED");
+
+	matrix = JASPAR_MATRIX.return_inverse_matrix(1);
+	JASPAR_MATRIX.print_debug_matrix(matrix, " INVERSE COMPLEMENT");
+	//Print the matrix for debugging
+	matrix = JASPAR_MATRIX.return_log_matrix(1);
+	JASPAR_MATRIX.print_debug_matrix(matrix, " LOGARITHMIC");
 
 //	for(int i=0; i<GEP.size();i++){
 //
@@ -33,14 +38,14 @@ int main(int argc, char *argv[]){
 //    
 //	}	
 //	JASPAR_MATRIX.scorrimento(test, p, l, oligo); 
-         test = GEP[1].return_sequence(GEP[1]);					//Print GEP vector for debugging
-	 cout << test << "\n";
-	 JASPAR_MATRIX.scorrimento(test, p, l, oligo);
+//        test = GEP[1].return_sequence(GEP[1]);					//Print GEP vector for debugging
+//	 cout << test << "\n";
+//	 JASPAR_MATRIX.scorrimento(test, p, l, oligo);
 
 
-        for(int i=0; i<oligo.size(); i++){
- 	cout << oligo[i] << "\n";
- 	}
+//        for(int i=0; i<oligo.size(); i++){
+//	cout << oligo[i] << "\n";
+// 	}
 //	for(int i=0; i<GEP.size();i++){
 
 //	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
@@ -245,66 +250,45 @@ void matrix_class::find_minmax(vector<vector<double>> matrix){
 
 }	
 
+vector<vector<double>> matrix_class::return_matrix(int i){
 
-void matrix_class::print_debug_matrix(matrix_class, string matrix_type){			//Debugging of matrix
+	return matrix;
+}
+vector<vector<double>> matrix_class::return_norm_matrix(int i){
 
-	if (matrix_type == "matrix"){ 
-		cout << "\n" << matrix_name << " " << tf <<  ":\n";		//Printing matrix_name and tf
+	return norm_matrix;
+}
+vector<vector<double>> matrix_class::return_inverse_matrix(int i){
 
-		for (int i = 0; i < matrix.size(); i++) {
-			for (int j = 0; j < matrix[i].size(); j++)		//Printing matrix
-				cout << matrix[i][j] << " ";
-			cout << endl;
-		}
-	}
-	else if (matrix_type == "norm_matrix") {
-		cout << "\n" << matrix_name << " " << tf <<  " NORMALIZED:\n";		//Printing matrix_name and tf
+	return inverse_complement_matrix;
+}
+vector<vector<double>> matrix_class::return_log_matrix(int i){
 
-		for (int i = 0; i < norm_matrix.size(); i++) {
-			for (int j = 0; j < norm_matrix[i].size(); j++){	//Printing normalized matrix
-				cout << norm_matrix[i][j] << " ";
-			}
-			cout << endl;
-		}
-		cout << endl;
-	}
-	else if (matrix_type == "inverse_complement_matrix") {
-		cout << "\n" << matrix_name << " " << tf <<  " INVERSE COMPLEMENT:\n";		//Printing matrix_name and tf
+	return matrix_log;
+}
 
-		for (int i = 0; i < inverse_complement_matrix.size(); i++) {
-			for (int j = 0; j < inverse_complement_matrix[i].size(); j++){	//Printing normalized matrix
-				cout << inverse_complement_matrix[i][j] << " ";
-			}
-			cout << endl;
+void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){			//Debugging of matrix
+	
+	cout << "\n" << matrix_name << " " << tf << type << ":" << endl;
+
+	for(int i=0; i < matrix.size(); i++){
+		for(int j=0; j<matrix[i].size(); j++){
+
+			cout << matrix[i][j] << " ";
 		}
 		cout << endl;
 	}
 	
-	else if (matrix_type == "matrix_log") {
-		cout << "\n" << matrix_name << " " << tf <<  " LOG MATRIX:\n";		//Printing matrix_name and tf
-
-		for (int i = 0; i < matrix_log.size(); i++) {
-			for (int j = 0; j < matrix_log[i].size(); j++){	//Printing normalized matrix
-				cout << matrix_log[i][j] << " ";
-			}
-			cout << endl;
+	if(type == " LOGARITHMIC"){
+	
+		for(int i=0; i < local_maxes.size(); i++){
+			
+			cout  << local_maxes[i] << " ";
 		}
+		
 		cout << endl;
-	
-		for(int i=0; i < local_mins.size(); i++){
-
-		cout << local_mins[i] << " ";
-	}
-	cout << endl;
-	
-	for(int i=0; i < local_maxes.size(); i++){
-
-		cout  << local_maxes[i] << " ";
-	}
-	cout << endl;
-
-	cout << "The global min is: " << global_min << endl;
-	cout << "The global max is: " << global_max << endl;
+		cout << "\nThe global min is: " << global_min << endl;
+		cout << "The global max is: " << global_max << endl;
 	}
 }
 

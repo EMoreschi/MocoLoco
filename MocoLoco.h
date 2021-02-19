@@ -90,8 +90,13 @@ class matrix_class {
 			inverse_matrix(norm_matrix);
 			find_minmax(matrix_log);		
 		}
-		void print_debug_matrix(matrix_class, string matrix_type);
+		void print_debug_matrix(vector<vector<double>>, string);
                 void scorrimento(string seq, int p, int length, vector<double>&);
+		vector<vector<double>> return_matrix(int);
+		vector<vector<double>> return_norm_matrix(int);
+		vector<vector<double>> return_inverse_matrix(int);
+		vector<vector<double>> return_log_matrix(int);
+
 };
 
 void GEP_creation(string, string, vector<genomic_position>&);
