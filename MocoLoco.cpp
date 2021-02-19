@@ -346,21 +346,17 @@ void command_line_parser(int argc, char **argv){
 				BED_FILE = argv[++i];
 				control_bed = 1;
 
-				bool bed_check = is_file_exist(BED_FILE);
 				bool dir = isDir(BED_FILE);
 				if(dir == 1){
 					cout << "ERROR: BED file inserted is a directory!\nPlease insert a BED file.\n!";
 					exit(EXIT_SUCCESS);
 				}
-				if(bed_check == 0){
-					cout << "File BED does not exist, please insert a BED file as input. \n";
-					cout << "FATAL ERROR \n";
-					exit(EXIT_SUCCESS);
+				is_file_exist(TWOBIT_FILE, "BED");
 				}
 				continue;
 
 			}
-		}
+		
 
 		if(buf == "--param" || buf == "-p"){
 
@@ -378,20 +374,16 @@ void command_line_parser(int argc, char **argv){
 
 				JASPAR_FILE = argv[++i];
 
-				bool jaspar_check = is_file_exist(JASPAR_FILE);
 				bool dir = isDir(JASPAR_FILE);
 				if(dir == 1){
 					cout << "ERROR: JASPAR file inserted is a directory!\nPlease insert a JASPAR file.\n!";
 					exit(EXIT_SUCCESS);
 				}
-				if(jaspar_check == 0){
-					cout << "JASPAR matrix does not exist, please insert a JASPAR matrix as input. \n";
-					cout << "FATAL ERROR \n";
-					exit(EXIT_SUCCESS);
+				is_file_exist(TWOBIT_FILE, "JASPAR");
 				}
 				continue;
 			}
-		}
+		
 
 		if(buf == "--twobit" || buf == "-tb"){
 
@@ -400,23 +392,16 @@ void command_line_parser(int argc, char **argv){
 				TWOBIT_FILE = argv[++i];
 				control_twobit = 1;
 
-				bool two_bit_check = is_file_exist(TWOBIT_FILE);
 				bool dir = isDir(TWOBIT_FILE);
 				if(dir == 1){
 					cout << "ERROR: TWOBIT file inserted is a directory!\nPlease insert a TWOBIT file.\n!";
 					exit(EXIT_SUCCESS);
 				}
-				if(two_bit_check == 0){
-					cout << "File 2bit does not exist, please insert a 2bit file as input. \n";
-					cout << "FATAL ERROR \n";
-					exit(EXIT_SUCCESS);
+				is_file_exist(TWOBIT_FILE, "2bit");
 				}
 				continue;
 			}
 		}
-
-
-	}
 
 	if(control_bed == 0 && control_twobit == 0){
 
@@ -452,13 +437,14 @@ void command_line_parser(int argc, char **argv){
 	}
 }
 
-bool is_file_exist(string fileName)		//Input files existence control
-{
+void is_file_exist(string fileName, string type){		//Input files existence control
+
 	ifstream infile(fileName);
-	if(!infile)
-		return 0;
-	else{
-		return 1;
+	if(!infile){
+		cout << "Fiiiiiiiiiiiiiiiiiiiiiiiiiiiile " << type << " does not exist, please insert a " << type << " file as input. \n";
+		cout << "--help for display help.\n";
+		cout << "FATAL ERROR \n";
+		exit(EXIT_SUCCESS);
 	}
 }
 
@@ -486,3 +472,4 @@ void display_help() 						//Display help function
 
 	exit(EXIT_SUCCESS);
 }
+

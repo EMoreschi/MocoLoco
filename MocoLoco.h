@@ -112,5 +112,5 @@ void GEP_creation(string, string, vector<genomic_position>&);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(string);
-bool is_file_exist(string fileName);
+void is_file_exist(string fileName, string);
 bool isDir(string);
