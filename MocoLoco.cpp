@@ -34,13 +34,13 @@ int main(int argc, char *argv[]){
 //	for(int i=0; i<GEP.size();i++){
 //
 //         test = GEP[i].return_sequence(GEP[i]);					//Print GEP vector for debugging
-//	 JASPAR_MATRIX.shifting(test, p, l, oligo);
+//	 JASPAR_MATRIX.scorrimento(test, p, l, oligo);
 //    
 //	}	
-//	JASPAR_MATRIX.shifting(test, p, l, oligo); 
+//	JASPAR_MATRIX.scorrimento(test, p, l, oligo); 
 //        test = GEP[1].return_sequence(GEP[1]);					//Print GEP vector for debugging
 //	 cout << test << "\n";
-//	 JASPAR_MATRIX.shifting(test, p, l, oligo);
+//	 JASPAR_MATRIX.scorrimento(test, p, l, oligo);
 
 
 //        for(int i=0; i<oligo.size(); i++){
@@ -99,7 +99,7 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 	}
 }
 
-void matrix_class::shifting(string seq, int p, int l, vector<double> &oligo){
+void matrix_class::scorrimento(string seq, int p, int l, vector<double> &oligo){
 		
 	double sum_oligo = 0;
 	
@@ -133,7 +133,7 @@ void matrix_class::shifting(string seq, int p, int l, vector<double> &oligo){
 	}
 	
 	oligo.emplace_back(sum_oligo);
-	shifting(seq, p+1, l, oligo);
+	scorrimento(seq, p+1, l, oligo);
 	}
 
 }

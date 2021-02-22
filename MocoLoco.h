@@ -100,7 +100,7 @@ class matrix_class {
 			find_minmax(matrix_log);		
 		}
 		void print_debug_matrix(vector<vector<double>>, string);
-                void shifting(string seq, int p, int length, vector<double>&);
+                void scorrimento(string seq, int p, int length, vector<double>&);
 		vector<vector<double>> return_matrix(int);
 		vector<vector<double>> return_norm_matrix(int);
 		vector<vector<double>> return_inverse_matrix(int);
