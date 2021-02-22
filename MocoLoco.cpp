@@ -169,7 +169,7 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 	file.close();						//Closing file
 }
 
-vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
+void matrix_class::find_col_sum(vector<vector<double>> matrix){
 
 	vector<double> col_sum;						//Vector of columns sum
 	double sum = 0;							//Sum initialized as 0
@@ -183,13 +183,11 @@ vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 		col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
 		sum = 0;						//Restore the sum to 0 for the next column
 	}
-	return col_sum;
 }
 
-void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
-	
+void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p, vector<double> col_sum){  
+
 	double norm;							//Norm variable initialized
-	vector<double> col_sum = find_col_sum(matrix);
 
 	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
@@ -204,9 +202,7 @@ void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, d
 	}
 }
 
-void matrix_class::matrix_normalization(vector<vector<double>> matrix){
-
-	vector<double> col_sum = find_col_sum(matrix);
+void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, vector<double> col_sum){
 
 	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 

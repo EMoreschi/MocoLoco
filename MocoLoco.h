@@ -79,13 +79,13 @@ class matrix_class {
 		vector<double> col_sum;		
 
 
-		void matrix_normalization_pseudoc(vector<vector<double>>, double);
-		void matrix_normalization(vector<vector<double>>);
+		void matrix_normalization(vector<vector<double>>, double, vector<double> col_sum);
+		void matrix_normalization_pseudoc(vector<vector<double>>, vector<double>);
 		void matrix_logarithmic(vector<vector<double>>);
 		void read_JASPAR(string);
 		void inverse_matrix(vector<vector<double>>);
 		void find_minmax(vector<vector<double>>);
-		vector<double> find_col_sum(vector<vector<double>>);
+		void find_col_sum(vector<vector<double>>);
 
 		
 
@@ -93,8 +93,10 @@ class matrix_class {
 		matrix_class(string JASPAR_FILE){
 
 			read_JASPAR(JASPAR_FILE);
-			matrix_normalization_pseudoc(matrix, pseudoc);			//Calling matrix normalization function
-			matrix_normalization(norm_matrix);
+			find_col_sum(matrix);
+			matrix_normalization(matrix, pseudoc, col_sum);			//Calling matrix normalization function
+			find_col_sum(norm_matrix);
+			matrix_normalization_pseudoc(norm_matrix, col_sum);
 			matrix_logarithmic(norm_matrix);
 			inverse_matrix(norm_matrix);
 			find_minmax(matrix_log);		
