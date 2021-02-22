@@ -79,13 +79,13 @@ class matrix_class {
 		vector<double> col_sum;		
 
 
-		void matrix_normalization(vector<vector<double>>, double, vector<double> col_sum);
-		void matrix_normalization_pseudoc(vector<vector<double>>, vector<double>);
+		void matrix_normalization_pseudoc(vector<vector<double>>, double);
+		void matrix_normalization(vector<vector<double>>);
 		void matrix_logarithmic(vector<vector<double>>);
 		void read_JASPAR(string);
 		void inverse_matrix(vector<vector<double>>);
 		void find_minmax(vector<vector<double>>);
-		void find_col_sum(vector<vector<double>>);
+		vector<double> find_col_sum(vector<vector<double>>);
 
 		
 
@@ -93,16 +93,14 @@ class matrix_class {
 		matrix_class(string JASPAR_FILE){
 
 			read_JASPAR(JASPAR_FILE);
-			find_col_sum(matrix);
-			matrix_normalization(matrix, pseudoc, col_sum);			//Calling matrix normalization function
-			find_col_sum(norm_matrix);
-			matrix_normalization_pseudoc(norm_matrix, col_sum);
+			matrix_normalization_pseudoc(matrix, pseudoc);			//Calling matrix normalization function
+			matrix_normalization(norm_matrix);
 			matrix_logarithmic(norm_matrix);
 			inverse_matrix(norm_matrix);
 			find_minmax(matrix_log);		
 		}
 		void print_debug_matrix(vector<vector<double>>, string);
-                void scorrimento(string seq, int p, int length, vector<double>&);
+                void shifting(string seq, int p, int length, vector<double>&);
 		vector<vector<double>> return_matrix(int);
 		vector<vector<double>> return_norm_matrix(int);
 		vector<vector<double>> return_inverse_matrix(int);
@@ -114,5 +112,5 @@ void GEP_creation(string, string, vector<genomic_position>&);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(string);
-void is_file_exist(string fileName, string);
+bool is_file_exist(string fileName);
 bool isDir(string);

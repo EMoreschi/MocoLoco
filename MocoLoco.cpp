@@ -34,18 +34,19 @@ int main(int argc, char *argv[]){
 //	for(int i=0; i<GEP.size();i++){
 //
 //         test = GEP[i].return_sequence(GEP[i]);					//Print GEP vector for debugging
-//	 JASPAR_MATRIX.scorrimento(test, p, l, oligo);
+//	 JASPAR_MATRIX.shifting(test, p, l, oligo);
 //    
 //	}	
-//	JASPAR_MATRIX.scorrimento(test, p, l, oligo); 
-//        test = GEP[1].return_sequence(GEP[1]);					//Print GEP vector for debugging
-//	 cout << test << "\n";
-//	 JASPAR_MATRIX.scorrimento(test, p, l, oligo);
+	test = GEP[1].return_sequence(GEP[1]);					//Print GEP vector for debugging
+//	test = "AAAAAAAAAANNNNNNNNAAAANNNNNNNNNNNNNNNNNNNNNNNNN";
+	JASPAR_MATRIX.shifting(test, p, l, oligo); 
+	cout << test << "\n";
+//	JASPAR_MATRIX.shifting(test, p, l, oligo);
 
 
-//        for(int i=0; i<oligo.size(); i++){
-//	cout << oligo[i] << "\n";
-// 	}
+        for(int i=0; i<oligo.size(); i++){
+	cout << oligo[i] << "\n";
+ 	}
 //	for(int i=0; i<GEP.size();i++){
 
 //	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
@@ -99,7 +100,7 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 	}
 }
 
-void matrix_class::scorrimento(string seq, int p, int l, vector<double> &oligo){
+void matrix_class::shifting(string seq, int p, int l, vector<double> &oligo){
 		
 	double sum_oligo = 0;
 	
@@ -128,12 +129,17 @@ void matrix_class::scorrimento(string seq, int p, int l, vector<double> &oligo){
 				       
 					sum_oligo = sum_oligo + matrix_log[3][i];
 					break;
+				
+				default:
+				       
+					sum_oligo = sum_oligo + local_mins[i];
+					break;
 
 		}
 	}
 	
 	oligo.emplace_back(sum_oligo);
-	scorrimento(seq, p+1, l, oligo);
+	shifting(seq, p+1, l, oligo);
 	}
 
 }
@@ -169,7 +175,7 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 	file.close();						//Closing file
 }
 
-void matrix_class::find_col_sum(vector<vector<double>> matrix){
+vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 
 	vector<double> col_sum;						//Vector of columns sum
 	double sum = 0;							//Sum initialized as 0
@@ -183,11 +189,13 @@ void matrix_class::find_col_sum(vector<vector<double>> matrix){
 		col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
 		sum = 0;						//Restore the sum to 0 for the next column
 	}
+	return col_sum;
 }
 
-void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p, vector<double> col_sum){  
-
+void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
+	
 	double norm;							//Norm variable initialized
+	vector<double> col_sum = find_col_sum(matrix);
 
 	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
@@ -202,7 +210,9 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix, double p,
 	}
 }
 
-void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, vector<double> col_sum){
+void matrix_class::matrix_normalization(vector<vector<double>> matrix){
+
+	vector<double> col_sum = find_col_sum(matrix);
 
 	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
@@ -286,13 +296,22 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 	}
 	
 	if(type == " LOGARITHMIC"){
-	
+		
+		cout << "\nLocal mins vector: " << endl;
+
 		for(int i=0; i < local_maxes.size(); i++){
 			
 			cout  << local_maxes[i] << " ";
-			cout  << local_mins[i] << " ";
 		}
 		
+		cout << "\nLocal maxes vector: " << endl;
+
+		for(int i=0; i < local_maxes.size(); i++){
+			
+			cout  << local_mins[i] << " ";
+		
+		}
+
 		cout << endl;
 		cout << "\nThe global min is: " << global_min << endl;
 		cout << "The global max is: " << global_max << endl;
@@ -342,17 +361,21 @@ void command_line_parser(int argc, char **argv){
 				BED_FILE = argv[++i];
 				control_bed = 1;
 
+				bool bed_check = is_file_exist(BED_FILE);
 				bool dir = isDir(BED_FILE);
 				if(dir == 1){
 					cout << "ERROR: BED file inserted is a directory!\nPlease insert a BED file.\n!";
 					exit(EXIT_SUCCESS);
 				}
-				is_file_exist(TWOBIT_FILE, "BED");
+				if(bed_check == 0){
+					cout << "File BED does not exist, please insert a BED file as input. \n";
+					cout << "FATAL ERROR \n";
+					exit(EXIT_SUCCESS);
 				}
 				continue;
 
 			}
-		
+		}
 
 		if(buf == "--param" || buf == "-p"){
 
@@ -370,16 +393,20 @@ void command_line_parser(int argc, char **argv){
 
 				JASPAR_FILE = argv[++i];
 
+				bool jaspar_check = is_file_exist(JASPAR_FILE);
 				bool dir = isDir(JASPAR_FILE);
 				if(dir == 1){
 					cout << "ERROR: JASPAR file inserted is a directory!\nPlease insert a JASPAR file.\n!";
 					exit(EXIT_SUCCESS);
 				}
-				is_file_exist(TWOBIT_FILE, "JASPAR");
+				if(jaspar_check == 0){
+					cout << "JASPAR matrix does not exist, please insert a JASPAR matrix as input. \n";
+					cout << "FATAL ERROR \n";
+					exit(EXIT_SUCCESS);
 				}
 				continue;
 			}
-		
+		}
 
 		if(buf == "--twobit" || buf == "-tb"){
 
@@ -388,16 +415,23 @@ void command_line_parser(int argc, char **argv){
 				TWOBIT_FILE = argv[++i];
 				control_twobit = 1;
 
+				bool two_bit_check = is_file_exist(TWOBIT_FILE);
 				bool dir = isDir(TWOBIT_FILE);
 				if(dir == 1){
 					cout << "ERROR: TWOBIT file inserted is a directory!\nPlease insert a TWOBIT file.\n!";
 					exit(EXIT_SUCCESS);
 				}
-				is_file_exist(TWOBIT_FILE, "2bit");
+				if(two_bit_check == 0){
+					cout << "File 2bit does not exist, please insert a 2bit file as input. \n";
+					cout << "FATAL ERROR \n";
+					exit(EXIT_SUCCESS);
 				}
 				continue;
 			}
 		}
+
+
+	}
 
 	if(control_bed == 0 && control_twobit == 0){
 
@@ -433,14 +467,13 @@ void command_line_parser(int argc, char **argv){
 	}
 }
 
-void is_file_exist(string fileName, string type){		//Input files existence control
-
+bool is_file_exist(string fileName)		//Input files existence control
+{
 	ifstream infile(fileName);
-	if(!infile){
-		cout << "Fiiiiiiiiiiiiiiiiiiiiiiiiiiiile " << type << " does not exist, please insert a " << type << " file as input. \n";
-		cout << "--help for display help.\n";
-		cout << "FATAL ERROR \n";
-		exit(EXIT_SUCCESS);
+	if(!infile)
+		return 0;
+	else{
+		return 1;
 	}
 }
 
@@ -468,4 +501,3 @@ void display_help() 						//Display help function
 
 	exit(EXIT_SUCCESS);
 }
-
