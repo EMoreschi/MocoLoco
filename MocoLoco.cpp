@@ -54,6 +54,7 @@ int main(int argc, char *argv[]){
 
 //	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
 //	}
+ return 0;
 }
 
 void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -344,10 +345,6 @@ void bed_class::print_debug_GEP(bed_class){			//Debug function: Print the GEP ve
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 void command_line_parser(int argc, char **argv){
 
-	int control_bed = 0;		
-	int control_twobit = 0;
-	int control_p = 0;
-
 	for(int i = 1; i < argc; i++){
 
 		string buf = argv[i];
@@ -358,148 +355,84 @@ void command_line_parser(int argc, char **argv){
 
 		}
 
-		if(buf == "--BED" || buf == "-B"){
+		else if(buf == "--BED" || buf == "-B"){
 
 			if(i < argc - 1){
 
 				BED_FILE = argv[++i];
-				control_bed = 1;
-
-				bool bed_check = is_file_exist(BED_FILE);
-				bool dir = isDir(BED_FILE);
-				if(dir == 1){
-					cout << "ERROR: BED file inserted is a directory!\nPlease insert a BED file.\n!";
-					exit(EXIT_SUCCESS);
-				}
-				if(bed_check == 0){
-					cout << "File BED does not exist, please insert a BED file as input. \n";
-					cout << "FATAL ERROR \n";
-					exit(EXIT_SUCCESS);
-				}
+				is_file_exist(BED_FILE, buf);
 				continue;
 
 			}
 		}
 
-		if(buf == "--param" || buf == "-p"){
+		else if(buf == "--param" || buf == "-p"){
 
 			if(i < argc - 1){
+				try{
 
-				parameter = stoi(argv[++i]);
-				control_p = 1;
+				parameter = stoi(argv[++i]);}
+				catch(exception &err)
+				{
+					cerr<< buf <<" parameter is not a number"<<endl;
+				}
 				continue;
 			}
 		}
 
-		if(buf == "--j" || buf == "-J"){
+		else if(buf == "--jaspar" || buf == "-J"){
 
 			if(i < argc - 1){
 
 				JASPAR_FILE = argv[++i];
-
-				bool jaspar_check = is_file_exist(JASPAR_FILE);
-				bool dir = isDir(JASPAR_FILE);
-				if(dir == 1){
-					cout << "ERROR: JASPAR file inserted is a directory!\nPlease insert a JASPAR file.\n!";
-					exit(EXIT_SUCCESS);
-				}
-				if(jaspar_check == 0){
-					cout << "JASPAR matrix does not exist, please insert a JASPAR matrix as input. \n";
-					cout << "FATAL ERROR \n";
-					exit(EXIT_SUCCESS);
-				}
+				is_file_exist(JASPAR_FILE, buf);
 				continue;
+
 			}
 		}
 
-		if(buf == "--twobit" || buf == "-tb"){
+		else if(buf == "--twobit" || buf == "-tb"){
 
 			if(i < argc - 1){
 
 				TWOBIT_FILE = argv[++i];
-				control_twobit = 1;
-
-				bool two_bit_check = is_file_exist(TWOBIT_FILE);
-				bool dir = isDir(TWOBIT_FILE);
-				if(dir == 1){
-					cout << "ERROR: TWOBIT file inserted is a directory!\nPlease insert a TWOBIT file.\n!";
-					exit(EXIT_SUCCESS);
-				}
-				if(two_bit_check == 0){
-					cout << "File 2bit does not exist, please insert a 2bit file as input. \n";
-					cout << "FATAL ERROR \n";
-					exit(EXIT_SUCCESS);
-				}
+				is_file_exist(TWOBIT_FILE, buf);
 				continue;
 			}
 		}
-
-
-	}
-
-	if(control_bed == 0 && control_twobit == 0){
-
-		cout << "BED file and TwoBit file missed or wrong parameters calling!\n";
-		cout << "Please insert as input a BED file using -B or --BED annotation before it.\n";
-		cout << "Please insert as input a Twobit file using -tb or --twobit annotation before it.\n";
-
-		exit(EXIT_SUCCESS);
-	}
-
-	if(control_bed == 0){
-
-		cout << "Wrong BED file immission or BED file missed!\n ";
-		cout << "Please insert as input a BED file using -B or --BED annotation before it.\n";
-
-		exit(EXIT_SUCCESS);
-	}
-
-	if(control_twobit == 0){
-
-		cout << "Wrong Twobit file immission or Twobit file missed!\n";
-		cout << "Please insert as input a Twobit file using -tb or --twobit annotation before it.\n";
-
-		exit(EXIT_SUCCESS);
-
-	}
-
-	if(control_p == 0){
-
-		cout << "WARNING: Sequence length parameter not inserted --> Default parameter is 150.\n";
-		cout << "To put a parameter as input write -p or --param before parameter value.";
+		else
+		{
+			cerr << "Unknown option: " << buf <<  endl;
+			exit(1);
+		}
 
 	}
 }
 
-bool is_file_exist(string fileName)		//Input files existence control
+bool is_file_exist(string fileName, string buf)		//Input files existence control
 {
-	ifstream infile(fileName);
-	if(!infile)
-		return 0;
-	else{
-		return 1;
+	DIR *Dir;
+	int result;
+	const char * C_fileName = fileName.c_str();
+	result = access (C_fileName, W_OK);
+	Dir = opendir(C_fileName);
+	if (result == 0 && Dir == 0 ) {
+		return result;
 	}
-}
-
-bool isDir(string filename){
-
-	DIR *pDir;
-	bool exists = false;
-	pDir = opendir(filename.c_str());
-	if(pDir != 0){
-		exists = true;
-		(void)closedir(pDir);
+	else
+	{ 
+		cerr <<"ERROR: "<< buf << " parameter has wrong argument"<< endl;
+		exit(1);	
 	}
-	return exists;
 }
 
 
 void display_help() 						//Display help function
 {
-	cerr << "\n --help: show this message" << endl;
+	cerr << "\n --help show this message" << endl;
 	cerr << "\n --BED -B <file_bed>: input bed file" << endl;
 	cerr << "\n --twobit -tb <file_twobit>: input twobit file" << endl;
-	cerr << "\n --j -J <JASPAR_file>: input JASPAR file" << endl;
+	cerr << "\n --jaspar -J <JASPAR_file>: input JASPAR file" << endl;
 	cerr << "\n --param -p <parameter>: input parameter to select bases number to keep around the chip seq signal" << endl;
 	cerr << endl;
 
