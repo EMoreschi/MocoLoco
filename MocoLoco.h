@@ -72,10 +72,6 @@ class matrix_class {
 		vector<vector<double>> norm_matrix;
 		vector<vector<double>> inverse_complement_matrix;
 		vector<vector<double>> matrix_log;
-		vector<double> local_mins;	
-		vector<double> local_maxes;
-		double global_min;
-		double global_max;
 		vector<double> col_sum;		
 
 
@@ -84,7 +80,6 @@ class matrix_class {
 		void matrix_logarithmic(vector<vector<double>>);
 		void read_JASPAR(string);
 		void inverse_matrix(vector<vector<double>>);
-		void find_minmax(vector<vector<double>>);
 		vector<double> find_col_sum(vector<vector<double>>);
 
 		
@@ -97,7 +92,6 @@ class matrix_class {
 			matrix_normalization(norm_matrix);
 			matrix_logarithmic(norm_matrix);
 			inverse_matrix(norm_matrix);
-			find_minmax(matrix_log);		
 		}
 		void print_debug_matrix(vector<vector<double>>, string);
                 void shifting(string seq, int p, int length, vector<double>&);
@@ -107,6 +101,38 @@ class matrix_class {
 		vector<vector<double>> return_log_matrix(int);
 
 };
+
+
+class oligos{
+
+	private:
+		
+			
+		vector<double> local_mins;	
+		vector<double> local_maxes;
+		double worst_oligo;
+		double best_oligo;
+		string local_coord;
+		string global_coord;
+
+		void find_minmax(vector<vector<double>>);
+
+	public:
+		vector<double> oligo_values;	
+
+		oligos(vector<vector<double>> matrix, string sequence){
+		
+			oligo_values.clear();
+			find_minmax(matrix);		
+			shifting(matrix, sequence, 0);
+		}
+
+		void shifting(vector<vector<double>>, string, int);
+
+
+
+};
+
 
 void GEP_creation(string, string, vector<genomic_position>&);
 void command_line_parser(int, char **);

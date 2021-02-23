@@ -8,17 +8,13 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	string test;
-	int p = 0;
-	int l = 16;
-	int end = 4;
-	vector<double> oligo;
-        genomic_position obj;
 	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
+	vector<oligos> oligos_vector;
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
 	
 	vector<vector<double>> matrix;
+	vector<vector<double>> matrix_log;
 	matrix = JASPAR_MATRIX.return_matrix(1);
 	JASPAR_MATRIX.print_debug_matrix(matrix, " ");
 
@@ -28,25 +24,29 @@ int main(int argc, char *argv[]){
 	matrix = JASPAR_MATRIX.return_inverse_matrix(1);
 	JASPAR_MATRIX.print_debug_matrix(matrix, " INVERSE COMPLEMENT");
 	//Print the matrix for debugging
-	matrix = JASPAR_MATRIX.return_log_matrix(1);
-	JASPAR_MATRIX.print_debug_matrix(matrix, " LOGARITHMIC");
+	matrix_log = JASPAR_MATRIX.return_log_matrix(1);
+	JASPAR_MATRIX.print_debug_matrix(matrix_log, " LOGARITHMIC");
 
-//	for(int i=0; i<GEP.size();i++){
+	for(int i=0; i<5; i++){
+
+	string sequence = GEP[i].return_sequence(GEP[i]);
+	oligos SHIFTING(matrix_log, sequence);
+	oligos_vector.emplace_back(SHIFTING);
+	cout << endl;
+	cout << sequence << endl;
+
+	for(int j=0; j<6; j++){
+		
+		cout << oligos_vector[i].oligo_values[j] << " ";
+	}
+	cout << endl;
+	}
+
+//	for(int i=0; i<5; i++){
 //
-//         test = GEP[i].return_sequence(GEP[i]);					//Print GEP vector for debugging
-//	 JASPAR_MATRIX.shifting(test, p, l, oligo);
-//    
-//	}	
-	test = GEP[1].return_sequence(GEP[1]);					//Print GEP vector for debugging
-//	test = "AAAAAAAAAANNNNNNNNAAAANNNNNNNNNNNNNNNNNNNNNNNNN";
-	JASPAR_MATRIX.shifting(test, p, l, oligo); 
-	cout << test << "\n";
-//	JASPAR_MATRIX.shifting(test, p, l, oligo);
-
-
-        for(int i=0; i<oligo.size(); i++){
-	cout << oligo[i] << "\n";
- 	}
+//		cout << SHIFTING.oligo_values[i] << endl;
+//	}
+//	}
 //	for(int i=0; i<GEP.size();i++){
 
 //	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
@@ -60,11 +60,11 @@ void genomic_position::read_line(string line){				//Read line function: it takes
 
 }
 
-void genomic_position::centering_function ( int start,  int end, int p, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
+void genomic_position::centering_function ( int start,  int end, int parameter, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
 	//following an input parameter value (overhead added)
 	int center = (start + end)/2;						
-	start_coord = center - p;			//No overhead for start
-	end_coord = center + p +overhead;		//Overhead for end
+	start_coord = center - parameter;			//No overhead for start
+	end_coord = center + parameter +overhead;		//Overhead for end
 }
 
 
@@ -100,34 +100,34 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 	}
 }
 
-void matrix_class::shifting(string seq, int p, int l, vector<double> &oligo){
+void oligos::shifting(vector<vector<double>> matrix, string sequence, int s_iterator){
 		
 	double sum_oligo = 0;
 	
-	if(p <= seq.size() - matrix_log[0].size() ) {
+	if(s_iterator <= sequence.size() - matrix[0].size() ) {
 
-	for(int i=0; i< matrix_log[0].size(); i++){
+	for(int i=0; i< matrix[0].size(); i++){
 
-			switch(seq[i+p]){
+			switch(sequence[i+s_iterator]){
 
 				case 'A':
 				       
-					sum_oligo = sum_oligo + matrix_log[0][i];
+					sum_oligo = sum_oligo + matrix[0][i];
 					break;
 
 				case 'C':
 				       
-					sum_oligo = sum_oligo + matrix_log[1][i];
+					sum_oligo = sum_oligo + matrix[1][i];
 					break;
 
 				case 'G':
 				       
-					sum_oligo = sum_oligo + matrix_log[2][i];
+					sum_oligo = sum_oligo + matrix[2][i];
 					break;
 
 				case 'T':
 				       
-					sum_oligo = sum_oligo + matrix_log[3][i];
+					sum_oligo = sum_oligo + matrix[3][i];
 					break;
 				
 				default:
@@ -138,8 +138,8 @@ void matrix_class::shifting(string seq, int p, int l, vector<double> &oligo){
 		}
 	}
 	
-	oligo.emplace_back(sum_oligo);
-	shifting(seq, p+1, l, oligo);
+	oligo_values.emplace_back(sum_oligo);
+	shifting(matrix, sequence, s_iterator+1);
 	}
 
 }
@@ -251,7 +251,7 @@ void matrix_class::inverse_matrix(vector<vector<double>> matrix){
 
 }
 
-void matrix_class::find_minmax(vector<vector<double>> matrix){
+void oligos::find_minmax(vector<vector<double>> matrix){
 
 	for(int i=0; i < matrix[0].size(); i++){
 		vector<double> colum;		   	
@@ -261,8 +261,8 @@ void matrix_class::find_minmax(vector<vector<double>> matrix){
 		local_mins.emplace_back(*min_element(colum.begin(),colum.end()));
 		local_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
 	}
-	global_min = accumulate(local_mins.begin(), local_mins.end(), 0.0);
-	global_max = accumulate(local_maxes.begin(), local_maxes.end(), 0.0);
+	worst_oligo = accumulate(local_mins.begin(), local_mins.end(), 0.0);
+	best_oligo = accumulate(local_maxes.begin(), local_maxes.end(), 0.0);
 
 }	
 
@@ -295,27 +295,27 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 		cout << endl;
 	}
 	
-	if(type == " LOGARITHMIC"){
-		
-		cout << "\nLocal mins vector: " << endl;
-
-		for(int i=0; i < local_maxes.size(); i++){
-			
-			cout  << local_maxes[i] << " ";
-		}
-		
-		cout << "\nLocal maxes vector: " << endl;
-
-		for(int i=0; i < local_maxes.size(); i++){
-			
-			cout  << local_mins[i] << " ";
-		
-		}
-
-		cout << endl;
-		cout << "\nThe global min is: " << global_min << endl;
-		cout << "The global max is: " << global_max << endl;
-	}
+//	if(type == " LOGARITHMIC"){
+//		
+//		cout << "\nLocal mins vector: " << endl;
+//
+//		for(int i=0; i < local_maxes.size(); i++){
+//			
+//			cout  << local_maxes[i] << " ";
+//		}
+//		
+//		cout << "\nLocal maxes vector: " << endl;
+//
+//		for(int i=0; i < local_maxes.size(); i++){
+//			
+//			cout  << local_mins[i] << " ";
+//		
+//		}
+//
+//		cout << endl;
+//		cout << "\nThe global min is: " << global_min << endl;
+//		cout << "The global max is: " << global_max << endl;
+//	}
 }
 
 
