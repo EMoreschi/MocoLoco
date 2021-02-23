@@ -276,6 +276,20 @@ void oligo_class::find_best_score(vector<double> oligo_scores){
 
 }
 
+void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
+	//extracted from Bed line
+	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+		string chrom = chr_coord; 				//Put in chrom the string of chr_coord
+		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
+	}
+	else {		
+		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
+		//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
+	}
+}
+
+/////DEBUG/////////////////////////////////////////////////////////
+
 vector<double> oligo_class::return_oligo_scores(int i){
 
 	return oligo_scores;
@@ -315,27 +329,6 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 		cout << endl;
 	}
 	
-//	if(type == " LOGARITHMIC"){
-//		
-//		cout << "\nLocal mins vector: " << endl;
-//
-//		for(int i=0; i < o_matrix_maxes.size(); i++){
-//			
-//			cout  << o_matrix_maxes[i] << " ";
-//		}
-//		
-//		cout << "\nLocal maxes vector: " << endl;
-//
-//		for(int i=0; i < o_matrix_maxes.size(); i++){
-//			
-//			cout  << o_matrix_mins[i] << " ";
-//		
-//		}
-//
-//		cout << endl;
-//		cout << "\nThe global min is: " << global_min << endl;
-//		cout << "The global max is: " << global_max << endl;
-//	}
 }
 
 
@@ -345,19 +338,10 @@ void bed_class::print_debug_GEP(bed_class){			//Debug function: Print the GEP ve
 	cout << sequence << endl;					//Printing sequence
 
 }
+///////////////////////////////////////////////////////////////////////////////////////////////
 
-void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
-	//extracted from Bed line
-	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		string chrom = chr_coord; 				//Put in chrom the string of chr_coord
-		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
-	}
-	else {		
-		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
-		//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
-	}
-}
 
+////////////////////PARSER////////////////////////////////////////////////////////////////////
 void command_line_parser(int argc, char **argv){
 
 	int control_bed = 0;		
@@ -521,3 +505,4 @@ void display_help() 						//Display help function
 
 	exit(EXIT_SUCCESS);
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
