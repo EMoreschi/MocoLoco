@@ -12,6 +12,7 @@
 #include <typeinfo> 
 #include <sstream>
 #include <numeric>
+#include <unistd.h>
 #include "./TwoBit/twobit.h"
 #include "./TwoBit/twobit.c"
 
@@ -140,5 +141,4 @@ void GEP_creation(string, string, vector<bed_class>&);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(string);
-bool is_file_exist(string fileName);
-bool isDir(string);
+bool is_file_exist(string fileName, string buf);
