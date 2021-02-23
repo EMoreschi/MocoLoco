@@ -108,27 +108,30 @@ class oligos{
 	private:
 		
 			
+		vector<double> oligo_values;	
 		vector<double> local_mins;	
 		vector<double> local_maxes;
-		double worst_oligo;
+		double worst_possible_oligo;
+		double best_possible_oligo;
 		double best_oligo;
-		string local_coord;
-		string global_coord;
+		string best_oligo_local_coord;
+		string best_oligo_global_coord;
 
 		void find_minmax(vector<vector<double>>);
+		void find_best_oligo(vector<double>);
 
 	public:
-		vector<double> oligo_values;	
 
 		oligos(vector<vector<double>> matrix, string sequence){
 		
-			oligo_values.clear();
 			find_minmax(matrix);		
 			shifting(matrix, sequence, 0);
+			find_best_oligo(oligo_values);
 		}
 
 		void shifting(vector<vector<double>>, string, int);
-
+		vector<double> return_oligo_values(int);
+		double return_best_oligo(int);
 
 
 };

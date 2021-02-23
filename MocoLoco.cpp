@@ -32,14 +32,17 @@ int main(int argc, char *argv[]){
 	string sequence = GEP[i].return_sequence(GEP[i]);
 	oligos SHIFTING(matrix_log, sequence);
 	oligos_vector.emplace_back(SHIFTING);
+	vector<double> oligo_val = SHIFTING.return_oligo_values(1);
+	double best_olig = SHIFTING.return_best_oligo(1);
 	cout << endl;
 	cout << sequence << endl;
 
-	for(int j=0; j<6; j++){
+	for(int j=0; j<oligo_val.size(); j++){
 		
-		cout << oligos_vector[i].oligo_values[j] << " ";
+		cout << oligo_val[j] << " ";
 	}
 	cout << endl;
+	cout << "The best oligo in sequence has a score of " << best_olig << endl;
 	}
 
 //	for(int i=0; i<5; i++){
@@ -261,10 +264,26 @@ void oligos::find_minmax(vector<vector<double>> matrix){
 		local_mins.emplace_back(*min_element(colum.begin(),colum.end()));
 		local_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
 	}
-	worst_oligo = accumulate(local_mins.begin(), local_mins.end(), 0.0);
-	best_oligo = accumulate(local_maxes.begin(), local_maxes.end(), 0.0);
+	worst_possible_oligo = accumulate(local_mins.begin(), local_mins.end(), 0.0);
+	best_possible_oligo = accumulate(local_maxes.begin(), local_maxes.end(), 0.0);
 
 }	
+
+void oligos::find_best_oligo(vector<double> oligo_values){
+
+	best_oligo = *max_element(oligo_values.begin(), oligo_values.end());
+
+}
+
+vector<double> oligos::return_oligo_values(int i){
+
+	return oligo_values;
+}
+
+double oligos::return_best_oligo(int i){
+
+	return best_oligo;
+}
 
 vector<vector<double>> matrix_class::return_matrix(int i){
 
