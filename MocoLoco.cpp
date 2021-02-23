@@ -8,8 +8,8 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	vector<genomic_position> GEP;					//Initializing GEP --> vector of genomic_position classes
-	vector<oligos> oligos_vector;
+	vector<bed_class> GEP;					//Initializing GEP --> vector of bed_class classes
+	vector<oligo_class> oligos_vector;
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
 	
@@ -30,24 +30,24 @@ int main(int argc, char *argv[]){
 	for(int i=0; i<5; i++){
 
 	string sequence = GEP[i].return_sequence(GEP[i]);
-	oligos SHIFTING(matrix_log, sequence);
+	oligo_class SHIFTING(matrix_log, sequence);
 	oligos_vector.emplace_back(SHIFTING);
-	vector<double> oligo_val = SHIFTING.return_oligo_values(1);
-	double best_olig = SHIFTING.return_best_oligo(1);
+	vector<double> oligo_scores = SHIFTING.return_oligo_scores(1);
+	double best_score = SHIFTING.return_best_score(1);
 	cout << endl;
 	cout << sequence << endl;
 
-	for(int j=0; j<oligo_val.size(); j++){
+	for(int j=0; j<oligo_scores.size(); j++){
 		
-		cout << oligo_val[j] << " ";
+		cout << oligo_scores[j] << " ";
 	}
 	cout << endl;
-	cout << "The best oligo in sequence has a score of " << best_olig << endl;
+	cout << "The best oligo in sequence has a score of " << best_score << endl;
 	}
 
 //	for(int i=0; i<5; i++){
 //
-//		cout << SHIFTING.oligo_values[i] << endl;
+//		cout << SHIFTING.oligo_scores[i] << endl;
 //	}
 //	}
 //	for(int i=0; i<GEP.size();i++){
@@ -56,14 +56,14 @@ int main(int argc, char *argv[]){
 //	}
 }
 
-void genomic_position::read_line(string line){				//Read line function: it takes in input each line from BED file 
+void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
 
 	istringstream mystream(line);					//Split the line word by word and extract chromosome coordinates (chr, start, end)
 	mystream >> chr_coord >> start_coord >> end_coord;		
 
 }
 
-void genomic_position::centering_function ( int start,  int end, int parameter, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
+void bed_class::centering_function ( int start,  int end, int parameter, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
 	//following an input parameter value (overhead added)
 	int center = (start + end)/2;						
 	start_coord = center - parameter;			//No overhead for start
@@ -71,7 +71,7 @@ void genomic_position::centering_function ( int start,  int end, int parameter, 
 }
 
 
-void genomic_position::flag_control( int start,  int end){ 	//Flag control function: start coordinates must be < then end coordinates
+void bed_class::flag_control( int start,  int end){ 	//Flag control function: start coordinates must be < then end coordinates
 
 	if(start > end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
 		flag = 0;
@@ -79,7 +79,7 @@ void genomic_position::flag_control( int start,  int end){ 	//Flag control funct
 	else{ flag = 1;}
 }
 
-void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
+void GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
 	ifstream in(Bed_file); 						//Opening file in lecture mode
 	TwoBit * tb;				//Creating a TwoBit* variable called tb
@@ -95,7 +95,7 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 		if(line[0]=='#')
 			continue;
 
-		genomic_position new_class(parameter,line,tb, n_line);  //Called the object constructor passing the Bed line, parameter P, twobit file tb, and the line counter n_line
+		bed_class new_class(parameter,line,tb, n_line);  //Called the object constructor passing the Bed line, parameter P, twobit file tb, and the line counter n_line
 		GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
 
 		n_line = n_line + 1;					//pass to next line 
@@ -103,7 +103,7 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<genomic_position> 
 	}
 }
 
-void oligos::shifting(vector<vector<double>> matrix, string sequence, int s_iterator){
+void oligo_class::shifting(vector<vector<double>> matrix, string sequence, int s_iterator){
 		
 	double sum_oligo = 0;
 	
@@ -135,19 +135,20 @@ void oligos::shifting(vector<vector<double>> matrix, string sequence, int s_iter
 				
 				default:
 				       
-					sum_oligo = sum_oligo + local_mins[i];
+					sum_oligo = sum_oligo + o_matrix_mins[i];
 					break;
 
 		}
 	}
 	
-	oligo_values.emplace_back(sum_oligo);
+	oligo_scores.emplace_back(sum_oligo);
 	shifting(matrix, sequence, s_iterator+1);
+
 	}
 
 }
 
-string genomic_position::return_sequence(genomic_position){ 
+string bed_class::return_sequence(bed_class){ 
        return sequence;
 }
 
@@ -159,7 +160,7 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 
 		if(line[0]=='>'){					//If line start with ">"
 			istringstream mystream(line);			
-			mystream >> matrix_name >> tf;			//Extract the first two words and put into matrix_name string variable and tf string variable
+			mystream >> matrix_name >> tf_name;			//Extract the first two words and put into matrix_name string variable and tf_name string variable
 		}
 
 		else{							//Else, if line does not start with ">"
@@ -254,35 +255,35 @@ void matrix_class::inverse_matrix(vector<vector<double>> matrix){
 
 }
 
-void oligos::find_minmax(vector<vector<double>> matrix){
+void oligo_class::find_minmax(vector<vector<double>> matrix){
 
 	for(int i=0; i < matrix[0].size(); i++){
 		vector<double> colum;		   	
 		for(int j=0; j < matrix.size(); j++){
 			colum.emplace_back(matrix[j][i]);
 		}
-		local_mins.emplace_back(*min_element(colum.begin(),colum.end()));
-		local_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
+		o_matrix_mins.emplace_back(*min_element(colum.begin(),colum.end()));
+		o_matrix_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
 	}
-	worst_possible_oligo = accumulate(local_mins.begin(), local_mins.end(), 0.0);
-	best_possible_oligo = accumulate(local_maxes.begin(), local_maxes.end(), 0.0);
+	min_possible_score = accumulate(o_matrix_mins.begin(), o_matrix_mins.end(), 0.0);
+	max_possible_score = accumulate(o_matrix_maxes.begin(), o_matrix_maxes.end(), 0.0);
 
 }	
 
-void oligos::find_best_oligo(vector<double> oligo_values){
+void oligo_class::find_best_score(vector<double> oligo_scores){
 
-	best_oligo = *max_element(oligo_values.begin(), oligo_values.end());
+	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
 
 }
 
-vector<double> oligos::return_oligo_values(int i){
+vector<double> oligo_class::return_oligo_scores(int i){
 
-	return oligo_values;
+	return oligo_scores;
 }
 
-double oligos::return_best_oligo(int i){
+double oligo_class::return_best_score(int i){
 
-	return best_oligo;
+	return best_score;
 }
 
 vector<vector<double>> matrix_class::return_matrix(int i){
@@ -304,7 +305,7 @@ vector<vector<double>> matrix_class::return_log_matrix(int i){
 
 void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){			//Debugging of matrix
 	
-	cout << "\n" << matrix_name << " " << tf << type << ":" << endl;
+	cout << "\n" << matrix_name << " " << tf_name << type << ":" << endl;
 
 	for(int i=0; i < matrix.size(); i++){
 		for(int j=0; j<matrix[i].size(); j++){
@@ -318,16 +319,16 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 //		
 //		cout << "\nLocal mins vector: " << endl;
 //
-//		for(int i=0; i < local_maxes.size(); i++){
+//		for(int i=0; i < o_matrix_maxes.size(); i++){
 //			
-//			cout  << local_maxes[i] << " ";
+//			cout  << o_matrix_maxes[i] << " ";
 //		}
 //		
 //		cout << "\nLocal maxes vector: " << endl;
 //
-//		for(int i=0; i < local_maxes.size(); i++){
+//		for(int i=0; i < o_matrix_maxes.size(); i++){
 //			
-//			cout  << local_mins[i] << " ";
+//			cout  << o_matrix_mins[i] << " ";
 //		
 //		}
 //
@@ -338,14 +339,14 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 }
 
 
-void genomic_position::print_debug_GEP(genomic_position){			//Debug function: Print the GEP vector to control the working flow
+void bed_class::print_debug_GEP(bed_class){			//Debug function: Print the GEP vector to control the working flow
 
 	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;	//Printing chr, start and end coordinates
 	cout << sequence << endl;					//Printing sequence
 
 }
 
-void genomic_position::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
+void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
 	//extracted from Bed line
 	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
 		string chrom = chr_coord; 				//Put in chrom the string of chr_coord

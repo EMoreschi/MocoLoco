@@ -24,7 +24,7 @@ string JASPAR_FILE;
 const int overhead = 25;
 const double pseudoc = 0.01;
 
-class genomic_position { //creation public class of genomic_position type        
+class bed_class { //creation public class of bed_class type        
 
 	private:	//field definition
 
@@ -40,7 +40,7 @@ class genomic_position { //creation public class of genomic_position type
 		void extract_seq(TwoBit*, int);
 
 	public:				//field definition
-		genomic_position(){	//default constructor
+		bed_class(){	//default constructor
 
 			chr_coord = "";
 			start_coord = 0;
@@ -49,7 +49,7 @@ class genomic_position { //creation public class of genomic_position type
 
 		}
 
-		genomic_position(int p, string line, TwoBit* tb,int n_line){
+		bed_class(int p, string line, TwoBit* tb,int n_line){
 
 			read_line(line);					//reading bed line
 			flag_control(start_coord,end_coord);			//controlling coordinates
@@ -57,8 +57,8 @@ class genomic_position { //creation public class of genomic_position type
 			extract_seq(tb, n_line);				//extracting the sequence
 
 		}
-		void print_debug_GEP(genomic_position);
-		string return_sequence(genomic_position);
+		void print_debug_GEP(bed_class);
+		string return_sequence(bed_class);
 
 };
 
@@ -67,7 +67,7 @@ class matrix_class {
 	private: //field definition
 
 		string matrix_name;
-		string tf;
+		string tf_name;
 		vector<vector<double>> matrix;
 		vector<vector<double>> norm_matrix;
 		vector<vector<double>> inverse_complement_matrix;
@@ -103,41 +103,40 @@ class matrix_class {
 };
 
 
-class oligos{
+class oligo_class{
 
 	private:
 		
 			
-		vector<double> oligo_values;	
-		vector<double> local_mins;	
-		vector<double> local_maxes;
-		double worst_possible_oligo;
-		double best_possible_oligo;
-		double best_oligo;
-		string best_oligo_local_coord;
-		string best_oligo_global_coord;
+		vector<double> oligo_scores;	
+		vector<double> o_matrix_mins;	
+		vector<double> o_matrix_maxes;
+		double min_possible_score;
+		double max_possible_score;
+		double best_score;
+		string best_oligo;
 
 		void find_minmax(vector<vector<double>>);
-		void find_best_oligo(vector<double>);
+		void find_best_score(vector<double>);
 
 	public:
 
-		oligos(vector<vector<double>> matrix, string sequence){
+		oligo_class(vector<vector<double>> matrix, string sequence){
 		
 			find_minmax(matrix);		
 			shifting(matrix, sequence, 0);
-			find_best_oligo(oligo_values);
+			find_best_score(oligo_scores);
 		}
 
 		void shifting(vector<vector<double>>, string, int);
-		vector<double> return_oligo_values(int);
-		double return_best_oligo(int);
+		vector<double> return_oligo_scores(int);
+		double return_best_score(int);
 
 
 };
 
 
-void GEP_creation(string, string, vector<genomic_position>&);
+void GEP_creation(string, string, vector<bed_class>&);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(string);
