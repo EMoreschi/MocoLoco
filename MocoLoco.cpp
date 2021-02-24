@@ -411,19 +411,18 @@ void command_line_parser(int argc, char **argv){
 
 bool is_file_exist(string fileName, string buf)		//Input files existence control
 {
-	DIR *Dir;
-	int result;
+        struct stat check;
+	int regular_check;
 	const char * C_fileName = fileName.c_str();
-	result = access (C_fileName, W_OK);
-	Dir = opendir(C_fileName);
-	if (result == 0 && Dir == 0 ) {
-		return result;
-	}
-	else
-	{ 
+        stat(C_fileName, &check );
+
+	regular_check = S_ISREG( check.st_mode );
+
+	if ( regular_check == 0 ) {
 		cerr <<"ERROR: "<< buf << " parameter has wrong argument"<< endl;
 		exit(1);	
 	}
+	return 0;
 }
 
 
