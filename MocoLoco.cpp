@@ -11,31 +11,38 @@ int main(int argc, char *argv[]){
 	vector<bed_class> GEP;					//Initializing GEP --> vector of bed_class classes
 	vector<oligo_class> oligos_vector;
 	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
+
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
 	
 	vector<vector<double>> matrix;
 	vector<vector<double>> matrix_log;
-	matrix = JASPAR_MATRIX.return_matrix(1);
+	matrix = JASPAR_MATRIX.return_matrix();
 	JASPAR_MATRIX.print_debug_matrix(matrix, " ");
 
-	matrix = JASPAR_MATRIX.return_norm_matrix(1);
+	matrix = JASPAR_MATRIX.return_norm_matrix();
 	JASPAR_MATRIX.print_debug_matrix(matrix, " NORMALIZED");
 
-	matrix = JASPAR_MATRIX.return_inverse_matrix(1);
+	matrix = JASPAR_MATRIX.return_inverse_matrix();
 	JASPAR_MATRIX.print_debug_matrix(matrix, " INVERSE COMPLEMENT");
 	//Print the matrix for debugging
-	matrix_log = JASPAR_MATRIX.return_log_matrix(1);
+	matrix_log = JASPAR_MATRIX.return_log_matrix();
 	JASPAR_MATRIX.print_debug_matrix(matrix_log, " LOGARITHMIC");
 
 	for(int i=0; i<25; i++){
 
 	string sequence = GEP[i].return_sequence(GEP[i]);
-//	string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAA";
-	oligo_class SHIFTING(matrix_log, sequence);
+	string chr_coord = GEP[i].return_chr_coord_GEP();
+	int start_coord = GEP[i].return_start_coord_GEP();
+//	string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAA";
+	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord);
 	oligos_vector.emplace_back(SHIFTING);
-	vector<double> oligo_scores = SHIFTING.return_oligo_scores(1);
-	int local_position = SHIFTING.return_local_position(1);
-	double best_score = SHIFTING.return_best_score(1);
+	vector<double> oligo_scores = SHIFTING.return_oligo_scores();
+	int local_position = SHIFTING.return_local_position();
+	double best_score = SHIFTING.return_best_score();
+	string best_oligo_seq = SHIFTING.return_best_oligo_seq();
+	string chr_coord_oligo = SHIFTING.return_chr_coord_oligo();
+	int start_coord_oligo = SHIFTING.return_start_coord_oligo();
+	int end_coord_oligo = SHIFTING.return_end_coord_oligo();
 	cout << endl;
 	cout << sequence << endl;
 
@@ -46,6 +53,8 @@ int main(int argc, char *argv[]){
 	cout << endl;
 	cout << "The best oligo in sequence has a score of " << best_score << endl;
 	cout << "His local position is " << local_position << endl;
+	cout << "The best sequence is " << best_oligo_seq << endl;
+	cout << "The global coordinates are:\n> " << chr_coord_oligo << ": " << start_coord_oligo << " - " << end_coord_oligo << endl;
 	}
 
 //	for(int i=0; i<5; i++){
@@ -300,6 +309,23 @@ void oligo_class::find_best_score(vector<double> oligo_scores){
 	}
 }
 
+void oligo_class::find_best_sequence(string sequence, int local_position, int length){
+
+	char* best_seq = new char;
+	strncpy(best_seq, sequence.c_str() + local_position, length);
+	string best(best_seq);
+	best_oligo_seq = best;
+}
+
+void oligo_class::find_coordinate(int local_position, int length, string chr_coord_GEP, int start_coord_GEP){
+
+	chr_coord_oligo = chr_coord_GEP;
+	start_coord_oligo = start_coord_GEP + local_position;
+	end_coord_oligo = start_coord_oligo + length;
+
+}
+
+
 int oligo_class::nearest_center(vector<int> positions, int center){
 
 	vector<int> save_positions = positions;
@@ -334,33 +360,63 @@ void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence functi
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
-int oligo_class::return_local_position(int i){
+		
+string oligo_class::return_chr_coord_oligo(){
+
+	return chr_coord_oligo;
+}
+
+int oligo_class::return_start_coord_oligo(){
+
+	return start_coord_oligo;
+}
+
+int oligo_class::return_end_coord_oligo(){
+
+	return end_coord_oligo;
+}
+string bed_class::return_chr_coord_GEP(){
+
+	return chr_coord;
+}
+
+int bed_class::return_start_coord_GEP(){
+
+	return start_coord;
+}
+
+string oligo_class::return_best_oligo_seq(){
+
+	return best_oligo_seq;
+}
+
+int oligo_class::return_local_position(){
 
 	return local_position;
 }
-vector<double> oligo_class::return_oligo_scores(int i){
+vector<double> oligo_class::return_oligo_scores(){
 
 	return oligo_scores;
 }
 
-double oligo_class::return_best_score(int i){
+double oligo_class::return_best_score(){
 
 	return best_score;
 }
 
-vector<vector<double>> matrix_class::return_matrix(int i){
+vector<vector<double>> matrix_class::return_matrix(){
 
 	return matrix;
 }
-vector<vector<double>> matrix_class::return_norm_matrix(int i){
+vector<vector<double>> matrix_class::return_norm_matrix(){
 
 	return norm_matrix;
 }
-vector<vector<double>> matrix_class::return_inverse_matrix(int i){
+vector<vector<double>> matrix_class::return_inverse_matrix(){
 
 	return inverse_complement_matrix;
 }
-vector<vector<double>> matrix_class::return_log_matrix(int i){
+vector<vector<double>> matrix_class::return_log_matrix(){
 
 	return matrix_log;
 }

@@ -60,6 +60,8 @@ class bed_class { //creation public class of bed_class type
 		}
 		void print_debug_GEP(bed_class);
 		string return_sequence(bed_class);
+		string return_chr_coord_GEP();
+		int return_start_coord_GEP();
 
 };
 
@@ -96,10 +98,10 @@ class matrix_class {
 		}
 		void print_debug_matrix(vector<vector<double>>, string);
                 void shifting(string seq, int p, int length, vector<double>&);
-		vector<vector<double>> return_matrix(int);
-		vector<vector<double>> return_norm_matrix(int);
-		vector<vector<double>> return_inverse_matrix(int);
-		vector<vector<double>> return_log_matrix(int);
+		vector<vector<double>> return_matrix();
+		vector<vector<double>> return_norm_matrix();
+		vector<vector<double>> return_inverse_matrix();
+		vector<vector<double>> return_log_matrix();
 
 };
 
@@ -115,26 +117,37 @@ class oligo_class{
 		double min_possible_score;
 		double max_possible_score;
 		double best_score;
-		string best_oligo;
+		string best_oligo_seq;
 		int local_position;
+		string chr_coord_oligo;
+		int start_coord_oligo;
+		int end_coord_oligo;
 
 		void find_minmax(vector<vector<double>>);
 		void find_best_score(vector<double>);
 		int nearest_center(vector<int>, int);
+		void find_coordinate(int, int, string, int);
+		void find_best_sequence(string, int, int);
 
 	public:
 
-		oligo_class(vector<vector<double>> matrix, string sequence){
+		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, int start_coord_GEP){
 		
 			find_minmax(matrix);		
 			shifting(matrix, sequence, 0);
 			find_best_score(oligo_scores);
+			find_best_sequence(sequence, local_position, matrix[0].size());
+			find_coordinate(local_position, matrix[0].size(), chr_coord_GEP, start_coord_GEP);
 		}
 
 		void shifting(vector<vector<double>>, string, int);
-		vector<double> return_oligo_scores(int);
-		double return_best_score(int);
-		int return_local_position(int);
+		vector<double> return_oligo_scores();
+		double return_best_score();
+		int return_local_position();
+		string return_best_oligo_seq();
+		string return_chr_coord_oligo();
+		int return_start_coord_oligo();
+		int return_end_coord_oligo();
 
 };
 
