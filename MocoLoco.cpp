@@ -27,12 +27,14 @@ int main(int argc, char *argv[]){
 	matrix_log = JASPAR_MATRIX.return_log_matrix(1);
 	JASPAR_MATRIX.print_debug_matrix(matrix_log, " LOGARITHMIC");
 
-	for(int i=0; i<5; i++){
+	for(int i=0; i<25; i++){
 
 	string sequence = GEP[i].return_sequence(GEP[i]);
+//	string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAA";
 	oligo_class SHIFTING(matrix_log, sequence);
 	oligos_vector.emplace_back(SHIFTING);
 	vector<double> oligo_scores = SHIFTING.return_oligo_scores(1);
+	int local_position = SHIFTING.return_local_position(1);
 	double best_score = SHIFTING.return_best_score(1);
 	cout << endl;
 	cout << sequence << endl;
@@ -43,6 +45,7 @@ int main(int argc, char *argv[]){
 	}
 	cout << endl;
 	cout << "The best oligo in sequence has a score of " << best_score << endl;
+	cout << "His local position is " << local_position << endl;
 	}
 
 //	for(int i=0; i<5; i++){
@@ -108,7 +111,7 @@ void oligo_class::shifting(vector<vector<double>> matrix, string sequence, int s
 		
 	double sum_oligo = 0;
 	
-	if(s_iterator <= sequence.size() - matrix[0].size() ) {
+	if(s_iterator < sequence.size() - matrix[0].size() ) {
 
 	for(int i=0; i< matrix[0].size(); i++){
 
@@ -272,9 +275,50 @@ void oligo_class::find_minmax(vector<vector<double>> matrix){
 }	
 
 void oligo_class::find_best_score(vector<double> oligo_scores){
-
+	
 	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
+	vector<int> positions;
+	int center = parameter/2;
+	int matches = 0;
 
+	for(int i=0; i < oligo_scores.size(); i++){
+
+		if(oligo_scores[i] == best_score){
+			
+			matches = matches + 1;
+			positions.emplace_back(i);
+		}
+	}
+	
+	if(matches > 1){
+
+		local_position = nearest_center(positions, center);
+	}
+
+	else{
+		local_position = positions[0];
+	}
+}
+
+int oligo_class::nearest_center(vector<int> positions, int center){
+
+	vector<int> save_positions = positions;
+	int min;
+
+	for(int i=0; i<positions.size(); i++){
+		
+		positions[i] = abs(positions[i]-center);
+	}
+		
+	min = *min_element(positions.begin(),positions.end());
+	
+	for(int i=0; i<positions.size(); i++){
+
+		if(min == positions[i]){
+
+			return save_positions[i];
+		}
+	}
 }
 
 void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
@@ -290,7 +334,10 @@ void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence functi
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
+int oligo_class::return_local_position(int i){
 
+	return local_position;
+}
 vector<double> oligo_class::return_oligo_scores(int i){
 
 	return oligo_scores;

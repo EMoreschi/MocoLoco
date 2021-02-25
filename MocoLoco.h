@@ -116,9 +116,11 @@ class oligo_class{
 		double max_possible_score;
 		double best_score;
 		string best_oligo;
+		int local_position;
 
 		void find_minmax(vector<vector<double>>);
 		void find_best_score(vector<double>);
+		int nearest_center(vector<int>, int);
 
 	public:
 
@@ -132,7 +134,7 @@ class oligo_class{
 		void shifting(vector<vector<double>>, string, int);
 		vector<double> return_oligo_scores(int);
 		double return_best_score(int);
-
+		int return_local_position(int);
 
 };
 
