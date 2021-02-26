@@ -16,21 +16,26 @@ int main(int argc, char *argv[]){
 	
 	vector<vector<double>> matrix;
 	vector<vector<double>> matrix_log;
+	vector<vector<double>> matrix_log_inverse;
 	matrix = JASPAR_MATRIX.return_matrix();
 	JASPAR_MATRIX.print_debug_matrix(matrix, " ");
 
 	matrix = JASPAR_MATRIX.return_norm_matrix();
 	JASPAR_MATRIX.print_debug_matrix(matrix, " NORMALIZED");
 
-	matrix = JASPAR_MATRIX.return_inverse_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix, " INVERSE COMPLEMENT");
+	matrix = JASPAR_MATRIX.return_inverse_norm_matrix();
+	JASPAR_MATRIX.print_debug_matrix(matrix, " INVERSE NORMALIZED MATRIX");
 	//Print the matrix for debugging
 	matrix_log = JASPAR_MATRIX.return_log_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix_log, " LOGARITHMIC");
+	JASPAR_MATRIX.print_debug_matrix(matrix_log, " LOGARITHMIC MATRIX");
+	
+	matrix_log_inverse = JASPAR_MATRIX.return_inverse_log_matrix();
+	JASPAR_MATRIX.print_debug_matrix(matrix_log_inverse, " INVERSE LOGARITHMIC MATRIX");
 
 	for(int i=0; i<25; i++){
 
 	string sequence = GEP[i].return_sequence(GEP[i]);
+	string sequence_inverse = GEP[i].return_sequence_inverse(GEP[i]);
 	string chr_coord = GEP[i].return_chr_coord_GEP();
 	int start_coord = GEP[i].return_start_coord_GEP();
 //	string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAA";
@@ -161,10 +166,6 @@ void oligo_class::shifting(vector<vector<double>> matrix, string sequence, int s
 
 }
 
-string bed_class::return_sequence(bed_class){ 
-       return sequence;
-}
-
 void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
 	ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
@@ -257,14 +258,15 @@ void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 }
 	
 
-void matrix_class::inverse_matrix(vector<vector<double>> matrix){
+vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> matrix){
 
-	inverse_complement_matrix = norm_matrix;
-	reverse(inverse_complement_matrix.begin(), inverse_complement_matrix.end());
+	vector<vector<double>> inv_matrix = matrix;
+	reverse(inv_matrix.begin(), inv_matrix.end());
 	for (int i = 0; i < 4; i++) {		//From 0 to number of matrix lines
 		vector<double> baseQ;
-		reverse(inverse_complement_matrix[i].begin(), inverse_complement_matrix[i].end());
+		reverse(inv_matrix[i].begin(), inv_matrix[i].end());
 	}
+	return inv_matrix;
 
 }
 
@@ -359,6 +361,42 @@ void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence functi
 	}
 }
 
+void bed_class::reverse_sequence(string sequence){
+	
+	string sequence_inverse = sequence;
+
+	for(int i=0; i< sequence.size(); i++){
+
+			switch(sequence[i]){
+
+				case 'A':
+
+					sequence_inverse.replace(i, 1, "T");
+					break;
+
+				case 'C':
+				       
+					sequence_inverse.replace(i, 1, "G");
+					break;
+
+				case 'G':
+				       
+					sequence_inverse.replace(i, 1, "C");
+					break;
+
+				case 'T':
+				       
+					sequence_inverse.replace(i, 1, "A");
+					break;
+				
+				default:
+				       
+					sequence_inverse.replace(i, 1, "N");
+					break;
+		}
+	}
+}
+
 /////DEBUG/////////////////////////////////////////////////////////
 		
 string oligo_class::return_chr_coord_oligo(){
@@ -412,13 +450,25 @@ vector<vector<double>> matrix_class::return_norm_matrix(){
 
 	return norm_matrix;
 }
-vector<vector<double>> matrix_class::return_inverse_matrix(){
+vector<vector<double>> matrix_class::return_inverse_norm_matrix(){
 
-	return inverse_complement_matrix;
+	return inverse_norm_matrix;
+}
+vector<vector<double>> matrix_class::return_inverse_log_matrix(){
+
+	return inverse_matrix_log;
 }
 vector<vector<double>> matrix_class::return_log_matrix(){
 
 	return matrix_log;
+}
+string bed_class::return_sequence(bed_class){
+
+       return sequence;
+}
+string bed_class::return_sequence_inverse(bed_class){
+
+       return sequence_inverse;
 }
 
 void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){			//Debugging of matrix

@@ -34,11 +34,13 @@ class bed_class { //creation public class of bed_class type
 		int end_coord;
 		bool flag;
 		string sequence;
+		string sequence_inverse;
 
 		void centering_function(int, int, int, const int);
 		void read_line(string);
 		void flag_control(int, int);
 		void extract_seq(TwoBit*, int);
+		void reverse_sequence(string);
 
 	public:				//field definition
 		bed_class(){	//default constructor
@@ -56,10 +58,12 @@ class bed_class { //creation public class of bed_class type
 			flag_control(start_coord,end_coord);			//controlling coordinates
 			centering_function(start_coord, end_coord, p, overhead);		//centering the coordinates
 			extract_seq(tb, n_line);				//extracting the sequence
+			reverse_sequence(sequence);
 
 		}
 		void print_debug_GEP(bed_class);
 		string return_sequence(bed_class);
+		string return_sequence_inverse(bed_class);
 		string return_chr_coord_GEP();
 		int return_start_coord_GEP();
 
@@ -73,8 +77,9 @@ class matrix_class {
 		string tf_name;
 		vector<vector<double>> matrix;
 		vector<vector<double>> norm_matrix;
-		vector<vector<double>> inverse_complement_matrix;
+		vector<vector<double>> inverse_norm_matrix;
 		vector<vector<double>> matrix_log;
+		vector<vector<double>> inverse_matrix_log;
 		vector<double> col_sum;		
 
 
@@ -82,7 +87,7 @@ class matrix_class {
 		void matrix_normalization(vector<vector<double>>);
 		void matrix_logarithmic(vector<vector<double>>);
 		void read_JASPAR(string);
-		void inverse_matrix(vector<vector<double>>);
+		vector<vector<double>> reverse_matrix(vector<vector<double>>);
 		vector<double> find_col_sum(vector<vector<double>>);
 
 		
@@ -94,14 +99,17 @@ class matrix_class {
 			matrix_normalization_pseudoc(matrix, pseudoc);			//Calling matrix normalization function
 			matrix_normalization(norm_matrix);
 			matrix_logarithmic(norm_matrix);
-			inverse_matrix(norm_matrix);
+			inverse_norm_matrix = reverse_matrix(norm_matrix);
+			inverse_matrix_log = reverse_matrix(matrix_log);
+
 		}
 		void print_debug_matrix(vector<vector<double>>, string);
                 void shifting(string seq, int p, int length, vector<double>&);
 		vector<vector<double>> return_matrix();
 		vector<vector<double>> return_norm_matrix();
-		vector<vector<double>> return_inverse_matrix();
+		vector<vector<double>> return_inverse_norm_matrix();
 		vector<vector<double>> return_log_matrix();
+		vector<vector<double>> return_inverse_log_matrix();
 
 };
 
