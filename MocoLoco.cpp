@@ -34,22 +34,32 @@ int main(int argc, char *argv[]){
 
 	for(int i=0; i<25; i++){
 
-//	string sequence = GEP[i].return_sequence(GEP[i]);
-	string sequence_inverse = GEP[i].return_sequence_inverse(GEP[i]);
+	string sequence = GEP[i].return_sequence(GEP[i]);
 	string chr_coord = GEP[i].return_chr_coord_GEP();
 	int start_coord = GEP[i].return_start_coord_GEP();
-        string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAA";
+	//string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAA";
 	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord);
+	oligo_class SHIFTING_INV(matrix_log_inverse, sequence, chr_coord, start_coord);
 	oligos_vector.emplace_back(SHIFTING);
+	oligos_vector.emplace_back(SHIFTING_INV);
 	vector<double> oligo_scores = SHIFTING.return_oligo_scores();
+	vector<double> oligo_scores_2 = SHIFTING_INV.return_oligo_scores();
 	int local_position = SHIFTING.return_local_position();
+	int local_position_2 = SHIFTING_INV.return_local_position();
 	double best_score = SHIFTING.return_best_score();
+	double best_score_2 = SHIFTING_INV.return_best_score();
 	string best_oligo_seq = SHIFTING.return_best_oligo_seq();
+	string best_oligo_seq_2 = SHIFTING_INV.return_best_oligo_seq();
 	string chr_coord_oligo = SHIFTING.return_chr_coord_oligo();
+	string chr_coord_oligo_2 = SHIFTING_INV.return_chr_coord_oligo();
 	int start_coord_oligo = SHIFTING.return_start_coord_oligo();
+	int start_coord_oligo_2 = SHIFTING_INV.return_start_coord_oligo();
 	int end_coord_oligo = SHIFTING.return_end_coord_oligo();
+	int end_coord_oligo_2 = SHIFTING_INV.return_end_coord_oligo();
+	
 	cout << endl;
 	cout << sequence << endl;
+	cout << endl;
 
 	for(int j=0; j<oligo_scores.size(); j++){
 		
@@ -60,6 +70,17 @@ int main(int argc, char *argv[]){
 	cout << "His local position is " << local_position << endl;
 	cout << "The best sequence is " << best_oligo_seq << endl;
 	cout << "The global coordinates are:\n> " << chr_coord_oligo << ": " << start_coord_oligo << " - " << end_coord_oligo << endl;
+	cout << endl;
+	for(int j=0; j<oligo_scores_2.size(); j++){
+		
+		cout << oligo_scores_2[j] << " ";
+	}
+	cout << endl;
+	cout << "The inverse best oligo in sequence has a score of " << best_score_2 << endl;
+	cout << "His inverse local position is " << local_position_2 << endl;
+	cout << "The inverse best sequence is " << best_oligo_seq_2 << endl;
+	cout << "The inverse global coordinates are:\n> " << chr_coord_oligo_2 << ": " << start_coord_oligo_2 << " - " << end_coord_oligo_2 << endl;
+	cout << endl;
 	}
 
 //	for(int i=0; i<5; i++){
@@ -285,39 +306,39 @@ void oligo_class::find_minmax(vector<vector<double>> matrix){
 
 }	
 
-void oligo_class::find_best_score(vector<double> oligo_scores){
+int oligo_class::find_best_score(vector<double> oligo_scores){
 
 	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
+
 	vector<int> positions;
 	vector<int> dist_center;
-	int center = parameter/2;
 	int matches = 0;
-	int min;
-	vector<int>::iterator x;
+	int min_distance;
+	vector<int>::iterator itr;
 
 	for(int i=0; i < oligo_scores.size(); i++){
 
 		if(oligo_scores[i] == best_score){
-			
+
 			matches = matches + 1;
 			positions.emplace_back(i);
 		}
 	}
-        if(matches > 1){ 
-                    for (int& p: positions){
-                         int distance;
-			 distance = abs( p - parameter); 
-			 dist_center.emplace_back(distance);
-		    }
-	    min	= *min_element(dist_center.begin(), dist_center.end());
-            x = find(dist_center.begin(),dist_center.end(), min);
-	    int ciao = distance(dist_center.begin(), x);	
-	    local_position=positions[ciao];
+	if(matches > 1){ 
+		
+		for (int& p: positions){
+			int distance;
+			distance = abs( p - parameter); 
+			dist_center.emplace_back(distance);
+		}
 
-}
-else{
-local_position= positions[0];
-}
+		min_distance = *min_element(dist_center.begin(), dist_center.end());
+		itr = find(dist_center.begin(),dist_center.end(), min_distance);
+		int index = distance(dist_center.begin(), itr);
+		return positions[index];
+
+	}
+	return positions[0];
 }
 
 void oligo_class::find_best_sequence(string sequence, int local_position, int length){
@@ -336,28 +357,6 @@ void oligo_class::find_coordinate(int local_position, int length, string chr_coo
 
 }
 
-
-int oligo_class::nearest_center(vector<int> positions, int center){
-
-	vector<int> save_positions = positions;
-	int min;
-
-	for(int i=0; i<positions.size(); i++){
-		
-		positions[i] = abs(positions[i]-center);
-	}
-		
-	min = *min_element(positions.begin(),positions.end());
-	
-	for(int i=0; i<positions.size(); i++){
-
-		if(min == positions[i]){
-
-			return save_positions[i];
-		}
-	}
-}
-
 void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
 	//extracted from Bed line
 	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
@@ -370,41 +369,6 @@ void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence functi
 	}
 }
 
-void bed_class::reverse_sequence(string sequence){
-	
-	string sequence_inverse = sequence;
-
-	for(int i=0; i< sequence.size(); i++){
-
-			switch(sequence[i]){
-
-				case 'A':
-
-					sequence_inverse.replace(i, 1, "T");
-					break;
-
-				case 'C':
-				       
-					sequence_inverse.replace(i, 1, "G");
-					break;
-
-				case 'G':
-				       
-					sequence_inverse.replace(i, 1, "C");
-					break;
-
-				case 'T':
-				       
-					sequence_inverse.replace(i, 1, "A");
-					break;
-				
-				default:
-				       
-					sequence_inverse.replace(i, 1, "N");
-					break;
-		}
-	}
-}
 
 /////DEBUG/////////////////////////////////////////////////////////
 		
@@ -474,10 +438,6 @@ vector<vector<double>> matrix_class::return_log_matrix(){
 string bed_class::return_sequence(bed_class){
 
        return sequence;
-}
-string bed_class::return_sequence_inverse(bed_class){
-
-       return sequence_inverse;
 }
 
 void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){			//Debugging of matrix

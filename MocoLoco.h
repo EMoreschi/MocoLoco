@@ -34,13 +34,11 @@ class bed_class { //creation public class of bed_class type
 		int end_coord;
 		bool flag;
 		string sequence;
-		string sequence_inverse;
 
 		void centering_function(int, int, int, const int);
 		void read_line(string);
 		void flag_control(int, int);
 		void extract_seq(TwoBit*, int);
-		void reverse_sequence(string);
 
 	public:				//field definition
 		bed_class(){	//default constructor
@@ -58,12 +56,10 @@ class bed_class { //creation public class of bed_class type
 			flag_control(start_coord,end_coord);			//controlling coordinates
 			centering_function(start_coord, end_coord, p, overhead);		//centering the coordinates
 			extract_seq(tb, n_line);				//extracting the sequence
-			reverse_sequence(sequence);
 
 		}
 		void print_debug_GEP(bed_class);
 		string return_sequence(bed_class);
-		string return_sequence_inverse(bed_class);
 		string return_chr_coord_GEP();
 		int return_start_coord_GEP();
 
@@ -132,8 +128,7 @@ class oligo_class{
 		int end_coord_oligo;
 
 		void find_minmax(vector<vector<double>>);
-		void find_best_score(vector<double>);
-		int nearest_center(vector<int>, int);
+		int find_best_score(vector<double>);
 		void find_coordinate(int, int, string, int);
 		void find_best_sequence(string, int, int);
 
@@ -143,7 +138,7 @@ class oligo_class{
 		
 			find_minmax(matrix);		
 			shifting(matrix, sequence, 0);
-			find_best_score(oligo_scores);
+			local_position = find_best_score(oligo_scores);
 			find_best_sequence(sequence, local_position, matrix[0].size());
 			find_coordinate(local_position, matrix[0].size(), chr_coord_GEP, start_coord_GEP);
 		}
