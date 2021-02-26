@@ -34,11 +34,11 @@ int main(int argc, char *argv[]){
 
 	for(int i=0; i<25; i++){
 
-	string sequence = GEP[i].return_sequence(GEP[i]);
+//	string sequence = GEP[i].return_sequence(GEP[i]);
 	string sequence_inverse = GEP[i].return_sequence_inverse(GEP[i]);
 	string chr_coord = GEP[i].return_chr_coord_GEP();
 	int start_coord = GEP[i].return_start_coord_GEP();
-//	string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAA";
+        string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAA";
 	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord);
 	oligos_vector.emplace_back(SHIFTING);
 	vector<double> oligo_scores = SHIFTING.return_oligo_scores();
@@ -286,11 +286,14 @@ void oligo_class::find_minmax(vector<vector<double>> matrix){
 }	
 
 void oligo_class::find_best_score(vector<double> oligo_scores){
-	
+
 	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
 	vector<int> positions;
+	vector<int> dist_center;
 	int center = parameter/2;
 	int matches = 0;
+	int min;
+	vector<int>::iterator x;
 
 	for(int i=0; i < oligo_scores.size(); i++){
 
@@ -300,15 +303,21 @@ void oligo_class::find_best_score(vector<double> oligo_scores){
 			positions.emplace_back(i);
 		}
 	}
-	
-	if(matches > 1){
+        if(matches > 1){ 
+                    for (int& p: positions){
+                         int distance;
+			 distance = abs( p - parameter); 
+			 dist_center.emplace_back(distance);
+		    }
+	    min	= *min_element(dist_center.begin(), dist_center.end());
+            x = find(dist_center.begin(),dist_center.end(), min);
+	    int ciao = distance(dist_center.begin(), x);	
+	    local_position=positions[ciao];
 
-		local_position = nearest_center(positions, center);
-	}
-
-	else{
-		local_position = positions[0];
-	}
+}
+else{
+local_position= positions[0];
+}
 }
 
 void oligo_class::find_best_sequence(string sequence, int local_position, int length){
