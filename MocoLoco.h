@@ -24,6 +24,7 @@ string TWOBIT_FILE;	//initializing const char variable for Twobit_file input rea
 string JASPAR_FILE;
 const int overhead = 25;
 const double pseudoc = 0.01;
+bool DS = 0;
 
 class bed_class { //creation public class of bed_class type        
 
@@ -85,6 +86,7 @@ class matrix_class {
 		void read_JASPAR(string);
 		vector<vector<double>> reverse_matrix(vector<vector<double>>);
 		vector<double> find_col_sum(vector<vector<double>>);
+		void print_debug_matrix(vector<vector<double>>, string);
 
 		
 
@@ -99,7 +101,8 @@ class matrix_class {
 			inverse_matrix_log = reverse_matrix(matrix_log);
 
 		}
-		void print_debug_matrix(vector<vector<double>>, string);
+
+		void debug_matrix(matrix_class);
                 void shifting(string seq, int p, int length, vector<double>&);
 		vector<vector<double>> return_matrix();
 		vector<vector<double>> return_norm_matrix();
@@ -121,28 +124,36 @@ class oligo_class{
 		double min_possible_score;
 		double max_possible_score;
 		double best_score;
+		double best_score_normalized;
+		string global_sequence;
 		string best_oligo_seq;
 		int local_position;
 		string chr_coord_oligo;
 		int start_coord_oligo;
 		int end_coord_oligo;
+		char strand;
 
 		void find_minmax(vector<vector<double>>);
 		int find_best_score(vector<double>);
 		void find_coordinate(int, int, string, int);
 		void find_best_sequence(string, int, int);
-
+		void best_score_normalization();
+	
 	public:
 
-		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, int start_coord_GEP){
-		
+		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, int start_coord_GEP, char strand_sign){
+			
+			global_sequence = sequence;
+			strand = strand_sign;
 			find_minmax(matrix);		
 			shifting(matrix, sequence, 0);
 			local_position = find_best_score(oligo_scores);
+			best_score_normalization();
 			find_best_sequence(sequence, local_position, matrix[0].size());
 			find_coordinate(local_position, matrix[0].size(), chr_coord_GEP, start_coord_GEP);
-		}
 
+		}
+		
 		void shifting(vector<vector<double>>, string, int);
 		vector<double> return_oligo_scores();
 		double return_best_score();
@@ -151,10 +162,13 @@ class oligo_class{
 		string return_chr_coord_oligo();
 		int return_start_coord_oligo();
 		int return_end_coord_oligo();
-
+		char return_strand();
+		string return_global_sequence();
+		double return_best_score_normalized();
 };
 
 
+void oligos_vector_creation(vector<oligo_class>&, int, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
 void GEP_creation(string, string, vector<bed_class>&);
 void command_line_parser(int, char **);
 void display_help();

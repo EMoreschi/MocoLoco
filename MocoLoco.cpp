@@ -14,84 +14,47 @@ int main(int argc, char *argv[]){
 
 	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
 	
-	vector<vector<double>> matrix;
 	vector<vector<double>> matrix_log;
 	vector<vector<double>> matrix_log_inverse;
-	matrix = JASPAR_MATRIX.return_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix, " ");
-
-	matrix = JASPAR_MATRIX.return_norm_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix, " NORMALIZED");
-
-	matrix = JASPAR_MATRIX.return_inverse_norm_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix, " INVERSE NORMALIZED MATRIX");
-	//Print the matrix for debugging
 	matrix_log = JASPAR_MATRIX.return_log_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix_log, " LOGARITHMIC MATRIX");
-	
 	matrix_log_inverse = JASPAR_MATRIX.return_inverse_log_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix_log_inverse, " INVERSE LOGARITHMIC MATRIX");
 
-	for(int i=0; i<25; i++){
-
-	string sequence = GEP[i].return_sequence(GEP[i]);
-	string chr_coord = GEP[i].return_chr_coord_GEP();
-	int start_coord = GEP[i].return_start_coord_GEP();
-	//string sequence = "AAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGTCTGTGGTTTAA";
-	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord);
-	oligo_class SHIFTING_INV(matrix_log_inverse, sequence, chr_coord, start_coord);
-	oligos_vector.emplace_back(SHIFTING);
-	oligos_vector.emplace_back(SHIFTING_INV);
-	vector<double> oligo_scores = SHIFTING.return_oligo_scores();
-	vector<double> oligo_scores_2 = SHIFTING_INV.return_oligo_scores();
-	int local_position = SHIFTING.return_local_position();
-	int local_position_2 = SHIFTING_INV.return_local_position();
-	double best_score = SHIFTING.return_best_score();
-	double best_score_2 = SHIFTING_INV.return_best_score();
-	string best_oligo_seq = SHIFTING.return_best_oligo_seq();
-	string best_oligo_seq_2 = SHIFTING_INV.return_best_oligo_seq();
-	string chr_coord_oligo = SHIFTING.return_chr_coord_oligo();
-	string chr_coord_oligo_2 = SHIFTING_INV.return_chr_coord_oligo();
-	int start_coord_oligo = SHIFTING.return_start_coord_oligo();
-	int start_coord_oligo_2 = SHIFTING_INV.return_start_coord_oligo();
-	int end_coord_oligo = SHIFTING.return_end_coord_oligo();
-	int end_coord_oligo_2 = SHIFTING_INV.return_end_coord_oligo();
+	cout << endl;
 	
-	cout << endl;
-	cout << sequence << endl;
-	cout << endl;
-
-	for(int j=0; j<oligo_scores.size(); j++){
-		
-		cout << oligo_scores[j] << " ";
-	}
-	cout << endl;
-	cout << "The best oligo in sequence has a score of " << best_score << endl;
-	cout << "His local position is " << local_position << endl;
-	cout << "The best sequence is " << best_oligo_seq << endl;
-	cout << "The global coordinates are:\n> " << chr_coord_oligo << ": " << start_coord_oligo << " - " << end_coord_oligo << endl;
-	cout << endl;
-	for(int j=0; j<oligo_scores_2.size(); j++){
-		
-		cout << oligo_scores_2[j] << " ";
-	}
-	cout << endl;
-	cout << "The inverse best oligo in sequence has a score of " << best_score_2 << endl;
-	cout << "His inverse local position is " << local_position_2 << endl;
-	cout << "The inverse best sequence is " << best_oligo_seq_2 << endl;
-	cout << "The inverse global coordinates are:\n> " << chr_coord_oligo_2 << ": " << start_coord_oligo_2 << " - " << end_coord_oligo_2 << endl;
-	cout << endl;
+	for(int i=0; i<10; i++){
+	
+	oligos_vector_creation(oligos_vector, i, matrix_log, matrix_log_inverse, GEP);
 	}
 
-//	for(int i=0; i<5; i++){
-//
-//		cout << SHIFTING.oligo_scores[i] << endl;
-//	}
-//	}
+	for(int i=0; i<oligos_vector.size(); i++){
+
+	string global_sequence = oligos_vector[i].return_global_sequence();
+	int local_position = oligos_vector[i].return_local_position();
+	double best_score = oligos_vector[i].return_best_score();
+	string best_oligo_seq = oligos_vector[i].return_best_oligo_seq();
+	string chr_coord_oligo = oligos_vector[i].return_chr_coord_oligo();
+	int start_coord_oligo = oligos_vector[i].return_start_coord_oligo();
+	int end_coord_oligo = oligos_vector[i].return_end_coord_oligo();
+	char strand_oligo = oligos_vector[i].return_strand();
+	double best_score_normalized = oligos_vector[i].return_best_score_normalized();
+
+	cout << endl;
+	cout << "Sequence: " << global_sequence << endl;  
+	cout << "The hit position is " << local_position << endl;
+	cout << "The genomic coordinates are:\n> " << chr_coord_oligo << ": " << start_coord_oligo << " - " << end_coord_oligo << endl;
+	cout << "The best score is " << best_score << endl;
+	cout << "The best score normalized is " << best_score_normalized << endl;
+	cout << "The best oligo sequence is " << best_oligo_seq << endl;
+	cout << "Strand  " << strand_oligo << endl;
+	cout << endl;
+	}	
+
+//	JASPAR_MATRIX.debug_matrix(JASPAR_MATRIX);
 //	for(int i=0; i<GEP.size();i++){
 
 //	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
 //	}
+
  return 0;
 }
 
@@ -142,9 +105,27 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){	
 	}
 }
 
+void oligos_vector_creation(vector<oligo_class> &oligos_vector, int i, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
+	
+	string sequence = GEP[i].return_sequence(GEP[i]);
+	string chr_coord = GEP[i].return_chr_coord_GEP();
+	int start_coord = GEP[i].return_start_coord_GEP();
+	
+	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
+	oligos_vector.emplace_back(SHIFTING);
+
+	if(DS == 1){
+	
+		oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
+		oligos_vector.emplace_back(SHIFTING);
+	}
+	
+
+}
+
 void oligo_class::shifting(vector<vector<double>> matrix, string sequence, int s_iterator){
 		
-	double sum_oligo = 0;
+	double sum_scores = 0;
 	
 	if(s_iterator < sequence.size() - matrix[0].size() ) {
 
@@ -154,33 +135,33 @@ void oligo_class::shifting(vector<vector<double>> matrix, string sequence, int s
 
 				case 'A':
 				       
-					sum_oligo = sum_oligo + matrix[0][i];
+					sum_scores = sum_scores + matrix[0][i];
 					break;
 
 				case 'C':
 				       
-					sum_oligo = sum_oligo + matrix[1][i];
+					sum_scores = sum_scores + matrix[1][i];
 					break;
 
 				case 'G':
 				       
-					sum_oligo = sum_oligo + matrix[2][i];
+					sum_scores = sum_scores + matrix[2][i];
 					break;
 
 				case 'T':
 				       
-					sum_oligo = sum_oligo + matrix[3][i];
+					sum_scores = sum_scores + matrix[3][i];
 					break;
 				
 				default:
 				       
-					sum_oligo = sum_oligo + o_matrix_mins[i];
+					sum_scores = sum_scores + o_matrix_mins[i];
 					break;
 
 		}
 	}
 	
-	oligo_scores.emplace_back(sum_oligo);
+	oligo_scores.emplace_back(sum_scores);
 	shifting(matrix, sequence, s_iterator+1);
 
 	}
@@ -341,6 +322,12 @@ int oligo_class::find_best_score(vector<double> oligo_scores){
 	return positions[0];
 }
 
+void oligo_class::best_score_normalization(){
+	
+	best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
+
+}
+
 void oligo_class::find_best_sequence(string sequence, int local_position, int length){
 
 	char* best_seq = new char;
@@ -415,6 +402,20 @@ double oligo_class::return_best_score(){
 	return best_score;
 }
 
+double oligo_class::return_best_score_normalized(){
+
+	return best_score_normalized;
+}
+char oligo_class::return_strand(){
+
+	return strand;
+}
+
+string oligo_class::return_global_sequence(){
+
+	return global_sequence;
+}
+
 vector<vector<double>> matrix_class::return_matrix(){
 
 	return matrix;
@@ -438,6 +439,28 @@ vector<vector<double>> matrix_class::return_log_matrix(){
 string bed_class::return_sequence(bed_class){
 
        return sequence;
+}
+
+void matrix_class::debug_matrix(matrix_class JASPAR_MATRIX){
+
+	
+	vector<vector<double>> matrix;
+	vector<vector<double>> matrix_log;
+	vector<vector<double>> matrix_log_inverse;
+	matrix = JASPAR_MATRIX.return_matrix();
+	JASPAR_MATRIX.print_debug_matrix(matrix, " ");
+
+	matrix = JASPAR_MATRIX.return_norm_matrix();
+	JASPAR_MATRIX.print_debug_matrix(matrix, " NORMALIZED");
+
+	matrix = JASPAR_MATRIX.return_inverse_norm_matrix();
+	JASPAR_MATRIX.print_debug_matrix(matrix, " INVERSE NORMALIZED MATRIX");
+
+	matrix_log = JASPAR_MATRIX.return_log_matrix();
+	JASPAR_MATRIX.print_debug_matrix(matrix_log, " LOGARITHMIC MATRIX");
+	
+	matrix_log_inverse = JASPAR_MATRIX.return_inverse_log_matrix();
+	JASPAR_MATRIX.print_debug_matrix(matrix_log_inverse, " INVERSE LOGARITHMIC MATRIX");
 }
 
 void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){			//Debugging of matrix
@@ -522,6 +545,13 @@ void command_line_parser(int argc, char **argv){
 				continue;
 			}
 		}
+		
+		else if(buf == "-DS"){
+
+			DS = 1;
+
+		}
+
 		else
 		{
 			cerr << "Unknown option: " << buf <<  endl;
