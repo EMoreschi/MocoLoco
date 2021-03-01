@@ -8,38 +8,13 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-//	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 
-//	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
-	
-//	vector<vector<double>> matrix_log;
-//	vector<vector<double>> matrix_log_inverse;
-//	matrix_log = JASPAR_MATRIX.return_log_matrix();
-//	matrix_log_inverse = JASPAR_MATRIX.return_inverse_log_matrix();
-
-//	cout << endl;
-double best_score;	
 	prova_class pr;
 	for(int i = 0; i<pr.oligos_vector.size(); i++){
-	best_score = pr.oligos_vector[i].return_best_score();
-	cout << best_score << "\n";
-	
+		pr.oligos_vector[i].oligos_vector_debug(pr.oligos_vector[i]);
 	} 
-        
-
-
-//	cout << endl;
-//	cout << "Sequence: " << global_sequence << endl;  
-//	cout << "The hit position is " << local_position << endl;
-//	cout << "The genomic coordinates are:\n> " << chr_coord_oligo << ": " << start_coord_oligo << " - " << end_coord_oligo << endl;
-//	cout << "The best score is " << best_score << endl;
-//	cout << "The best score normalized is " << best_score_normalized << endl;
-//	cout << "The best oligo sequence is " << best_oligo_seq << endl;
-//	cout << "Strand  " << strand_oligo << endl;
-//	cout << endl;
-//	}	
-
-//	JASPAR_MATRIX.debug_matrix(JASPAR_MATRIX);
+        matrix_class M(JASPAR_FILE);
+	M.debug_matrix(M);
 //	for(int i=0; i<GEP.size();i++){
 
 //	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
@@ -350,21 +325,7 @@ void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence functi
 
 
 /////DEBUG/////////////////////////////////////////////////////////
-		
-string oligo_class::return_chr_coord_oligo(){
 
-	return chr_coord_oligo;
-}
-
-int oligo_class::return_start_coord_oligo(){
-
-	return start_coord_oligo;
-}
-
-int oligo_class::return_end_coord_oligo(){
-
-	return end_coord_oligo;
-}
 string bed_class::return_chr_coord_GEP(){
 
 	return chr_coord;
@@ -373,39 +334,6 @@ string bed_class::return_chr_coord_GEP(){
 int bed_class::return_start_coord_GEP(){
 
 	return start_coord;
-}
-
-string oligo_class::return_best_oligo_seq(){
-
-	return best_oligo_seq;
-}
-
-int oligo_class::return_local_position(){
-
-	return local_position;
-}
-vector<double> oligo_class::return_oligo_scores(){
-
-	return oligo_scores;
-}
-
-double oligo_class::return_best_score(){
-
-	return best_score;
-}
-
-double oligo_class::return_best_score_normalized(){
-
-	return best_score_normalized;
-}
-char oligo_class::return_strand(){
-
-	return strand;
-}
-
-string oligo_class::return_global_sequence(){
-
-	return global_sequence;
 }
 
 vector<vector<double>> matrix_class::return_matrix(){
@@ -475,6 +403,19 @@ void bed_class::print_debug_GEP(bed_class){			//Debug function: Print the GEP ve
 	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;	//Printing chr, start and end coordinates
 	cout << sequence << endl;					//Printing sequence
 
+}
+
+void oligo_class::oligos_vector_debug(oligo_class oligos_vector){
+
+	cout << endl;
+	cout << "Sequence: " << global_sequence << endl;
+	cout << "The hit position is " << local_position << endl;
+	cout << "The genomic coordinates are:\n> " << chr_coord_oligo << ": " << start_coord_oligo << " - " << end_coord_oligo << endl;
+	cout << "The best score is " << best_score << endl;
+	cout << "The best score normalized is " << best_score_normalized << endl;
+	cout << "The best oligo sequence is " << best_oligo_seq << endl;
+	cout << "Strand  " << strand << endl;
+	cout << endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

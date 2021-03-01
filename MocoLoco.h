@@ -156,24 +156,16 @@ class oligo_class{
 		}
 		
 		void shifting(vector<vector<double>>, string, int);
-		vector<double> return_oligo_scores();
-		double return_best_score();
-		int return_local_position();
-		string return_best_oligo_seq();
-		string return_chr_coord_oligo();
-		int return_start_coord_oligo();
-		int return_end_coord_oligo();
-		char return_strand();
-		string return_global_sequence();
-		double return_best_score_normalized();
+		void oligos_vector_debug(oligo_class);
 };
 
-class prova_class {
+class prova_class{
 
 	private:
 
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
+		
 
 
 	public:
@@ -188,7 +180,6 @@ class prova_class {
 			matrix_log = M.return_log_matrix();
 			inverse_matrix_log = M.return_inverse_log_matrix();
 	                oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
-
 		}
 
 };
