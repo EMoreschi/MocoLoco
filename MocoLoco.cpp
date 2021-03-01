@@ -8,46 +8,36 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	vector<bed_class> GEP;					//Initializing GEP --> vector of bed_class classes
-	vector<oligo_class> oligos_vector;
-	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
+//	GEP_creation(BED_FILE, TWOBIT_FILE, GEP); 			//Function to read BED and 2Bit files and create GEP objects vector
 
-	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
+//	matrix_class JASPAR_MATRIX(JASPAR_FILE);				//Function to read JASPAR PWM file, extract value from it and create a matrix class called JASPAR_MTX
 	
-	vector<vector<double>> matrix_log;
-	vector<vector<double>> matrix_log_inverse;
-	matrix_log = JASPAR_MATRIX.return_log_matrix();
-	matrix_log_inverse = JASPAR_MATRIX.return_inverse_log_matrix();
+//	vector<vector<double>> matrix_log;
+//	vector<vector<double>> matrix_log_inverse;
+//	matrix_log = JASPAR_MATRIX.return_log_matrix();
+//	matrix_log_inverse = JASPAR_MATRIX.return_inverse_log_matrix();
 
-	cout << endl;
+//	cout << endl;
+double best_score;	
+	prova_class pr;
+	for(int i = 0; i<pr.oligos_vector.size(); i++){
+	best_score = pr.oligos_vector[i].return_best_score();
+	cout << best_score << "\n";
 	
-	for(int i=0; i<10; i++){
-	
-	oligos_vector_creation(oligos_vector, i, matrix_log, matrix_log_inverse, GEP);
-	}
+	} 
+        
 
-	for(int i=0; i<oligos_vector.size(); i++){
 
-	string global_sequence = oligos_vector[i].return_global_sequence();
-	int local_position = oligos_vector[i].return_local_position();
-	double best_score = oligos_vector[i].return_best_score();
-	string best_oligo_seq = oligos_vector[i].return_best_oligo_seq();
-	string chr_coord_oligo = oligos_vector[i].return_chr_coord_oligo();
-	int start_coord_oligo = oligos_vector[i].return_start_coord_oligo();
-	int end_coord_oligo = oligos_vector[i].return_end_coord_oligo();
-	char strand_oligo = oligos_vector[i].return_strand();
-	double best_score_normalized = oligos_vector[i].return_best_score_normalized();
-
-	cout << endl;
-	cout << "Sequence: " << global_sequence << endl;  
-	cout << "The hit position is " << local_position << endl;
-	cout << "The genomic coordinates are:\n> " << chr_coord_oligo << ": " << start_coord_oligo << " - " << end_coord_oligo << endl;
-	cout << "The best score is " << best_score << endl;
-	cout << "The best score normalized is " << best_score_normalized << endl;
-	cout << "The best oligo sequence is " << best_oligo_seq << endl;
-	cout << "Strand  " << strand_oligo << endl;
-	cout << endl;
-	}	
+//	cout << endl;
+//	cout << "Sequence: " << global_sequence << endl;  
+//	cout << "The hit position is " << local_position << endl;
+//	cout << "The genomic coordinates are:\n> " << chr_coord_oligo << ": " << start_coord_oligo << " - " << end_coord_oligo << endl;
+//	cout << "The best score is " << best_score << endl;
+//	cout << "The best score normalized is " << best_score_normalized << endl;
+//	cout << "The best oligo sequence is " << best_oligo_seq << endl;
+//	cout << "Strand  " << strand_oligo << endl;
+//	cout << endl;
+//	}	
 
 //	JASPAR_MATRIX.debug_matrix(JASPAR_MATRIX);
 //	for(int i=0; i<GEP.size();i++){
@@ -81,7 +71,7 @@ void bed_class::flag_control( int start,  int end){ 	//Flag control function: st
 	else{ flag = 1;}
 }
 
-void GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
+void prova_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
 	ifstream in(Bed_file); 						//Opening file in lecture mode
 	TwoBit * tb;				//Creating a TwoBit* variable called tb
@@ -105,11 +95,13 @@ void GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){	
 	}
 }
 
-void oligos_vector_creation(vector<oligo_class> &oligos_vector, int i, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
-	
+void prova_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
+        	
+	for(int i=0; i<GEP.size(); i++){
 	string sequence = GEP[i].return_sequence(GEP[i]);
 	string chr_coord = GEP[i].return_chr_coord_GEP();
 	int start_coord = GEP[i].return_start_coord_GEP();
+	
 	
 	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
 	oligos_vector.emplace_back(SHIFTING);
@@ -119,7 +111,7 @@ void oligos_vector_creation(vector<oligo_class> &oligos_vector, int i, vector<ve
 		oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
 		oligos_vector.emplace_back(SHIFTING);
 	}
-	
+	}	
 
 }
 

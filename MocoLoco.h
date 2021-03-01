@@ -42,6 +42,7 @@ class bed_class { //creation public class of bed_class type
 		void extract_seq(TwoBit*, int);
 
 	public:				//field definition
+		
 		bed_class(){	//default constructor
 
 			chr_coord = "";
@@ -167,9 +168,31 @@ class oligo_class{
 		double return_best_score_normalized();
 };
 
+class prova_class {
 
-void oligos_vector_creation(vector<oligo_class>&, int, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
-void GEP_creation(string, string, vector<bed_class>&);
+	private:
+
+		vector<vector<double>> matrix_log;
+		vector<vector<double>> inverse_matrix_log;
+
+
+	public:
+	        vector<oligo_class> oligos_vector;
+		vector<bed_class> GEP; 
+		void GEP_creation(string, string, vector<bed_class>&);
+                void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
+
+		prova_class(){
+			GEP_creation(BED_FILE, TWOBIT_FILE, GEP);
+			matrix_class M(JASPAR_FILE);
+			matrix_log = M.return_log_matrix();
+			inverse_matrix_log = M.return_inverse_log_matrix();
+	                oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
+
+		}
+
+};
+
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(string);
