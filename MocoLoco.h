@@ -105,9 +105,6 @@ class matrix_class {
 
 		void debug_matrix(matrix_class);
                 void shifting(string seq, int p, int length, vector<double>&);
-		vector<vector<double>> return_matrix();
-		vector<vector<double>> return_norm_matrix();
-		vector<vector<double>> return_inverse_norm_matrix();
 		vector<vector<double>> return_log_matrix();
 		vector<vector<double>> return_inverse_log_matrix();
 
@@ -158,7 +155,7 @@ class oligo_class{
 		void oligos_vector_debug(oligo_class);
 };
 
-class coordinator_class{
+class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and Oligos_vector
 
 	private:
 

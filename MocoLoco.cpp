@@ -297,10 +297,7 @@ void oligo_class::best_score_normalization(){
 
 void oligo_class::find_best_sequence(string sequence, int local_position, int length){
 
-	char* best_seq = new char;
-	strncpy(best_seq, sequence.c_str() + local_position, length);
-	string best(best_seq);
-	best_oligo_seq = best;
+	best_oligo_seq = sequence.substr(local_position,length);
 }
 
 void oligo_class::find_coordinate(int local_position, int length, string chr_coord_GEP, int start_coord_GEP){
@@ -336,18 +333,6 @@ int bed_class::return_start_coord_GEP(){
 	return start_coord;
 }
 
-vector<vector<double>> matrix_class::return_matrix(){
-
-	return matrix;
-}
-vector<vector<double>> matrix_class::return_norm_matrix(){
-
-	return norm_matrix;
-}
-vector<vector<double>> matrix_class::return_inverse_norm_matrix(){
-
-	return inverse_norm_matrix;
-}
 vector<vector<double>> matrix_class::return_inverse_log_matrix(){
 
 	return inverse_matrix_log;
@@ -361,29 +346,16 @@ string bed_class::return_sequence(bed_class){
        return sequence;
 }
 
-void matrix_class::debug_matrix(matrix_class JASPAR_MATRIX){
+void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
 
-	
-	vector<vector<double>> matrix;
-	vector<vector<double>> matrix_log;
-	vector<vector<double>> matrix_log_inverse;
-	matrix = JASPAR_MATRIX.return_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix, " ");
-
-	matrix = JASPAR_MATRIX.return_norm_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix, " NORMALIZED");
-
-	matrix = JASPAR_MATRIX.return_inverse_norm_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix, " INVERSE NORMALIZED MATRIX");
-
-	matrix_log = JASPAR_MATRIX.return_log_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix_log, " LOGARITHMIC MATRIX");
-	
-	matrix_log_inverse = JASPAR_MATRIX.return_inverse_log_matrix();
-	JASPAR_MATRIX.print_debug_matrix(matrix_log_inverse, " INVERSE LOGARITHMIC MATRIX");
+	M.print_debug_matrix(matrix, " ");
+	M.print_debug_matrix(norm_matrix, " NORMALIZED");
+	M.print_debug_matrix(inverse_norm_matrix, " INVERSE NORMALIZED MATRIX");
+	M.print_debug_matrix(matrix_log, " LOGARITHMIC MATRIX");
+	M.print_debug_matrix(inverse_matrix_log, " INVERSE LOGARITHMIC MATRIX");
 }
 
-void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){			//Debugging of matrix
+void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){		//Print matrix function
 	
 	cout << "\n" << matrix_name << " " << tf_name << type << ":" << endl;
 
@@ -405,7 +377,7 @@ void bed_class::print_debug_GEP(bed_class){			//Debug function: Print the GEP ve
 
 }
 
-void oligo_class::oligos_vector_debug(oligo_class oligos_vector){
+void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug function to print the best oligo features
 
 	cout << endl;
 	cout << "Sequence: " << global_sequence << endl;
