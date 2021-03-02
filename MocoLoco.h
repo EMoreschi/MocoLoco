@@ -95,6 +95,7 @@ class matrix_class {
 		matrix_class(string JASPAR_FILE){
 
 			read_JASPAR(JASPAR_FILE);
+<<<<<<< HEAD
 			matrix_normalization_pseudoc(matrix, pseudoc);			//Calling matrix normalization function
 			matrix_normalization(norm_matrix);
 			matrix_logarithmic(norm_matrix);
@@ -141,6 +142,10 @@ class oligo_class{
 		void best_score_normalization();
 	
 	public:
+=======
+			matrix_normalization(matrix, 0.01);			//Calling matrix normalization function //FZ Mai hardcodare valori, utilizzare sempre costanti
+			inverse_matrix(norm_matrix);
+>>>>>>> 485dcd17fd188b51ae04e8463eecc1e9969bcfbd
 
 		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, int start_coord_GEP, char strand_sign){
 			
