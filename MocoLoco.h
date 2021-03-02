@@ -2,17 +2,13 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
-#include <cassert>
 #include <string>
-#include <dirent.h>
 #include <cmath>
-#include <valarray>
 #include <vector>
 #include <algorithm>
 #include <typeinfo> 
 #include <sstream>
 #include <numeric>
-#include <unistd.h>
 #include "./TwoBit/twobit.h"
 #include "./TwoBit/twobit.c"
 
