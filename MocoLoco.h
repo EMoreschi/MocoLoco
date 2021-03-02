@@ -19,7 +19,7 @@
 using namespace std;
 
 string BED_FILE; 		//initializing const char variarible for Bed_file input reading
-int parameter = 150; 		//default parameter 150
+int half_length = 150; 		//default half_length 150
 string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 string JASPAR_FILE;
 const int overhead = 25;
@@ -152,14 +152,13 @@ class oligo_class{
 			best_score_normalization();
 			find_best_sequence(sequence, local_position, matrix[0].size());
 			find_coordinate(local_position, matrix[0].size(), chr_coord_GEP, start_coord_GEP);
-
 		}
 		
 		void shifting(vector<vector<double>>, string, int);
 		void oligos_vector_debug(oligo_class);
 };
 
-class prova_class{
+class coordinator_class{
 
 	private:
 
@@ -174,7 +173,7 @@ class prova_class{
 		void GEP_creation(string, string, vector<bed_class>&);
                 void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
 
-		prova_class(){
+		coordinator_class(){
 			GEP_creation(BED_FILE, TWOBIT_FILE, GEP);
 			matrix_class M(JASPAR_FILE);
 			matrix_log = M.return_log_matrix();

@@ -9,9 +9,9 @@ int main(int argc, char *argv[]){
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
 
-	prova_class pr;
-	for(int i = 0; i<pr.oligos_vector.size(); i++){
-		pr.oligos_vector[i].oligos_vector_debug(pr.oligos_vector[i]);
+	coordinator_class C;
+	for(int i = 0; i<C.oligos_vector.size(); i++){
+		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
 	} 
         matrix_class M(JASPAR_FILE);
 	M.debug_matrix(M);
@@ -30,11 +30,11 @@ void bed_class::read_line(string line){				//Read line function: it takes in inp
 
 }
 
-void bed_class::centering_function ( int start,  int end, int parameter, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
-	//following an input parameter value (overhead added)
+void bed_class::centering_function ( int start,  int end, int half_length, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
+	//following an input half_length value (overhead added to the end)
 	int center = (start + end)/2;						
-	start_coord = center - parameter;			//No overhead for start
-	end_coord = center + parameter +overhead;		//Overhead for end
+	start_coord = center - half_length;			//No overhead for start
+	end_coord = center + half_length +overhead;		//Overhead for end
 }
 
 
@@ -46,7 +46,7 @@ void bed_class::flag_control( int start,  int end){ 	//Flag control function: st
 	else{ flag = 1;}
 }
 
-void prova_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
+void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
 	ifstream in(Bed_file); 						//Opening file in lecture mode
 	TwoBit * tb;				//Creating a TwoBit* variable called tb
@@ -62,7 +62,7 @@ void prova_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_c
 		if(line[0]=='#')
 			continue;
 
-		bed_class new_class(parameter,line,tb, n_line);  //Called the object constructor passing the Bed line, parameter P, twobit file tb, and the line counter n_line
+		bed_class new_class(half_length,line,tb, n_line);  //Called the object constructor passing the Bed line, half_length P, twobit file tb, and the line counter n_line
 		GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
 
 		n_line = n_line + 1;					//pass to next line 
@@ -70,7 +70,7 @@ void prova_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_c
 	}
 }
 
-void prova_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
+void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
         	
 	for(int i=0; i<GEP.size(); i++){
 	string sequence = GEP[i].return_sequence(GEP[i]);
@@ -276,7 +276,7 @@ int oligo_class::find_best_score(vector<double> oligo_scores){
 		
 		for (int& p: positions){
 			int distance;
-			distance = abs( p - parameter); 
+			distance = abs( p - half_length); 
 			dist_center.emplace_back(distance);
 		}
 
@@ -416,6 +416,11 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){
 	cout << "The best oligo sequence is " << best_oligo_seq << endl;
 	cout << "Strand  " << strand << endl;
 	cout << endl;
+	//cout << "Oligo scores along the sequence: " << endl;
+	//for(int i =0; i <oligo_scores.size(); i++){
+	//cout << oligo_scores[i] << " "; 
+	//}
+	//cout << endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -449,10 +454,10 @@ void command_line_parser(int argc, char **argv){
 			if(i < argc - 1){
 				try{
 
-				parameter = stoi(argv[++i]);}
+				half_length = stoi(argv[++i]);}
 				catch(exception &err)
 				{
-					cerr<< buf <<" parameter is not a number"<<endl;
+					cerr<< buf <<" half_length is not a number"<<endl;
 				}
 				continue;
 			}
@@ -517,7 +522,8 @@ void display_help() 						//Display help function
 	cerr << "\n --BED -B <file_bed>: input bed file" << endl;
 	cerr << "\n --twobit -tb <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar -J <JASPAR_file>: input JASPAR file" << endl;
-	cerr << "\n --param -p <parameter>: input parameter to select bases number to keep around the chip seq signal" << endl;
+	cerr << "\n --param -p <half_length>: input half_length to select bases number to keep around the chip seq signal" << endl;
+	cerr << "\n -DS as input to make the analysis along the double strand. Default along single strand" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
