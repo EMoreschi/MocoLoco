@@ -90,6 +90,26 @@ void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vecto
 
 }
 
+void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
+	
+	if(DS == 1){
+		vector<oligo_class> comparison;
+		for(int i=0; i<oligos_vec.size(); i+=2){
+
+			double best_score_norm_positive = oligos_vec[i].return_best_score_normalized();
+			double best_score_norm_negative = oligos_vec[i+1].return_best_score_normalized(); 
+			if(best_score_norm_positive >= best_score_norm_negative){
+
+				comparison.emplace_back(oligos_vec[i]);
+			}
+			else{
+				comparison.emplace_back(oligos_vec[i+1]);
+			}
+		}
+		oligos_vector = comparison;
+	}
+}
+
 void oligo_class::shifting(vector<vector<double>> matrix, string sequence, int s_iterator){
 		
 	double sum_scores = 0;
@@ -315,9 +335,7 @@ void coordinator_class::centering_oligo(){
 	int center_oligo ;
 
 	for(int i=0; i<oligos_vector.size(); i++){
-	//int start_oligo = oligos_vector.return_start_coord_oligo();
 	center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
-	//cout << "% "<< matrix_log[0].size()/2 << "    center_oligo :" << center_oligo;
 	GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
 	GEP[i].extract_seq(tb,0);
 	}
@@ -340,6 +358,11 @@ void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence functi
 int oligo_class::return_start_coord_oligo(){
 
 	return start_coord_oligo;
+}
+
+double oligo_class::return_best_score_normalized(){
+
+	return best_score_normalized;
 }
 
 string bed_class::return_chr_coord_GEP(){
@@ -420,7 +443,7 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 
 void command_line_parser(int argc, char** argv){
 	int opt= 0;
-	const char* const short_opts = "hp:b:j:t:d";
+	const char* const short_opts = "hp:b:j:t:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -429,7 +452,7 @@ void command_line_parser(int argc, char** argv){
 		{"bed",    required_argument, nullptr,  'b' },
 		{"jaspar",   required_argument, nullptr,  'j' },
 		{"twobit",   required_argument, nullptr,  't' },
-		{"ds",   no_argument, nullptr,  'd' },
+		{"ss",   no_argument, nullptr,  's' },
 		{nullptr, no_argument, nullptr,  0   }
 	};
 
@@ -455,7 +478,7 @@ void command_line_parser(int argc, char** argv){
 			case 't' : TWOBIT_FILE = string(optarg);
 				   is_file_exist(TWOBIT_FILE, "--twobit || -t ");
 				   break;
-			case 'd' : DS = 1;
+			case 's' : DS = 0;
 				   break;
 			case '?': // Unrecognized option
 			default:
@@ -492,7 +515,7 @@ void display_help() 						//Display help function
 	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
 	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal" << endl;
-	cerr << "\n -d || --DS as input to make the analysis along the double strand. Default along single strand" << endl;
+	cerr << "\n -s || --ss as input to make the analysis along the single strand. Default along double strand" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);

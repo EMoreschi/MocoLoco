@@ -21,7 +21,7 @@ string TWOBIT_FILE;	//initializing const char variable for Twobit_file input rea
 string JASPAR_FILE;
 const int overhead = 25;
 const double pseudoc = 0.01;
-bool DS = 0;
+bool DS = 1;
 
 class bed_class { //creation public class of bed_class type        
 
@@ -150,6 +150,7 @@ class oligo_class{
 		void shifting(vector<vector<double>>, string, int);
 		void oligos_vector_debug(oligo_class);
 		int return_start_coord_oligo();
+		double return_best_score_normalized();
 };
 
 class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and Oligos_vector
@@ -159,6 +160,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
 		void centering_oligo();
+		void best_strand(vector<oligo_class>);
 
 
 	public:
@@ -173,6 +175,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			matrix_log = M.return_log_matrix();
 			inverse_matrix_log = M.return_inverse_log_matrix();
 	                oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
+			best_strand(oligos_vector);
 			centering_oligo();
 		}
 
