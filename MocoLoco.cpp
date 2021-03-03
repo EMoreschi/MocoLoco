@@ -15,10 +15,10 @@ int main(int argc, char *argv[]){
 	} 
         matrix_class M(JASPAR_FILE);
 	M.debug_matrix(M);
-//	for(int i=0; i<GEP.size();i++){
+	for(int i=0; i<C.GEP.size();i++){
 
-//	GEP[i].print_debug_GEP(GEP[i]);					//Print GEP vector for debugging
-//	}
+	C.GEP[i].print_debug_GEP(C.GEP[i]);					//Print GEP vector for debugging
+	}
 
  return 0;
 }
@@ -308,6 +308,20 @@ void oligo_class::find_coordinate(int local_position, int length, string chr_coo
 
 }
 
+void coordinator_class::centering_oligo(){
+	
+	TwoBit * tb;
+	tb = twobit_open(TWOBIT_FILE.c_str());
+	int start_oligo;
+
+	for(int i=0; i<oligos_vector.size(); i++){
+	//int start_oligo = oligos_vector.return_start_coord_oligo();
+	start_oligo = oligos_vector[i].return_start_coord_oligo();
+	GEP[i].centering_function(start_oligo,start_oligo,half_length,0);
+	GEP[i].extract_seq(tb,0);
+	}
+}
+
 void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
 	//extracted from Bed line
 	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
@@ -322,6 +336,10 @@ void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence functi
 
 
 /////DEBUG/////////////////////////////////////////////////////////
+int oligo_class::return_start_coord_oligo(){
+
+	return start_coord_oligo;
+}
 
 string bed_class::return_chr_coord_GEP(){
 

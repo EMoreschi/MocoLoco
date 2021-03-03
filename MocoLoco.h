@@ -33,10 +33,8 @@ class bed_class { //creation public class of bed_class type
 		bool flag;
 		string sequence;
 
-		void centering_function(int, int, int, const int);
 		void read_line(string);
 		void flag_control(int, int);
-		void extract_seq(TwoBit*, int);
 
 	public:				//field definition
 		
@@ -61,6 +59,8 @@ class bed_class { //creation public class of bed_class type
 		string return_sequence(bed_class);
 		string return_chr_coord_GEP();
 		int return_start_coord_GEP();
+		void centering_function(int, int, int, const int);
+		void extract_seq(TwoBit*, int);
 
 };
 
@@ -149,6 +149,7 @@ class oligo_class{
 		
 		void shifting(vector<vector<double>>, string, int);
 		void oligos_vector_debug(oligo_class);
+		int return_start_coord_oligo();
 };
 
 class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and Oligos_vector
@@ -157,7 +158,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
-		
+		void centering_oligo();
 
 
 	public:
@@ -172,6 +173,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			matrix_log = M.return_log_matrix();
 			inverse_matrix_log = M.return_inverse_log_matrix();
 	                oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
+			centering_oligo();
 		}
 
 };
