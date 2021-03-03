@@ -11,6 +11,7 @@
 #include <numeric>
 #include "./TwoBit/twobit.h"
 #include "./TwoBit/twobit.c"
+#include <getopt.h>
 
 using namespace std;
 

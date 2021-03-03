@@ -398,89 +398,67 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 
 
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
-void command_line_parser(int argc, char **argv){
 
-	for(int i = 1; i < argc; i++){
+void command_line_parser(int argc, char** argv){
+	int opt= 0;
+	const char* const short_opts = "hp:b:j:t:d";
 
-		string buf = argv[i];
+	//Specifying the expected options
+	const option long_opts[] ={
+		{"help",      no_argument, nullptr,  'h' },
+		{"param",      required_argument, nullptr,  'p' },
+		{"bed",    required_argument, nullptr,  'b' },
+		{"jaspar",   required_argument, nullptr,  'j' },
+		{"twobit",   required_argument, nullptr,  't' },
+		{"ds",   no_argument, nullptr,  'd' },
+		{nullptr, no_argument, nullptr,  0   }
+	};
 
-		if(buf == "--help" || buf == "-h"){
+	while (true)
+	{
+		const auto opt = getopt_long(argc, argv, short_opts, long_opts, nullptr);
 
-			display_help();
+		if (-1 == opt)
+			break;
 
+
+		switch (opt) {
+			case 'h' : display_help();
+				   break;
+			case 'p' : half_length = stoi(optarg); 
+				   break;
+			case 'b' : BED_FILE = string(optarg);
+				   is_file_exist(BED_FILE, "--bed || -b");
+				   break;
+			case 'j' : JASPAR_FILE = string(optarg);
+				   is_file_exist(JASPAR_FILE, "--jaspar || -j");
+				   break;
+			case 't' : TWOBIT_FILE = string(optarg);
+				   is_file_exist(TWOBIT_FILE, "--twobit || -t ");
+				   break;
+			case 'd' : DS = 1;
+				   break;
+			case '?': // Unrecognized option
+			default:
+				   display_help();
+				   break;
 		}
-
-		else if(buf == "--BED" || buf == "-B"){
-
-			if(i < argc - 1){
-
-				BED_FILE = argv[++i];
-				is_file_exist(BED_FILE, buf);
-				continue;
-
-			}
-		}
-
-		else if(buf == "--param" || buf == "-p"){
-
-			if(i < argc - 1){
-				try{
-
-				half_length = stoi(argv[++i]);}
-				catch(exception &err)
-				{
-					cerr<< buf <<" half_length is not a number"<<endl;
-				}
-				continue;
-			}
-		}
-
-		else if(buf == "--jaspar" || buf == "-J"){
-
-			if(i < argc - 1){
-
-				JASPAR_FILE = argv[++i];
-				is_file_exist(JASPAR_FILE, buf);
-				continue;
-
-			}
-		}
-
-		else if(buf == "--twobit" || buf == "-tb"){
-
-			if(i < argc - 1){
-
-				TWOBIT_FILE = argv[++i];
-				is_file_exist(TWOBIT_FILE, buf);
-				continue;
-			}
-		}
-		
-		else if(buf == "-DS"){
-
-			DS = 1;
-
-		}
-
-		else
-		{
-			cerr << "Unknown option: " << buf <<  endl;
-			exit(1);
-		}
-
 	}
 }
 
+
+
+
 bool is_file_exist(string fileName, string buf)		//Input files existence control
 {
-        struct stat check;
-	int regular_check;
+	struct stat check;
+	int regular_check, existing_check;
 	const char * C_fileName = fileName.c_str();
-        stat(C_fileName, &check );
+	existing_check = stat(C_fileName, &check );
 
 	regular_check = S_ISREG( check.st_mode );
 
-	if ( regular_check == 0 ) {
+	if ( regular_check == 0 || existing_check != 0) {
 		cerr <<"ERROR: "<< buf << " parameter has wrong argument"<< endl;
 		exit(1);	
 	}
@@ -490,12 +468,12 @@ bool is_file_exist(string fileName, string buf)		//Input files existence control
 
 void display_help() 						//Display help function
 {
-	cerr << "\n --help show this message" << endl;
-	cerr << "\n --BED -B <file_bed>: input bed file" << endl;
-	cerr << "\n --twobit -tb <file_twobit>: input twobit file" << endl;
-	cerr << "\n --jaspar -J <JASPAR_file>: input JASPAR file" << endl;
-	cerr << "\n --param -p <half_length>: input half_length to select bases number to keep around the chip seq signal" << endl;
-	cerr << "\n -DS as input to make the analysis along the double strand. Default along single strand" << endl;
+	cerr << "\n --help || -h show this message" << endl;
+	cerr << "\n --bed || -b <file_bed>: input bed file" << endl;
+	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
+	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
+	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal" << endl;
+	cerr << "\n -d || --DS as input to make the analysis along the double strand. Default along single strand" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
