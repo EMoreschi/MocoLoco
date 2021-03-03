@@ -38,14 +38,14 @@ class bed_class { //creation public class of bed_class type
 
 	public:				//field definition
 		
-		bed_class(){	//default constructor
-
-			chr_coord = "";
-			start_coord = 0;
-			end_coord = 0;
-			flag = 0;	
-
-		}
+//		bed_class(){	//default constructor
+//
+//			chr_coord = "";
+//			start_coord = 0;
+//			end_coord = 0;
+//			flag = 0;	
+//
+//		}
 
 		bed_class(int p, string line, TwoBit* tb,int n_line){
 

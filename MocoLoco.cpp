@@ -312,12 +312,13 @@ void coordinator_class::centering_oligo(){
 	
 	TwoBit * tb;
 	tb = twobit_open(TWOBIT_FILE.c_str());
-	int start_oligo;
+	int center_oligo ;
 
 	for(int i=0; i<oligos_vector.size(); i++){
 	//int start_oligo = oligos_vector.return_start_coord_oligo();
-	start_oligo = oligos_vector[i].return_start_coord_oligo();
-	GEP[i].centering_function(start_oligo,start_oligo,half_length,0);
+	center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
+	//cout << "% "<< matrix_log[0].size()/2 << "    center_oligo :" << center_oligo;
+	GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
 	GEP[i].extract_seq(tb,0);
 	}
 }
