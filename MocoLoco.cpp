@@ -427,7 +427,8 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 	ofstream outfile;	
 	//cout << BED_FILE << "\n";
 	//cout << BED_FILE.find_last_of("/") << "\n";
-	outfile.open(BED_FILE.erase(0,BED_FILE.find_last_of("/")+1) + "centered.bed");
+	JASPAR_FILE = JASPAR_FILE.erase(JASPAR_FILE.find_last_of("."), JASPAR_FILE.size());
+	outfile.open(TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
 	//cout << BED_FILE<< "\n";
 	//cout << BED_FILE.find_last_of("/")<< "\n";
 	for(int i=0; i<GEP.size(); i++){
@@ -437,7 +438,8 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
 	}
 	outfile.close();
-	outfile.open("centered.fasta");
+	BED_FILE = BED_FILE.erase(BED_FILE.find_last_of("."), BED_FILE.size());
+	outfile.open(TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1)+".fasta");
 	for(int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
