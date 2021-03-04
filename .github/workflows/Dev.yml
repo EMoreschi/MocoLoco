@@ -39,8 +39,11 @@ jobs:
       - name: hg38 genome download 
         run: cat $GITHUB_WORKSPACE/Genomes/hg38/get_hg38.script | bash
 
-      - name: hg38 genome download 
+      - name: hg19 genome download 
         run: cat $GITHUB_WORKSPACE/Genomes/hg19/get_hg19.script | bash
 
       - name: Run a multi-line script
         run: bash $GITHUB_WORKSPACE/test.sh output
+      
+      - name: Run a multi-line script
+        run: cat $GITHUB_WORKSPACE/output
