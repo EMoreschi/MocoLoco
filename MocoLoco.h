@@ -55,12 +55,14 @@ class bed_class { //creation public class of bed_class type
 			extract_seq(tb, n_line);				//extracting the sequence
 
 		}
-		void print_debug_GEP(bed_class);
 		string return_sequence(bed_class);
 		string return_chr_coord_GEP();
 		int return_start_coord_GEP();
 		void centering_function(int, int, int, const int);
 		void extract_seq(TwoBit*, int);
+		string return_chr_coord();
+		int return_start_coord();
+		int return_end_coord();
 
 };
 
@@ -168,6 +170,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 		vector<bed_class> GEP; 
 		void GEP_creation(string, string, vector<bed_class>&);
                 void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
+		void print_debug_GEP(vector <bed_class>);
 
 		coordinator_class(){
 			GEP_creation(BED_FILE, TWOBIT_FILE, GEP);

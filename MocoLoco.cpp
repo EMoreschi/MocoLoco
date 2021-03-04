@@ -10,15 +10,16 @@ int main(int argc, char *argv[]){
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
 
 	coordinator_class C;
-	for(int i = 0; i<C.oligos_vector.size(); i++){
-		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
-	} 
-        matrix_class M(JASPAR_FILE);
-	M.debug_matrix(M);
-	for(int i=0; i<C.GEP.size();i++){
+	//for(int i = 0; i<C.oligos_vector.size(); i++){
+	//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
+	//} 
+        //matrix_class M(JASPAR_FILE);
+	//M.debug_matrix(M);
+	//ofstream outfile;
+	//for(int i=0; i<C.GEP.size();i++){
 
-	C.GEP[i].print_debug_GEP(C.GEP[i]);					//Print GEP vector for debugging
-	}
+	C.print_debug_GEP(C.GEP);					//Print GEP vector for debugging
+	//}
 
  return 0;
 }
@@ -387,6 +388,18 @@ string bed_class::return_sequence(bed_class){
 
        return sequence;
 }
+string bed_class::return_chr_coord(){
+
+       return chr_coord;
+}
+int bed_class::return_start_coord(){
+
+       return start_coord;
+}
+int bed_class::return_end_coord(){
+
+       return end_coord;
+}
 
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
 
@@ -412,10 +425,27 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 }
 
 
-void bed_class::print_debug_GEP(bed_class){			//Debug function: Print the GEP vector to control the working flow
-
-	cout << ">" << chr_coord << ":" << start_coord << " - " << end_coord << endl;	//Printing chr, start and end coordinates
-	cout << sequence << endl;					//Printing sequence
+void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug function: Print the GEP vector to control the working flow
+	
+	ofstream outfile;	
+	outfile.open("centered.bed");
+	for(int i=0; i<GEP.size(); i++){
+	string chr_coord = GEP[i].return_chr_coord();
+	int start_coord = GEP[i].return_start_coord();
+	int end_coord = GEP[i].return_end_coord();
+	outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
+	}
+	outfile.close();
+	outfile.open("centered.fasta");
+	for(int i=0; i<GEP.size(); i++){
+	string chr_coord = GEP[i].return_chr_coord();
+	int start_coord = GEP[i].return_start_coord();
+	int end_coord = GEP[i].return_end_coord();
+	string sequence = GEP[i].return_sequence(GEP[i]);					//Printing sequence
+	outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	//Printing chr, start and end coordinates
+	outfile << sequence << endl;
+	}
+	outfile.close();
 
 }
 
