@@ -259,9 +259,9 @@ vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> matri
 
 void oligo_class::find_minmax(vector<vector<double>> matrix){
 
-	for(int i=0; i < matrix[0].size(); i++){
+	for(unsigned int i=0; i < matrix[0].size(); i++){
 		vector<double> colum;		   	
-		for(int j=0; j < matrix.size(); j++){
+		for(unsigned int j=0; j < matrix.size(); j++){
 			colum.emplace_back(matrix[j][i]);
 		}
 		o_matrix_mins.emplace_back(*min_element(colum.begin(),colum.end()));
@@ -282,7 +282,7 @@ unsigned int oligo_class::find_best_score(vector<double> oligo_scores){
 	int min_distance;
 	vector<int>::iterator itr;
 
-	for(int i=0; i < oligo_scores.size(); i++){
+	for(unsigned int i=0; i < oligo_scores.size(); i++){
 
 		if(oligo_scores[i] == best_score){
 
@@ -332,7 +332,7 @@ void coordinator_class::centering_oligo(){
 	tb = twobit_open(TWOBIT_FILE.c_str());
 	int center_oligo ;
 
-	for(int i=0; i<oligos_vector.size(); i++){
+	for(unsigned int i=0; i<oligos_vector.size(); i++){
 		center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
 		GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
 		GEP[i].extract_seq(tb,0);
@@ -411,8 +411,8 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 
 	cout << "\n" << matrix_name << " " << tf_name << type << ":" << endl;
 
-	for(int i=0; i < matrix.size(); i++){
-		for(int j=0; j<matrix[i].size(); j++){
+	for(unsigned int i=0; i < matrix.size(); i++){
+		for(unsigned int j=0; j<matrix[i].size(); j++){
 
 			cout << matrix[i][j] << " ";
 		}
@@ -431,7 +431,7 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 	outfile.open(TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
 	//cout << BED_FILE<< "\n";
 	//cout << BED_FILE.find_last_of("/")<< "\n";
-	for(int i=0; i<GEP.size(); i++){
+	for(unsigned int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
 		unsigned int end_coord = GEP[i].return_end_coord();
@@ -440,7 +440,7 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 	outfile.close();
 	BED_FILE = BED_FILE.erase(BED_FILE.find_last_of("."), BED_FILE.size());
 	outfile.open(TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1)+".fasta");
-	for(int i=0; i<GEP.size(); i++){
+	for(unsigned int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
 		unsigned int end_coord = GEP[i].return_end_coord();
@@ -475,7 +475,7 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 
 void command_line_parser(int argc, char** argv){
-	int opt= 0;
+	
 	const char* const short_opts = "hp:b:j:t:s";
 
 	//Specifying the expected options
