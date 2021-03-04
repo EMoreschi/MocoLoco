@@ -43,4 +43,4 @@ jobs:
         run: cat $GITHUB_WORKSPACE/Genomes/hg19/get_hg19.script | bash
 
       - name: Run a multi-line script
-        run: bash $GITHUB_WORKSPACE/test.sh  
+        run: bash $GITHUB_WORKSPACE/test.sh output
