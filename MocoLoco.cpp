@@ -28,15 +28,15 @@ void bed_class::read_line(string line){				//Read line function: it takes in inp
 
 }
 
-void bed_class::centering_function ( int start,  int end, int half_length, const int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
+void bed_class::centering_function ( unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
 	//following an input half_length value (overhead added to the end)
-	int center = (start + end)/2;						
+	unsigned int center = (start + end)/2;						
 	start_coord = center - half_length;			//No overhead for start
 	end_coord = center + half_length +overhead;		//Overhead for end
 }
 
 
-void bed_class::flag_control( int start,  int end){ 	//Flag control function: start coordinates must be < then end coordinates
+void bed_class::flag_control( unsigned int start,  unsigned int end){ 	//Flag control function: start coordinates must be < then end coordinates
 
 	if(start > end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
 		flag = 0;
@@ -51,7 +51,7 @@ void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector
 	tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
 	string line; 							//defining line string
 
-	int n_line = 1;							//line counter initialization
+	unsigned int n_line = 1;							//line counter initialization
 
 	while(getline(in,line)){  					//reading input file line by line with getline function
 
@@ -70,10 +70,10 @@ void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector
 
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
 
-	for(int i=0; i<GEP.size(); i++){
+	for(unsigned int i=0; i<GEP.size(); i++){
 		string sequence = GEP[i].return_sequence(GEP[i]);
 		string chr_coord = GEP[i].return_chr_coord_GEP();
-		int start_coord = GEP[i].return_start_coord_GEP();
+		unsigned int start_coord = GEP[i].return_start_coord_GEP();
 
 
 		oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
@@ -92,7 +92,7 @@ void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
 
 	if(DS == 1){
 		vector<oligo_class> comparison;
-		for(int i=0; i<oligos_vec.size(); i+=2){
+		for(unsigned int i=0; i<oligos_vec.size(); i+=2){
 
 			double best_score_norm_positive = oligos_vec[i].return_best_score_normalized();
 			double best_score_norm_negative = oligos_vec[i+1].return_best_score_normalized(); 
@@ -108,13 +108,13 @@ void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
 	}
 }
 
-void oligo_class::shifting(vector<vector<double>> matrix, string sequence, int s_iterator){
+void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsigned int s_iterator){
 
 	double sum_scores = 0;
 
 	if(s_iterator < sequence.size() - matrix[0].size() ) {
 
-		for(int i=0; i< matrix[0].size(); i++){
+		for(unsigned int i=0; i< matrix[0].size(); i++){
 
 			switch(sequence[i+s_iterator]){
 
@@ -185,8 +185,8 @@ vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 	vector<double> col_sum;						//Vector of columns sum
 	double sum = 0;							//Sum initialized as 0
 
-	for (int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
-		for (int j = 0; j < 4; j++){				//From 0 to 4 (line number)
+	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
+		for (unsigned int j = 0; j < 4; j++){				//From 0 to 4 (line number)
 
 			sum = sum + matrix[j][i];			//Calculate the sum of columns
 		}
@@ -202,10 +202,10 @@ void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, d
 	double norm;							//Norm variable initialized
 	vector<double> col_sum = find_col_sum(matrix);
 
-	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+	for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
 		vector<double> baseQ;				//baseQ vector to store the lines initialized
-		for (int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+		for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
 			norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
 			baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
@@ -219,10 +219,10 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
 	vector<double> col_sum = find_col_sum(matrix);
 
-	for (int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+	for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
 		vector<double> baseQ;				//baseQ vector to store the lines initialized
-		for (int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+		for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
 			norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
 		}
@@ -231,11 +231,11 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 
-	for(int i=0; i < matrix.size(); i++){
+	for(unsigned int i=0; i < matrix.size(); i++){
 		vector<double> baseQ;
 		double value_log;
 
-		for(int j=0; j < norm_matrix[i].size(); j++){
+		for(unsigned int j=0; j < norm_matrix[i].size(); j++){
 
 			value_log = log(norm_matrix[i][j]);
 			baseQ.emplace_back(value_log);
@@ -272,13 +272,13 @@ void oligo_class::find_minmax(vector<vector<double>> matrix){
 
 }	
 
-int oligo_class::find_best_score(vector<double> oligo_scores){
+unsigned int oligo_class::find_best_score(vector<double> oligo_scores){
 
 	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
 
 	vector<int> positions;
 	vector<int> dist_center;
-	int matches = 0;
+	unsigned int matches = 0;
 	int min_distance;
 	vector<int>::iterator itr;
 
@@ -300,7 +300,7 @@ int oligo_class::find_best_score(vector<double> oligo_scores){
 
 		min_distance = *min_element(dist_center.begin(), dist_center.end());
 		itr = find(dist_center.begin(),dist_center.end(), min_distance);
-		int index = distance(dist_center.begin(), itr);
+		unsigned int index = distance(dist_center.begin(), itr);
 		return positions[index];
 
 	}
@@ -313,12 +313,12 @@ void oligo_class::best_score_normalization(){
 
 }
 
-void oligo_class::find_best_sequence(string sequence, int local_position, int length){
+void oligo_class::find_best_sequence(string sequence, unsigned int local_position, unsigned int length){
 
 	best_oligo_seq = sequence.substr(local_position,length);
 }
 
-void oligo_class::find_coordinate(int local_position, int length, string chr_coord_GEP, int start_coord_GEP){
+void oligo_class::find_coordinate(unsigned int local_position, unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
 
 	chr_coord_oligo = chr_coord_GEP;
 	start_coord_oligo = start_coord_GEP + local_position;
@@ -339,10 +339,10 @@ void coordinator_class::centering_oligo(){
 	}
 }
 
-void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
+void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
 	//extracted from Bed line
 	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		string chrom = chr_coord; 				//Put in chrom the string of chr_coord
+		string chrom = chr_coord;		//Put in chrom the string of chr_coord
 		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
 	}
 	else {		
@@ -353,7 +353,7 @@ void bed_class::extract_seq(TwoBit* tb, int n_line){			//Extract sequence functi
 
 
 /////DEBUG/////////////////////////////////////////////////////////
-int oligo_class::return_start_coord_oligo(){
+unsigned int oligo_class::return_start_coord_oligo(){
 
 	return start_coord_oligo;
 }
@@ -368,7 +368,7 @@ string bed_class::return_chr_coord_GEP(){
 	return chr_coord;
 }
 
-int bed_class::return_start_coord_GEP(){
+unsigned int bed_class::return_start_coord_GEP(){
 
 	return start_coord;
 }
@@ -389,11 +389,11 @@ string bed_class::return_chr_coord(){
 
 	return chr_coord;
 }
-int bed_class::return_start_coord(){
+unsigned int bed_class::return_start_coord(){
 
 	return start_coord;
 }
-int bed_class::return_end_coord(){
+unsigned int bed_class::return_end_coord(){
 
 	return end_coord;
 }
@@ -426,22 +426,26 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 
 	ofstream outfile;	
 	outfile.open("centered.bed");
+	outfile << "------------------------------------------------------------------------------------------" << endl;
 	for(int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
-		int start_coord = GEP[i].return_start_coord();
-		int end_coord = GEP[i].return_end_coord();
+		unsigned int start_coord = GEP[i].return_start_coord();
+		unsigned int end_coord = GEP[i].return_end_coord();
 		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
 	}
+	outfile << "------------------------------------------------------------------------------------------" << endl;
 	outfile.close();
 	outfile.open("centered.fasta");
+	outfile << "------------------------------------------------------------------------------------------" << endl;
 	for(int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
-		int start_coord = GEP[i].return_start_coord();
-		int end_coord = GEP[i].return_end_coord();
+		unsigned int start_coord = GEP[i].return_start_coord();
+		unsigned int end_coord = GEP[i].return_end_coord();
 		string sequence = GEP[i].return_sequence(GEP[i]);					//Printing sequence
 		outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	//Printing chr, start and end coordinates
 		outfile << sequence << endl;
 	}
+	outfile << "------------------------------------------------------------------------------------------" << endl;
 	outfile.close();
 
 }

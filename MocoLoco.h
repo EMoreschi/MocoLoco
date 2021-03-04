@@ -19,7 +19,7 @@ string BED_FILE; 		//initializing const char variarible for Bed_file input readi
 int half_length = 150; 		//default half_length 150
 string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 string JASPAR_FILE;
-const int overhead = 25;
+const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
 
@@ -28,17 +28,17 @@ class bed_class { //creation public class of bed_class type
 	private:	//field definition
 
 		string chr_coord;
-		int start_coord;
-		int end_coord;
+		unsigned int start_coord;
+		unsigned int end_coord;
 		bool flag;
 		string sequence;
 
 		void read_line(string);
-		void flag_control(int, int);
+		void flag_control(unsigned int, unsigned int);
 
 	public:				//field definition
 
-		bed_class(int p, string line, TwoBit* tb,int n_line){
+		bed_class(unsigned int p, string line, TwoBit* tb,unsigned int n_line){
 
 			read_line(line);					//reading bed line
 			flag_control(start_coord,end_coord);			//controlling coordinates
@@ -48,12 +48,12 @@ class bed_class { //creation public class of bed_class type
 		}
 		string return_sequence(bed_class);
 		string return_chr_coord_GEP();
-		int return_start_coord_GEP();
-		void centering_function(int, int, int, const int);
-		void extract_seq(TwoBit*, int);
+		unsigned int return_start_coord_GEP();
+		void centering_function(unsigned int, unsigned int, unsigned int, const unsigned int);
+		void extract_seq(TwoBit*, unsigned int);
 		string return_chr_coord();
-		int return_start_coord();
-		int return_end_coord();
+		unsigned int return_start_coord();
+		unsigned int return_end_coord();
 
 };
 
@@ -94,7 +94,6 @@ class matrix_class {
 		}
 
 		void debug_matrix(matrix_class);
-		void shifting(string seq, int p, int length, vector<double>&);
 		vector<vector<double>> return_log_matrix();
 		vector<vector<double>> return_inverse_log_matrix();
 
@@ -115,20 +114,20 @@ class oligo_class{
 		double best_score_normalized;
 		string global_sequence;
 		string best_oligo_seq;
-		int local_position;
+		unsigned int local_position;
 		string chr_coord_oligo;
-		int start_coord_oligo;
-		int end_coord_oligo;
+		unsigned int start_coord_oligo;
+		unsigned int end_coord_oligo;
 		char strand;
 
 		void find_minmax(vector<vector<double>>);
-		int find_best_score(vector<double>);
-		void find_coordinate(int, int, string, int);
-		void find_best_sequence(string, int, int);
+		unsigned int find_best_score(vector<double>);
+		void find_coordinate(unsigned int, unsigned int, string, unsigned int);
+		void find_best_sequence(string, unsigned int, unsigned int);
 		void best_score_normalization();
 
 	public:
-		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, int start_coord_GEP, char strand_sign){
+		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, unsigned int start_coord_GEP, char strand_sign){
 
 			global_sequence = sequence;
 			strand = strand_sign;
@@ -140,9 +139,9 @@ class oligo_class{
 			find_coordinate(local_position, matrix[0].size(), chr_coord_GEP, start_coord_GEP);
 		}
 
-		void shifting(vector<vector<double>>, string, int);
+		void shifting(vector<vector<double>>, string, unsigned int);
 		void oligos_vector_debug(oligo_class);
-		int return_start_coord_oligo();
+		unsigned int return_start_coord_oligo();
 		double return_best_score_normalized();
 };
 

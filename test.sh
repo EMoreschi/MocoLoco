@@ -2,9 +2,6 @@
 
 g++ -o test MocoLoco.cpp;
 
-touch $1
-rm $1
-
 Jaspar="Jaspar_2020/MA0502.2.jaspar Jaspar_2020/MA0002.2.jaspar Jaspar_2020/MA0042.2.jaspar Jaspar_2020/MA0071.1.jaspar Jaspar_2020/MA0093.3.jaspar"
 ###Twobit="Genomes/hg38/hg38.2bit Genomes/hg19/hg19.2bit"
 Twobit="hg38.2bit hg19.2bit"
@@ -16,10 +13,7 @@ do
 	do
 		for c in $Jaspar 
 		do
-			g++ -o test MocoLoco.cpp;
-			echo "FILE BED: ${a} - FILE TWOBIT: ${b} - JASPAR: ${c}	" >> $1;
-			./test -b ${a} -t ${b} -j ${c} >> $1;
-			echo "----------------------------------------------------------------------------------------------------------------------------" >> $1;
+			./test -b ${a} -t ${b} -j ${c};
 			
 		done
 	done
