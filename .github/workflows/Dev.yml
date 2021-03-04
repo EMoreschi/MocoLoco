@@ -48,7 +48,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: centered.bed  
-          path: $GITHUB_WORKSPACE
+          path: ./
       
       - name: Run a multi-line script
         run: cat $GITHUB_WORKSPACE/output
