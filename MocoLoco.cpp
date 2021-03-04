@@ -13,15 +13,12 @@ int main(int argc, char *argv[]){
 	//for(int i = 0; i<C.oligos_vector.size(); i++){
 	//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
 	//} 
-        //matrix_class M(JASPAR_FILE);
+	//matrix_class M(JASPAR_FILE);
 	//M.debug_matrix(M);
-	//ofstream outfile;
-	//for(int i=0; i<C.GEP.size();i++){
 
 	C.print_debug_GEP(C.GEP);					//Print GEP vector for debugging
-	//}
 
- return 0;
+	return 0;
 }
 
 void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -72,27 +69,27 @@ void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector
 }
 
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
-        	
-	for(int i=0; i<GEP.size(); i++){
-	string sequence = GEP[i].return_sequence(GEP[i]);
-	string chr_coord = GEP[i].return_chr_coord_GEP();
-	int start_coord = GEP[i].return_start_coord_GEP();
-	
-	
-	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
-	oligos_vector.emplace_back(SHIFTING);
 
-	if(DS == 1){
-	
-		oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
+	for(int i=0; i<GEP.size(); i++){
+		string sequence = GEP[i].return_sequence(GEP[i]);
+		string chr_coord = GEP[i].return_chr_coord_GEP();
+		int start_coord = GEP[i].return_start_coord_GEP();
+
+
+		oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
 		oligos_vector.emplace_back(SHIFTING);
-	}
+
+		if(DS == 1){
+
+			oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
+			oligos_vector.emplace_back(SHIFTING);
+		}
 	}	
 
 }
 
 void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
-	
+
 	if(DS == 1){
 		vector<oligo_class> comparison;
 		for(int i=0; i<oligos_vec.size(); i+=2){
@@ -112,45 +109,45 @@ void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
 }
 
 void oligo_class::shifting(vector<vector<double>> matrix, string sequence, int s_iterator){
-		
+
 	double sum_scores = 0;
-	
+
 	if(s_iterator < sequence.size() - matrix[0].size() ) {
 
-	for(int i=0; i< matrix[0].size(); i++){
+		for(int i=0; i< matrix[0].size(); i++){
 
 			switch(sequence[i+s_iterator]){
 
 				case 'A':
-				       
+
 					sum_scores = sum_scores + matrix[0][i];
 					break;
 
 				case 'C':
-				       
+
 					sum_scores = sum_scores + matrix[1][i];
 					break;
 
 				case 'G':
-				       
+
 					sum_scores = sum_scores + matrix[2][i];
 					break;
 
 				case 'T':
-				       
+
 					sum_scores = sum_scores + matrix[3][i];
 					break;
-				
+
 				default:
-				       
+
 					sum_scores = sum_scores + o_matrix_mins[i];
 					break;
 
+			}
 		}
-	}
-	
-	oligo_scores.emplace_back(sum_scores);
-	shifting(matrix, sequence, s_iterator+1);
+
+		oligo_scores.emplace_back(sum_scores);
+		shifting(matrix, sequence, s_iterator+1);
 
 	}
 
@@ -201,7 +198,7 @@ vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 }
 
 void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
-	
+
 	double norm;							//Norm variable initialized
 	vector<double> col_sum = find_col_sum(matrix);
 
@@ -210,11 +207,11 @@ void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, d
 		vector<double> baseQ;				//baseQ vector to store the lines initialized
 		for (int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
-				norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
-				baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
+			norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
+			baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
 		}
 
-			norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
+		norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
 	}
 }
 
@@ -227,26 +224,26 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 		vector<double> baseQ;				//baseQ vector to store the lines initialized
 		for (int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
-				norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
+			norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
 		}
 	}
 }
 
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
-	
+
 	for(int i=0; i < matrix.size(); i++){
 		vector<double> baseQ;
 		double value_log;
 
 		for(int j=0; j < norm_matrix[i].size(); j++){
-			
+
 			value_log = log(norm_matrix[i][j]);
 			baseQ.emplace_back(value_log);
 		}
 		matrix_log.emplace_back(baseQ);
 	}
 }
-	
+
 
 vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> matrix){
 
@@ -294,7 +291,7 @@ int oligo_class::find_best_score(vector<double> oligo_scores){
 		}
 	}
 	if(matches > 1){ 
-		
+
 		for (int& p: positions){
 			int distance;
 			distance = abs( p - half_length); 
@@ -311,7 +308,7 @@ int oligo_class::find_best_score(vector<double> oligo_scores){
 }
 
 void oligo_class::best_score_normalization(){
-	
+
 	best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
 
 }
@@ -330,15 +327,15 @@ void oligo_class::find_coordinate(int local_position, int length, string chr_coo
 }
 
 void coordinator_class::centering_oligo(){
-	
+
 	TwoBit * tb;
 	tb = twobit_open(TWOBIT_FILE.c_str());
 	int center_oligo ;
 
 	for(int i=0; i<oligos_vector.size(); i++){
-	center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
-	GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
-	GEP[i].extract_seq(tb,0);
+		center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
+		GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
+		GEP[i].extract_seq(tb,0);
 	}
 }
 
@@ -386,19 +383,19 @@ vector<vector<double>> matrix_class::return_log_matrix(){
 }
 string bed_class::return_sequence(bed_class){
 
-       return sequence;
+	return sequence;
 }
 string bed_class::return_chr_coord(){
 
-       return chr_coord;
+	return chr_coord;
 }
 int bed_class::return_start_coord(){
 
-       return start_coord;
+	return start_coord;
 }
 int bed_class::return_end_coord(){
 
-       return end_coord;
+	return end_coord;
 }
 
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
@@ -411,7 +408,7 @@ void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calli
 }
 
 void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){		//Print matrix function
-	
+
 	cout << "\n" << matrix_name << " " << tf_name << type << ":" << endl;
 
 	for(int i=0; i < matrix.size(); i++){
@@ -421,29 +418,29 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 		}
 		cout << endl;
 	}
-	
+
 }
 
 
 void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug function: Print the GEP vector to control the working flow
-	
+
 	ofstream outfile;	
 	outfile.open("centered.bed");
 	for(int i=0; i<GEP.size(); i++){
-	string chr_coord = GEP[i].return_chr_coord();
-	int start_coord = GEP[i].return_start_coord();
-	int end_coord = GEP[i].return_end_coord();
-	outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
+		string chr_coord = GEP[i].return_chr_coord();
+		int start_coord = GEP[i].return_start_coord();
+		int end_coord = GEP[i].return_end_coord();
+		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
 	}
 	outfile.close();
 	outfile.open("centered.fasta");
 	for(int i=0; i<GEP.size(); i++){
-	string chr_coord = GEP[i].return_chr_coord();
-	int start_coord = GEP[i].return_start_coord();
-	int end_coord = GEP[i].return_end_coord();
-	string sequence = GEP[i].return_sequence(GEP[i]);					//Printing sequence
-	outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	//Printing chr, start and end coordinates
-	outfile << sequence << endl;
+		string chr_coord = GEP[i].return_chr_coord();
+		int start_coord = GEP[i].return_start_coord();
+		int end_coord = GEP[i].return_end_coord();
+		string sequence = GEP[i].return_sequence(GEP[i]);					//Printing sequence
+		outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	//Printing chr, start and end coordinates
+		outfile << sequence << endl;
 	}
 	outfile.close();
 

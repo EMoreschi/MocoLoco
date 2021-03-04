@@ -37,15 +37,6 @@ class bed_class { //creation public class of bed_class type
 		void flag_control(int, int);
 
 	public:				//field definition
-		
-//		bed_class(){	//default constructor
-//
-//			chr_coord = "";
-//			start_coord = 0;
-//			end_coord = 0;
-//			flag = 0;	
-//
-//		}
 
 		bed_class(int p, string line, TwoBit* tb,int n_line){
 
@@ -88,7 +79,7 @@ class matrix_class {
 		vector<double> find_col_sum(vector<vector<double>>);
 		void print_debug_matrix(vector<vector<double>>, string);
 
-		
+
 
 	public:
 		matrix_class(string JASPAR_FILE){
@@ -103,7 +94,7 @@ class matrix_class {
 		}
 
 		void debug_matrix(matrix_class);
-                void shifting(string seq, int p, int length, vector<double>&);
+		void shifting(string seq, int p, int length, vector<double>&);
 		vector<vector<double>> return_log_matrix();
 		vector<vector<double>> return_inverse_log_matrix();
 
@@ -113,8 +104,8 @@ class matrix_class {
 class oligo_class{
 
 	private:
-		
-			
+
+
 		vector<double> oligo_scores;	
 		vector<double> o_matrix_mins;	
 		vector<double> o_matrix_maxes;
@@ -135,10 +126,10 @@ class oligo_class{
 		void find_coordinate(int, int, string, int);
 		void find_best_sequence(string, int, int);
 		void best_score_normalization();
-	
+
 	public:
 		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, int start_coord_GEP, char strand_sign){
-			
+
 			global_sequence = sequence;
 			strand = strand_sign;
 			find_minmax(matrix);		
@@ -148,7 +139,7 @@ class oligo_class{
 			find_best_sequence(sequence, local_position, matrix[0].size());
 			find_coordinate(local_position, matrix[0].size(), chr_coord_GEP, start_coord_GEP);
 		}
-		
+
 		void shifting(vector<vector<double>>, string, int);
 		void oligos_vector_debug(oligo_class);
 		int return_start_coord_oligo();
@@ -166,10 +157,10 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 
 	public:
-	        vector<oligo_class> oligos_vector;
+		vector<oligo_class> oligos_vector;
 		vector<bed_class> GEP; 
 		void GEP_creation(string, string, vector<bed_class>&);
-                void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
+		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
 		void print_debug_GEP(vector <bed_class>);
 
 		coordinator_class(){
@@ -177,7 +168,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			matrix_class M(JASPAR_FILE);
 			matrix_log = M.return_log_matrix();
 			inverse_matrix_log = M.return_inverse_log_matrix();
-	                oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
+			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
 			best_strand(oligos_vector);
 			centering_oligo();
 		}
