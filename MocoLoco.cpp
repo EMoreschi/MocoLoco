@@ -425,18 +425,19 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug function: Print the GEP vector to control the working flow
 
 	ofstream outfile;	
-	outfile.open("centered.bed");
-	outfile << "------------------------------------------------------------------------------------------" << endl;
+	//cout << BED_FILE << "\n";
+	//cout << BED_FILE.find_last_of("/") << "\n";
+	outfile.open(BED_FILE.erase(0,BED_FILE.find_last_of("/")+1) + "centered.bed");
+	//cout << BED_FILE<< "\n";
+	//cout << BED_FILE.find_last_of("/")<< "\n";
 	for(int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
 		unsigned int end_coord = GEP[i].return_end_coord();
 		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
 	}
-	outfile << "------------------------------------------------------------------------------------------" << endl;
 	outfile.close();
 	outfile.open("centered.fasta");
-	outfile << "------------------------------------------------------------------------------------------" << endl;
 	for(int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
@@ -445,7 +446,6 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 		outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	//Printing chr, start and end coordinates
 		outfile << sequence << endl;
 	}
-	outfile << "------------------------------------------------------------------------------------------" << endl;
 	outfile.close();
 
 }

@@ -44,11 +44,7 @@ jobs:
      
       - uses: actions/upload-artifact@v2
         with:
-          name: centered.bed  
-          path: ./centered.bed
+          name: testing 
+          path: ./testing
       
-      - uses: actions/upload-artifact@v2
-        with:
-          name: centered.fasta
-          path: ./centered.fasta
 
