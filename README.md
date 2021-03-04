@@ -8,7 +8,7 @@
 
 #### How to run 
 
-`./test --BED <file.bed>  -p <number> -tb <file.2bit> `
+`./test -b <file.bed>  -p <number> -t <file.2bit> -j <file.JASPAR>`-ss(optional)
 
 #### this script uses the twobit.c and twobit.h file from
 https://github.com/andrelmartins/TwoBit 
