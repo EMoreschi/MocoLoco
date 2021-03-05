@@ -34,10 +34,12 @@ jobs:
         run: g++ -o test -Wall $GITHUB_WORKSPACE/*.cpp 
       
       - name: hg38 genome download 
-        run: cat $GITHUB_WORKSPACE/Genomes/hg38/get_hg38.script | bash
+        run: cat get_hg38.script | bash
+        working-directory: Genomes/hg38
 
       - name: hg19 genome download 
-        run: cat $GITHUB_WORKSPACE/Genomes/hg19/get_hg19.script | bash
+        run: cat get_hg19.script | bash
+        working-directory: Genomes/hg19
 
       - name: Run a multi-line script
         run: bash $GITHUB_WORKSPACE/test.sh
@@ -45,6 +47,6 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: testing 
-          path: ./testing
+          path: testing
       
 
