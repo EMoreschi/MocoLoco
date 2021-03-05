@@ -289,9 +289,9 @@ char * twobit_sequence(TwoBit * ptr, const char * name, int start, int end) {
 
   /* fill in Ns */
   for (i = 0; i < seq->n_blocks; ++i) {
-    uint32 bstart = seq->n_block_starts[i];
-    uint32 bsize = seq->n_block_sizes[i];
-    uint32 bend = bstart + bsize - 1;
+    int bstart = seq->n_block_starts[i];
+    int bsize = seq->n_block_sizes[i];
+    int bend = bstart + bsize - 1;
 
     if (bstart <= end && bend >= start) {
       int j, k;
