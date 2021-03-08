@@ -19,12 +19,14 @@ int main(int argc, char *argv[]){
 	C.print_debug_GEP(C.GEP);	//Print GEP vector for debugging
 	map_class MAPPA(C.GEP,6);
 
-	for(auto it = MAPPA.moco_table.cbegin(); it!= MAPPA.moco_table.cend(); it++){
+	for(map<string,int>::iterator it = MAPPA.moco_table.begin(); it!= MAPPA.moco_table.end(); ++it){
 
-		cout << it -> first << " --- ";
-		cout << it -> second;
+		cout << it->first << " --- ";
+		cout << it->second;
 		cout << endl;
 	}
+	cout << MAPPA.moco_table.begin()->first;
+
 
 	return 0;
 }
@@ -480,19 +482,20 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 
 void map_class::table_preparation(vector<bed_class> GEP){
 
-	//for(int i=0; i<GEP.size(); i++){
 
-		string sequence = GEP[0].return_sequence(GEP[0]);
+	for(int i=0; i<GEP.size(); i++){
+
+		string sequence = GEP[i].return_sequence(GEP[i]);
 		table_creation(moco_table, sequence, kmer_length);
-	//}
+	}
 
 }
 
 void map_class::table_creation(map<string,int> moco_table, string sequence, int kmer_length){
 	
-	for(unsigned int i=0; i<sequence.size(); i++){
+	for(unsigned int i=0; i<sequence.size() - kmer_length; i++){
 
-		bases = sequence.substr(i,kmer_length);
+		string bases = sequence.substr(i,kmer_length);
 		bool palindrome = check_palindrome(bases);
 		map<string, int>::iterator it = moco_table.find(bases);
 
@@ -519,6 +522,7 @@ void map_class::table_creation(map<string,int> moco_table, string sequence, int 
 			}
 
 		}
+		bases.clear();
 	}
 }
 

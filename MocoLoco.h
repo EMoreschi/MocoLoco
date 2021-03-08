@@ -182,7 +182,7 @@ class map_class{
 
 		int kmer_length;
 		string reverse_bases;
-		string bases;	
+//		string bases;	
 
 		void table_creation(map<string,int>,string, int);
 		void check_palindrome(map<string, int>, string);
