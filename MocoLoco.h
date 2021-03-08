@@ -175,16 +175,30 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 };
 
-class mocomap_class : public coordinator_class{
-	private:
-		string reverse_bases;
-		string bases;
-		bool palindrome;
-		map <string, int> moco_table;
-	public:
-	      void check_palindrome(string);
-	      void divide_seq(string, int);
 
+class map_class{
+
+	private:
+
+		int kmer_length;
+		string reverse_bases;
+		string bases;	
+
+		void table_creation(map<string,int>,string, int);
+		void check_palindrome(map<string, int>, string);
+		void table_preparation(vector<bed_class>); 
+		void check_seq_map(map<string,int>, string);
+		bool check_palindrome(string);
+
+	public:
+
+		map_class(vector<bed_class> GEP, int seq_len){
+		kmer_length = seq_len;
+		table_preparation(GEP);
+
+		}
+		map<string,int> moco_table;
+			
 };
 
 void command_line_parser(int, char **);

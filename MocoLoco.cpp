@@ -16,7 +16,15 @@ int main(int argc, char *argv[]){
 	//matrix_class M(JASPAR_FILE);
 	//M.debug_matrix(M);
 
-	C.print_debug_GEP(C.GEP);					//Print GEP vector for debugging
+	C.print_debug_GEP(C.GEP);	//Print GEP vector for debugging
+	map_class MAPPA(C.GEP,6);
+
+	for(auto it = MAPPA.moco_table.cbegin(); it!= MAPPA.moco_table.cend(); it++){
+
+		cout << it -> first << " --- ";
+		cout << it -> second;
+		cout << endl;
+	}
 
 	return 0;
 }
@@ -470,14 +478,24 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	//cout << endl;
 }
 
+void map_class::table_preparation(vector<bed_class> GEP){
 
+	//for(int i=0; i<GEP.size(); i++){
 
-void mocomap_class::divide_seq(string sequence, int kmer_base){
+		string sequence = GEP[0].return_sequence(GEP[0]);
+		table_creation(moco_table, sequence, kmer_length);
+	//}
+
+}
+
+void map_class::table_creation(map<string,int> moco_table, string sequence, int kmer_length){
+	
 	for(unsigned int i=0; i<sequence.size(); i++){
-		string bases; 
-		bases = sequence.substr(i,kmer_base);
-		check_palindrome(bases);
+
+		bases = sequence.substr(i,kmer_length);
+		bool palindrome = check_palindrome(bases);
 		map<string, int>::iterator it = moco_table.find(bases);
+
 		if (!palindrome && DS){
 			map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
 			if (it != moco_table.end()){
@@ -498,22 +516,17 @@ void mocomap_class::divide_seq(string sequence, int kmer_base){
 			else{
 				moco_table.insert( pair<string,int>(bases,1) );
 
-			} 
+			}
 
 		}
 	}
 }
 
-
-
-
-
-
-
-void mocomap_class::check_palindrome(string bases){
+bool map_class::check_palindrome(string bases){
 	for(unsigned int i=0; i<bases.size(); i++){
 		char base;
-		base = bases[i]; 
+		reverse_bases.clear();
+		base = bases[i];
 		switch (base) {
 			case 'A' : reverse_bases.append("T"); 
 				   break;
@@ -527,18 +540,12 @@ void mocomap_class::check_palindrome(string bases){
 				   break;
 		}
 }
-if (reverse_bases == bases) palindrome = true;
-else palindrome = false;
+if (reverse_bases == bases){
+       return true;
+}
+else {return false;}
 
 }
-
-
-
-
-
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
