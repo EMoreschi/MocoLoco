@@ -12,6 +12,7 @@
 #include "./TwoBit/twobit.h"
 #include "./TwoBit/twobit.c"
 #include <getopt.h>
+#include <map>
 
 using namespace std;
 
@@ -171,6 +172,18 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			best_strand(oligos_vector);
 			centering_oligo();
 		}
+
+};
+
+class mocomap_class : public coordinator_class{
+	private:
+		string reverse_bases;
+		string bases;
+		bool palindrome;
+		map <string, int> moco_table;
+	public:
+	      void check_palindrome(string);
+	      void divide_seq(string, int);
 
 };
 

@@ -469,6 +469,77 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	//}
 	//cout << endl;
 }
+
+
+
+void mocomap_class::divide_seq(string sequence, int kmer_base){
+	for(unsigned int i=0; i<sequence.size(); i++){
+		string bases; 
+		bases = sequence.substr(i,kmer_base);
+		check_palindrome(bases);
+		map<string, int>::iterator it = moco_table.find(bases);
+		if (!palindrome && DS){
+			map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
+			if (it != moco_table.end()){
+				it->second++;
+				it_rev->second++;
+			}
+			else{
+
+				moco_table.insert( pair<string,int>(bases,1) );
+				moco_table.insert( pair<string,int>(reverse_bases,1) );
+
+			} 
+		}
+		else{
+			if (it != moco_table.end()){
+				it->second++;
+			}
+			else{
+				moco_table.insert( pair<string,int>(bases,1) );
+
+			} 
+
+		}
+	}
+}
+
+
+
+
+
+
+
+void mocomap_class::check_palindrome(string bases){
+	for(unsigned int i=0; i<bases.size(); i++){
+		char base;
+		base = bases[i]; 
+		switch (base) {
+			case 'A' : reverse_bases.append("T"); 
+				   break;
+			case 'T' : reverse_bases.append("A"); 
+				   break;
+			case 'G' : reverse_bases.append("C"); 
+				   break;
+			case 'C' : reverse_bases.append("G"); 
+				   break;
+			case 'N' : reverse_bases.append("N"); 
+				   break;
+		}
+}
+if (reverse_bases == bases) palindrome = true;
+else palindrome = false;
+
+}
+
+
+
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
