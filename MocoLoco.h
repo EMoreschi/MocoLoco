@@ -182,6 +182,7 @@ class map_class{
 
 		int kmer_length;
 		string reverse_bases;
+		map<string, int> moco_table;
 //		string bases;	
 
 		void table_creation(map<string,int>,string, int);
@@ -197,7 +198,7 @@ class map_class{
 		table_preparation(GEP);
 
 		}
-		map<string,int> moco_table;
+//		map<string,int> moco_table;
 			
 };
 

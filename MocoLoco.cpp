@@ -19,14 +19,6 @@ int main(int argc, char *argv[]){
 	C.print_debug_GEP(C.GEP);	//Print GEP vector for debugging
 	map_class MAPPA(C.GEP,6);
 
-	for(map<string,int>::iterator it = MAPPA.moco_table.begin(); it!= MAPPA.moco_table.end(); ++it){
-
-		cout << it->first << " --- ";
-		cout << it->second;
-		cout << endl;
-	}
-	cout << MAPPA.moco_table.begin()->first;
-
 
 	return 0;
 }
@@ -496,8 +488,8 @@ void map_class::table_creation(map<string,int> moco_table, string sequence, int 
 	for(unsigned int i=0; i<sequence.size() - kmer_length; i++){
 
 		string bases = sequence.substr(i,kmer_length);
-		bool palindrome = check_palindrome(bases);
 		map<string, int>::iterator it = moco_table.find(bases);
+		bool palindrome = check_palindrome(bases);
 
 		if (!palindrome && DS){
 			map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
@@ -522,8 +514,12 @@ void map_class::table_creation(map<string,int> moco_table, string sequence, int 
 			}
 
 		}
+	for (it = moco_table.begin(); it != moco_table.end(); it++) {
+    cout <<"Oligo:  " << it->first << "-----" << it->second << "\n";
 		bases.clear();
 	}
+  }
+
 }
 
 bool map_class::check_palindrome(string bases){
