@@ -6,9 +6,9 @@ int main(int argc, char *argv[]){
 	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
 		display_help();
 	}
-
+		
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-
+	
 	coordinator_class C;
 	//for(int i = 0; i<C.oligos_vector.size(); i++){
 	//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
@@ -17,8 +17,7 @@ int main(int argc, char *argv[]){
 	//M.debug_matrix(M);
 
 	C.print_debug_GEP(C.GEP);	//Print GEP vector for debugging
-	map_class MAPPA(C.GEP,6);
-
+	map_class MAPPA(C.GEP,kmers);
 
 	return 0;
 }
@@ -551,12 +550,13 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:b:j:t:s";
+	const char* const short_opts = "hp:k:b:j:t:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
 		{"help",      no_argument, nullptr,  'h' },
 		{"param",      required_argument, nullptr,  'p' },
+		{"kmer",   required_argument, nullptr,  'k' },
 		{"bed",    required_argument, nullptr,  'b' },
 		{"jaspar",   required_argument, nullptr,  'j' },
 		{"twobit",   required_argument, nullptr,  't' },
@@ -585,6 +585,15 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 't' : TWOBIT_FILE = string(optarg);
 				   is_file_exist(TWOBIT_FILE, "--twobit || -t ");
+				   break;
+			case 'k' : kmers.clear();
+				   kmers_input = string(optarg);
+				   int index;
+				   while(index != -1){
+					   index = kmers_input.find(",");
+					   kmers.emplace_back(stoi(kmers_input.substr(0,index)));
+					   kmers_input.erase(0,index+1);
+				   }
 				   break;
 			case 's' : DS = 0;
 				   break;
@@ -620,6 +629,7 @@ void display_help() 						//Display help function
 {
 	cerr << "\n --help || -h show this message" << endl;
 	cerr << "\n --bed || -b <file_bed>: input bed file" << endl;
+	cerr << "\n --kmer || -k <n1,n2,..,nX>: input at least one k-mer length" << endl;
 	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
 	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal" << endl;

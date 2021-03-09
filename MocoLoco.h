@@ -23,7 +23,8 @@ string JASPAR_FILE;
 const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
-
+vector<int> kmers = {6,8,10};
+string kmers_input;
 class bed_class { //creation public class of bed_class type        
 
 	private:	//field definition
@@ -175,15 +176,13 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 };
 
-
 class map_class{
 
 	private:
-
-		int kmer_length;
+		
+		vector<unordered_map<string,int>> maps_vector;
 		string reverse_bases;
 		unordered_map<string, int> moco_table;
-//		string bases;	
 
 		void table_creation(unordered_map<string,int>, int, vector<bed_class>);
 		void check_palindrome(unordered_map<string, int>, string);
@@ -191,13 +190,15 @@ class map_class{
 
 	public:
 
-		map_class(vector<bed_class> GEP, int seq_len){
-		kmer_length = seq_len;
-		table_creation(moco_table, kmer_length, GEP);
-
+		map_class(vector<bed_class> GEP, vector<int> kmers){
+		
+			for(unsigned int i=0; i<kmers.size(); i++){
+				
+				table_creation(moco_table, kmers[i], GEP);
+				maps_vector.emplace_back(moco_table);
+				moco_table.clear();
+			}
 		}
-//		map<string,int> moco_table;
-			
 };
 
 void command_line_parser(int, char **);
