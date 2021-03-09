@@ -12,7 +12,7 @@
 #include "./TwoBit/twobit.h"
 #include "./TwoBit/twobit.c"
 #include <getopt.h>
-#include <map>
+#include <unordered_map>
 
 using namespace std;
 
@@ -182,11 +182,11 @@ class map_class{
 
 		int kmer_length;
 		string reverse_bases;
-		map<string, int> moco_table;
+		unordered_map<string, int> moco_table;
 //		string bases;	
 
-		void table_creation(map<string,int>, int, vector<bed_class>);
-		void check_palindrome(map<string, int>, string);
+		void table_creation(unordered_map<string,int>, int, vector<bed_class>);
+		void check_palindrome(unordered_map<string, int>, string);
 		bool check_palindrome(string);
 
 	public:
