@@ -484,11 +484,11 @@ void map_class::table_preparation(vector<bed_class> GEP){
 }
 
 void map_class::table_creation(map<string,int> moco_table, string sequence, int kmer_length){
-	
+            map<string,int>::iterator it;
 	for(unsigned int i=0; i<sequence.size() - kmer_length; i++){
 
 		string bases = sequence.substr(i,kmer_length);
-		map<string, int>::iterator it = moco_table.find(bases);
+		it = moco_table.find(bases);
 		bool palindrome = check_palindrome(bases);
 
 		if (!palindrome && DS){
@@ -514,18 +514,18 @@ void map_class::table_creation(map<string,int> moco_table, string sequence, int 
 			}
 
 		}
+		bases.clear();
+		reverse_bases.clear();
+  }
 	for (it = moco_table.begin(); it != moco_table.end(); it++) {
     cout <<"Oligo:  " << it->first << "-----" << it->second << "\n";
-		bases.clear();
 	}
-  }
 
 }
 
 bool map_class::check_palindrome(string bases){
 	for(unsigned int i=0; i<bases.size(); i++){
 		char base;
-		reverse_bases.clear();
 		base = bases[i];
 		switch (base) {
 			case 'A' : reverse_bases.append("T"); 
