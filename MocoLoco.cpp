@@ -472,25 +472,21 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	//cout << endl;
 }
 
-void map_class::table_preparation(vector<bed_class> GEP){
-
-
-	for(int i=0; i<GEP.size(); i++){
+void map_class::table_creation(map<string,int> moco_table, int kmer_length, vector<bed_class> GEP){
+	
+	for(unsigned int i=0; i<GEP.size(); i++){
 
 		string sequence = GEP[i].return_sequence(GEP[i]);
-		table_creation(moco_table, sequence, kmer_length);
-	}
-
-}
-
-void map_class::table_creation(map<string,int> moco_table, string sequence, int kmer_length){
-            map<string,int>::iterator it;
-	for(unsigned int i=0; i<sequence.size() - kmer_length; i++){
+//		string sequence = "CCCCCCAAAAAAGCGGGGGGAACCCCCCGTAAAAAAGGT";
+//		table_creation(moco_table, sequence, kmer_length);
+	        
+		map<string,int>::iterator it;
+		for(unsigned int i=0; i<=sequence.size() - kmer_length; i++){
 
 		string bases = sequence.substr(i,kmer_length);
 		it = moco_table.find(bases);
 		bool palindrome = check_palindrome(bases);
-
+		
 		if (!palindrome && DS){
 			map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
 			if (it != moco_table.end()){
@@ -516,8 +512,10 @@ void map_class::table_creation(map<string,int> moco_table, string sequence, int 
 		}
 		bases.clear();
 		reverse_bases.clear();
-  }
-	for (it = moco_table.begin(); it != moco_table.end(); it++) {
+		}
+	}
+	
+	for (map<string,int>::iterator it = moco_table.begin(); it != moco_table.end(); it++) {
     cout <<"Oligo:  " << it->first << "-----" << it->second << "\n";
 	}
 

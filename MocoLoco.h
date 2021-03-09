@@ -185,17 +185,15 @@ class map_class{
 		map<string, int> moco_table;
 //		string bases;	
 
-		void table_creation(map<string,int>,string, int);
+		void table_creation(map<string,int>, int, vector<bed_class>);
 		void check_palindrome(map<string, int>, string);
-		void table_preparation(vector<bed_class>); 
-		void check_seq_map(map<string,int>, string);
 		bool check_palindrome(string);
 
 	public:
 
 		map_class(vector<bed_class> GEP, int seq_len){
 		kmer_length = seq_len;
-		table_preparation(GEP);
+		table_creation(moco_table, kmer_length, GEP);
 
 		}
 //		map<string,int> moco_table;
