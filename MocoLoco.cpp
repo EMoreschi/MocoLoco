@@ -353,6 +353,78 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){			//Extract sequen
 	}
 }
 
+void map_class::table_creation(unordered_map<string,int> moco_table, int kmer_length, vector<bed_class> GEP){
+	
+	for(unsigned int i=0; i<GEP.size(); i++){
+
+		string sequence = GEP[i].return_sequence(GEP[i]);
+//		string sequence = "CCCCCCAAAAAAGCGGGGGGAACCCCCCGTAAAAAAGGT";
+//		table_creation(moco_table, sequence, kmer_length);
+	        
+		unordered_map<string,int>::iterator it;
+		for(unsigned int i=0; i<=sequence.size() - kmer_length; i++){
+
+		string bases = sequence.substr(i,kmer_length);
+		it = moco_table.find(bases);
+		bool palindrome = check_palindrome(bases);
+		
+		if (!palindrome && DS){
+			unordered_map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
+			if (it != moco_table.end()){
+				it->second++;
+				it_rev->second++;
+			}
+			else{
+
+				moco_table.insert( pair<string,int>(bases,1) );
+				moco_table.insert( pair<string,int>(reverse_bases,1) );
+
+			} 
+		}
+		else{
+			if (it != moco_table.end()){
+				it->second++;
+			}
+			else{
+				moco_table.insert( pair<string,int>(bases,1) );
+
+			}
+
+		}
+		bases.clear();
+		reverse_bases.clear();
+		}
+	}
+	
+	for (unordered_map<string,int>::iterator it = moco_table.begin(); it != moco_table.end(); it++) {
+    cout <<"Oligo:  " << it->first << "-----" << it->second << "\n";
+	}
+
+}
+
+bool map_class::check_palindrome(string bases){
+	for(unsigned int i=0; i<bases.size(); i++){
+		char base;
+		base = bases[i];
+		switch (base) {
+			case 'A' : reverse_bases.append("T"); 
+				   break;
+			case 'T' : reverse_bases.append("A"); 
+				   break;
+			case 'G' : reverse_bases.append("C"); 
+				   break;
+			case 'C' : reverse_bases.append("G"); 
+				   break;
+			case 'N' : reverse_bases.append("N"); 
+				   break;
+		}
+}
+if (reverse_bases == bases){
+       return true;
+}
+else {return false;}
+
+}
 
 /////DEBUG/////////////////////////////////////////////////////////
 unsigned int oligo_class::return_start_coord_oligo(){
@@ -470,79 +542,6 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	//cout << oligo_scores[i] << " "; 
 	//}
 	//cout << endl;
-}
-
-void map_class::table_creation(unordered_map<string,int> moco_table, int kmer_length, vector<bed_class> GEP){
-	
-	for(unsigned int i=0; i<GEP.size(); i++){
-
-		string sequence = GEP[i].return_sequence(GEP[i]);
-//		string sequence = "CCCCCCAAAAAAGCGGGGGGAACCCCCCGTAAAAAAGGT";
-//		table_creation(moco_table, sequence, kmer_length);
-	        
-		unordered_map<string,int>::iterator it;
-		for(unsigned int i=0; i<=sequence.size() - kmer_length; i++){
-
-		string bases = sequence.substr(i,kmer_length);
-		it = moco_table.find(bases);
-		bool palindrome = check_palindrome(bases);
-		
-		if (!palindrome && DS){
-			unordered_map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
-			if (it != moco_table.end()){
-				it->second++;
-				it_rev->second++;
-			}
-			else{
-
-				moco_table.insert( pair<string,int>(bases,1) );
-				moco_table.insert( pair<string,int>(reverse_bases,1) );
-
-			} 
-		}
-		else{
-			if (it != moco_table.end()){
-				it->second++;
-			}
-			else{
-				moco_table.insert( pair<string,int>(bases,1) );
-
-			}
-
-		}
-		bases.clear();
-		reverse_bases.clear();
-		}
-	}
-	
-	for (unordered_map<string,int>::iterator it = moco_table.begin(); it != moco_table.end(); it++) {
-    cout <<"Oligo:  " << it->first << "-----" << it->second << "\n";
-	}
-
-}
-
-bool map_class::check_palindrome(string bases){
-	for(unsigned int i=0; i<bases.size(); i++){
-		char base;
-		base = bases[i];
-		switch (base) {
-			case 'A' : reverse_bases.append("T"); 
-				   break;
-			case 'T' : reverse_bases.append("A"); 
-				   break;
-			case 'G' : reverse_bases.append("C"); 
-				   break;
-			case 'C' : reverse_bases.append("G"); 
-				   break;
-			case 'N' : reverse_bases.append("N"); 
-				   break;
-		}
-}
-if (reverse_bases == bases){
-       return true;
-}
-else {return false;}
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
