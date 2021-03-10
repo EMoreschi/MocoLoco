@@ -6,6 +6,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <map>
 #include <typeinfo> 
 #include <sstream>
 #include <numeric>
@@ -23,8 +24,7 @@ string JASPAR_FILE;
 const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
-vector<int> kmers = {6,8,10};
-string kmers_input;
+string kmers = "6,8,10";
 class bed_class { //creation public class of bed_class type        
 
 	private:	//field definition
@@ -181,26 +181,31 @@ class map_class{
 	private:
 		
 		vector<unordered_map<string,int>> maps_vector;
+		vector<unordered_map<string,int>> maps_vector_ordered;
 		string reverse_bases;
 		unordered_map<string, int> moco_table;
+		unordered_map<string, int> ordered_map;
+		vector<int> kmers_vector;
 
-		void table_creation(unordered_map<string,int>, int, vector<bed_class>);
-		void check_palindrome(unordered_map<string, int>, string);
+		void kmers_vector_creation(string);
+		void table_creation(unordered_map<string,int>, vector<int>, vector<bed_class>);
 		bool check_palindrome(string);
+		void maps_sorting(vector<unordered_map<string,int>>);
+		void print_debug_maps(vector<unordered_map<string,int>>, vector<int>);
 
 	public:
 
-		map_class(vector<bed_class> GEP, vector<int> kmers){
-		
-			for(unsigned int i=0; i<kmers.size(); i++){
-				
-				table_creation(moco_table, kmers[i], GEP);
-				maps_vector.emplace_back(moco_table);
-				moco_table.clear();
-			}
+		map_class(vector<bed_class> GEP, string kmers){
+
+			kmers_vector_creation(kmers);
+			table_creation(moco_table, kmers_vector, GEP);
+			maps_sorting(maps_vector);
+			print_debug_maps(maps_vector_ordered, kmers_vector);
 		}
+
 };
 
+bool cmp(pair<string,int>&,pair<string,int>&);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(string);

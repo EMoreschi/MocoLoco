@@ -352,53 +352,71 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){			//Extract sequen
 	}
 }
 
-void map_class::table_creation(unordered_map<string,int> moco_table, int kmer_length, vector<bed_class> GEP){
+void map_class::kmers_vector_creation(string kmers){
+
+	int index;
 	
-	for(unsigned int i=0; i<GEP.size(); i++){
-
-		string sequence = GEP[i].return_sequence(GEP[i]);
-//		string sequence = "CCCCCCAAAAAAGCGGGGGGAACCCCCCGTAAAAAAGGT";
-//		table_creation(moco_table, sequence, kmer_length);
-	        
-		unordered_map<string,int>::iterator it;
-		for(unsigned int i=0; i<=sequence.size() - kmer_length; i++){
-
-		string bases = sequence.substr(i,kmer_length);
-		it = moco_table.find(bases);
-		bool palindrome = check_palindrome(bases);
-		
-		if (!palindrome && DS){
-			unordered_map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
-			if (it != moco_table.end()){
-				it->second++;
-				it_rev->second++;
-			}
-			else{
-
-				moco_table.insert( pair<string,int>(bases,1) );
-				moco_table.insert( pair<string,int>(reverse_bases,1) );
-
-			} 
-		}
-		else{
-			if (it != moco_table.end()){
-				it->second++;
-			}
-			else{
-				moco_table.insert( pair<string,int>(bases,1) );
-
-			}
-
-		}
-		bases.clear();
-		reverse_bases.clear();
-		}
+	while(index != -1){
+		index = kmers.find(",");
+		kmers_vector.emplace_back(stoi(kmers.substr(0,index)));
+		kmers.erase(0,index+1);
 	}
-	
-	for (unordered_map<string,int>::iterator it = moco_table.begin(); it != moco_table.end(); it++) {
-    cout <<"Oligo:  " << it->first << "-----" << it->second << "\n";
-	}
+}
 
+void map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){
+	for(unsigned int k=0; k<kmers_vector.size(); k++){
+
+		moco_table.clear();
+
+		for(unsigned int j=0; j<GEP.size(); j++){
+
+			string sequence = GEP[j].return_sequence(GEP[j]);
+			//		string sequence = "CCCCCCAAAAAAGCGGGGGGAACCCCCCGTAAAAAAGGT";
+			//		table_creation(moco_table, sequence, kmer_length);
+
+			unordered_map<string,int>::iterator it;
+			for(unsigned int i=0; i<=sequence.size() - kmers_vector[k]; i++){
+
+				string bases = sequence.substr(i,kmers_vector[k]);
+				it = moco_table.find(bases);
+				bool palindrome = check_palindrome(bases);
+
+				if (!palindrome && DS){
+					unordered_map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
+					if (it != moco_table.end()){
+						it->second++;
+						it_rev->second++;
+					}
+					else{
+
+						moco_table.insert( pair<string,int>(bases,1) );
+						moco_table.insert( pair<string,int>(reverse_bases,1) );
+
+					} 
+				}
+				else{
+					if (it != moco_table.end()){
+						it->second++;
+					}
+					else{
+						moco_table.insert( pair<string,int>(bases,1) );
+
+					}
+
+				}
+				bases.clear();
+				reverse_bases.clear();
+			}
+		}
+
+		maps_vector.emplace_back(moco_table);
+	//	moco_table.clear();
+
+		//for (unordered_map<string,int>::iterator it = moco_table.begin(); it != moco_table.end(); it++) {
+		//	cout <<"Oligo:  " << it->first << "-----" << it->second << "\n";
+		//}
+
+	}
 }
 
 bool map_class::check_palindrome(string bases){
@@ -423,6 +441,36 @@ if (reverse_bases == bases){
 }
 else {return false;}
 
+}
+
+void map_class::maps_sorting(vector<unordered_map<string,int>> maps_vector){
+
+	vector<pair<string,int>> A;
+
+	for(unsigned int i=0; i<maps_vector.size(); i++){
+
+		for(unordered_map<string,int>::iterator it = maps_vector[i].begin(); it != maps_vector[i].end(); it++){
+
+			A.emplace_back(make_pair(it->first, it->second));
+		}
+
+		sort(A.begin(), A.end(), cmp);	
+
+		for(unsigned int j=0; j<A.size(); j++){
+
+			ordered_map.insert(A[j]);
+		}
+		
+		maps_vector_ordered.emplace_back(ordered_map);
+		ordered_map.clear();
+		A.clear();
+
+	}
+}
+
+bool cmp(pair<string,int> &a,pair<string, int> &b){
+
+	return a.second < b.second;
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -543,6 +591,23 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	//cout << endl;
 }
 
+void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_ordered, vector<int> kmers_vector){
+
+	for(unsigned int i=0; i<maps_vector_ordered.size(); i++){
+		
+		ofstream outfile;
+		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map.txt");	
+		for (unordered_map<string,int>::iterator it = maps_vector_ordered[i].begin(); it != maps_vector_ordered[i].end(); it++) {
+	
+			outfile <<"Oligo:  " << it->first << "-----" << it->second << "\n";
+
+		}
+
+		outfile.close();
+
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -587,13 +652,7 @@ void command_line_parser(int argc, char** argv){
 				   is_file_exist(TWOBIT_FILE, "--twobit || -t ");
 				   break;
 			case 'k' : kmers.clear();
-				   kmers_input = string(optarg);
-				   int index;
-				   while(index != -1){
-					   index = kmers_input.find(",");
-					   kmers.emplace_back(stoi(kmers_input.substr(0,index)));
-					   kmers_input.erase(0,index+1);
-				   }
+				   kmers = string(optarg);
 				   break;
 			case 's' : DS = 0;
 				   break;
