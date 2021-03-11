@@ -445,11 +445,6 @@ else {return false;}
 }
 
 
-bool cmp(pair<string,int> &a,pair<string, int> &b){
-
-	return a.second < b.second;
-}
-
 /////DEBUG/////////////////////////////////////////////////////////
 unsigned int oligo_class::return_start_coord_oligo(){
 
