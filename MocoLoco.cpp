@@ -443,30 +443,6 @@ else {return false;}
 
 }
 
-void map_class::maps_sorting(vector<unordered_map<string,int>> maps_vector){
-
-	vector<pair<string,int>> A;
-
-	for(unsigned int i=0; i<maps_vector.size(); i++){
-
-		for(unordered_map<string,int>::iterator it = maps_vector[i].begin(); it != maps_vector[i].end(); it++){
-
-			A.emplace_back(make_pair(it->first, it->second));
-		}
-
-		sort(A.begin(), A.end(), cmp);	
-
-		for(unsigned int j=0; j<A.size(); j++){
-
-			ordered_map.insert(A[j]);
-		}
-		
-		maps_vector_ordered.emplace_back(ordered_map);
-		ordered_map.clear();
-		A.clear();
-
-	}
-}
 
 bool cmp(pair<string,int> &a,pair<string, int> &b){
 
@@ -591,18 +567,18 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	//cout << endl;
 }
 
-void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_ordered, vector<int> kmers_vector){
-
-	for(unsigned int i=0; i<maps_vector_ordered.size(); i++){
+void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector, vector<int> kmers_vector){
+	for(unsigned int i=0; i<maps_vector.size(); i++){
 		
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map.txt");	
-		for (unordered_map<string,int>::iterator it = maps_vector_ordered[i].begin(); it != maps_vector_ordered[i].end(); it++) {
-	
-			outfile <<"Oligo:  " << it->first << "-----" << it->second << "\n";
-
+			multimap<int,string> moco_multimap;
+		for (unordered_map<string,int>::iterator it = maps_vector[i].begin(); it !=maps_vector[i].end(); it++) {
+			moco_multimap.insert( { it->second, it->first });
 		}
-
+		for (multimap<int,string>::reverse_iterator rev_it = moco_multimap.rbegin(); rev_it != moco_multimap.rend(); rev_it++) {
+			outfile << rev_it->second <<"\t"<< rev_it->first <<"\n";
+		}
 		outfile.close();
 
 	}

@@ -181,16 +181,13 @@ class map_class{
 	private:
 		
 		vector<unordered_map<string,int>> maps_vector;
-		vector<unordered_map<string,int>> maps_vector_ordered;
 		string reverse_bases;
 		unordered_map<string, int> moco_table;
-		unordered_map<string, int> ordered_map;
 		vector<int> kmers_vector;
 
 		void kmers_vector_creation(string);
 		void table_creation(unordered_map<string,int>, vector<int>, vector<bed_class>);
 		bool check_palindrome(string);
-		void maps_sorting(vector<unordered_map<string,int>>);
 		void print_debug_maps(vector<unordered_map<string,int>>, vector<int>);
 
 	public:
@@ -199,8 +196,7 @@ class map_class{
 
 			kmers_vector_creation(kmers);
 			table_creation(moco_table, kmers_vector, GEP);
-			maps_sorting(maps_vector);
-			print_debug_maps(maps_vector_ordered, kmers_vector);
+			print_debug_maps(maps_vector, kmers_vector);
 		}
 
 };
