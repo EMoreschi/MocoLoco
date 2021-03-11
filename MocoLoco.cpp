@@ -517,13 +517,11 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 
 void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug function: Print the GEP vector to control the working flow
 
+	alias_file = (TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
 	ofstream outfile;	
-	//cout << BED_FILE << "\n";
-	//cout << BED_FILE.find_last_of("/") << "\n";
 	JASPAR_FILE = JASPAR_FILE.erase(JASPAR_FILE.find_last_of("."), JASPAR_FILE.size());
-	outfile.open(TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
-	//cout << BED_FILE<< "\n";
-	//cout << BED_FILE.find_last_of("/")<< "\n";
+	outfile.open(alias_file);
+	
 	for(unsigned int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
@@ -531,8 +529,9 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
 	}
 	outfile.close();
+	
 	BED_FILE = BED_FILE.erase(BED_FILE.find_last_of("."), BED_FILE.size());
-	outfile.open(TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1)+".fasta");
+	outfile.open(alias_file+".fasta");
 	for(unsigned int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
@@ -567,7 +566,7 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector, 
 	for(unsigned int i=0; i<maps_vector.size(); i++){
 		
 		ofstream outfile;
-		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map.txt");	
+		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map_"+alias_file+".txt");	
 			multimap<int,string> moco_multimap;
 		for (unordered_map<string,int>::iterator it = maps_vector[i].begin(); it !=maps_vector[i].end(); it++) {
 			moco_multimap.insert( { it->second, it->first });
