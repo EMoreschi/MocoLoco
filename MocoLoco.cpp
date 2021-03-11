@@ -436,6 +436,7 @@ bool map_class::check_palindrome(string bases){
 				   break;
 		}
 }
+reverse(reverse_bases.begin(), reverse_bases.end());
 if (reverse_bases == bases){
        return true;
 }
