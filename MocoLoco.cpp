@@ -16,8 +16,8 @@ int main(int argc, char *argv[]){
 	//matrix_class M(JASPAR_FILE);
 	//M.debug_matrix(M);
 
-	C.print_debug_GEP(C.GEP);	//Print GEP vector for debugging
-	map_class MAPPA(C.GEP,kmers);
+	C.print_debug_GEP(C.GEP);
+	map_class MAP(C.GEP,kmers);
 
 	return 0;
 }
@@ -366,16 +366,12 @@ void map_class::kmers_vector_creation(string kmers){
 void map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
-		moco_table.clear();
-
 		for(unsigned int j=0; j<GEP.size(); j++){
 
 			string sequence = GEP[j].return_sequence(GEP[j]);
-			//		string sequence = "CCCCCCAAAAAAGCGGGGGGAACCCCCCGTAAAAAAGGT";
-			//		table_creation(moco_table, sequence, kmer_length);
 
 			unordered_map<string,int>::iterator it;
-			for(unsigned int i=0; i<=sequence.size() - kmers_vector[k]; i++){
+			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
 
 				string bases = sequence.substr(i,kmers_vector[k]);
 				it = moco_table.find(bases);
@@ -410,20 +406,18 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 		}
 
 		maps_vector.emplace_back(moco_table);
-	//	moco_table.clear();
-
-		//for (unordered_map<string,int>::iterator it = moco_table.begin(); it != moco_table.end(); it++) {
-		//	cout <<"Oligo:  " << it->first << "-----" << it->second << "\n";
-		//}
-
+		moco_table.clear();
 	}
 }
 
 bool map_class::check_palindrome(string bases){
+
 	for(unsigned int i=0; i<bases.size(); i++){
+
 		char base;
 		base = bases[i];
 		switch (base) {
+
 			case 'A' : reverse_bases.append("T"); 
 				   break;
 			case 'T' : reverse_bases.append("A"); 
@@ -435,17 +429,19 @@ bool map_class::check_palindrome(string bases){
 			case 'N' : reverse_bases.append("N"); 
 				   break;
 		}
-}
-reverse(reverse_bases.begin(), reverse_bases.end());
-if (reverse_bases == bases){
-       return true;
-}
-else {return false;}
+	}
+
+	reverse(reverse_bases.begin(), reverse_bases.end());
+	if (reverse_bases == bases){
+		return true;
+	}
+	else {return false;}
 
 }
 
 
 /////DEBUG/////////////////////////////////////////////////////////
+
 unsigned int oligo_class::return_start_coord_oligo(){
 
 	return start_coord_oligo;
@@ -575,7 +571,6 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector, 
 			outfile << rev_it->second <<"\t"<< rev_it->first <<"\n";
 		}
 		outfile.close();
-
 	}
 }
 
@@ -635,11 +630,8 @@ void command_line_parser(int argc, char** argv){
 	}
 }
 
+bool is_file_exist(string fileName, string buf){		//Input files existence control
 
-
-
-bool is_file_exist(string fileName, string buf)		//Input files existence control
-{
 	struct stat check;
 	int regular_check, existing_check;
 	const char * C_fileName = fileName.c_str();
