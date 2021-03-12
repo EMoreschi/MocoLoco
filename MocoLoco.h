@@ -6,12 +6,14 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <map>
 #include <typeinfo> 
 #include <sstream>
 #include <numeric>
 #include "./TwoBit/twobit.h"
 #include "./TwoBit/twobit.c"
 #include <getopt.h>
+#include <unordered_map>
 
 using namespace std;
 
@@ -19,10 +21,11 @@ string BED_FILE; 		//initializing const char variarible for Bed_file input readi
 int half_length = 150; 		//default half_length 150
 string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 string JASPAR_FILE;
+string alias_file;
 const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
-
+string kmers = "6,8,10";
 class bed_class { //creation public class of bed_class type        
 
 	private:	//field definition
@@ -174,6 +177,32 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 };
 
+class map_class{
+
+	private:
+		
+		vector<unordered_map<string,int>> maps_vector;
+		string reverse_bases;
+		unordered_map<string, int> moco_table;
+		vector<int> kmers_vector;
+
+		void kmers_vector_creation(string);
+		void table_creation(unordered_map<string,int>, vector<int>, vector<bed_class>);
+		bool check_palindrome(string);
+		void print_debug_maps(vector<unordered_map<string,int>>, vector<int>);
+
+	public:
+
+		map_class(vector<bed_class> GEP, string kmers){
+
+			kmers_vector_creation(kmers);
+			table_creation(moco_table, kmers_vector, GEP);
+			print_debug_maps(maps_vector, kmers_vector);
+		}
+
+};
+
+bool cmp(pair<string,int>&,pair<string,int>&);
 void command_line_parser(int, char **);
 void display_help();
 bool exist_test0(string);

@@ -6,9 +6,9 @@ int main(int argc, char *argv[]){
 	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
 		display_help();
 	}
-
+		
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-
+	
 	coordinator_class C;
 	//for(int i = 0; i<C.oligos_vector.size(); i++){
 	//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
@@ -16,7 +16,8 @@ int main(int argc, char *argv[]){
 	//matrix_class M(JASPAR_FILE);
 	//M.debug_matrix(M);
 
-	C.print_debug_GEP(C.GEP);					//Print GEP vector for debugging
+	C.print_debug_GEP(C.GEP);
+	map_class MAP(C.GEP,kmers);
 
 	return 0;
 }
@@ -351,8 +352,96 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){			//Extract sequen
 	}
 }
 
+void map_class::kmers_vector_creation(string kmers){
+
+	int index;
+	
+	while(index != -1){
+		index = kmers.find(",");
+		kmers_vector.emplace_back(stoi(kmers.substr(0,index)));
+		kmers.erase(0,index+1);
+	}
+}
+
+void map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){
+	for(unsigned int k=0; k<kmers_vector.size(); k++){
+
+		for(unsigned int j=0; j<GEP.size(); j++){
+
+			string sequence = GEP[j].return_sequence(GEP[j]);
+
+			unordered_map<string,int>::iterator it;
+			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
+
+				string bases = sequence.substr(i,kmers_vector[k]);
+				it = moco_table.find(bases);
+				bool palindrome = check_palindrome(bases);
+
+				if (!palindrome && DS){
+					unordered_map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
+					if (it != moco_table.end()){
+						it->second++;
+						it_rev->second++;
+					}
+					else{
+
+						moco_table.insert( pair<string,int>(bases,1) );
+						moco_table.insert( pair<string,int>(reverse_bases,1) );
+
+					} 
+				}
+				else{
+					if (it != moco_table.end()){
+						it->second++;
+					}
+					else{
+						moco_table.insert( pair<string,int>(bases,1) );
+
+					}
+
+				}
+				bases.clear();
+				reverse_bases.clear();
+			}
+		}
+
+		maps_vector.emplace_back(moco_table);
+		moco_table.clear();
+	}
+}
+
+bool map_class::check_palindrome(string bases){
+
+	for(unsigned int i=0; i<bases.size(); i++){
+
+		char base;
+		base = bases[i];
+		switch (base) {
+
+			case 'A' : reverse_bases.append("T"); 
+				   break;
+			case 'T' : reverse_bases.append("A"); 
+				   break;
+			case 'G' : reverse_bases.append("C"); 
+				   break;
+			case 'C' : reverse_bases.append("G"); 
+				   break;
+			case 'N' : reverse_bases.append("N"); 
+				   break;
+		}
+	}
+
+	reverse(reverse_bases.begin(), reverse_bases.end());
+	if (reverse_bases == bases){
+		return true;
+	}
+	else {return false;}
+
+}
+
 
 /////DEBUG/////////////////////////////////////////////////////////
+
 unsigned int oligo_class::return_start_coord_oligo(){
 
 	return start_coord_oligo;
@@ -424,13 +513,11 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 
 void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug function: Print the GEP vector to control the working flow
 
+	alias_file = (TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
 	ofstream outfile;	
-	//cout << BED_FILE << "\n";
-	//cout << BED_FILE.find_last_of("/") << "\n";
 	JASPAR_FILE = JASPAR_FILE.erase(JASPAR_FILE.find_last_of("."), JASPAR_FILE.size());
-	outfile.open(TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
-	//cout << BED_FILE<< "\n";
-	//cout << BED_FILE.find_last_of("/")<< "\n";
+	outfile.open(alias_file);
+	
 	for(unsigned int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
@@ -438,8 +525,9 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
 	}
 	outfile.close();
+	
 	BED_FILE = BED_FILE.erase(BED_FILE.find_last_of("."), BED_FILE.size());
-	outfile.open(TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1)+".fasta");
+	outfile.open(alias_file+".fasta");
 	for(unsigned int i=0; i<GEP.size(); i++){
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
@@ -469,6 +557,23 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	//}
 	//cout << endl;
 }
+
+void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector, vector<int> kmers_vector){
+	for(unsigned int i=0; i<maps_vector.size(); i++){
+		
+		ofstream outfile;
+		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map_"+alias_file+".txt");	
+			multimap<int,string> moco_multimap;
+		for (unordered_map<string,int>::iterator it = maps_vector[i].begin(); it !=maps_vector[i].end(); it++) {
+			moco_multimap.insert( { it->second, it->first });
+		}
+		for (multimap<int,string>::reverse_iterator rev_it = moco_multimap.rbegin(); rev_it != moco_multimap.rend(); rev_it++) {
+			outfile << rev_it->second <<"\t"<< rev_it->first <<"\n";
+		}
+		outfile.close();
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -476,12 +581,13 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:b:j:t:s";
+	const char* const short_opts = "hp:k:b:j:t:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
 		{"help",      no_argument, nullptr,  'h' },
 		{"param",      required_argument, nullptr,  'p' },
+		{"kmer",   required_argument, nullptr,  'k' },
 		{"bed",    required_argument, nullptr,  'b' },
 		{"jaspar",   required_argument, nullptr,  'j' },
 		{"twobit",   required_argument, nullptr,  't' },
@@ -511,6 +617,9 @@ void command_line_parser(int argc, char** argv){
 			case 't' : TWOBIT_FILE = string(optarg);
 				   is_file_exist(TWOBIT_FILE, "--twobit || -t ");
 				   break;
+			case 'k' : kmers.clear();
+				   kmers = string(optarg);
+				   break;
 			case 's' : DS = 0;
 				   break;
 			case '?': // Unrecognized option
@@ -521,11 +630,8 @@ void command_line_parser(int argc, char** argv){
 	}
 }
 
+bool is_file_exist(string fileName, string buf){		//Input files existence control
 
-
-
-bool is_file_exist(string fileName, string buf)		//Input files existence control
-{
 	struct stat check;
 	int regular_check, existing_check;
 	const char * C_fileName = fileName.c_str();
@@ -545,6 +651,7 @@ void display_help() 						//Display help function
 {
 	cerr << "\n --help || -h show this message" << endl;
 	cerr << "\n --bed || -b <file_bed>: input bed file" << endl;
+	cerr << "\n --kmer || -k <n1,n2,..,nX>: input at least one k-mer length" << endl;
 	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
 	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal" << endl;
