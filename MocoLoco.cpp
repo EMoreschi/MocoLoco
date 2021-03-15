@@ -6,18 +6,26 @@ int main(int argc, char *argv[]){
 	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
 		display_help();
 	}
-		
-	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	
-	coordinator_class C;
-	//for(int i = 0; i<C.oligos_vector.size(); i++){
-	//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
-	//} 
-	//matrix_class M(JASPAR_FILE);
-	//M.debug_matrix(M);
 
-	C.print_debug_GEP(C.GEP);
-	map_class MAP(C.GEP,kmers);
+	command_line_parser(argc, argv);					//Parser function called to handle aguments
+
+	if(MFASTA_FILE.size() == 0){	
+		coordinator_class C;
+		//for(int i = 0; i<C.oligos_vector.size(); i++){
+		//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
+		//} 
+		//matrix_class M(JASPAR_FILE);
+		//M.debug_matrix(M);
+
+		C.print_debug_GEP(C.GEP);
+		map_class MAP(C.GEP,kmers);
+	}
+
+	else{
+
+		multifasta_class MULTI(MFASTA_FILE);
+		map_class MAP(MULTI.GEP,kmers);
+	}		
 
 	return 0;
 }
@@ -439,6 +447,64 @@ bool map_class::check_palindrome(string bases){
 
 }
 
+void multifasta_class::length_control(vector<string> sequences){
+	
+	int size = sequences[0].size();
+	cout << sequences.size();
+	for(int i=0; i<sequences.size(); i++){
+
+		if(sequences[i].size() != size){
+
+			cout << "sequences not of the same length!" << endl;
+			exit(1);
+		}
+	}
+
+	cout << "sequences OK!" << endl;
+
+	for(int i=0; i<sequences.size(); i++){
+
+		cout << sequences[i] << endl;
+	}
+
+}
+
+void multifasta_class::extract_sequences(string MFasta_file){
+
+	ifstream file(MFasta_file);
+	string line;
+	string current_sequence;
+	bool first_line = 1;
+
+	while(getline(file,line)){
+
+		if(line[0] == '>' && !first_line){
+			
+			sequences.emplace_back(current_sequence);
+			current_sequence.clear();
+			
+			}
+
+		else if (!first_line){
+
+			current_sequence = current_sequence + line; 
+			current_sequence.erase(current_sequence.end()-1);
+		}
+
+		first_line = 0;	
+	}
+	sequences.emplace_back(current_sequence);
+}
+
+void multifasta_class::GEP_creation_MF(vector<string> sequences){
+
+	for(int i=0; i<sequences.size(); i++){
+
+		bed_class new_class(sequences[i]);
+		GEP.emplace_back(new_class);
+	}
+
+}
 
 /////DEBUG/////////////////////////////////////////////////////////
 
@@ -576,12 +642,11 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector, 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:t:s";
+	const char* const short_opts = "hp:k:b:j:m:t:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -590,6 +655,7 @@ void command_line_parser(int argc, char** argv){
 		{"kmer",   required_argument, nullptr,  'k' },
 		{"bed",    required_argument, nullptr,  'b' },
 		{"jaspar",   required_argument, nullptr,  'j' },
+		{"mf",   required_argument, nullptr,  'm' },
 		{"twobit",   required_argument, nullptr,  't' },
 		{"ss",   no_argument, nullptr,  's' },
 		{nullptr, no_argument, nullptr,  0   }
@@ -621,6 +687,9 @@ void command_line_parser(int argc, char** argv){
 				   kmers = string(optarg);
 				   break;
 			case 's' : DS = 0;
+				   break;
+			case 'm' : MFASTA_FILE = string(optarg);
+				   is_file_exist(MFASTA_FILE, "--mf || -m ");
 				   break;
 			case '?': // Unrecognized option
 			default:
