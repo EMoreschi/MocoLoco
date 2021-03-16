@@ -64,6 +64,8 @@ void bed_class::flag_control( unsigned int start,  unsigned int end){ 	//Flag co
 
 void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
+	cout << "\nGenomic Position vector GEP creating...\n";
+
 	ifstream in(Bed_file); 						//Opening file in lecture mode
 	TwoBit * tb;				//Creating a TwoBit* variable called tb
 	tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
@@ -88,6 +90,8 @@ void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector
 
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
 
+	cout << "Shifting DNA strands on matrix and calculating oligos score...\n";
+
 	for(unsigned int i=0; i<GEP.size(); i++){
 		string sequence = GEP[i].return_sequence(GEP[i]);
 		string chr_coord = GEP[i].return_chr_coord_GEP();
@@ -104,6 +108,7 @@ void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vecto
 		}
 	}	
 
+	cout << "Analyzing all the oligos and selecting the best score for each sequence...\n";
 }
 
 void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
@@ -127,7 +132,7 @@ void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
 }
 
 void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsigned int s_iterator){
-
+	
 	double sum_scores = 0;
 
 	if(s_iterator < sequence.size() - matrix[0].size() ) {
@@ -173,6 +178,8 @@ void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsig
 
 void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
+	cout << "Reading JASPAR MATRIX file and extracting values...\n";
+
 	ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
 	string line;							
 	while(getline(file,line)){					//For each line of the file do:
@@ -217,6 +224,8 @@ vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 
 void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
 
+	cout << "First Matrix normalization and pseudocount adding...\n";
+
 	double norm;							//Norm variable initialized
 	vector<double> col_sum = find_col_sum(matrix);
 
@@ -235,6 +244,8 @@ void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, d
 
 void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
+	cout << "Second Matrix normalization...\n";
+
 	vector<double> col_sum = find_col_sum(matrix);
 
 	for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
@@ -249,6 +260,8 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 
+	cout << "Calculating the log matrix...\n";
+
 	for(unsigned int i=0; i < matrix.size(); i++){
 		vector<double> baseQ;
 		double value_log;
@@ -260,6 +273,8 @@ void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 		}
 		matrix_log.emplace_back(baseQ);
 	}
+	
+	cout << "Reversing the normalized matrix to analize the reverse strand...\n";
 }
 
 
@@ -326,18 +341,18 @@ unsigned int oligo_class::find_best_score(vector<double> oligo_scores){
 }
 
 void oligo_class::best_score_normalization(){
-
+	
 	best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
 
 }
 
 void oligo_class::find_best_sequence(string sequence, unsigned int local_position, unsigned int length){
-
+	
 	best_oligo_seq = sequence.substr(local_position,length);
 }
 
 void oligo_class::find_coordinate(unsigned int local_position, unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
-
+	
 	chr_coord_oligo = chr_coord_GEP;
 	start_coord_oligo = start_coord_GEP + local_position;
 	end_coord_oligo = start_coord_oligo + length;
@@ -345,6 +360,11 @@ void oligo_class::find_coordinate(unsigned int local_position, unsigned int leng
 }
 
 void coordinator_class::centering_oligo(){
+
+	cout << "Normalizing best scores...\n";
+	cout << "Saving sequences of the best oligos...\n";
+	cout << "Finding and saving the genomic coordinates of best oligos...\n";
+	cout << "Centering sequences following the best oligos...\n";
 
 	TwoBit * tb;
 	tb = twobit_open(TWOBIT_FILE.c_str());
@@ -381,6 +401,9 @@ void map_class::kmers_vector_creation(string kmers){
 }
 
 void map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){
+
+	cout << "Creating a map to count all k-mers occurrences in sequences and redirecting maps into oputput files...\n";
+
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
 		for(unsigned int j=0; j<GEP.size(); j++){
@@ -457,28 +480,24 @@ bool map_class::check_palindrome(string bases){
 }
 
 void multifasta_class::length_control(vector<string> sequences){
-	
+
+	cout << "Checking if all the sequences extracted have the same length...\n";
+
 	unsigned int size = sequences[0].size();
 
 	for(unsigned int i=0; i<sequences.size(); i++){
 
 		if(sequences[i].size() != size){
 
-			cout << "sequences not of the same length!" << endl;
+			cout << "Sequences are not of the same length!" << endl;
 			exit(1);
 		}
 	}
-
-	cout << "sequences OK!" << endl;
-
-	for(unsigned int i=0; i<sequences.size(); i++){
-
-		cout << sequences[i] << endl;
-	}
-
 }
 
 void multifasta_class::extract_sequences(string MFasta_file){
+	
+	cout << "\nExtracting sequences from MultiFasta file...\n";
 
 	ifstream file(MFasta_file);
 	string line;
@@ -507,6 +526,8 @@ void multifasta_class::extract_sequences(string MFasta_file){
 }
 
 void multifasta_class::GEP_creation_MF(vector<string> sequences){
+
+	cout << "Genomic Position vector GEP creation...\n";
 
 	for(unsigned int i=0; i<sequences.size(); i++){
 
