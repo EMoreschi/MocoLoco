@@ -449,9 +449,9 @@ bool map_class::check_palindrome(string bases){
 
 void multifasta_class::length_control(vector<string> sequences){
 	
-	int size = sequences[0].size();
-	cout << sequences.size();
-	for(int i=0; i<sequences.size(); i++){
+	unsigned int size = sequences[0].size();
+
+	for(unsigned int i=0; i<sequences.size(); i++){
 
 		if(sequences[i].size() != size){
 
@@ -462,7 +462,7 @@ void multifasta_class::length_control(vector<string> sequences){
 
 	cout << "sequences OK!" << endl;
 
-	for(int i=0; i<sequences.size(); i++){
+	for(unsigned int i=0; i<sequences.size(); i++){
 
 		cout << sequences[i] << endl;
 	}
@@ -486,7 +486,8 @@ void multifasta_class::extract_sequences(string MFasta_file){
 			}
 
 		else if (!first_line){
-
+			
+			transform(line.begin(), line.end(), line.begin(), ::toupper);	
 			current_sequence = current_sequence + line; 
 			current_sequence.erase(current_sequence.end()-1);
 		}
@@ -498,7 +499,7 @@ void multifasta_class::extract_sequences(string MFasta_file){
 
 void multifasta_class::GEP_creation_MF(vector<string> sequences){
 
-	for(int i=0; i<sequences.size(); i++){
+	for(unsigned int i=0; i<sequences.size(); i++){
 
 		bed_class new_class(sequences[i]);
 		GEP.emplace_back(new_class);
@@ -676,6 +677,7 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'b' : BED_FILE = string(optarg);
 				   is_file_exist(BED_FILE, "--bed || -b");
+				   check_multifa_bed(MFASTA_FILE, BED_FILE);
 				   break;
 			case 'j' : JASPAR_FILE = string(optarg);
 				   is_file_exist(JASPAR_FILE, "--jaspar || -j");
@@ -690,6 +692,7 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'm' : MFASTA_FILE = string(optarg);
 				   is_file_exist(MFASTA_FILE, "--mf || -m ");
+				   check_multifa_bed(MFASTA_FILE, BED_FILE);
 				   break;
 			case '?': // Unrecognized option
 			default:
@@ -715,6 +718,14 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 	return 0;
 }
 
+void check_multifa_bed(string Multifa, string bed){
+
+	if(Multifa.size() != 0 && bed.size() != 0){
+		
+		cerr << "BED file and MULTIFASTA file inserted!\nPlease insert just one of them.\n";
+		exit(1);
+	}
+}
 
 void display_help() 						//Display help function
 {

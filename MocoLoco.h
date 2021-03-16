@@ -47,7 +47,6 @@ class bed_class { //creation public class of bed_class type
 			chr_coord = "MULTIFASTA";
 			start_coord = 0;
 			end_coord = 0;
-			bool flag = 0;
 			sequence = seq;
 		}
 
@@ -235,12 +234,7 @@ class multifasta_class{
 
 };
 
-//bool cmp(pair<string,int>&,pair<string,int>&);
 void command_line_parser(int, char **);
 void display_help();
-bool exist_test0(string);
-bool cmp(pair<string,int>&,pair<string,int>&);
-void command_line_parser(int, char **);
-void display_help();
-bool exist_test0(string);
 bool is_file_exist(string fileName, string buf);
+void check_multifa_bed(string, string);
