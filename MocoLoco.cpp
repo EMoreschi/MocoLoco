@@ -8,6 +8,13 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
+	GEP_path();
+
+
+	return 0;
+}
+
+void  GEP_path(){
 
 	if(MFASTA_FILE.size() == 0){	
 		coordinator_class C;
@@ -27,7 +34,9 @@ int main(int argc, char *argv[]){
 		map_class MAP(MULTI.GEP,kmers);
 	}		
 
-	return 0;
+
+
+
 }
 
 void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 

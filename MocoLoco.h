@@ -234,6 +234,7 @@ class multifasta_class{
 
 };
 
+void GEP_path();
 void command_line_parser(int, char **);
 void display_help();
 bool is_file_exist(string fileName, string buf);
