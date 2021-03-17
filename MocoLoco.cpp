@@ -707,7 +707,6 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'b' : BED_FILE = string(optarg);
 				   is_file_exist(BED_FILE, "--bed || -b");
-				   check_multifa_bed(MFASTA_FILE, BED_FILE);
 				   break;
 			case 'j' : JASPAR_FILE = string(optarg);
 				   is_file_exist(JASPAR_FILE, "--jaspar || -j");
@@ -722,7 +721,6 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'm' : MFASTA_FILE = string(optarg);
 				   is_file_exist(MFASTA_FILE, "--mf || -m ");
-				   check_multifa_bed(MFASTA_FILE, BED_FILE);
 				   break;
 			case '?': // Unrecognized option
 			default:
@@ -730,6 +728,7 @@ void command_line_parser(int argc, char** argv){
 				   break;
 		}
 	}
+	check_input_file();
 }
 
 bool is_file_exist(string fileName, string buf){		//Input files existence control
@@ -748,13 +747,14 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 	return 0;
 }
 
-void check_multifa_bed(string Multifa, string bed){
+void check_input_file(){
 
-	if(Multifa.size() != 0 && bed.size() != 0){
+	if(MFASTA_FILE.size() != 0 && (BED_FILE.size() != 0 || JASPAR_FILE.size() != 0 || TWOBIT_FILE.size() != 0)){
 		
-		cerr << "BED file and MULTIFASTA file inserted!\nPlease insert just one of them.\n";
+		cerr << "Too many input arguments!\nPlease insert Multifasta file or Bed, Twobit and Jaspar file.\nCheck the help with --help for more info.\n";
 		exit(1);
 	}
+
 }
 
 void display_help() 						//Display help function
