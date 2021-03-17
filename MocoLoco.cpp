@@ -10,20 +10,14 @@ int main(int argc, char *argv[]){
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
 	GEP_path();
 
-
 	return 0;
 }
 
 void  GEP_path(){
 
 	if(MFASTA_FILE.size() == 0){	
+		
 		coordinator_class C;
-		//for(int i = 0; i<C.oligos_vector.size(); i++){
-		//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
-		//} 
-		//matrix_class M(JASPAR_FILE);
-		//M.debug_matrix(M);
-
 		C.print_debug_GEP(C.GEP);
 		map_class MAP(C.GEP,kmers);
 	}
@@ -33,10 +27,6 @@ void  GEP_path(){
 		multifasta_class MULTI(MFASTA_FILE);
 		map_class MAP(MULTI.GEP,kmers);
 	}		
-
-
-
-
 }
 
 void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -52,7 +42,6 @@ void bed_class::centering_function ( unsigned int start,  unsigned int end, unsi
 	start_coord = center - half_length;			//No overhead for start
 	end_coord = center + half_length +overhead;		//Overhead for end
 }
-
 
 void bed_class::flag_control( unsigned int start,  unsigned int end){ 	//Flag control function: start coordinates must be < then end coordinates
 
@@ -648,11 +637,6 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	cout << "The best oligo sequence is " << best_oligo_seq << endl;
 	cout << "Strand  " << strand << endl;
 	cout << endl;
-	//cout << "Oligo scores along the sequence: " << endl;
-	//for(int i =0; i <oligo_scores.size(); i++){
-	//cout << oligo_scores[i] << " "; 
-	//}
-	//cout << endl;
 }
 
 void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector, vector<int> kmers_vector){
@@ -741,7 +725,8 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 	regular_check = S_ISREG( check.st_mode );
 
 	if ( regular_check == 0 || existing_check != 0) {
-		cerr <<"ERROR: "<< buf << " parameter has wrong argument"<< endl;
+		cerr <<"ERROR: "<< buf << " parameter has wrong argument\n"<< endl;
+		display_help();
 		exit(1);	
 	}
 	return 0;
@@ -751,7 +736,7 @@ void check_input_file(){
 
 	if(MFASTA_FILE.size() != 0 && (BED_FILE.size() != 0 || JASPAR_FILE.size() != 0 || TWOBIT_FILE.size() != 0)){
 
-		cerr << "Too many input arguments!\nPlease insert Multifasta file or Bed, Twobit and Jaspar file.\n";
+		cerr << "ERROR FATAL: Too many input arguments!\nPlease insert Multifasta file or Bed, Twobit and Jaspar file.\n" << endl;
 	        display_help();
 		exit(1);
 	}
