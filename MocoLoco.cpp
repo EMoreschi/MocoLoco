@@ -6,20 +6,37 @@ int main(int argc, char *argv[]){
 	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
 		display_help();
 	}
-		
-	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	
-	coordinator_class C;
-	//for(int i = 0; i<C.oligos_vector.size(); i++){
-	//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
-	//} 
-	//matrix_class M(JASPAR_FILE);
-	//M.debug_matrix(M);
 
-	C.print_debug_GEP(C.GEP);
-	map_class MAP(C.GEP,kmers);
+	command_line_parser(argc, argv);					//Parser function called to handle aguments
+	GEP_path();
+
 
 	return 0;
+}
+
+void  GEP_path(){
+
+	if(MFASTA_FILE.size() == 0){	
+		coordinator_class C;
+		//for(int i = 0; i<C.oligos_vector.size(); i++){
+		//		C.oligos_vector[i].oligos_vector_debug(C.oligos_vector[i]);
+		//} 
+		//matrix_class M(JASPAR_FILE);
+		//M.debug_matrix(M);
+
+		C.print_debug_GEP(C.GEP);
+		map_class MAP(C.GEP,kmers);
+	}
+
+	else{
+
+		multifasta_class MULTI(MFASTA_FILE);
+		map_class MAP(MULTI.GEP,kmers);
+	}		
+
+
+
+
 }
 
 void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -47,6 +64,8 @@ void bed_class::flag_control( unsigned int start,  unsigned int end){ 	//Flag co
 
 void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
+	cout << "\nGenomic Position vector GEP creating...\n";
+
 	ifstream in(Bed_file); 						//Opening file in lecture mode
 	TwoBit * tb;				//Creating a TwoBit* variable called tb
 	tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
@@ -71,6 +90,8 @@ void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector
 
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
 
+	cout << "Shifting DNA strands on matrix and calculating oligos score...\n";
+
 	for(unsigned int i=0; i<GEP.size(); i++){
 		string sequence = GEP[i].return_sequence(GEP[i]);
 		string chr_coord = GEP[i].return_chr_coord_GEP();
@@ -87,6 +108,7 @@ void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vecto
 		}
 	}	
 
+	cout << "Analyzing all the oligos and selecting the best score for each sequence...\n";
 }
 
 void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
@@ -110,7 +132,7 @@ void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
 }
 
 void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsigned int s_iterator){
-
+	
 	double sum_scores = 0;
 
 	if(s_iterator < sequence.size() - matrix[0].size() ) {
@@ -156,6 +178,8 @@ void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsig
 
 void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
+	cout << "Reading JASPAR MATRIX file and extracting values...\n";
+
 	ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
 	string line;							
 	while(getline(file,line)){					//For each line of the file do:
@@ -200,6 +224,8 @@ vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 
 void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
 
+	cout << "First Matrix normalization and pseudocount adding...\n";
+
 	double norm;							//Norm variable initialized
 	vector<double> col_sum = find_col_sum(matrix);
 
@@ -218,6 +244,8 @@ void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, d
 
 void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
+	cout << "Second Matrix normalization...\n";
+
 	vector<double> col_sum = find_col_sum(matrix);
 
 	for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
@@ -232,6 +260,8 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 
+	cout << "Calculating the log matrix...\n";
+
 	for(unsigned int i=0; i < matrix.size(); i++){
 		vector<double> baseQ;
 		double value_log;
@@ -243,6 +273,8 @@ void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 		}
 		matrix_log.emplace_back(baseQ);
 	}
+	
+	cout << "Reversing the normalized matrix to analize the reverse strand...\n";
 }
 
 
@@ -309,18 +341,18 @@ unsigned int oligo_class::find_best_score(vector<double> oligo_scores){
 }
 
 void oligo_class::best_score_normalization(){
-
+	
 	best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
 
 }
 
 void oligo_class::find_best_sequence(string sequence, unsigned int local_position, unsigned int length){
-
+	
 	best_oligo_seq = sequence.substr(local_position,length);
 }
 
 void oligo_class::find_coordinate(unsigned int local_position, unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
-
+	
 	chr_coord_oligo = chr_coord_GEP;
 	start_coord_oligo = start_coord_GEP + local_position;
 	end_coord_oligo = start_coord_oligo + length;
@@ -328,6 +360,11 @@ void oligo_class::find_coordinate(unsigned int local_position, unsigned int leng
 }
 
 void coordinator_class::centering_oligo(){
+
+	cout << "Normalizing best scores...\n";
+	cout << "Saving sequences of the best oligos...\n";
+	cout << "Finding and saving the genomic coordinates of best oligos...\n";
+	cout << "Centering sequences following the best oligos...\n";
 
 	TwoBit * tb;
 	tb = twobit_open(TWOBIT_FILE.c_str());
@@ -364,6 +401,9 @@ void map_class::kmers_vector_creation(string kmers){
 }
 
 void map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){
+
+	cout << "Creating a map to count all k-mers occurrences in sequences and redirecting maps into oputput files...\n";
+
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
 		for(unsigned int j=0; j<GEP.size(); j++){
@@ -439,6 +479,63 @@ bool map_class::check_palindrome(string bases){
 
 }
 
+void multifasta_class::length_control(vector<string> sequences){
+
+	cout << "Checking if all the sequences extracted have the same length...\n";
+
+	unsigned int size = sequences[0].size();
+
+	for(unsigned int i=0; i<sequences.size(); i++){
+
+		if(sequences[i].size() != size){
+
+			cout << "Sequences are not of the same length!" << endl;
+			exit(1);
+		}
+	}
+}
+
+void multifasta_class::extract_sequences(string MFasta_file){
+	
+	cout << "\nExtracting sequences from MultiFasta file...\n";
+
+	ifstream file(MFasta_file);
+	string line;
+	string current_sequence;
+	bool first_line = 1;
+
+	while(getline(file,line)){
+
+		if(line[0] == '>' && !first_line){
+			
+			sequences.emplace_back(current_sequence);
+			current_sequence.clear();
+			
+			}
+
+		else if (!first_line){
+			
+			transform(line.begin(), line.end(), line.begin(), ::toupper);	
+			current_sequence = current_sequence + line; 
+			current_sequence.erase(current_sequence.end()-1);
+		}
+
+		first_line = 0;	
+	}
+	sequences.emplace_back(current_sequence);
+}
+
+void multifasta_class::GEP_creation_MF(vector<string> sequences){
+
+	cout << "Genomic Position vector GEP creation...\n";
+
+	for(unsigned int i=0; i<sequences.size(); i++){
+
+		bed_class new_class(sequences[i]);
+		GEP.emplace_back(new_class);
+	}
+
+}
 
 /////DEBUG/////////////////////////////////////////////////////////
 
@@ -576,12 +673,11 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector, 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:t:s";
+	const char* const short_opts = "hp:k:b:j:m:t:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -590,6 +686,7 @@ void command_line_parser(int argc, char** argv){
 		{"kmer",   required_argument, nullptr,  'k' },
 		{"bed",    required_argument, nullptr,  'b' },
 		{"jaspar",   required_argument, nullptr,  'j' },
+		{"mf",   required_argument, nullptr,  'm' },
 		{"twobit",   required_argument, nullptr,  't' },
 		{"ss",   no_argument, nullptr,  's' },
 		{nullptr, no_argument, nullptr,  0   }
@@ -622,12 +719,16 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 's' : DS = 0;
 				   break;
+			case 'm' : MFASTA_FILE = string(optarg);
+				   is_file_exist(MFASTA_FILE, "--mf || -m ");
+				   break;
 			case '?': // Unrecognized option
 			default:
 				   display_help();
 				   break;
 		}
 	}
+	check_input_file();
 }
 
 bool is_file_exist(string fileName, string buf){		//Input files existence control
@@ -646,16 +747,31 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 	return 0;
 }
 
+void check_input_file(){
+
+	if(MFASTA_FILE.size() != 0 && (BED_FILE.size() != 0 || JASPAR_FILE.size() != 0 || TWOBIT_FILE.size() != 0)){
+
+		cerr << "Too many input arguments!\nPlease insert Multifasta file or Bed, Twobit and Jaspar file.\n";
+	        display_help();
+		exit(1);
+	}
+	if ((TWOBIT_FILE.size() == 0 ||  JASPAR_FILE.size() == 0 || BED_FILE.size() == 0) && MFASTA_FILE.size() == 0){
+		cerr << "ERROR FATAL: some arguments needed \n"<<endl;	
+	        display_help();
+		exit(1);
+	}
+}
 
 void display_help() 						//Display help function
 {
 	cerr << "\n --help || -h show this message" << endl;
 	cerr << "\n --bed || -b <file_bed>: input bed file" << endl;
-	cerr << "\n --kmer || -k <n1,n2,..,nX>: input at least one k-mer length" << endl;
+	cerr << "\n --kmer || -k <n1,n2,..,nX>:input at least one k-mer length (DEFAULT: 6,8,10) " << endl;
 	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
-	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal" << endl;
-	cerr << "\n -s || --ss as input to make the analysis along the single strand. Default along double strand" << endl;
+	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal (DEFAULT: 150) " << endl;
+	cerr << "\n --mf || -m <multifasta-file>: use multifasta instead of bed file [ -j,-b,-t,-p options not needed ]" << endl;
+	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);

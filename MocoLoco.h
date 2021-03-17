@@ -22,6 +22,7 @@ int half_length = 150; 		//default half_length 150
 string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 string JASPAR_FILE;
 string alias_file;
+string MFASTA_FILE;
 const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
@@ -40,6 +41,14 @@ class bed_class { //creation public class of bed_class type
 		void flag_control(unsigned int, unsigned int);
 
 	public:				//field definition
+		
+		bed_class(string seq){
+
+			chr_coord = "MULTIFASTA";
+			start_coord = 0;
+			end_coord = 0;
+			sequence = seq;
+		}
 
 		bed_class(unsigned int p, string line, TwoBit* tb,unsigned int n_line){
 
@@ -202,8 +211,31 @@ class map_class{
 
 };
 
-bool cmp(pair<string,int>&,pair<string,int>&);
+class multifasta_class{
+
+	private:
+
+		vector<string> sequences;
+
+		void length_control(vector<string>);
+		void extract_sequences(string);
+		void GEP_creation_MF(vector<string>);
+
+	public:
+
+		vector<bed_class> GEP;
+		
+		multifasta_class(string MFASTA_FILE){
+
+			extract_sequences(MFASTA_FILE);
+			length_control(sequences);
+			GEP_creation_MF(sequences);
+		}
+
+};
+
+void GEP_path();
 void command_line_parser(int, char **);
 void display_help();
-bool exist_test0(string);
 bool is_file_exist(string fileName, string buf);
+void check_input_file();
