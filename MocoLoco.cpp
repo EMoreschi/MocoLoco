@@ -750,22 +750,28 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 void check_input_file(){
 
 	if(MFASTA_FILE.size() != 0 && (BED_FILE.size() != 0 || JASPAR_FILE.size() != 0 || TWOBIT_FILE.size() != 0)){
-		
-		cerr << "Too many input arguments!\nPlease insert Multifasta file or Bed, Twobit and Jaspar file.\nCheck the help with --help for more info.\n";
+
+		cerr << "Too many input arguments!\nPlease insert Multifasta file or Bed, Twobit and Jaspar file.\n";
+	        display_help();
 		exit(1);
 	}
-
+	if ((TWOBIT_FILE.size() == 0 ||  JASPAR_FILE.size() == 0 || BED_FILE.size() == 0) && MFASTA_FILE.size() == 0){
+		cerr << "ERROR FATAL: some arguments needed \n"<<endl;	
+	        display_help();
+		exit(1);
+	}
 }
 
 void display_help() 						//Display help function
 {
 	cerr << "\n --help || -h show this message" << endl;
 	cerr << "\n --bed || -b <file_bed>: input bed file" << endl;
-	cerr << "\n --kmer || -k <n1,n2,..,nX>: input at least one k-mer length" << endl;
+	cerr << "\n --kmer || -k <n1,n2,..,nX>:input at least one k-mer length (DEFAULT: 6,8,10) " << endl;
 	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
-	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal" << endl;
-	cerr << "\n -s || --ss as input to make the analysis along the single strand. Default along double strand" << endl;
+	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal (DEFAULT: 150) " << endl;
+	cerr << "\n --mf || -m <multifasta-file>: use multifasta instead of bed file [ -j,-b,-t,-p options not needed ]" << endl;
+	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
