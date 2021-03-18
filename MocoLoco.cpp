@@ -504,9 +504,11 @@ void multifasta_class::extract_sequences(string MFasta_file){
 
 		else if (!first_line){
 			
+			if(line[0] != ' ' && line.size() != 0){	
 			transform(line.begin(), line.end(), line.begin(), ::toupper);	
 			current_sequence = current_sequence + line; 
 			current_sequence.erase(current_sequence.end()-1);
+			}
 		}
 
 		first_line = 0;	
@@ -725,7 +727,7 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 	regular_check = S_ISREG( check.st_mode );
 
 	if ( regular_check == 0 || existing_check != 0) {
-		cerr <<"ERROR: "<< buf << " parameter has wrong argument\n"<< endl;
+		cerr <<"ERROR: "<< buf << " file does not exist!\n"<< endl;
 		display_help();
 		exit(1);	
 	}
@@ -736,12 +738,12 @@ void check_input_file(){
 
 	if(MFASTA_FILE.size() != 0 && (BED_FILE.size() != 0 || JASPAR_FILE.size() != 0 || TWOBIT_FILE.size() != 0)){
 
-		cerr << "ERROR FATAL: Too many input arguments!\nPlease insert Multifasta file or Bed, Twobit and Jaspar file.\n" << endl;
+		cerr << "FATAL ERROR: Too many input arguments!\nPlease insert Multifasta file or Bed, Twobit and Jaspar file.\n" << endl;
 	        display_help();
 		exit(1);
 	}
 	if ((TWOBIT_FILE.size() == 0 ||  JASPAR_FILE.size() == 0 || BED_FILE.size() == 0) && MFASTA_FILE.size() == 0){
-		cerr << "ERROR FATAL: some arguments needed \n"<<endl;	
+		cerr << "FATAL ERROR: some arguments needed \n"<<endl;	
 	        display_help();
 		exit(1);
 	}
