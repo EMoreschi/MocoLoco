@@ -702,11 +702,11 @@ void map_class::print_debug_maps_positions(){
 
 		cout << "Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 
-		for(unsigned int i=0; i<maps_vector_positions[j].size(); i++){
+		for(unsigned int i=0; i<v_v_maps[j].size(); i++){
 
 			cout << "kmers occurred in position " << i << ":" << endl;
 			
-			for (unordered_map<string,int>::iterator it = maps_vector_positions[i].begin(); it !=maps_vector_positions[i].end(); it++) {
+			for (unordered_map<string,int>::iterator it = v_v_maps[j][i].begin(); it !=v_v_maps[j][i].end(); it++) {
 
 				cout << it->second << "\t" << it->first<<endl;
 			}
