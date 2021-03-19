@@ -3,3 +3,4 @@ test
 a.out
 Test_Output
 Multifasta_random.fasta
+gsl_test.cpp

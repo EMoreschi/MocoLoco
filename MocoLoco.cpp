@@ -398,16 +398,29 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 		for(unsigned int j=0; j<GEP.size(); j++){
 
 			string sequence = GEP[j].return_sequence(GEP[j]);
-
 			unordered_map<string,int>::iterator it;
 			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
 
 				string bases = sequence.substr(i,kmers_vector[k]);
 				it = moco_table.find(bases);
 				bool palindrome = check_palindrome(bases);
+				
+				if(j==0){
+				unordered_map<string, int> moco_pos;
+				moco_pos.insert(pair<string,int>(bases,0));
+				maps_vector_positions.emplace_back(moco_pos);
+				moco_pos.clear();
+
+				}
+				
+				
+				unordered_map<string,int>::iterator it_pos;
+				it_pos = maps_vector_positions[i].find(bases);
 
 				if (!palindrome && DS){
 					unordered_map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
+					unordered_map<string, int>::iterator it_rev_pos = maps_vector_positions[i].find(reverse_bases);
+
 					if (it != moco_table.end()){
 						it->second++;
 						it_rev->second++;
@@ -417,8 +430,22 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 						moco_table.insert( pair<string,int>(bases,1) );
 						moco_table.insert( pair<string,int>(reverse_bases,1) );
 
-					} 
+					}
+
+
+					if(it_pos != maps_vector_positions[i].end() || j==0){
+
+						it_pos->second++;
+						it_rev_pos->second++;
+					}
+
+					else {
+
+						maps_vector_positions[i].insert(pair<string,int>(bases,1));
+						maps_vector_positions[i].insert(pair<string,int>(reverse_bases,1));
+					}
 				}
+
 				else{
 					if (it != moco_table.end()){
 						it->second++;
@@ -428,13 +455,23 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 
 					}
 
+
+					if(it_pos != maps_vector_positions[i].end() || j==0){
+
+						it_pos->second++;
+					}
+					else{
+
+						maps_vector_positions[i].insert(pair<string,int>(bases,1));						
+					}
 				}
+
 				bases.clear();
 				reverse_bases.clear();
 			}
 		}
 
-		maps_vector.emplace_back(moco_table);
+		maps_vector_debug.emplace_back(moco_table);
 		moco_table.clear();
 	}
 }
@@ -641,19 +678,32 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	cout << endl;
 }
 
-void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector, vector<int> kmers_vector){
-	for(unsigned int i=0; i<maps_vector.size(); i++){
+void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_debug, vector<int> kmers_vector){
+	for(unsigned int i=0; i<maps_vector_debug.size(); i++){
 		
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map_"+alias_file+".txt");	
 			multimap<int,string> moco_multimap;
-		for (unordered_map<string,int>::iterator it = maps_vector[i].begin(); it !=maps_vector[i].end(); it++) {
+		for (unordered_map<string,int>::iterator it = maps_vector_debug[i].begin(); it !=maps_vector_debug[i].end(); it++) {
 			moco_multimap.insert( { it->second, it->first });
 		}
 		for (multimap<int,string>::reverse_iterator rev_it = moco_multimap.rbegin(); rev_it != moco_multimap.rend(); rev_it++) {
 			outfile << rev_it->second <<"\t"<< rev_it->first <<"\n";
 		}
 		outfile.close();
+	}
+}
+
+void map_class::print_debug_maps_positions(){
+	
+	cout << maps_vector_positions.size() << endl;
+	for(unsigned int i=0; i<maps_vector_positions.size(); i++){
+
+			
+		for (unordered_map<string,int>::iterator it = maps_vector_positions[i].begin(); it !=maps_vector_positions[i].end(); it++) {
+
+			cout << it->second << "\t" << it->first<<endl;
+		}
 	}
 }
 
