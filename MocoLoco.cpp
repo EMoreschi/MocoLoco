@@ -407,12 +407,11 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 				
 				if(j==0){
 				unordered_map<string, int> moco_pos;
-				moco_pos.insert(pair<string,int>(bases,0));
+				//moco_pos.insert(pair<string,int>(bases,0));
 				maps_vector_positions.emplace_back(moco_pos);
 				moco_pos.clear();
 
 				}
-				
 				
 				unordered_map<string,int>::iterator it_pos;
 				it_pos = maps_vector_positions[i].find(bases);
@@ -433,7 +432,7 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 					}
 
 
-					if(it_pos != maps_vector_positions[i].end() || j==0){
+					if(it_pos != maps_vector_positions[i].end()){
 
 						it_pos->second++;
 						it_rev_pos->second++;
@@ -456,7 +455,7 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 					}
 
 
-					if(it_pos != maps_vector_positions[i].end() || j==0){
+					if(it_pos != maps_vector_positions[i].end()){
 
 						it_pos->second++;
 					}
@@ -704,6 +703,7 @@ void map_class::print_debug_maps_positions(){
 
 			cout << it->second << "\t" << it->first<<endl;
 		}
+			cout << "##" << endl;
 	}
 }
 
