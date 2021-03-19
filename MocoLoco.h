@@ -190,10 +190,12 @@ class map_class{
 
 	private:
 		
+		vector<vector<unordered_map<string,int>>> v_v_maps;
 		vector<unordered_map<string,int>> maps_vector_debug;
 		vector<unordered_map<string,int>> maps_vector_positions;
 		string reverse_bases;
 		unordered_map<string, int> moco_table;
+		unordered_map<string, int> moco_pos;
 		vector<int> kmers_vector;
 
 

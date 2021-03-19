@@ -395,10 +395,13 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
+		maps_vector_positions.clear();
+
 		for(unsigned int j=0; j<GEP.size(); j++){
 
 			string sequence = GEP[j].return_sequence(GEP[j]);
 			unordered_map<string,int>::iterator it;
+			
 			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
 
 				string bases = sequence.substr(i,kmers_vector[k]);
@@ -406,8 +409,7 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 				bool palindrome = check_palindrome(bases);
 				
 				if(j==0){
-				unordered_map<string, int> moco_pos;
-				//moco_pos.insert(pair<string,int>(bases,0));
+				
 				maps_vector_positions.emplace_back(moco_pos);
 				moco_pos.clear();
 
@@ -472,6 +474,8 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 
 		maps_vector_debug.emplace_back(moco_table);
 		moco_table.clear();
+
+		v_v_maps.emplace_back(maps_vector_positions);
 	}
 }
 
@@ -543,7 +547,6 @@ void multifasta_class::extract_sequences(string MFasta_file){
 			if(line[0] != ' ' && line.size() != 0){	
 			transform(line.begin(), line.end(), line.begin(), ::toupper);	
 			current_sequence = current_sequence + line; 
-			current_sequence.erase(current_sequence.end()-1);
 			}
 		}
 
@@ -694,16 +697,21 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 }
 
 void map_class::print_debug_maps_positions(){
-	
-	cout << maps_vector_positions.size() << endl;
-	for(unsigned int i=0; i<maps_vector_positions.size(); i++){
 
+	for(unsigned int j=0; j<v_v_maps.size(); j++){
+
+		cout << "Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+
+		for(unsigned int i=0; i<maps_vector_positions[j].size(); i++){
+
+			cout << "kmers occurred in position " << i << ":" << endl;
 			
-		for (unordered_map<string,int>::iterator it = maps_vector_positions[i].begin(); it !=maps_vector_positions[i].end(); it++) {
+			for (unordered_map<string,int>::iterator it = maps_vector_positions[i].begin(); it !=maps_vector_positions[i].end(); it++) {
 
-			cout << it->second << "\t" << it->first<<endl;
+				cout << it->second << "\t" << it->first<<endl;
+			}
+			cout << "----------------------------------------------------" << endl;
 		}
-			cout << "##" << endl;
 	}
 }
 
