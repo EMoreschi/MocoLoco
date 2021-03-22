@@ -702,11 +702,11 @@ void map_class::print_debug_maps_positions(){
 	outfile.open("vertical_ordered_map_"+alias_file+".txt");
 	for(unsigned int j=0; j<v_v_maps.size(); j++){
 
-		cout << "Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 
 		for(unsigned int i=0; i<v_v_maps[j].size(); i++){
 
-			cout << "kmers occurred in position " << i << ":" << endl;
+			outfile << "kmers occurred in position " << i << ":" << endl;
 			multimap<int,string> moco_multimap;
 		
 			for (unordered_map<string,int>::iterator it = v_v_maps[j][i].begin(); it !=v_v_maps[j][i].end(); it++) {
@@ -715,9 +715,9 @@ void map_class::print_debug_maps_positions(){
 			//int k = 0;
 			multimap<int,string>::reverse_iterator rev_it = moco_multimap.rbegin();
 			
-			for_each(rev_it, next(rev_it,10),[](pair<int,string> element){
+			for_each(rev_it, next(rev_it,10),[&outfile](pair<int,string> element){
 					
-				cout << element.second << "\t" << element.first << "\n";
+				outfile << element.second << "\t" << element.first << "\n";
 				});
 
 			//for(rev_it = advance(rev_it,11);  ; rev_it +){
@@ -726,7 +726,7 @@ void map_class::print_debug_maps_positions(){
 			//}
 
 
-			cout << "----------------------------------------------------" << endl;
+			outfile << "----------------------------------------------------" << endl;
 		}
 	}
 
