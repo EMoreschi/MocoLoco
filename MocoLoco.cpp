@@ -697,10 +697,14 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 }
 
 void map_class::print_debug_maps_positions(){
+	ofstream outfile;
+	outfile.open("prova_mappe.txt");
 
 	for(unsigned int j=0; j<v_v_maps.size(); j++){
 
 		cout << "Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+		vector<multimap<int, string>> vector_multi_map; 
+		multimap<int, string> multimap_maps_pos;
 
 		for(unsigned int i=0; i<v_v_maps[j].size(); i++){
 
@@ -708,11 +712,18 @@ void map_class::print_debug_maps_positions(){
 			
 			for (unordered_map<string,int>::iterator it = v_v_maps[j][i].begin(); it !=v_v_maps[j][i].end(); it++) {
 
-				cout << it->second << "\t" << it->first<<endl;
+				multimap_maps_pos.insert( { it->second, it->first } );
+				//cout << it->second << "\t" << it->first<<endl;
 			}
-			cout << "----------------------------------------------------" << endl;
+		        for (multimap<int,string>::reverse_iterator rev_it = multimap_maps_pos.rbegin(); rev_it != multimap_maps_pos.rend(); rev_it++) {
+			
+				outfile << rev_it->second << "\t" << rev_it->first<<endl;
+			//vector_multi_map.emplace_back(multimap_maps_pos);
+			}
 		}
+		
 	}
+	outfile.close();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
