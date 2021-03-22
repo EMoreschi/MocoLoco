@@ -4,6 +4,8 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <iterator>
+#include <list>
 #include <vector>
 #include <algorithm>
 #include <map>
@@ -202,7 +204,7 @@ class map_class{
 		void kmers_vector_creation(string);
 		void table_creation(unordered_map<string,int>, vector<int>, vector<bed_class>);
 		bool check_palindrome(string);
-		void print_debug_maps(vector<unordered_map<string,int>>, vector<int>);
+		void print_debug_maps(vector<unordered_map<string,int>>, vector<int>, string);
 		void print_debug_maps_positions();
 
 	public:
@@ -211,7 +213,7 @@ class map_class{
 
 			kmers_vector_creation(kmers);
 			table_creation(moco_table, kmers_vector, GEP);
-			print_debug_maps(maps_vector_debug, kmers_vector);
+			print_debug_maps(maps_vector_debug, kmers_vector, "orizzontal");
 			print_debug_maps_positions();
 
 		}
