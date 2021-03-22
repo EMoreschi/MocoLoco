@@ -8,7 +8,7 @@ int main(int argc, char *argv[]){
 	}
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	GEP_path();
+	GEP_path();							//Calling to GEP pathway
 
 	return 0;
 }
