@@ -1,23 +1,14 @@
 #include <cstdio>
 #include <sys/stat.h>
-#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cmath>
-#include <iterator>
-#include <list>
 #include <vector>
 #include <algorithm>
-#include <map>
-#include <typeinfo>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_math.h>
-#include <sys/time.h>
 #include <sstream>
-#include <numeric>
 #include <getopt.h>
-#include <unordered_map>
+#include <random>
 
 using namespace std;
 int length = 500;

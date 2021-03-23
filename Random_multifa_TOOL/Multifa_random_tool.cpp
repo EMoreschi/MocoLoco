@@ -23,29 +23,15 @@ int main(int argc, char *argv[]){
 		outfile << endl;
 	}
 
-	matrix_class M(JASPAR_FILE);
+//	matrix_class M(JASPAR_FILE);
 }
 
 char random_number(){
 
-	const gsl_rng_type * T;
-	gsl_rng *r;
-
-	gsl_rng_env_setup();
-	struct timeval tv;		//Generate a seed depending on time to get every time different random number
-	gettimeofday(&tv, 0);
-	unsigned long mySeed = tv.tv_sec + tv.tv_usec;
-
-	T = gsl_rng_default;
-	r = gsl_rng_alloc(T);
-	gsl_rng_set(r, mySeed);
-		
-	int r_number = gsl_rng_uniform_int(r,4);
-	
+        mt19937_64 generator (clock());	
+        uniform_int_distribution<int> dis(0,3);	
+        int r_number = dis(generator);;
 	char base = from_n_to_base(r_number);
-
-	gsl_rng_free(r);
-
 	return 	base;
 }
 
