@@ -1,36 +1,32 @@
 #include "Multifa_random_tool.h"
 
-
 int main(int argc, char *argv[]){
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	string sequence;
-	ofstream outfile;
-	outfile.open("random_multifasta.fasta");
+	
+	matrix_class MATRIX(JASPAR_FILE);
+	multifasta_class MULTIFA(MATRIX.oligo_vector, MATRIX.matrix_size);
+}
 
-	for(int j=0; j<n_seq; j++){
+void multifasta_class::multifasta_map_creation(){
+
+	string sequence;
+
+	for(unsigned int j=0; j<n_seq; j++){
 		
 		sequence.clear();
 		
-		for(int i=0; i<length; i++){
+		for(unsigned int i=0; i<length; i++){
 
 			int random_int = random_number(0,3);
 			char base = from_n_to_base(random_int);
 			sequence = sequence + base;
 		}
-
-		outfile << ">random sequence " << j << " containing " << length << " bases." << endl;
-		outfile << sequence << endl;
-		outfile << endl;
+	
+		multifasta_map.insert(pair<int,string>(j+1, sequence));
 	}
-
-	matrix_class M(JASPAR_FILE);
+	
 }
-
-
-
-
-
 
 int random_number(int range_begin, int range_end){
 
@@ -90,9 +86,9 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 		else{							//Else, if line does not start with ">"
 			line.erase(0,line.find('[') +1);		//Take line charachters after "["...
 			line.erase(line.find(']'));			//...and line charachters before "]"
-			vector<double> baseQ;				//Initializing baseQ vector of double
+			vector<int> baseQ;				//Initializing baseQ vector of double
 			istringstream mystream(line);			//Splitting the line in words
-			for (double num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
+			for (int num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
 				baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
 			}
 			matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
@@ -104,15 +100,17 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 }
 
 void matrix_class::oligo_creation(){
-
-	for(unsigned int j=0; j<n_oligo; j++){
+	
 	string oligo;
+	for(unsigned int j=0; j<n_oligo; j++){
+	
+		oligo.clear();
 
 	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
 
 		int somma = matrix[0][i] + matrix[1][i] + matrix[2][i]+ matrix[3][i];
 		int random_score = random_number(1,somma);
-		cout << random_score << endl; 
+		
 		if(random_score <= matrix[0][i]){
 			oligo = oligo + 'A';
 		}
@@ -138,6 +136,15 @@ void matrix_class::check_oligo_number(){
 		exit(1);
 	}
 }
+
+void multifasta_class::implanting_oligo(int matrix_size){
+	
+	int i=0;
+	cout << oligo_vector[2];	
+	for(map<int,string>::iterator it = multifasta_map_implanted.begin(); it->first < oligo_vector.size() ; it++, i++){
+		it->second.replace(position,matrix_size,oligo_vector[i]);
+	}
+}
 /////////////////////////////////////// DEBUG ////////////////////////////////////
 
 
@@ -153,11 +160,36 @@ void matrix_class::print_debug_matrix(){		//Print matrix function
 		cout << endl;
 	}
 }
+
+void matrix_class::print_oligo_vector(){
+	
+	cout << endl;
+	for(unsigned int i=0; i<oligo_vector.size();i++){
+
+		cout << oligo_vector[i] << endl;
+	}
+}
+
+void multifasta_class::multifasta_outfile(map<int,string> multifasta_map, string filename){
+
+	ofstream outfile;
+	outfile.open(filename);
+	
+	for(map<int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
+
+		
+		outfile << ">random multifasta sequence number " + to_string(it->first) + " containing "+ to_string(length) +" bases:";
+		outfile << it->second << endl;
+		outfile << endl;
+	}
+	outfile.close();
+}
+
 /////////////////////////////////////// PARSER ///////////////////////////////////
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hl:n:j:o:";
+	const char* const short_opts = "hl:n:j:o:p:";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -166,6 +198,7 @@ void command_line_parser(int argc, char** argv){
 		{"jaspar",   required_argument, nullptr,  'j' },
 		{"nseq",   required_argument, nullptr,  'n' },
 		{"noligo",   required_argument, nullptr,  'o' },
+		{"position",   required_argument, nullptr,  'p' },
 	};
 
 	while (true)
@@ -184,6 +217,8 @@ void command_line_parser(int argc, char** argv){
 			case 'n' : n_seq = stoi(optarg); 
 				   break;
 			case 'o' : n_oligo = stoi(optarg); 
+				   break;
+			case 'p' : position = stoi(optarg); 
 				   break;
 			case 'j' : JASPAR_FILE = string(optarg);
 				   is_file_exist(JASPAR_FILE, "--jaspar || -j");
@@ -219,6 +254,7 @@ void display_help() 						//Display help function
 	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)" << endl;
 	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DAFAULT: 200)" << endl;
 	cerr << "\n --noligo || -o <number> to insert the number of oligo to put in Multifasta sequences (DAFAULT: 80)" << endl;
+	cerr << "\n --position || -p <number> to insert the position in Multifasta sequences where you want to implant the oligos (DAFAULT: 80)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
