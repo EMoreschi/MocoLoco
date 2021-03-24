@@ -140,8 +140,7 @@ void matrix_class::check_oligo_number(){
 void multifasta_class::implanting_oligo(int matrix_size){
 	
 	int i=0;
-	cout << oligo_vector[2];	
-	for(map<int,string>::iterator it = multifasta_map_implanted.begin(); it->first < oligo_vector.size() ; it++, i++){
+	for(map<int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= oligo_vector.size() ; it++, i++){
 		it->second.replace(position,matrix_size,oligo_vector[i]);
 	}
 }
