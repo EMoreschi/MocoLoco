@@ -9,6 +9,7 @@
 #include <sstream>
 #include <getopt.h>
 #include <random>
+#include <map>
 
 using namespace std;
 int length = 500;
@@ -23,7 +24,7 @@ class matrix_class {
 		string matrix_name;
 		string tf_name;
 		vector<vector<double>> matrix;
-		vector<double> col_sum;		
+		vector<vector<int>> matrix_sum;		
 
 
 		void read_JASPAR(string);
@@ -43,6 +44,6 @@ class matrix_class {
 
 void command_line_parser(int, char **);
 void display_help(); 						//Display help function
-char random_number();
+int random_number(int, int);
 char from_n_to_base(int);
 bool is_file_exist(string, string);

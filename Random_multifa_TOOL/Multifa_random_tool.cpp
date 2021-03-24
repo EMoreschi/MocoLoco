@@ -14,7 +14,8 @@ int main(int argc, char *argv[]){
 		
 		for(int i=0; i<length; i++){
 
-			char base = random_number();
+			int random_int = random_number(0,3);
+			char base = from_n_to_base(random_int);
 			sequence = sequence + base;
 		}
 
@@ -23,16 +24,20 @@ int main(int argc, char *argv[]){
 		outfile << endl;
 	}
 
-//	matrix_class M(JASPAR_FILE);
+	matrix_class M(JASPAR_FILE);
 }
 
-char random_number(){
+
+
+
+
+
+int random_number(int range_begin, int range_end){
 
         mt19937_64 generator (clock());	
-        uniform_int_distribution<int> dis(0,3);	
+        uniform_int_distribution<int> dis(range_begin, range_end);	
         int r_number = dis(generator);;
-	char base = from_n_to_base(r_number);
-	return 	base;
+	return 	r_number;
 }
 
 char from_n_to_base (int n){
@@ -99,20 +104,27 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 }
 
 void matrix_class::find_col_sum(){
-
-	vector<double> col_sum;						//Vector of columns sum
-	double sum = 0;							//Sum initialized as 0
-	cout << "\nCOL SUM: ";
+	string oligo;
 
 	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
-		for (unsigned int j = 0; j < 4; j++){				//From 0 to 4 (line number)
-
-			sum = sum + matrix[j][i];			//Calculate the sum of columns
-		}
-		cout << sum << " ";
-		col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
-		sum = 0;						//Restore the sum to 0 for the next column
+           vector<unsigned int> column_sums;
+	   int somma = matrix[0][i] + matrix[1][i] + matrix[2][i]+ matrix[3][i];
+	   int random_score = random_number(0,somma);
+	   unsigned int ascore = matrix[0][i] - random_score;
+	   unsigned int cscore = matrix[0][i] + matrix[1][i] - random_score;
+	   unsigned int gscore = matrix[0][i] + matrix[1][i] + matrix[2][i] - random_score;
+	   unsigned int tscore = somma - random_score;
+	   column_sums.emplace_back(ascore);
+	   column_sums.emplace_back(cscore);
+	   column_sums.emplace_back(gscore);
+	   column_sums.emplace_back(tscore);
+	   int min_index = min_element(column_sums.begin(),column_sums.end()) - column_sums.begin(); *min_element(column_sums.begin(), column_sums.end());
+	   char base = from_n_to_base(min_index);
+//	   cout << min_index <<endl;
+	   oligo= oligo +base;
 	}
+	cout << oligo <<endl;
+//	cout << col_sum[0][3]<<endl;
 }
 
 /////////////////////////////////////// DEBUG ////////////////////////////////////
