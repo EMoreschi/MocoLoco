@@ -28,7 +28,7 @@ class matrix_class {
 
 
 		void read_JASPAR(string);
-		void find_col_sum();
+		void oligo_creation();
 		void print_debug_matrix();
 
 	public:
@@ -36,7 +36,7 @@ class matrix_class {
 
 			read_JASPAR(JASPAR_FILE);
 			print_debug_matrix();
-			find_col_sum();
+			oligo_creation();
 
 		}
 };

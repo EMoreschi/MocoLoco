@@ -103,28 +103,30 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 	file.close();						//Closing file
 }
 
-void matrix_class::find_col_sum(){
+void matrix_class::oligo_creation(){
+
 	string oligo;
 
 	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
-           vector<unsigned int> column_sums;
-	   int somma = matrix[0][i] + matrix[1][i] + matrix[2][i]+ matrix[3][i];
-	   int random_score = random_number(0,somma);
-	   unsigned int ascore = matrix[0][i] - random_score;
-	   unsigned int cscore = matrix[0][i] + matrix[1][i] - random_score;
-	   unsigned int gscore = matrix[0][i] + matrix[1][i] + matrix[2][i] - random_score;
-	   unsigned int tscore = somma - random_score;
-	   column_sums.emplace_back(ascore);
-	   column_sums.emplace_back(cscore);
-	   column_sums.emplace_back(gscore);
-	   column_sums.emplace_back(tscore);
-	   int min_index = min_element(column_sums.begin(),column_sums.end()) - column_sums.begin(); *min_element(column_sums.begin(), column_sums.end());
-	   char base = from_n_to_base(min_index);
-//	   cout << min_index <<endl;
-	   oligo= oligo +base;
+
+		int somma = matrix[0][i] + matrix[1][i] + matrix[2][i]+ matrix[3][i];
+		int random_score = random_number(1,somma);
+		cout << random_score << endl; 
+		if(random_score <= matrix[0][i]){
+			oligo = oligo + 'A';
+		}
+		else if(random_score > matrix[0][i] && random_score <= (matrix[0][i] + matrix[1][i])){
+			oligo = oligo + 'C';
+		}
+		else if(random_score > (matrix[0][i]+matrix[1][i]) && random_score <= (matrix[0][i] + matrix[1][i] + matrix[2][i])){
+			oligo = oligo + 'G';
+		}
+		else{
+			oligo = oligo + 'T';
+		}
 	}
+
 	cout << oligo <<endl;
-//	cout << col_sum[0][3]<<endl;
 }
 
 /////////////////////////////////////// DEBUG ////////////////////////////////////
