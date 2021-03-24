@@ -15,6 +15,7 @@ using namespace std;
 int length = 500;
 int n_seq = 200;
 string JASPAR_FILE;
+int n_oligo = 80;
 
 
 class matrix_class {
@@ -25,15 +26,17 @@ class matrix_class {
 		string tf_name;
 		vector<vector<double>> matrix;
 		vector<vector<int>> matrix_sum;		
-
+		vector<string> oligo_vector;
 
 		void read_JASPAR(string);
 		void oligo_creation();
 		void print_debug_matrix();
+		void check_oligo_number();
 
 	public:
 		matrix_class(string JASPAR_FILE){
-
+			
+			check_oligo_number();
 			read_JASPAR(JASPAR_FILE);
 			print_debug_matrix();
 			oligo_creation();

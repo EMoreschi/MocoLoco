@@ -105,6 +105,7 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 
 void matrix_class::oligo_creation(){
 
+	for(unsigned int j=0; j<n_oligo; j++){
 	string oligo;
 
 	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
@@ -125,10 +126,18 @@ void matrix_class::oligo_creation(){
 			oligo = oligo + 'T';
 		}
 	}
-
-	cout << oligo <<endl;
+	oligo_vector.emplace_back(oligo);
+	}
 }
 
+void matrix_class::check_oligo_number(){
+
+	if(n_oligo > n_seq){
+		
+		cerr << "The number of oligo can't be > then n_seq.";
+		exit(1);
+	}
+}
 /////////////////////////////////////// DEBUG ////////////////////////////////////
 
 
@@ -148,7 +157,7 @@ void matrix_class::print_debug_matrix(){		//Print matrix function
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hl:n:j:";
+	const char* const short_opts = "hl:n:j:o:";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -156,6 +165,7 @@ void command_line_parser(int argc, char** argv){
 		{"length",      required_argument, nullptr,  'l' },
 		{"jaspar",   required_argument, nullptr,  'j' },
 		{"nseq",   required_argument, nullptr,  'n' },
+		{"noligo",   required_argument, nullptr,  'o' },
 	};
 
 	while (true)
@@ -172,6 +182,8 @@ void command_line_parser(int argc, char** argv){
 			case 'l' : length = stoi(optarg); 
 				   break;
 			case 'n' : n_seq = stoi(optarg); 
+				   break;
+			case 'o' : n_oligo = stoi(optarg); 
 				   break;
 			case 'j' : JASPAR_FILE = string(optarg);
 				   is_file_exist(JASPAR_FILE, "--jaspar || -j");
@@ -206,6 +218,7 @@ void display_help() 						//Display help function
 	cerr << "\n --help || -h show this message" << endl;
 	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)" << endl;
 	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DAFAULT: 200)" << endl;
+	cerr << "\n --noligo || -o <number> to insert the number of oligo to put in Multifasta sequences (DAFAULT: 80)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
