@@ -8,6 +8,7 @@ int main(int argc, char *argv[]){
 	}
 	
 	vector<matrix_class> MATRIX_VECTOR;
+	position_vector_creation(position);
 
 	cout << "Il numero di JASPAR inserite è: " << JASPAR_FILE_vector.size() << endl;
 	for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
@@ -19,7 +20,8 @@ int main(int argc, char *argv[]){
 	}
 
 	multifasta_class MULTIFA(length,n_seq);
-	implanting_class IMPLANTED(MATRIX_VECTOR[0].oligo_vector, MATRIX_VECTOR[0].matrix_size, MULTIFA.multifasta_map);
+	implanting_class IMPLANTED(MATRIX_VECTOR, MULTIFA.multifasta_map);
+
 }
 
 void multifasta_class::multifasta_map_creation(){
@@ -151,11 +153,24 @@ void matrix_class::check_oligo_number(){
 	}
 }
 
-void implanting_class::implanting_oligo(int matrix_size){
+void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 	
-	int i=0;
-	for(map<int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= oligo_vector.size() ; it++, i++){
-		it->second.replace(position,matrix_size,oligo_vector[i]);
+	for(int j=0; j<MATRIX_VECTOR.size(); j++){
+		int i=0;
+		for(map<int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[j].oligo_vector.size() ; it++, i++){
+			it->second.replace(position_vector[j], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
+		}
+	}
+}
+
+void position_vector_creation(string position){
+
+	int index;
+	
+	while(index != -1){
+		index = position.find(",");
+		position_vector.emplace_back(stoi(position.substr(0,index)));
+		position.erase(0,index+1);
 	}
 }
 /////////////////////////////////////// DEBUG ////////////////////////////////////
@@ -181,6 +196,7 @@ void matrix_class::print_oligo_vector(){
 
 		cout << oligo_vector[i] << endl;
 	}
+	cout << "\n\n----------------------------------------------------------------------------"<< "\n\n";
 }
 
 void multifasta_class::multifasta_outfile(map<int,string> multifasta_map, string filename){
@@ -245,7 +261,7 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'o' : n_oligo = stoi(optarg); 
 				   break;
-			case 'p' : position = stoi(optarg); 
+			case 'p' : position = string(optarg); 
 				   break;
 			case 'j' : JASPAR_FILE = (string(optarg));
 				   is_file_exist(JASPAR_FILE, ("--jaspar || -j number 1"));
