@@ -19,9 +19,11 @@
 using namespace std;
 unsigned int length = 500;
 unsigned int n_seq = 200;
+vector<string> JASPAR_FILE_vector;
 string JASPAR_FILE;
 unsigned int n_oligo = 80;
 unsigned int position = 250;
+bool flag_JASPAR = 0;
 class matrix_class {
 
 	private: //field definition
@@ -56,31 +58,43 @@ class multifasta_class{
 
 	private:
 		
-		map<int,string> multifasta_map;
-		map<int,string> multifasta_map_implanted;
-		vector<string> oligo_vector;
 		vector<string> headers;
 		vector<string> sequences;
-		int matrix_size;
 
 		void multifasta_map_creation();
 		void multifasta_outfile(map<int,string>, string);
-		void implanting_oligo(int);
 
 	public:
 
-		multifasta_class(vector<string> oligo_v, int matrix_size){
+		multifasta_class(int length, int n_seq){
 			
-			oligo_vector = oligo_v;
 			multifasta_map_creation();
-			multifasta_map_implanted = multifasta_map;
 			multifasta_outfile(multifasta_map, "random_multifa.fasta");
-			implanting_oligo(matrix_size);
-			multifasta_outfile(multifasta_map_implanted, "random_multifa_implanted.fasta");
 		}
+		map<int,string> multifasta_map;
 		
 };
 
+class implanting_class{
+
+	private:
+		vector<string> oligo_vector;
+		int matrix_size;
+
+		void implanting_oligo(int);
+		void multifasta_outfile_2(map<int,string>, string);
+
+	public:
+
+		implanting_class(vector<string> oligo_v, int matrix_size, map<int,string> multifasta_map){
+		
+			oligo_vector = oligo_v;
+			multifasta_map_implanted = multifasta_map;
+			implanting_oligo(matrix_size);
+			multifasta_outfile_2(multifasta_map_implanted, "random_multifa_implanted.fasta");
+		}
+		map<int,string> multifasta_map_implanted;
+};
 
 void command_line_parser(int, char **);
 void display_help(); 						//Display help function

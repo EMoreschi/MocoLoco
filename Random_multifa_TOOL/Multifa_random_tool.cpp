@@ -6,10 +6,20 @@ int main(int argc, char *argv[]){
 	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
 		display_help();
 	}
+	
+	vector<matrix_class> MATRIX_VECTOR;
 
+	cout << "Il numero di JASPAR inserite è: " << JASPAR_FILE_vector.size() << endl;
+	for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
+	
+		cout << JASPAR_FILE_vector[i];
+		cout << endl;
+		matrix_class NEW_MATRIX(JASPAR_FILE_vector[i]);
+		MATRIX_VECTOR.emplace_back(NEW_MATRIX);
+	}
 
-	matrix_class MATRIX(JASPAR_FILE);
-	multifasta_class MULTIFA(MATRIX.oligo_vector, MATRIX.matrix_size);
+	multifasta_class MULTIFA(length,n_seq);
+	implanting_class IMPLANTED(MATRIX_VECTOR[0].oligo_vector, MATRIX_VECTOR[0].matrix_size, MULTIFA.multifasta_map);
 }
 
 void multifasta_class::multifasta_map_creation(){
@@ -141,7 +151,7 @@ void matrix_class::check_oligo_number(){
 	}
 }
 
-void multifasta_class::implanting_oligo(int matrix_size){
+void implanting_class::implanting_oligo(int matrix_size){
 	
 	int i=0;
 	for(map<int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= oligo_vector.size() ; it++, i++){
@@ -188,6 +198,20 @@ void multifasta_class::multifasta_outfile(map<int,string> multifasta_map, string
 	outfile.close();
 }
 
+void implanting_class::multifasta_outfile_2(map<int,string> multifasta_map, string filename){
+
+	ofstream outfile;
+	outfile.open(filename);
+	
+	for(map<int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
+
+		
+		outfile << ">random multifasta sequence number " + to_string(it->first) + " containing "+ to_string(length) +" bases:"<<endl;
+		outfile << it->second << endl;
+		outfile << endl;
+	}
+	outfile.close();
+}
 /////////////////////////////////////// PARSER ///////////////////////////////////
 
 void command_line_parser(int argc, char** argv){
@@ -223,8 +247,29 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'p' : position = stoi(optarg); 
 				   break;
-			case 'j' : JASPAR_FILE = string(optarg);
-				   is_file_exist(JASPAR_FILE, "--jaspar || -j");
+			case 'j' : JASPAR_FILE = (string(optarg));
+				   is_file_exist(JASPAR_FILE, ("--jaspar || -j number 1"));
+				   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
+
+				   if(argv[optind-1] !=  argv[argc-1]){
+					   
+					   if(string(argv[optind])[0] != '-'){
+						   
+						   JASPAR_FILE = (string(argv[optind]));
+						   is_file_exist(JASPAR_FILE, ("--jaspar || -j number 2"));
+						   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
+						   
+						   if(argv[optind]!=  argv[argc-1]){
+							   
+							   if(string(argv[optind+1])[0] != '-'){
+								   
+								   JASPAR_FILE = (string(argv[optind+1]));
+								   is_file_exist(JASPAR_FILE, ("--jaspar || -j number 3"));
+								   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
+							   }
+						   }
+					   }
+				   }
 				   break;
 			case '?': // Unrecognized option
 			default:
