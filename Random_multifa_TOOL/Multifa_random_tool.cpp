@@ -3,7 +3,11 @@
 int main(int argc, char *argv[]){
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	
+	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
+		display_help();
+	}
+
+
 	matrix_class MATRIX(JASPAR_FILE);
 	multifasta_class MULTIFA(MATRIX.oligo_vector, MATRIX.matrix_size);
 }
@@ -177,7 +181,7 @@ void multifasta_class::multifasta_outfile(map<int,string> multifasta_map, string
 	for(map<int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
 
 		
-		outfile << ">random multifasta sequence number " + to_string(it->first) + " containing "+ to_string(length) +" bases:";
+		outfile << ">random multifasta sequence number " + to_string(it->first) + " containing "+ to_string(length) +" bases:"<<endl;
 		outfile << it->second << endl;
 		outfile << endl;
 	}
