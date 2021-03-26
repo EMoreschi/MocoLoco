@@ -19,19 +19,14 @@ int main(int argc, char *argv[]){
 	
 	check_input();	
 	
-	if(position_vector.size() > 1){	
+	for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++){
 	
-			for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++){
-	
-				matrix_class NEW_MATRIX(it->second);
-				MATRIX_VECTOR.emplace_back(NEW_MATRIX);
-			}
-	
-	check_overlapping(MATRIX_VECTOR);
-	}
-	else{
-		matrix_class NEW_MATRIX(JASPAR_F);
+		matrix_class NEW_MATRIX(it->second);
 		MATRIX_VECTOR.emplace_back(NEW_MATRIX);
+		}
+	
+	if(position_vector.size() > 1){	
+	check_overlapping(MATRIX_VECTOR);
 	}
 
 	check_positions(MATRIX_VECTOR);
@@ -176,13 +171,9 @@ void check_input(){
 		exit(1);
 	}
 
-	if(position_vector.size() > 1){
-
 		for(unsigned int i=0; i<position_vector.size(); i++){	
 			position_jaspar_map.insert(pair<unsigned int,string>(position_vector[i], JASPAR_FILE_vector[i]));
 		}
-
-	}
 }
 
 void check_positions(vector<matrix_class> MATRIX_VECTOR){
@@ -220,7 +211,6 @@ void check_overlapping(vector<matrix_class> MATRIX_VECTOR){
 
 void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 
-	if(position_vector.size() > 1){	
 		map<unsigned int,string>::iterator pos_it = position_jaspar_map.begin();
 
 		for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){
@@ -230,14 +220,6 @@ void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 			}
 			++pos_it;
 		}
-	}
-
-	else{
-		unsigned int i=0;
-		for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[0].oligo_vector.size() ; it++, i++){
-			it->second.replace(position_vector[0], MATRIX_VECTOR[0].matrix_size, MATRIX_VECTOR[0].oligo_vector[i]);
-		}
-	}
 }
 
 void position_vector_creation(string position){
