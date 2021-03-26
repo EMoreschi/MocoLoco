@@ -7,27 +7,37 @@ int main(int argc, char *argv[]){
 		display_help();
 	}
 	
-	vector<matrix_class> MATRIX_VECTOR;
-	position_vector_creation(position);
+	vector<matrix_class> MATRIX_VECTOR;	//MATRIX_VECTOR initialization
+	position_vector_creation(position);	//position vector creation from input positions, passed as a string
 
-	cout << "The number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl;
+	cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl; //Debug for a beautiful and meaningful output -> here you can check if you have put the input that you wanted
 	cout << "The number of implanting position is: " << position_vector.size() << endl;
-	check_input();	
-
-	for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
+	cout << "The length of multifasta random sequences is: " << length << endl;
+	cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
+	cout << "The number of oligo randomly generated for each Jaspar matrix is: " << n_oligo << endl << endl;
+	cout << "-----------------------------------------------------------------------------------" << endl;
 	
-		cout << "\n" << JASPAR_FILE_vector[i];
-		cout << endl;
-		matrix_class NEW_MATRIX(JASPAR_FILE_vector[i]);
+	check_input();	
+	
+	if(position_vector.size() > 1){	
+	
+			for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++){
+	
+				matrix_class NEW_MATRIX(it->second);
+				MATRIX_VECTOR.emplace_back(NEW_MATRIX);
+			}
+	
+	check_overlapping(MATRIX_VECTOR);
+	}
+	else{
+		matrix_class NEW_MATRIX(JASPAR_F);
 		MATRIX_VECTOR.emplace_back(NEW_MATRIX);
 	}
 
-	if(position_vector.size() > 1){	
-	check_overlapping(MATRIX_VECTOR);
-	}
-
+	check_positions(MATRIX_VECTOR);
 	multifasta_class MULTIFA(length,n_seq);
 	implanting_class IMPLANTED(MATRIX_VECTOR, MULTIFA.multifasta_map);
+	print_debug_matrixclass(MATRIX_VECTOR);
 
 }
 
@@ -41,25 +51,25 @@ void multifasta_class::multifasta_map_creation(){
 		
 		for(unsigned int i=0; i<length; i++){
 
-			int random_int = random_number(0,3);
+			unsigned int random_int = random_number(0,3);
 			char base = from_n_to_base(random_int);
 			sequence = sequence + base;
 		}
 	
-		multifasta_map.insert(pair<int,string>(j+1, sequence));
+		multifasta_map.insert(pair<unsigned int,string>(j+1, sequence));
 	}
 	
 }
 
-int random_number(int range_begin, int range_end){
+unsigned int random_number(unsigned int range_begin, unsigned int range_end){
 
         mt19937_64 generator (clock());	
-        uniform_int_distribution<int> dis(range_begin, range_end);	
-        int r_number = dis(generator);;
+        uniform_int_distribution<unsigned int> dis(range_begin, range_end);	
+        unsigned int r_number = dis(generator);;
 	return 	r_number;
 }
 
-char from_n_to_base (int n){
+char from_n_to_base (unsigned int n){
 
 	char base;
 			switch(n){
@@ -86,7 +96,7 @@ char from_n_to_base (int n){
 
 				default:
 					
-					cout << "Generation of random sequence failed. Please check the random generation code.!" << endl;
+					cerr << "ERROR: Generation of random sequence failed. Please check the random generation code.!" << endl;
 					exit(1);
 					break;
 			}
@@ -94,8 +104,6 @@ char from_n_to_base (int n){
 }
 
 void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
-
-	cout << "Reading JASPAR MATRIX file and extracting values...\n";
 
 	ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
 	string line;							
@@ -109,9 +117,9 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 		else{							//Else, if line does not start with ">"
 			line.erase(0,line.find('[') +1);		//Take line charachters after "["...
 			line.erase(line.find(']'));			//...and line charachters before "]"
-			vector<int> baseQ;				//Initializing baseQ vector of double
+			vector<unsigned int> baseQ;				//Initializing baseQ vector of double
 			istringstream mystream(line);			//Splitting the line in words
-			for (int num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
+			for (unsigned int num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
 				baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
 			}
 			matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
@@ -131,8 +139,8 @@ void matrix_class::oligo_creation(){
 
 	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
 
-		int somma = matrix[0][i] + matrix[1][i] + matrix[2][i]+ matrix[3][i];
-		int random_score = random_number(1,somma);
+		unsigned int somma = matrix[0][i] + matrix[1][i] + matrix[2][i]+ matrix[3][i];
+		unsigned int random_score = random_number(1,somma);
 		
 		if(random_score <= matrix[0][i]){
 			oligo = oligo + 'A';
@@ -155,7 +163,7 @@ void matrix_class::check_oligo_number(){
 
 	if(n_oligo > n_seq){
 		
-		cerr << "The number of oligo can't be > then n_seq.";
+		cerr << "\nERROR: The number of oligo can't be > then n_seq.";
 		exit(1);
 	}
 }
@@ -164,29 +172,70 @@ void check_input(){
 
 	if(JASPAR_FILE_vector.size() != position_vector.size()){
 
-		cerr << "Please insert the rigth number of Jaspar files and implanting position.\nTheir number need to be equal to make a correct implanting!" << endl;
+		cerr << "\nERROR: Please insert the rigth number of Jaspar files and implanting position.\nTheir number need to be equal to make a correct implanting!" << endl;
 		exit(1);
+	}
+
+	if(position_vector.size() > 1){
+
+		for(unsigned int i=0; i<position_vector.size(); i++){	
+			position_jaspar_map.insert(pair<unsigned int,string>(position_vector[i], JASPAR_FILE_vector[i]));
+		}
+
+	}
+}
+
+void check_positions(vector<matrix_class> MATRIX_VECTOR){
+
+	for(unsigned int i=0; i<position_vector.size(); i++){
+
+		if(position_vector[i] + MATRIX_VECTOR[i].matrix_size > length){
+
+			cerr << "\nERRORRRRRRRRRRRRRRRRRRRRR: Position in input lead the oligos to exceed the length of the sequences.\nPlease check your implanting position!" << endl;
+			exit(1);
+		}
 	}
 }
 
 void check_overlapping(vector<matrix_class> MATRIX_VECTOR){
 
-	for(unsigned int i=1; i<position_vector.size(); i++){
-		
-		if(position_vector[i] > position_vector[i-1] && position_vector[i] <= (position_vector[i-1]+MATRIX_VECTOR[i-1].matrix_size)){
+	map<unsigned int, string>::iterator it_before = position_jaspar_map.begin();
+	map<unsigned int, string>::iterator it_after = ++position_jaspar_map.begin();
+	
+	if(position_vector.size() != position_jaspar_map.size()){
 
-				cerr << "The oligos coming from matrix 1 and 2 that you are trying to implant overlap!"<< endl;
+		cerr << "\nERROR: You have inserted 2 or more equal implanting positions!\nPlease check your -p input." << endl;
+		exit(1);
+	}
+
+	for(unsigned int i=0; i<MATRIX_VECTOR.size(); i++, it_after++, it_before++){
+		
+		if(it_after->first >= it_before->first && it_after->first < (it_before->first + MATRIX_VECTOR[i].matrix_size)){
+
+				cerr << "\nERROR: The oligos coming from matrix " << i+1 << " and " << i+2 << " that you are trying to implant overlap!"<< endl;
 				exit(1);
 		}
 	}
 }
 
 void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
-	
-	for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){
-		int i=0;
-		for(map<int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[j].oligo_vector.size() ; it++, i++){
-			it->second.replace(position_vector[j], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
+
+	if(position_vector.size() > 1){	
+		map<unsigned int,string>::iterator pos_it = position_jaspar_map.begin();
+
+		for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){
+			unsigned int i=0;
+			for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[j].oligo_vector.size() ; it++, i++){
+				it->second.replace(pos_it->first, MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
+			}
+			++pos_it;
+		}
+	}
+
+	else{
+		unsigned int i=0;
+		for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[0].oligo_vector.size() ; it++, i++){
+			it->second.replace(position_vector[0], MATRIX_VECTOR[0].matrix_size, MATRIX_VECTOR[0].oligo_vector[i]);
 		}
 	}
 }
@@ -199,16 +248,6 @@ void position_vector_creation(string position){
 		index = position.find(",");
 		position_vector.emplace_back(stoi(position.substr(0,index)));
 		position.erase(0,index+1);
-	}
-	if(position_vector.size() > 1){
-		
-		for(unsigned int i=1; i<position_vector.size(); i++){
-			if(position_vector[i] < position_vector[i-1]){
-
-				cerr << "Please insert the implanting position in a crescent order! "<< endl;
-				exit(1);
-			}
-		}
 	}
 }
 /////////////////////////////////////// DEBUG ////////////////////////////////////
@@ -237,12 +276,12 @@ void matrix_class::print_oligo_vector(){
 	cout << "\n\n----------------------------------------------------------------------------"<< "\n\n";
 }
 
-void multifasta_class::multifasta_outfile(map<int,string> multifasta_map, string filename){
+void multifasta_class::multifasta_outfile(map<unsigned int,string> multifasta_map, string filename){
 
 	ofstream outfile;
 	outfile.open(filename);
 	
-	for(map<int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
+	for(map<unsigned int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
 
 		
 		outfile << ">random multifasta sequence number " + to_string(it->first) + " containing "+ to_string(length) +" bases:"<<endl;
@@ -252,12 +291,12 @@ void multifasta_class::multifasta_outfile(map<int,string> multifasta_map, string
 	outfile.close();
 }
 
-void implanting_class::multifasta_outfile_2(map<int,string> multifasta_map, string filename){
+void implanting_class::multifasta_outfile_2(map<unsigned int,string> multifasta_map, string filename){
 
 	ofstream outfile;
 	outfile.open(filename);
 	
-	for(map<int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
+	for(map<unsigned int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
 
 		
 		outfile << ">random multifasta sequence number " + to_string(it->first) + " containing "+ to_string(length) +" bases:"<<endl;
@@ -266,6 +305,20 @@ void implanting_class::multifasta_outfile_2(map<int,string> multifasta_map, stri
 	}
 	outfile.close();
 }
+
+void print_debug_matrixclass(vector<matrix_class> MATRIX_VECTOR){
+
+	map<unsigned int,string>::iterator it = position_jaspar_map.begin();
+
+	for (unsigned int i=0; i<MATRIX_VECTOR.size(); i++, it++){
+
+		cout << "\nImplant position: "<< it->first << endl;
+		cout << "Matrix: " << it->second << endl;
+		MATRIX_VECTOR[i].print_debug_matrix();
+		MATRIX_VECTOR[i].print_oligo_vector();
+	}
+}
+
 /////////////////////////////////////// PARSER ///////////////////////////////////
 
 void command_line_parser(int argc, char** argv){
@@ -302,13 +355,13 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'p' : position = string(optarg); 
 				   break;
-			case 'j' : JASPAR_FILE = (string(optarg));
-				   is_file_exist(JASPAR_FILE, ("--jaspar || -j number 1"));
-				   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
+			case 'j' : JASPAR_F = (string(optarg));
+				   is_file_exist(JASPAR_F, ("--jaspar || -j number 1"));
+				   JASPAR_FILE_vector.emplace_back(JASPAR_F);
 				   for (;optind < argc && *argv[optind] != '-';optind++){
-					   JASPAR_FILE = (string(argv[optind]));
-					   is_file_exist(JASPAR_FILE, ("--jaspar || -j one of files do not exist"));
-					   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
+					   JASPAR_F = (string(argv[optind]));
+					   is_file_exist(JASPAR_F, ("--jaspar || -j one of files do not exist"));
+					   JASPAR_FILE_vector.emplace_back(JASPAR_F);
 				   }
 				   break;
 			case '?': // Unrecognized option
