@@ -242,6 +242,7 @@ void command_line_parser(int argc, char** argv){
 		{"nseq",   required_argument, nullptr,  'n' },
 		{"noligo",   required_argument, nullptr,  'o' },
 		{"position",   required_argument, nullptr,  'p' },
+		{nullptr, no_argument, nullptr,  0   }
 	};
 
 	while (true)
@@ -266,25 +267,10 @@ void command_line_parser(int argc, char** argv){
 			case 'j' : JASPAR_FILE = (string(optarg));
 				   is_file_exist(JASPAR_FILE, ("--jaspar || -j number 1"));
 				   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
-
-				   if(argv[optind-1] !=  argv[argc-1]){
-					   
-					   if(string(argv[optind])[0] != '-'){
-						   
-						   JASPAR_FILE = (string(argv[optind]));
-						   is_file_exist(JASPAR_FILE, ("--jaspar || -j number 2"));
-						   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
-						   
-						   if(argv[optind]!=  argv[argc-1]){
-							   
-							   if(string(argv[optind+1])[0] != '-'){
-								   
-								   JASPAR_FILE = (string(argv[optind+1]));
-								   is_file_exist(JASPAR_FILE, ("--jaspar || -j number 3"));
-								   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
-							   }
-						   }
-					   }
+				   for (;optind < argc && *argv[optind] != '-';optind++){
+					   JASPAR_FILE = (string(argv[optind]));
+					   is_file_exist(JASPAR_FILE, ("--jaspar || -j one of files do not exist"));
+					   JASPAR_FILE_vector.emplace_back(JASPAR_FILE);
 				   }
 				   break;
 			case '?': // Unrecognized option
