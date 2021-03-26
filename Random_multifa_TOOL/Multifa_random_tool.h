@@ -99,4 +99,6 @@ void display_help(); 						//Display help function
 int random_number(int, int);
 char from_n_to_base(int);
 void position_vector_creation(string);
+void check_overlapping(vector<matrix_class>);
+void check_input();
 bool is_file_exist(string, string);

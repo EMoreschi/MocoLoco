@@ -10,13 +10,20 @@ int main(int argc, char *argv[]){
 	vector<matrix_class> MATRIX_VECTOR;
 	position_vector_creation(position);
 
-	cout << "Il numero di JASPAR inserite è: " << JASPAR_FILE_vector.size() << endl;
+	cout << "The number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl;
+	cout << "The number of implanting position is: " << position_vector.size() << endl;
+	check_input();	
+
 	for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
 	
-		cout << JASPAR_FILE_vector[i];
+		cout << "\n" << JASPAR_FILE_vector[i];
 		cout << endl;
 		matrix_class NEW_MATRIX(JASPAR_FILE_vector[i]);
 		MATRIX_VECTOR.emplace_back(NEW_MATRIX);
+	}
+
+	if(position_vector.size() > 1){	
+	check_overlapping(MATRIX_VECTOR);
 	}
 
 	multifasta_class MULTIFA(length,n_seq);
@@ -153,9 +160,30 @@ void matrix_class::check_oligo_number(){
 	}
 }
 
+void check_input(){
+
+	if(JASPAR_FILE_vector.size() != position_vector.size()){
+
+		cerr << "Please insert the rigth number of Jaspar files and implanting position.\nTheir number need to be equal to make a correct implanting!" << endl;
+		exit(1);
+	}
+}
+
+void check_overlapping(vector<matrix_class> MATRIX_VECTOR){
+
+	for(unsigned int i=1; i<position_vector.size(); i++){
+		
+		if(position_vector[i] > position_vector[i-1] && position_vector[i] <= (position_vector[i-1]+MATRIX_VECTOR[i-1].matrix_size)){
+
+				cerr << "The oligos coming from matrix 1 and 2 that you are trying to implant overlap!"<< endl;
+				exit(1);
+		}
+	}
+}
+
 void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 	
-	for(int j=0; j<MATRIX_VECTOR.size(); j++){
+	for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){
 		int i=0;
 		for(map<int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[j].oligo_vector.size() ; it++, i++){
 			it->second.replace(position_vector[j], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
@@ -171,6 +199,16 @@ void position_vector_creation(string position){
 		index = position.find(",");
 		position_vector.emplace_back(stoi(position.substr(0,index)));
 		position.erase(0,index+1);
+	}
+	if(position_vector.size() > 1){
+		
+		for(unsigned int i=1; i<position_vector.size(); i++){
+			if(position_vector[i] < position_vector[i-1]){
+
+				cerr << "Please insert the implanting position in a crescent order! "<< endl;
+				exit(1);
+			}
+		}
 	}
 }
 /////////////////////////////////////// DEBUG ////////////////////////////////////
