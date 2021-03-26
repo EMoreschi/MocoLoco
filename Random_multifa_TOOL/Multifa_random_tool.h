@@ -22,7 +22,7 @@ unsigned int n_seq = 200;
 vector<string> JASPAR_FILE_vector;
 string JASPAR_F;
 unsigned int n_oligo = 80;
-string position = "250";
+string position = "10";
 vector<unsigned int> position_vector;
 map<unsigned int,string> position_jaspar_map;
 bool flag_JASPAR = 0;

@@ -377,7 +377,7 @@ void display_help() 						//Display help function
 	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)" << endl;
 	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DAFAULT: 200)" << endl;
 	cerr << "\n --noligo || -o <number> to insert the number of oligo to put in Multifasta sequences (DAFAULT: 80)" << endl;
-	cerr << "\n --position || -p <number> to insert the position in Multifasta sequences where you want to implant the oligos (DAFAULT: 80)" << endl;
+	cerr << "\n --position || -p <n1,n2..> to insert the position in Multifasta sequences where you want to implant the oligos (DAFAULT: 10)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
