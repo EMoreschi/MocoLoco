@@ -17,22 +17,22 @@ int main(int argc, char *argv[]){
 	cout << "The number of oligo randomly generated for each Jaspar matrix is: " << n_oligo << endl << endl;
 	cout << "-----------------------------------------------------------------------------------" << endl;
 	
-	check_input();	
+	check_input();		//controlling that the number of Jaspar matrices in input are = to number of -p (implanting position) in input. If the control is positive, the map<position,jaspar_name> start to be filled	
 	
-	for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++){
+	for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++){	//for each element in the map
 	
-		matrix_class NEW_MATRIX(it->second);
-		MATRIX_VECTOR.emplace_back(NEW_MATRIX);
+		matrix_class NEW_MATRIX(it->second);		//a new matrix_class is created starting from the jaspar_name string
+		MATRIX_VECTOR.emplace_back(NEW_MATRIX);		//and a vector of matrix_class is filled
 		}
 	
-	if(position_vector.size() > 1){	
-	check_overlapping(MATRIX_VECTOR);
+	if(position_vector.size() > 1){		//if the jaspar input are more then 1
+	check_overlapping(MATRIX_VECTOR);	//checking if -p implanting position in input are different and if the implanting does not overlap
 	}
 
-	check_positions(MATRIX_VECTOR);
-	multifasta_class MULTIFA(length,n_seq);
-	implanting_class IMPLANTED(MATRIX_VECTOR, MULTIFA.multifasta_map);
-	print_debug_matrixclass(MATRIX_VECTOR);
+	check_positions(MATRIX_VECTOR);		//checking if -p implanting position don't bring the oligos to exceed from the sequences length 
+	multifasta_class MULTIFA(length,n_seq); 	//generating a random multifasta_class
+	implanting_class IMPLANTED(MATRIX_VECTOR, MULTIFA.multifasta_map);	//implanting the oligos in the position -p gave as input on the multifasta sequences from multifasta_class previouly generated
+	print_debug_matrixclass(MATRIX_VECTOR);		//matrix_class debugging -> printing matrices and oligos generated from them
 
 }
 
@@ -182,7 +182,7 @@ void check_positions(vector<matrix_class> MATRIX_VECTOR){
 
 		if(position_vector[i] + MATRIX_VECTOR[i].matrix_size > length){
 
-			cerr << "\nERRORRRRRRRRRRRRRRRRRRRRR: Position in input lead the oligos to exceed the length of the sequences.\nPlease check your implanting position!" << endl;
+			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nPlease check your implanting position!" << endl;
 			exit(1);
 		}
 	}

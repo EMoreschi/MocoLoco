@@ -29,7 +29,7 @@ bool flag_JASPAR = 0;
 
 class matrix_class {
 
-	private: //field definition
+	private: 
 
 		string matrix_name;
 		string tf_name;
@@ -95,7 +95,7 @@ class implanting_class{
 };
 
 void command_line_parser(int, char **);
-void display_help(); 						//Display help function
+void display_help(); 
 unsigned int random_number(unsigned int, unsigned int);
 char from_n_to_base(unsigned int);
 void position_vector_creation(string);
