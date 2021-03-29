@@ -7,33 +7,70 @@ int main(int argc, char *argv[]){
 		display_help();
 	}
 	
-	vector<matrix_class> MATRIX_VECTOR;	//MATRIX_VECTOR initialization
-	position_vector_creation(position);	//position vector creation from input positions, passed as a string
-
-	cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl; //Debug for a beautiful and meaningful output -> here you can check if you have put the input that you wanted
-	cout << "The number of implanting position is: " << position_vector.size() << endl;
-	cout << "The length of multifasta random sequences is: " << length << endl;
-	cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
-	cout << "The number of oligo randomly generated for each Jaspar matrix is: " << n_oligo << endl << endl;
-	cout << "-----------------------------------------------------------------------------------" << endl;
-	
-	check_input();		//controlling that the number of Jaspar matrices in input are = to number of -p (implanting position) in input. If the control is positive, the map<position,jaspar_name> start to be filled	
-	
-	for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++){	//for each element in the map
-	
-		matrix_class NEW_MATRIX(it->second);		//a new matrix_class is created starting from the jaspar_name string
-		MATRIX_VECTOR.emplace_back(NEW_MATRIX);		//and a vector of matrix_class is filled
-		}
-	
-	if(position_vector.size() > 1){		//if the jaspar input are more then 1
-	check_overlapping(MATRIX_VECTOR);	//checking if -p implanting position in input are different and if the implanting does not overlap
+	find_oligo_number();
+	for(unsigned int i=0; i<cycles; i++){
+	check_jaspar_exist(i);
 	}
+}	
 
-	check_positions(MATRIX_VECTOR);		//checking if -p implanting position don't bring the oligos to exceed from the sequences length 
-	multifasta_class MULTIFA(length,n_seq); 	//generating a random multifasta_class
-	implanting_class IMPLANTED(MATRIX_VECTOR, MULTIFA.multifasta_map);	//implanting the oligos in the position -p gave as input on the multifasta sequences from multifasta_class previouly generated
-	print_debug_matrixclass(MATRIX_VECTOR);		//matrix_class debugging -> printing matrices and oligos generated from them
+void find_oligo_number(){
 
+	if(oligo_perc > 100){
+
+		cout << "ERROR: The percentage need to be from 0 to 100!" << endl;
+		exit(1);
+	}
+		n_oligo = (oligo_perc * n_seq)/100;
+}
+
+void check_jaspar_exist(unsigned int i){
+
+	if(position.size() != 0){
+		
+		position_vector.clear();
+		position_vector_creation(position);	//position vector creation from input positions, passed as a string
+		vector<matrix_class> MATRIX_VECTOR;	//MATRIX_VECTOR initialization
+
+		cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl; //Debug for a beautiful and meaningful output -> here you can check if you have put the input that you wanted
+		cout << "The number of implanting position is: " << position_vector.size() << endl;
+		cout << "The length of multifasta random sequences is: " << length << endl;
+		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
+		cout << "The percentage of oligo randomly generated for each Jaspar matrix is: " << oligo_perc << endl;
+		cout << "The number of oligo randomly generated for each Jaspar matrix is: " << n_oligo << endl << endl;
+		cout << "-----------------------------------------------------------------------------------" << endl;
+
+		check_input();		//controlling that the number of Jaspar matrices in input are = to number of -p (implanting position) in input. If the control is positive, the map<position,jaspar_name> start to be filled	
+
+		for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++){	//for each element in the map
+
+			matrix_class NEW_MATRIX(it->second);		//a new matrix_class is created starting from the jaspar_name string
+			MATRIX_VECTOR.emplace_back(NEW_MATRIX);		//and a vector of matrix_class is filled
+		}
+
+		if(position_vector.size() > 1){		//if the jaspar input are more then 1
+			check_overlapping(MATRIX_VECTOR);	//checking if -p implanting position in input are different and if the implanting does not overlap
+		}
+
+		check_positions(MATRIX_VECTOR);		//checking if -p implanting position don't bring the oligos to exceed from the sequences length 
+		multifasta_class MULTIFA(length,n_seq,i); 	//generating a random multifasta_class
+		implanting_class IMPLANTED(MATRIX_VECTOR, MULTIFA.multifasta_map,i);	//implanting the oligos in the position -p gave as input on the multifasta sequences from multifasta_class previouly generated
+		print_debug_matrixclass(MATRIX_VECTOR);		//matrix_class debugging -> printing matrices and oligos generated from them
+	
+		MATRIX_VECTOR.clear();
+	}
+	else{
+	
+		cout << "\nWARNING: No Jaspar matrices and implanting position given as input." << endl;	
+		cout << "Generating a Random Multifasta file of " << n_seq << " sequences of " << length << " bases length...\n" << endl;
+		cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl; //Debug for a beautiful and meaningful output -> here you can check if you have put the input that you wanted
+		cout << "The number of implanting position is: " << position_vector.size() << endl;
+		cout << "The length of multifasta random sequences is: " << length << endl;
+		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
+		cout << "The percentage of oligo randomly generated for each Jaspar matrix is: " << oligo_perc << endl;
+		cout << "The number of oligo randomly generated for each Jaspar matrix is: " << n_oligo << endl << endl;
+		cout << "-----------------------------------------------------------------------------------" << endl;
+		multifasta_class MULTIFA(length,n_seq,i); 	//generating a random multifasta_class
+	}
 }
 
 void multifasta_class::multifasta_map_creation(){
@@ -63,6 +100,33 @@ unsigned int random_number(unsigned int range_begin, unsigned int range_end){
         unsigned int r_number = dis(generator);;
 	return 	r_number;
 }
+
+string reverse_complement(string oligo){
+
+	string reverse_oligo;
+	for(unsigned int i=0; i<oligo.size(); i++){
+
+		char base;
+		base = oligo[i];
+		switch (base) {
+
+			case 'A' : reverse_oligo.append("T"); 
+				   break;
+			case 'T' : reverse_oligo.append("A"); 
+				   break;
+			case 'G' : reverse_oligo.append("C"); 
+				   break;
+			case 'C' : reverse_oligo.append("G"); 
+				   break;
+			case 'N' : reverse_oligo.append("N"); 
+				   break;
+		}
+	}
+
+	reverse(reverse_oligo.begin(), reverse_oligo.end());
+	return reverse_oligo;
+}
+
 
 char from_n_to_base (unsigned int n){
 
@@ -127,9 +191,11 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 
 void matrix_class::oligo_creation(){
 	
+	unsigned int strand;
 	string oligo;
 	for(unsigned int j=0; j<n_oligo; j++){
 	
+		strand = random_number(0,1);
 		oligo.clear();
 
 	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
@@ -150,7 +216,15 @@ void matrix_class::oligo_creation(){
 			oligo = oligo + 'T';
 		}
 	}
+	
+	if(strand == 0){
 	oligo_vector.emplace_back(oligo);
+	}
+	else{
+		oligo = reverse_complement(oligo); 
+		oligo_vector.emplace_back(oligo);
+	}
+
 	}
 }
 
@@ -305,7 +379,7 @@ void print_debug_matrixclass(vector<matrix_class> MATRIX_VECTOR){
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hl:n:j:o:p:";
+	const char* const short_opts = "hl:n:c:j:o:p:";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -313,7 +387,8 @@ void command_line_parser(int argc, char** argv){
 		{"length",      required_argument, nullptr,  'l' },
 		{"jaspar",   required_argument, nullptr,  'j' },
 		{"nseq",   required_argument, nullptr,  'n' },
-		{"noligo",   required_argument, nullptr,  'o' },
+		{"cycles",   required_argument, nullptr,  'c' },
+		{"oligop",   required_argument, nullptr,  'o' },
 		{"position",   required_argument, nullptr,  'p' },
 		{nullptr, no_argument, nullptr,  0   }
 	};
@@ -333,7 +408,9 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'n' : n_seq = stoi(optarg); 
 				   break;
-			case 'o' : n_oligo = stoi(optarg); 
+			case 'c' : cycles = stoi(optarg); 
+				   break;
+			case 'o' : oligo_perc = stoi(optarg); 
 				   break;
 			case 'p' : position = string(optarg); 
 				   break;
@@ -374,10 +451,12 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 void display_help() 						//Display help function
 {
 	cerr << "\n --help || -h show this message" << endl;
+	cerr << "\n --jaspar || -j <JASPAR_FILE_1, JASPAR_FILE_2, ..., JASPAR_FILE_N> to import the jaspar matrices from which the oligos will be generated." << endl;
 	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)" << endl;
-	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DAFAULT: 200)" << endl;
-	cerr << "\n --noligo || -o <number> to insert the number of oligo to put in Multifasta sequences (DAFAULT: 80)" << endl;
-	cerr << "\n --position || -p <n1,n2..> to insert the position in Multifasta sequences where you want to implant the oligos (DAFAULT: 10)" << endl;
+	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DEFAULT: 200)" << endl;
+	cerr << "\n --oligop || -o <number> to insert the percentage of sequences in which the oligos will be implanted (DEFAULT: 80%) ---- NB: The number of sequences extracted from the percentage will be rounded down" << endl;
+	cerr << "\n --position || -p <n1,n2..,nN> to insert the position in Multifasta sequences where you want to implant the oligos (DEFAULT: 10)" << endl;
+	cerr << "\n --cycles || -c <number> to choose how many random multifasta files (and implanted also) this tool will produce" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);

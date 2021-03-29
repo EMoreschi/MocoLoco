@@ -21,10 +21,12 @@ unsigned int length = 500;
 unsigned int n_seq = 200;
 vector<string> JASPAR_FILE_vector;
 string JASPAR_F;
-unsigned int n_oligo = 80;
-string position = "10";
+unsigned int oligo_perc = 80;
+unsigned int n_oligo;
+string position;
 vector<unsigned int> position_vector;
 map<unsigned int,string> position_jaspar_map;
+unsigned int cycles = 1;
 bool flag_JASPAR = 0;
 
 class matrix_class {
@@ -67,10 +69,10 @@ class multifasta_class{
 
 	public:
 
-		multifasta_class(unsigned int length, unsigned int n_seq){
+		multifasta_class(unsigned int length, unsigned int n_seq, unsigned int i){
 			
 			multifasta_map_creation();
-			multifasta_outfile(multifasta_map, "random_multifa.fasta");
+			multifasta_outfile(multifasta_map, "random_multifa_"+to_string(i+1)+".fasta");
 		}
 		map<unsigned int,string> multifasta_map;
 		
@@ -86,21 +88,24 @@ class implanting_class{
 
 	public:
 
-		implanting_class(vector<matrix_class> MATRIX_VECTOR, map<unsigned int,string> multifasta_map){
+		implanting_class(vector<matrix_class> MATRIX_VECTOR, map<unsigned int,string> multifasta_map, unsigned int i){
 		
 			multifasta_map_implanted = multifasta_map;
 			implanting_oligo(MATRIX_VECTOR);
-			multifasta_outfile_2(multifasta_map_implanted, "random_multifa_implanted.fasta");
+			multifasta_outfile_2(multifasta_map_implanted, "random_multifa_implanted"+to_string(i+1)+".fasta");
 		}
 };
 
 void command_line_parser(int, char **);
 void display_help(); 
 unsigned int random_number(unsigned int, unsigned int);
+string reverse_complement(string);
 char from_n_to_base(unsigned int);
 void position_vector_creation(string);
 void check_overlapping(vector<matrix_class>);
 void check_input();
 void check_positions(vector<matrix_class>);
 void print_debug_matrixclass(vector<matrix_class>);
+void check_jaspar_exist(unsigned int);
+void find_oligo_number();
 bool is_file_exist(string, string);
