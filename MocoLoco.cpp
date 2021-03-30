@@ -745,9 +745,9 @@ void map_class::find_topN_frequence(){
 	double n_sequences = v_v_maps[0].size();
 	vector<double> frequence_topN_kmers;
 	
-	for(int i=0; i< sum_topN_all.size(); i++){
+	for(unsigned int i=0; i< sum_topN_all.size(); i++){
 
-		for(int j=0; j<sum_topN_all[i].size(); j++){
+		for(unsigned int j=0; j<sum_topN_all[i].size(); j++){
 
 				frequence_topN_kmers.emplace_back(sum_topN_all[i][j]/n_sequences);
 		}
@@ -759,16 +759,18 @@ void map_class::find_topN_frequence(){
 void map_class::print_debug_topN_sumfreq(){
 	
 	ofstream outfile;
-	outfile.open("Top"+to_string(top_N)+"_count_and_frequences");
 
-	for(int i=0; i<sum_topN_all.size(); i++){
+	for(unsigned int i=0; i<sum_topN_all.size(); i++){
+	
+		outfile.open(to_string(kmers_vector[i])+"mers_Top"+to_string(top_N)+"_count_and_frequences");
+		outfile << "\n###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":\n" << endl; 
 		
-		outfile << "top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":\n" << endl; 
-		for(int j=0; j<sum_topN_all[0].size(); j++){
+		for(unsigned int j=0; j<sum_topN_all[0].size(); j++){
 			
 			outfile << "position " << j << ":    SUM = " << sum_topN_all[i][j] << " | FREQ = " << frequence_topN_all[i][j] << endl; 
 
 		}
+		outfile.close();
 	}
 }
 
