@@ -393,6 +393,8 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
 		maps_vector_positions.clear();
+		vector<pair<string,string>> no_pal_list;
+		vector<string> pal_list;
 
 		for(unsigned int j=0; j<GEP.size(); j++){
 
@@ -427,9 +429,12 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 
 						moco_table.insert( pair<string,int>(bases,1) );
 						moco_table.insert( pair<string,int>(reverse_bases,1) );
-
+						pair<string,string> prova;
+						prova.first = bases;
+						prova.second = reverse_bases;
+						no_pal_list.emplace_back(prova);
+				//		cout << prova.first << "/t" <<prova.second<<endl;
 					}
-
 
 					if(it_pos != maps_vector_positions[i].end()){
 
@@ -450,6 +455,7 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 					}
 					else{
 						moco_table.insert( pair<string,int>(bases,1) );
+						pal_list.emplace_back(bases);
 
 					}
 
@@ -683,6 +689,7 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map_"+alias_file+direction+".txt");	
 			multimap<int,string> moco_multimap;
+	        
 		for (unordered_map<string,int>::iterator it = maps_vector_debug[i].begin(); it !=maps_vector_debug[i].end(); it++) {
 			moco_multimap.insert( { it->second, it->first });
 		}
