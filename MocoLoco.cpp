@@ -391,7 +391,7 @@ void map_class::kmers_vector_creation(string kmers){
 
 void map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){
 
-	cout << "Creating a map to count all k-mers occurrences in sequences and redirecting maps into oputput files...\n";
+	cout << "Creating a map to count all k-mers occurrences in sequences and redirecting maps into output files...\n";
 
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
@@ -699,8 +699,9 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 void map_class::print_debug_maps_positions(){
 	
 	ofstream outfile;
-	outfile.open("vertical_ordered_map_"+alias_file+".txt");
 	for(unsigned int j=0; j<v_v_maps.size(); j++){
+
+	        outfile.open("vertical_ordered_map_"+to_string(kmers_vector[j])+"kmers"+alias_file+".txt");
 
 		outfile << "Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 
@@ -726,11 +727,12 @@ void map_class::print_debug_maps_positions(){
 			//}
 
 
-			outfile << "----------------------------------------------------" << endl;
+	//		outfile << "----------------------------------------------------" << endl;
 		}
-	}
 
 	outfile.close();
+	}
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
