@@ -29,6 +29,7 @@ const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
 string kmers = "6,8,10";
+int top_N = 10;
 class bed_class { //creation public class of bed_class type        
 
 	private:	//field definition
@@ -199,6 +200,9 @@ class map_class{
 		unordered_map<string, int> moco_table;
 		unordered_map<string, int> moco_pos;
 		vector<int> kmers_vector;
+		vector<vector<int>> sum_topN_all;
+		vector<vector<double>> frequence_topN_all;
+
 
 
 		void kmers_vector_creation(string);
@@ -206,6 +210,8 @@ class map_class{
 		bool check_palindrome(string);
 		void print_debug_maps(vector<unordered_map<string,int>>, vector<int>, string);
 		void print_debug_maps_positions();
+		void find_topN_frequence();
+		void print_debug_topN_sumfreq();
 
 	public:
 
@@ -215,6 +221,8 @@ class map_class{
 			table_creation(moco_table, kmers_vector, GEP);
 			print_debug_maps(maps_vector_debug, kmers_vector, "orizzontal");
 			print_debug_maps_positions();
+			find_topN_frequence();
+			print_debug_topN_sumfreq();
 
 		}
 

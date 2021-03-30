@@ -702,6 +702,8 @@ void map_class::print_debug_maps_positions(){
 
 		outfile << "# Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 
+		vector<int> sum_topN_kmer;
+		
 		for(unsigned int i=0; i<v_v_maps[j].size(); i++){
 
 			outfile << "### kmers occurred in position " << i << ":" << endl;
@@ -710,18 +712,57 @@ void map_class::print_debug_maps_positions(){
 			for (unordered_map<string,int>::iterator it = v_v_maps[j][i].begin(); it !=v_v_maps[j][i].end(); it++) {
 				moco_multimap.insert({it->second, it->first});
 			}
+			
+			int sum = 0;
 			multimap<int,string>::reverse_iterator rev_it = moco_multimap.rbegin();
 
-			for_each(rev_it, next(rev_it,10),[&outfile](pair<int,string> element){
+			for_each(rev_it, next(rev_it,top_N),[&outfile, &sum](pair<int,string> element){
 
 					outfile << element.second << "\t" << element.first << "\n";
+					sum = sum + element.first;
 					});
+			sum_topN_kmer.emplace_back(sum);
 
 		}
+
+		sum_topN_all.emplace_back(sum_topN_kmer);
+		sum_topN_kmer.clear();
 
 		outfile.close();
 	}
 
+}
+
+void map_class::find_topN_frequence(){
+	
+	double n_sequences = v_v_maps[0].size();
+	vector<double> frequence_topN_kmers;
+	
+	for(int i=0; i< sum_topN_all.size(); i++){
+
+		for(int j=0; j<sum_topN_all[i].size(); j++){
+
+				frequence_topN_kmers.emplace_back(sum_topN_all[i][j]/n_sequences);
+		}
+
+	frequence_topN_all.emplace_back(frequence_topN_kmers);
+	}
+}
+
+void map_class::print_debug_topN_sumfreq(){
+	
+	ofstream outfile;
+	outfile.open("Top"+to_string(top_N)+"_count_and_frequences");
+
+	for(int i=0; i<sum_topN_all.size(); i++){
+		
+		outfile << "top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":\n" << endl; 
+		for(int j=0; j<sum_topN_all[0].size(); j++){
+			
+			outfile << "position " << j << ":    SUM = " << sum_topN_all[i][j] << " | FREQ = " << frequence_topN_all[i][j] << endl; 
+
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -730,12 +771,13 @@ void map_class::print_debug_maps_positions(){
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:m:t:s";
+	const char* const short_opts = "hp:k:b:j:m:t:n:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
 		{"help",      no_argument, nullptr,  'h' },
 		{"param",      required_argument, nullptr,  'p' },
+		{"ntop",      required_argument, nullptr,  'n' },
 		{"kmer",   required_argument, nullptr,  'k' },
 		{"bed",    required_argument, nullptr,  'b' },
 		{"jaspar",   required_argument, nullptr,  'j' },
@@ -757,6 +799,8 @@ void command_line_parser(int argc, char** argv){
 			case 'h' : display_help();
 				   break;
 			case 'p' : half_length = stoi(optarg); 
+				   break;
+			case 'n' : top_N = stoi(optarg); 
 				   break;
 			case 'b' : BED_FILE = string(optarg);
 				   is_file_exist(BED_FILE, "--bed || -b");
@@ -824,6 +868,7 @@ void display_help() 						//Display help function
 	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
 	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal (DEFAULT: 150) " << endl;
+	cerr << "\n --ntop || -n <number>: to decide the top n oligos to classify in vertical sequence occurrences (DEFAULT: 10) " << endl;
 	cerr << "\n --mf || -m <multifasta-file>: use multifasta instead of bed file [ -j,-b,-t,-p options not needed ]" << endl;
 	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
 	cerr << endl;
