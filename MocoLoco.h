@@ -202,7 +202,10 @@ class map_class{
 		vector<int> kmers_vector;
 		vector<vector<int>> sum_topN_all;
 		vector<vector<double>> frequence_topN_all;
-		vector<pair<string,string>> no_pal_list;
+		vector<vector<pair<string,string>>> no_pal_list;
+		vector<pair<string,string>> no_pal_vec;
+		vector<vector<string>> pal_list;
+		vector<string> pal_vec;
 
 
 
