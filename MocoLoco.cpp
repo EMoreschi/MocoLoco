@@ -452,7 +452,7 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 					}
 					else{
 						moco_table.insert( pair<string,int>(bases,1) );
-						pal_vec.emplace_back(bases);
+						no_pal_vec.emplace_back(bases, "palindrome");
 
 					}
 
@@ -473,9 +473,7 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 		}
 
 		no_pal_list.emplace_back(no_pal_vec);
-		pal_list.emplace_back(pal_vec);
 		no_pal_vec.clear();
-		pal_vec.clear();
 		maps_vector_debug.emplace_back(moco_table);
 		moco_table.clear();
 
@@ -691,20 +689,32 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 		
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map_"+alias_file+direction+".txt");	
+		multimap<int,pair<string,string>> pal_output;
 		//	multimap<int,string> moco_multimap;
 		for (vector<pair<string,string>>::const_iterator itv = no_pal_list[i].begin() ; itv != no_pal_list[i].end(); itv++ ){
 			//	cout << itv->first;	
 			unordered_map<string,int>::iterator it = maps_vector_debug[i].find(itv->first);
 			unordered_map<string,int>::iterator it2 = maps_vector_debug[i].find(itv->second);
-			outfile<< it->first <<"\t"<<it->second<<"\t"<< it2->first <<"\t"<<it2->second<<endl;
-		}	      
 
-		for(unsigned int j=0; j<pal_list[i].size(); j++){
+			//outfile<< it->first <<"\t"<<it->second<<"\t"<< it2->first <<"\t"<<it2->second<<endl;
+			pair<string,string> pal_map_pair;
+			pal_map_pair.first=itv->first;
+			pal_map_pair.second = itv->second;
+			pal_output.insert({ it->second, pal_map_pair });
 			
-			unordered_map<string,int>::iterator it = maps_vector_debug[i].find(pal_list[i][j]);
-			outfile << it->first << "\t" << it->second << endl;		
-
+		}	      
+		for (multimap<int,pair<string,string>>::reverse_iterator ito = pal_output.rbegin(); ito!=pal_output.rend(); ito++){
+	        outfile << ito->second.first << "\t"<< ito->first <<ito->second.second<<"\t"<<ito->first <<endl; 	
+		
+		
 		}
+
+//		for(unsigned int j=0; j<pal_list[i].size(); j++){
+			
+//			unordered_map<string,int>::iterator it = maps_vector_debug[i].find(pal_list[i][j]);
+//			outfile << it->first << "\t" << it->second << endl;		
+//
+//		}
 				
 //		for (unordered_map<string,int>::iterator it = maps_vector_debug[i].begin(); it !=maps_vector_debug[i].end(); it++) {
 //			moco_multimap.insert( { it->second, it->first });
