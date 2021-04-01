@@ -394,7 +394,6 @@ vector<vector<map<string,string>>> map_class::table_creation(unordered_map<strin
 
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 	
-		cout << kmers_vector.size() << endl;
 		maps_vector_positions.clear();
 		string length = GEP[0].return_sequence(GEP[0]);
 		vector<map<string,string>> vertical_MAPS(length.size()-(kmers_vector[k])+1);
@@ -435,7 +434,7 @@ vector<vector<map<string,string>>> map_class::table_creation(unordered_map<strin
 						pair<string,string> prova;
 						prova.first = bases;
 						prova.second = reverse_bases;
-						no_pal_vec.emplace_back(prova);
+						RCs_vector.emplace_back(prova);
 					}
 
 					if(it_pos != maps_vector_positions[i].end()){
@@ -459,7 +458,7 @@ vector<vector<map<string,string>>> map_class::table_creation(unordered_map<strin
 					}
 					else{
 						moco_table.insert( pair<string,int>(bases,1) );
-						no_pal_vec.emplace_back(bases, "palindrome");
+						RCs_vector.emplace_back(bases, "palindrome");
 
 					}
 
@@ -481,8 +480,8 @@ vector<vector<map<string,string>>> map_class::table_creation(unordered_map<strin
 			}
 		}
 
-		no_pal_list.emplace_back(no_pal_vec);
-		no_pal_vec.clear();
+		RCs_matrix.emplace_back(RCs_vector);
+		RCs_vector.clear();
 		maps_vector_debug.emplace_back(moco_table);
 		moco_table.clear();
 
@@ -700,16 +699,11 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 
 	for(unsigned int i=0; i<maps_vector_debug.size(); i++){
 		
-		cout << "VV" <<v_v_maps.size() << endl;
-		cout << "MAPS V DEB " << maps_vector_debug.size()<< endl;
-		
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map_"+alias_file+direction+".txt");	
 		multimap<int,pair<string,string>> pal_output;
-		cout << no_pal_list.size() << endl;	
-		for (vector<pair<string,string>>::const_iterator itv = no_pal_list[i].begin() ; itv != no_pal_list[i].end(); itv++ ){
+		for (vector<pair<string,string>>::const_iterator itv = RCs_matrix[i].begin() ; itv != RCs_matrix[i].end(); itv++ ){
 			unordered_map<string,int>::iterator it = maps_vector_debug[i].find(itv->first);
-			unordered_map<string,int>::iterator it2 = maps_vector_debug[i].find(itv->second);
 
 			pair<string,string> pal_map_pair;
 			pal_map_pair.first=itv->first;
@@ -734,8 +728,8 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 }
 
 void map_class::print_debug_maps_positions(){
-	
-	
+
+
 
 
 	ofstream outfile;
@@ -746,17 +740,16 @@ void map_class::print_debug_maps_positions(){
 		outfile << "# Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 
 		vector<int> sum_topN_kmer;
-		
+
 		for(unsigned int i=0; i<v_v_maps[j].size(); i++){
 
-			outfile << "### kmers occurred in position " << i << ":" << endl;
-				
+			outfile << "\n### kmers occurred in position " << i << ":" << endl;
+
 			multimap<int,pair<string,string>> vertical_multimap;	
-			
+
 			for(map<string,string>::iterator itv = vertical_maps[j][i].begin(); itv != vertical_maps[j][i].end(); itv++){ 	
-				
+
 				unordered_map<string,int>::iterator it = v_v_maps[j][i].find(itv->first);
-				unordered_map<string,int>::iterator it2 = v_v_maps[j][i].find(itv->second);
 				pair<string,string> seq_pair;
 				seq_pair.first = itv->first;
 				seq_pair.second = itv->second;
@@ -767,7 +760,13 @@ void map_class::print_debug_maps_positions(){
 			int c=0;	
 			for(multimap<int,pair<string,string>>::reverse_iterator ito = vertical_multimap.rbegin(); c<10; c++, ito++){
 
-				outfile << ito->second.first << "\t" << ito->first << "\t" << ito->second.second << "\t" << ito->first << endl;
+				if(ito->second.second != "palindrome"){
+					outfile << ito->second.first << "\t"<< ito->first <<"\t" <<ito->second.second<<"\t"<<ito->first <<endl; 	
+				}
+				else{
+
+					outfile << ito->second.first << "\t"<< ito->first  <<endl; 	
+				}
 				sum = sum + ito->first;
 			}
 			//for_each(ito, next(ito,top_N),[&outfile, &sum](int, pair<string,string> element){
@@ -787,9 +786,9 @@ void map_class::print_debug_maps_positions(){
 
 }
 
-void map_class::find_topN_frequence(){
-	
-	double n_sequences = v_v_maps[0].size();
+void map_class::find_topN_frequence(vector<bed_class> GEP){
+
+	double n_sequences = GEP.size();
 	vector<double> frequence_topN_kmers;
 	
 	for(unsigned int i=0; i< sum_topN_all.size(); i++){

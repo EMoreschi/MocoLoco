@@ -204,13 +204,9 @@ class map_class{
 		vector<int> kmers_vector;
 		vector<vector<int>> sum_topN_all;
 		vector<vector<double>> frequence_topN_all;
-		vector<vector<pair<string,string>>> no_pal_list;
-		vector<pair<string,string>> no_pal_vec;
-		vector<vector<string>> pal_list;
-		vector<string> pal_vec;
+		vector<vector<pair<string,string>>> RCs_matrix;
+		vector<pair<string,string>> RCs_vector;
 
-		//map<string,string> vertical_map;
-		//vector<map<string,string>> vertical_maps;
 		vector<vector<map<string,string>>> vertical_maps;
 
 
@@ -219,7 +215,7 @@ class map_class{
 		bool check_palindrome(string);
 		void print_debug_maps(vector<unordered_map<string,int>>, vector<int>, string);
 		void print_debug_maps_positions();
-		void find_topN_frequence();
+		void find_topN_frequence(vector<bed_class>);
 		void print_debug_topN_sumfreq();
 
 	public:
@@ -230,7 +226,7 @@ class map_class{
 			vertical_maps = table_creation(moco_table, kmers_vector, GEP);
 			print_debug_maps(maps_vector_debug, kmers_vector, "orizzontal");
 			print_debug_maps_positions();
-			find_topN_frequence();
+			find_topN_frequence(GEP);
 			print_debug_topN_sumfreq();
 
 		}
