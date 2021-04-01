@@ -384,16 +384,21 @@ void map_class::kmers_vector_creation(string kmers){
 	}
 }
 
-void map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){ 
+vector<vector<map<string,string>>> map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){ 
 	if (MFASTA_FILE.size() ==0) 
 		cout << "- [7] Counting all k-mers occurrences for sequence and positions  \n";
 	else
 		cout << "- [4] Counting all k-mers occurrences for sequence and positions  \n";
+	
+	vector<vector<map<string,string>>> vec_vertical_MAPS(kmers_vector.size());
 
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
-
+	
+		cout << kmers_vector.size() << endl;
 		maps_vector_positions.clear();
-
+		string length = GEP[0].return_sequence(GEP[0]);
+		vector<map<string,string>> vertical_MAPS(length.size()-(kmers_vector[k])+1);
+		
 		for(unsigned int j=0; j<GEP.size(); j++){
 
 			string sequence = GEP[j].return_sequence(GEP[j]);
@@ -443,6 +448,8 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 
 						maps_vector_positions[i].insert(pair<string,int>(bases,1));
 						maps_vector_positions[i].insert(pair<string,int>(reverse_bases,1));
+						
+						vertical_MAPS[i].insert(pair<string,string>(bases,reverse_bases));
 					}
 				}
 
@@ -463,7 +470,9 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 					}
 					else{
 
-						maps_vector_positions[i].insert(pair<string,int>(bases,1));						
+						maps_vector_positions[i].insert(pair<string,int>(bases,1));
+						
+						vertical_MAPS[i].insert(pair<string,string>(bases,"palindrome"));
 					}
 				}
 
@@ -478,7 +487,11 @@ void map_class::table_creation(unordered_map<string,int> moco_table, vector<int>
 		moco_table.clear();
 
 		v_v_maps.emplace_back(maps_vector_positions);
+	
+		vec_vertical_MAPS[k] = vertical_MAPS;
 	}
+
+	return vec_vertical_MAPS;
 }
 
 bool map_class::check_palindrome(string bases){
@@ -687,16 +700,17 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 
 	for(unsigned int i=0; i<maps_vector_debug.size(); i++){
 		
+		cout << "VV" <<v_v_maps.size() << endl;
+		cout << "MAPS V DEB " << maps_vector_debug.size()<< endl;
+		
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map_"+alias_file+direction+".txt");	
 		multimap<int,pair<string,string>> pal_output;
-		//	multimap<int,string> moco_multimap;
+		cout << no_pal_list.size() << endl;	
 		for (vector<pair<string,string>>::const_iterator itv = no_pal_list[i].begin() ; itv != no_pal_list[i].end(); itv++ ){
-			//	cout << itv->first;	
 			unordered_map<string,int>::iterator it = maps_vector_debug[i].find(itv->first);
 			unordered_map<string,int>::iterator it2 = maps_vector_debug[i].find(itv->second);
 
-			//outfile<< it->first <<"\t"<<it->second<<"\t"<< it2->first <<"\t"<<it2->second<<endl;
 			pair<string,string> pal_map_pair;
 			pal_map_pair.first=itv->first;
 			pal_map_pair.second = itv->second;
@@ -704,29 +718,25 @@ void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_d
 			
 		}	      
 		for (multimap<int,pair<string,string>>::reverse_iterator ito = pal_output.rbegin(); ito!=pal_output.rend(); ito++){
-	        outfile << ito->second.first << "\t"<< ito->first <<ito->second.second<<"\t"<<ito->first <<endl; 	
-		
+
+			if(ito->second.second != "palindrome"){
+			outfile << ito->second.first << "\t"<< ito->first <<"\t" <<ito->second.second<<"\t"<<ito->first <<endl; 	
+			}
+			else{
+			
+				outfile << ito->second.first << "\t"<< ito->first  <<endl; 	
+			}
 		
 		}
 
-//		for(unsigned int j=0; j<pal_list[i].size(); j++){
-			
-//			unordered_map<string,int>::iterator it = maps_vector_debug[i].find(pal_list[i][j]);
-//			outfile << it->first << "\t" << it->second << endl;		
-//
-//		}
-				
-//		for (unordered_map<string,int>::iterator it = maps_vector_debug[i].begin(); it !=maps_vector_debug[i].end(); it++) {
-//			moco_multimap.insert( { it->second, it->first });
-//		}
-//		for (multimap<int,string>::reverse_iterator rev_it = moco_multimap.rbegin(); rev_it != moco_multimap.rend(); rev_it++) {
-//			outfile << rev_it->second <<"\t"<< rev_it->first <<"\n";
-//		}
 		outfile.close();
 	}
 }
 
 void map_class::print_debug_maps_positions(){
+	
+	
+
 
 	ofstream outfile;
 	for(unsigned int j=0; j<v_v_maps.size(); j++){
@@ -740,20 +750,31 @@ void map_class::print_debug_maps_positions(){
 		for(unsigned int i=0; i<v_v_maps[j].size(); i++){
 
 			outfile << "### kmers occurred in position " << i << ":" << endl;
-			multimap<int,string> moco_multimap;
-
-			for (unordered_map<string,int>::iterator it = v_v_maps[j][i].begin(); it !=v_v_maps[j][i].end(); it++) {
-				moco_multimap.insert({it->second, it->first});
-			}
+				
+			multimap<int,pair<string,string>> vertical_multimap;	
 			
+			for(map<string,string>::iterator itv = vertical_maps[j][i].begin(); itv != vertical_maps[j][i].end(); itv++){ 	
+				
+				unordered_map<string,int>::iterator it = v_v_maps[j][i].find(itv->first);
+				unordered_map<string,int>::iterator it2 = v_v_maps[j][i].find(itv->second);
+				pair<string,string> seq_pair;
+				seq_pair.first = itv->first;
+				seq_pair.second = itv->second;
+				vertical_multimap.insert({ it->second, pair<string,string>(itv->first,itv->second) });
+			}	
+
 			int sum = 0;
-			multimap<int,string>::reverse_iterator rev_it = moco_multimap.rbegin();
+			int c=0;	
+			for(multimap<int,pair<string,string>>::reverse_iterator ito = vertical_multimap.rbegin(); c<10; c++, ito++){
 
-			for_each(rev_it, next(rev_it,top_N),[&outfile, &sum](pair<int,string> element){
+				outfile << ito->second.first << "\t" << ito->first << "\t" << ito->second.second << "\t" << ito->first << endl;
+				sum = sum + ito->first;
+			}
+			//for_each(ito, next(ito,top_N),[&outfile, &sum](int, pair<string,string> element){
 
-					outfile << element.second << "\t" << element.first << "\n";
-					sum = sum + element.first;
-					});
+			//		outfile << element.second << "\t" << element.first << "\n";
+			//		sum = sum + element.first;
+			//		});
 			sum_topN_kmer.emplace_back(sum);
 
 		}
