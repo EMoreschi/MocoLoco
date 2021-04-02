@@ -694,13 +694,13 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	cout << endl;
 }
 
-void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_debug, vector<int> kmers_vector, string direction){
+void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_debug, vector<int> kmers_vector){
 
 
 	for(unsigned int i=0; i<maps_vector_debug.size(); i++){
 		
 		ofstream outfile;
-		outfile.open(to_string(kmers_vector[i])+"-mer_ordered_map_"+alias_file+direction+".txt");	
+		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+".txt");	
 		multimap<int,pair<string,string>> pal_output;
 		for (vector<pair<string,string>>::const_iterator itv = RCs_matrix[i].begin() ; itv != RCs_matrix[i].end(); itv++ ){
 			unordered_map<string,int>::iterator it = maps_vector_debug[i].find(itv->first);
@@ -735,8 +735,8 @@ void map_class::print_debug_maps_positions(){
 	ofstream outfile;
 	for(unsigned int j=0; j<v_v_maps.size(); j++){
 
-		outfile.open("vertical_ordered_map_"+to_string(kmers_vector[j])+"kmers"+alias_file+".txt");
-
+		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
+ 
 		outfile << "# Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 
 		vector<int> sum_topN_kmer;
@@ -769,11 +769,6 @@ void map_class::print_debug_maps_positions(){
 				}
 				sum = sum + ito->first;
 			}
-			//for_each(ito, next(ito,top_N),[&outfile, &sum](int, pair<string,string> element){
-
-			//		outfile << element.second << "\t" << element.first << "\n";
-			//		sum = sum + element.first;
-			//		});
 			sum_topN_kmer.emplace_back(sum);
 
 		}
@@ -808,7 +803,7 @@ void map_class::print_debug_topN_sumfreq(){
 
 	for(unsigned int i=0; i<sum_topN_all.size(); i++){
 	
-		outfile.open(to_string(kmers_vector[i])+"mers_Top"+to_string(top_N)+"_count_and_frequences");
+		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence.txt");
 		outfile << "\n###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":\n" << endl; 
 		
 		for(unsigned int j=0; j<sum_topN_all[0].size(); j++){
