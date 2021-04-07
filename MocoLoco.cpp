@@ -784,9 +784,10 @@ void map_class::print_debug_maps_positions(){
 void map_class::find_topN_frequence(vector<bed_class> GEP){
 
 	double n_sequences = GEP.size();
-	vector<double> frequence_topN_kmers;
 	
 	for(unsigned int i=0; i< sum_topN_all.size(); i++){
+
+	       vector<double> frequence_topN_kmers;
 
 		for(unsigned int j=0; j<sum_topN_all[i].size(); j++){
 
