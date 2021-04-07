@@ -807,7 +807,7 @@ void map_class::print_debug_topN_sumfreq(){
 		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence.txt");
 		outfile << "\n###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":\n" << endl; 
 		
-		for(unsigned int j=0; j<sum_topN_all[0].size(); j++){
+		for(unsigned int j=0; j<sum_topN_all[i].size(); j++){
 			
 			outfile << "position " << j << ":    SUM = " << sum_topN_all[i][j] << " | FREQ = " << frequence_topN_all[i][j] << endl; 
 
