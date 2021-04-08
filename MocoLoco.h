@@ -214,6 +214,7 @@ class map_class{
 		void kmers_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
+		void or_ver_kmer_count(string,unordered_map<string,int>&, unordered_map<string,int>&);
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
 		void print_debug_maps_positions();

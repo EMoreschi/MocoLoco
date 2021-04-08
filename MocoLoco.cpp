@@ -385,44 +385,25 @@ void map_class::kmers_vector_creation(string kmers){
 }
 
 void map_class::table_creation_orizzontal(vector<bed_class> GEP){ 
-	
+
 	if (MFASTA_FILE.size() ==0) 
 		cout << "- [7] Counting all k-mers occurrences for sequence and positions  \n";
 	else
 		cout << "- [4] Counting all k-mers occurrences for sequence and positions  \n";
-	
+
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
-	
+
 		for(unsigned int j=0; j<GEP.size(); j++){
 
 			string sequence = GEP[j].return_sequence(GEP[j]);
-			unordered_map<string,int>::iterator it_plus;
-			unordered_map<string,int>::iterator it_minus;
 
 			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
 
 				string bases = sequence.substr(i,kmers_vector[k]);
-				it_plus = orizzontal_plus.find(bases);
-				check_palindrome(bases);
-				it_minus = orizzontal_minus.find(reverse_bases);
-				
-				if (it_plus != orizzontal_plus.end()){
-						
-					it_plus->second++;
-					it_minus->second++;
-				}
-
-				else{
-
-					orizzontal_plus.insert({bases,1});
-					orizzontal_minus.insert({reverse_bases,1});
-				}
-				
-				bases.clear();
-				reverse_bases.clear();
+				or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
 			}
 		}
-	
+
 		orizzontal_plus_debug.emplace_back(orizzontal_plus);
 		orizzontal_minus_debug.emplace_back(orizzontal_minus);
 		orizzontal_plus.clear();
@@ -433,50 +414,56 @@ void map_class::table_creation_orizzontal(vector<bed_class> GEP){
 void map_class::table_creation_vertical(vector<bed_class> GEP){
 
 	string seq_length = GEP[0].return_sequence(GEP[0]);
-	
+
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
-			
-			for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
-		
-				unordered_map<string,int>::iterator it_plus;
-				unordered_map<string,int>::iterator it_minus;
-				
-				for(unsigned int j=0; j<GEP.size(); j++){
 
-					string sequence = GEP[j].return_sequence(GEP[j]);
-					string bases = sequence.substr(i,kmers_vector[k]);
-					it_plus = vertical_plus.find(bases);
-					check_palindrome(bases);
-					it_minus = vertical_minus.find(reverse_bases);
+		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
-					if(it_plus!=vertical_plus.end()){
-							
-						it_plus->second++;
-						it_minus->second++;
-					}
 
-					else{
-							
-						vertical_plus.insert({bases,1});
-						vertical_minus.insert({reverse_bases,1});
-					}
+			for(unsigned int j=0; j<GEP.size(); j++){
 
-						
-				bases.clear();
-				reverse_bases.clear();
-				}
-
-				maps_vector_positions_plus.emplace_back(vertical_plus);
-				maps_vector_positions_minus.emplace_back(vertical_minus);
-				vertical_plus.clear();
-				vertical_minus.clear();
+				string sequence = GEP[j].return_sequence(GEP[j]);
+				string bases = sequence.substr(i,kmers_vector[k]);
+				or_ver_kmer_count(bases, vertical_plus,vertical_minus);
 			}
-		
-			vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
-			vector_kmers_maps_minus.emplace_back(maps_vector_positions_minus);
-			maps_vector_positions_plus.clear();
-			maps_vector_positions_minus.clear();
+			maps_vector_positions_plus.emplace_back(vertical_plus);
+			maps_vector_positions_minus.emplace_back(vertical_minus);
+			vertical_plus.clear();
+			vertical_minus.clear();
+		}
+
+		vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
+		vector_kmers_maps_minus.emplace_back(maps_vector_positions_minus);
+		maps_vector_positions_plus.clear();
+		maps_vector_positions_minus.clear();
 	}
+}
+
+void map_class::or_ver_kmer_count(string bases,unordered_map<string,int> &plus, unordered_map<string,int> &minus){
+
+
+
+	unordered_map<string,int>::iterator it_plus;
+	unordered_map<string,int>::iterator it_minus;
+	it_plus = plus.find(bases);
+	check_palindrome(bases);
+	it_minus = minus.find(reverse_bases);
+
+	if(it_plus!=plus.end()){
+
+		it_plus->second++;
+		it_minus->second++;
+	}
+
+	else{
+
+		plus.insert({bases,1});
+		minus.insert({reverse_bases,1});
+	}
+
+
+	bases.clear();
+	reverse_bases.clear();
 }
 
 bool map_class::check_palindrome(string bases){
