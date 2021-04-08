@@ -403,63 +403,79 @@ void map_class::table_creation_orizzontal(vector<bed_class> GEP){
 
 				string bases = sequence.substr(i,kmers_vector[k]);
 				it_plus = orizzontal_plus.find(bases);
-				bool palindrome = check_palindrome(bases);
+				check_palindrome(bases);
 				it_minus = orizzontal_minus.find(reverse_bases);
 				
-				if (!palindrome && DS){
-					
-
-					if (it_plus != orizzontal_plus.end()){
+				if (it_plus != orizzontal_plus.end()){
 						
-						it_plus->second++;
-						it_minus->second++;
-					}
-
-					else{
-
-						orizzontal_plus.insert( pair<string,int>(bases,1) );
-						orizzontal_minus.insert( pair<string,int>(reverse_bases,1) );
-					}
-
+					it_plus->second++;
+					it_minus->second++;
 				}
 
 				else{
-					if (it_plus != orizzontal_plus.end()){
-						
-						it_plus->second++;
-						it_minus->second++;
-					}
 
-					else{
-						orizzontal_plus.insert( pair<string,int>(bases,1) );
-						orizzontal_minus.insert( pair<string,int>(bases,1) ); 
-					}
-
+					orizzontal_plus.insert({bases,1});
+					orizzontal_minus.insert({reverse_bases,1});
 				}
-
+				
 				bases.clear();
 				reverse_bases.clear();
 			}
 		}
 	
-	//	ofstream outfile;
-	//	outfile.open("plus.txt");
-	//	for(unordered_map<string,int>::iterator it = orizzontal_plus.begin(); it!=orizzontal_plus.end();it++){
-	//		
-	//		outfile << it->first << "\t" << it->second << endl;
-	//	}
-	//	outfile.close();	
-	//	outfile.open("minus.txt");
-	//	for(unordered_map<string,int>::iterator it = orizzontal_minus.begin(); it!=orizzontal_minus.end();it++){
-	//		
-	//		outfile << it->first << "\t" << it->second << endl;
-	//	}
-	//	outfile.close();
-
 		orizzontal_plus_debug.emplace_back(orizzontal_plus);
 		orizzontal_minus_debug.emplace_back(orizzontal_minus);
 		orizzontal_plus.clear();
 		orizzontal_minus.clear();
+	}
+}
+
+void map_class::table_creation_vertical(vector<bed_class> GEP){
+
+	string seq_length = GEP[0].return_sequence(GEP[0]);
+	
+	for(unsigned int k=0; k<kmers_vector.size(); k++){
+			
+			for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
+		
+				unordered_map<string,int>::iterator it_plus;
+				unordered_map<string,int>::iterator it_minus;
+				
+				for(unsigned int j=0; j<GEP.size(); j++){
+
+					string sequence = GEP[j].return_sequence(GEP[j]);
+					string bases = sequence.substr(i,kmers_vector[k]);
+					it_plus = vertical_plus.find(bases);
+					check_palindrome(bases);
+					it_minus = vertical_minus.find(reverse_bases);
+
+					if(it_plus!=vertical_plus.end()){
+							
+						it_plus->second++;
+						it_minus->second++;
+					}
+
+					else{
+							
+						vertical_plus.insert({bases,1});
+						vertical_minus.insert({reverse_bases,1});
+					}
+
+						
+				bases.clear();
+				reverse_bases.clear();
+				}
+
+				maps_vector_positions_plus.emplace_back(vertical_plus);
+				maps_vector_positions_minus.emplace_back(vertical_minus);
+				vertical_plus.clear();
+				vertical_minus.clear();
+			}
+		
+			vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
+			vector_kmers_maps_minus.emplace_back(maps_vector_positions_minus);
+			maps_vector_positions_plus.clear();
+			maps_vector_positions_minus.clear();
 	}
 }
 
@@ -688,7 +704,7 @@ void map_class::print_debug_orizzontal(){
 			}
 
 			else{
-				outfile << it_rev->second << "\t" << it_rev->first << endl;
+				outfile << it_rev->second << "\t" << it_rev->first <<  endl;
 			
 			}
 		}
@@ -698,11 +714,8 @@ void map_class::print_debug_orizzontal(){
 
 void map_class::print_debug_maps_positions(){
 
-
-
-
 	ofstream outfile;
-	for(unsigned int j=0; j<v_v_maps.size(); j++){
+	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
 
 		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
  
@@ -710,36 +723,41 @@ void map_class::print_debug_maps_positions(){
 
 		vector<int> sum_topN_kmer;
 
-		for(unsigned int i=0; i<v_v_maps[j].size(); i++){
+		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
 
 			outfile << "\n### kmers occurred in position " << i << ":" << endl;
 
-			multimap<int,pair<string,string>> vertical_multimap;	
+			multimap<int,string> vertical_multimap;	
 
-			for(map<string,string>::iterator itv = vertical_maps[j][i].begin(); itv != vertical_maps[j][i].end(); itv++){ 	
-
-				unordered_map<string,int>::iterator it = v_v_maps[j][i].find(itv->first);
-				pair<string,string> seq_pair;
-				seq_pair.first = itv->first;
-				seq_pair.second = itv->second;
-				vertical_multimap.insert({ it->second, pair<string,string>(itv->first,itv->second) });
-			}	
+			for(unordered_map<string,int>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
+				
+				vertical_multimap.insert({it->second,it->first});
+			}
 
 			int sum = 0;
 			int c=0;	
-			for(multimap<int,pair<string,string>>::reverse_iterator ito = vertical_multimap.rbegin(); c<10; c++, ito++){
+			for(multimap<int,string>::reverse_iterator it_rev = vertical_multimap.rbegin(); c<top_N; c++, it_rev++){
+				
+				reverse_bases.clear();
+				bool palindrome = check_palindrome(it_rev->second);
 
-				if(ito->second.second != "palindrome"){
-					outfile << ito->second.first << "\t"<< ito->first <<"\t" <<ito->second.second<<"\t"<<ito->first <<endl; 	
+				if(!palindrome){
+				
+					unordered_map<string,int>::iterator find_RC = vector_kmers_maps_minus[j][i].find(reverse_bases);
+					outfile << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << "Total: " << it_rev->first+find_RC->second << endl;
+
 				}
+
 				else{
 
-					outfile << ito->second.first << "\t"<< ito->first  <<endl; 	
-				}
-				sum = sum + ito->first;
-			}
-			sum_topN_kmer.emplace_back(sum);
+					outfile << it_rev->second << "\t" << it_rev->first << "\t\t\t" << "Total: " << it_rev->first*2 << endl;
 
+				}
+				
+				sum = sum + it_rev->first;
+			}
+
+			sum_topN_kmer.emplace_back(sum);
 		}
 
 		sum_topN_all.emplace_back(sum_topN_kmer);
