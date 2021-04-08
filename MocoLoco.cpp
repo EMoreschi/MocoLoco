@@ -384,113 +384,83 @@ void map_class::kmers_vector_creation(string kmers){
 	}
 }
 
-vector<vector<map<string,string>>> map_class::table_creation(unordered_map<string,int> moco_table, vector<int> kmers_vector, vector<bed_class> GEP){ 
+void map_class::table_creation_orizzontal(vector<bed_class> GEP){ 
+	
 	if (MFASTA_FILE.size() ==0) 
 		cout << "- [7] Counting all k-mers occurrences for sequence and positions  \n";
 	else
 		cout << "- [4] Counting all k-mers occurrences for sequence and positions  \n";
 	
-	vector<vector<map<string,string>>> vec_vertical_MAPS(kmers_vector.size());
-
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 	
-		maps_vector_positions.clear();
-		string length = GEP[0].return_sequence(GEP[0]);
-		vector<map<string,string>> vertical_MAPS(length.size()-(kmers_vector[k])+1);
-		
 		for(unsigned int j=0; j<GEP.size(); j++){
 
 			string sequence = GEP[j].return_sequence(GEP[j]);
-			unordered_map<string,int>::iterator it;
+			unordered_map<string,int>::iterator it_plus;
+			unordered_map<string,int>::iterator it_minus;
 
 			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
 
 				string bases = sequence.substr(i,kmers_vector[k]);
-				it = moco_table.find(bases);
+				it_plus = orizzontal_plus.find(bases);
 				bool palindrome = check_palindrome(bases);
-
-				if(j==0){
-
-					maps_vector_positions.emplace_back(moco_pos);
-					moco_pos.clear();
-
-				}
-
-				unordered_map<string,int>::iterator it_pos;
-				it_pos = maps_vector_positions[i].find(bases);
-
+				it_minus = orizzontal_minus.find(reverse_bases);
+				
 				if (!palindrome && DS){
-					unordered_map<string, int>::iterator it_rev = moco_table.find(reverse_bases);
-					unordered_map<string, int>::iterator it_rev_pos = maps_vector_positions[i].find(reverse_bases);
+					
 
-					if (it != moco_table.end()){
-						it->second++;
-						it_rev->second++;
+					if (it_plus != orizzontal_plus.end()){
+						
+						it_plus->second++;
+						it_minus->second++;
 					}
+
 					else{
 
-						moco_table.insert( pair<string,int>(bases,1) );
-						moco_table.insert( pair<string,int>(reverse_bases,1) );
-						pair<string,string> prova;
-						prova.first = bases;
-						prova.second = reverse_bases;
-						RCs_vector.emplace_back(prova);
+						orizzontal_plus.insert( pair<string,int>(bases,1) );
+						orizzontal_minus.insert( pair<string,int>(reverse_bases,1) );
 					}
 
-					if(it_pos != maps_vector_positions[i].end()){
-
-						it_pos->second++;
-						it_rev_pos->second++;
-					}
-
-					else {
-
-						maps_vector_positions[i].insert(pair<string,int>(bases,1));
-						maps_vector_positions[i].insert(pair<string,int>(reverse_bases,1));
-						
-						vertical_MAPS[i].insert(pair<string,string>(bases,reverse_bases));
-					}
 				}
 
 				else{
-					if (it != moco_table.end()){
-						it->second++;
-					}
-					else{
-						moco_table.insert( pair<string,int>(bases,1) );
-						RCs_vector.emplace_back(bases, "palindrome");
-
-					}
-
-
-					if(it_pos != maps_vector_positions[i].end()){
-
-						it_pos->second++;
-					}
-					else{
-
-						maps_vector_positions[i].insert(pair<string,int>(bases,1));
+					if (it_plus != orizzontal_plus.end()){
 						
-						vertical_MAPS[i].insert(pair<string,string>(bases,"palindrome"));
+						it_plus->second++;
+						it_minus->second++;
 					}
+
+					else{
+						orizzontal_plus.insert( pair<string,int>(bases,1) );
+						orizzontal_minus.insert( pair<string,int>(bases,1) ); 
+					}
+
 				}
 
 				bases.clear();
 				reverse_bases.clear();
 			}
 		}
-
-		RCs_matrix.emplace_back(RCs_vector);
-		RCs_vector.clear();
-		maps_vector_debug.emplace_back(moco_table);
-		moco_table.clear();
-
-		v_v_maps.emplace_back(maps_vector_positions);
 	
-		vec_vertical_MAPS[k] = vertical_MAPS;
-	}
+	//	ofstream outfile;
+	//	outfile.open("plus.txt");
+	//	for(unordered_map<string,int>::iterator it = orizzontal_plus.begin(); it!=orizzontal_plus.end();it++){
+	//		
+	//		outfile << it->first << "\t" << it->second << endl;
+	//	}
+	//	outfile.close();	
+	//	outfile.open("minus.txt");
+	//	for(unordered_map<string,int>::iterator it = orizzontal_minus.begin(); it!=orizzontal_minus.end();it++){
+	//		
+	//		outfile << it->first << "\t" << it->second << endl;
+	//	}
+	//	outfile.close();
 
-	return vec_vertical_MAPS;
+		orizzontal_plus_debug.emplace_back(orizzontal_plus);
+		orizzontal_minus_debug.emplace_back(orizzontal_minus);
+		orizzontal_plus.clear();
+		orizzontal_minus.clear();
+	}
 }
 
 bool map_class::check_palindrome(string bases){
@@ -694,36 +664,35 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 	cout << endl;
 }
 
-void map_class::print_debug_maps(vector<unordered_map<string,int>> maps_vector_debug, vector<int> kmers_vector){
+void map_class::print_debug_orizzontal(){
 
-
-	for(unsigned int i=0; i<maps_vector_debug.size(); i++){
+	for(unsigned int i=0; i<orizzontal_plus_debug.size(); i++){
 		
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+".txt");	
-		multimap<int,pair<string,string>> pal_output;
-		for (vector<pair<string,string>>::const_iterator itv = RCs_matrix[i].begin() ; itv != RCs_matrix[i].end(); itv++ ){
-			unordered_map<string,int>::iterator it = maps_vector_debug[i].find(itv->first);
-
-			pair<string,string> pal_map_pair;
-			pal_map_pair.first=itv->first;
-			pal_map_pair.second = itv->second;
-			pal_output.insert({ it->second, pal_map_pair });
-			
-		}	      
-		for (multimap<int,pair<string,string>>::reverse_iterator ito = pal_output.rbegin(); ito!=pal_output.rend(); ito++){
-
-			if(ito->second.second != "palindrome"){
-			outfile << ito->second.first << "\t"<< ito->first <<"\t" <<ito->second.second<<"\t"<<ito->first <<endl; 	
-			}
-			else{
-			
-				outfile << ito->second.first << "\t"<< ito->first  <<endl; 	
-			}
 		
-		}
+		multimap<int,string> orizzontal_output;
 
-		outfile.close();
+		for (unordered_map<string,int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
+			orizzontal_output.insert({it->second, it->first});	
+		}	      
+		
+		for (multimap<int,string>::reverse_iterator it_rev = orizzontal_output.rbegin(); it_rev!=orizzontal_output.rend(); it_rev++){
+			reverse_bases.clear();	
+			bool palindrome = check_palindrome(it_rev->second);
+
+			if(!palindrome){
+				
+				unordered_map<string,int>::iterator find_RC = orizzontal_minus_debug[i].find(reverse_bases);
+				outfile << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << endl;
+			}
+
+			else{
+				outfile << it_rev->second << "\t" << it_rev->first << endl;
+			
+			}
+		}
+	outfile.close();
 	}
 }
 

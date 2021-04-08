@@ -196,24 +196,26 @@ class map_class{
 	private:
 		
 		vector<vector<unordered_map<string,int>>> v_v_maps;
-		vector<unordered_map<string,int>> maps_vector_debug;
+		vector<unordered_map<string,int>> orizzontal_plus_debug;
+		vector<unordered_map<string,int>> orizzontal_minus_debug;
 		vector<unordered_map<string,int>> maps_vector_positions;
 		string reverse_bases;
-		unordered_map<string, int> moco_table;
+		unordered_map<string, int> orizzontal_plus;
+		unordered_map<string, int> orizzontal_minus;
 		unordered_map<string, int> moco_pos;
 		vector<int> kmers_vector;
 		vector<vector<int>> sum_topN_all;
 		vector<vector<double>> frequence_topN_all;
 		vector<vector<pair<string,string>>> RCs_matrix;
 		vector<pair<string,string>> RCs_vector;
-
+		map<string,pair<int,int>> RCs_occurrences;
 		vector<vector<map<string,string>>> vertical_maps;
 
 
 		void kmers_vector_creation(string);
-		vector<vector<map<string,string>>> table_creation(unordered_map<string,int>, vector<int>, vector<bed_class>);
+		void table_creation_orizzontal(vector<bed_class>);
 		bool check_palindrome(string);
-		void print_debug_maps(vector<unordered_map<string,int>>, vector<int>);
+		void print_debug_orizzontal();
 		void print_debug_maps_positions();
 		void find_topN_frequence(vector<bed_class>);
 		void print_debug_topN_sumfreq();
@@ -223,9 +225,9 @@ class map_class{
 		map_class(vector<bed_class> GEP, string kmers){
 
 			kmers_vector_creation(kmers);
-			vertical_maps = table_creation(moco_table, kmers_vector, GEP);
-			print_debug_maps(maps_vector_debug, kmers_vector);
-			print_debug_maps_positions();
+			table_creation_orizzontal(GEP);
+			print_debug_orizzontal();
+		//	print_debug_maps_positions();
 			find_topN_frequence(GEP);
 			print_debug_topN_sumfreq();
 
