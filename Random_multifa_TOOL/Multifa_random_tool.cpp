@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
 
 void find_oligo_number(){
 
-	for(int i=0; i<n_oligo_vector.size(); i++){
+	for(unsigned int i=0; i<n_oligo_vector.size(); i++){
 		
 		if(n_oligo_vector[i] > 100){
 
@@ -24,7 +24,6 @@ void find_oligo_number(){
 			exit(1);
 		}
 		n_oligo_vector[i] = (n_oligo_vector[i] * n_seq)/100;
-		cout << n_oligo_vector[i] << endl;
 	}
 
 }
@@ -44,7 +43,7 @@ void check_jaspar_exist(unsigned int i){
 		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
 		cout << "The number of oligo randomly generated for each Jaspar matrix is: ";
 		
-		for(int i=0; i<n_oligo_vector.size(); i++){
+		for(unsigned int i=0; i<n_oligo_vector.size(); i++){
 		cout <<n_oligo_vector[i] << " ";
 		}
 		cout << endl << endl;
@@ -79,7 +78,7 @@ void check_jaspar_exist(unsigned int i){
 		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
 		cout << "The number of oligo randomly generated for each Jaspar matrix is: ";
 		
-		for(int i=0; i<n_oligo_vector.size(); i++){
+		for(unsigned int i=0; i<n_oligo_vector.size(); i++){
 		cout <<n_oligo_vector[i] << " ";
 		}
 		cout << endl << endl;
@@ -310,16 +309,20 @@ void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 			
 			unsigned int i=0;
 			vector<unsigned int> index_vec;
-
+			cout << "Wobble indexes for matrix " << j <<": ";
+			
 			for(unsigned int w=0; w<MATRIX_VECTOR[j].oligo_vector.size(); w++){
 
 				unsigned int index = random_number((pos_it->first - wobble_vector[j]), (pos_it->first + wobble_vector[j]));
 				index_vec.emplace_back(index);
+				cout << index << " ";
 			}
+			cout << endl <<endl;
 
-			for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first < MATRIX_VECTOR[j].oligo_vector.size() ; it++, i++){
+			for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[j].oligo_vector.size() && it!= multifasta_map_implanted.end() ; it++, i++){
 				it->second.replace(index_vec[i], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
 			}
+
 			++pos_it;
 			index_vec.clear();
 		}
