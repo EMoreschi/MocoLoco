@@ -17,19 +17,18 @@
 #include <map>
 
 using namespace std;
-unsigned int length = 500;
-unsigned int n_seq = 200;
-vector<string> JASPAR_FILE_vector;
-string JASPAR_F;
-string oligo_perc = "80";
-vector<unsigned int> n_oligo_vector;
+unsigned int length = 500;				//length of sequences
+unsigned int n_seq = 200;				//number of sequences
+vector<string> JASPAR_FILE_vector;			//Vector of Jaspar_file strings
+string JASPAR_F;					
+string oligo_perc = "80";				
+vector<unsigned int> n_oligo_vector;			//vector of oligo_number we are implanting (calculated from percentages in input)
 string position = "10";
 string wobble = "0";
-vector<unsigned int> position_vector;
-vector<unsigned int> wobble_vector;
-map<unsigned int,string> position_jaspar_map;
+vector<unsigned int> position_vector;			//vector of implanting position (taken as input)
+vector<unsigned int> wobble_vector;			//vector of wobble interval (taken as input)
+map<unsigned int,string> position_jaspar_map;		//map of (implant_position | Jaspar_file_string)
 unsigned int cycles = 1;
-bool flag_JASPAR = 0;
 
 class matrix_class {
 
@@ -47,10 +46,10 @@ class matrix_class {
 	public:
 		matrix_class(string Jaspar_string, unsigned int p){
 			
-			check_oligo_number();
-			read_JASPAR(Jaspar_string);
-			oligo_creation(p);
-			matrix_size = matrix[0].size();
+			check_oligo_number();				//checking that oligo number is < n_seq
+			read_JASPAR(Jaspar_string);			//reading jaspar file and saving in matrix variable
+			oligo_creation(p);				//creating a vector of random oligos coming from matrix frequences -> the size of oligos vector follows the input n_oligo_vector values for each matrix
+			matrix_size = matrix[0].size();			//calculating the matrix size -> we need for implanting
 		}
 
 		unsigned int n_oligo;
@@ -73,7 +72,7 @@ class multifasta_class{
 
 		multifasta_class(unsigned int length, unsigned int n_seq, unsigned int i){
 			
-			multifasta_map_creation();
+			multifasta_map_creation();			
 			multifasta_outfile(multifasta_map, "random_multifa_"+to_string(i+1)+".fasta");
 		}
 		map<unsigned int,string> multifasta_map;
@@ -94,8 +93,8 @@ class implanting_class{
 
 		implanting_class(vector<matrix_class> MATRIX_VECTOR, map<unsigned int,string> multifasta_map, unsigned int i){
 		
-			multifasta_map_implanted = multifasta_map;
-			implanting_oligo(MATRIX_VECTOR);
+			multifasta_map_implanted = multifasta_map;	
+			implanting_oligo(MATRIX_VECTOR);		
 			multifasta_outfile_2(multifasta_map_implanted, "random_multifa_implanted"+to_string(i+1)+".fasta");
 		}
 };

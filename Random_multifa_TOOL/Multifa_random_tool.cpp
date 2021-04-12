@@ -67,6 +67,7 @@ void check_jaspar_exist(unsigned int i){
 	
 		MATRIX_VECTOR.clear();
 	}
+
 	else{
 	
 		cout << "\nWARNING: No Jaspar matrices and implanting position given as input." << endl;	
@@ -302,18 +303,18 @@ void check_overlapping(vector<matrix_class> MATRIX_VECTOR){
 
 void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 
-		map<unsigned int,string>::iterator pos_it = position_jaspar_map.begin();
+		map<unsigned int,string>::iterator pos_it = position_jaspar_map.begin(); 
 
-		for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){
+		for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){		//for every matrix_class created
 		
-			unique_random_generator();
+			unique_random_generator();				//generating a vector of unique random numbers from 1 to n_seq (length n_seq)
 
 			vector<unsigned int> index_vec;
 			
-			for(unsigned int w=0; w<MATRIX_VECTOR[j].oligo_vector.size(); w++){
+			for(unsigned int w=0; w<MATRIX_VECTOR[j].oligo_vector.size(); w++){	//Generating a vector of new indexes starting from input position and adding wobble
 
 				unsigned int index = random_number((pos_it->first - wobble_vector[j]), (pos_it->first + wobble_vector[j]));
-				index_vec.emplace_back(index);
+				index_vec.emplace_back(index);		//index_vec is vector of new idexes (wobble variation added)	
 			}
 
 			map<unsigned int, string>::iterator it;
@@ -324,10 +325,10 @@ void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 			MATRIX_VECTOR[j].print_debug_matrix();
 			cout << endl;
 
-			for(unsigned int i=0; i<MATRIX_VECTOR[j].oligo_vector.size(); i++){ 
+			for(unsigned int i=0; i<MATRIX_VECTOR[j].oligo_vector.size(); i++){ 	//from 0 to oligo_vector_size() (for every matrix class)
 				
-				it = multifasta_map_implanted.find(unique_rnd[i]);
-				it->second.replace(index_vec[i], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
+				it = multifasta_map_implanted.find(unique_rnd[i]);	//find in multifasta map the unique_rnd[i](random number) sequence
+				it->second.replace(index_vec[i], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);		//Implant the oligo generated from jaspar in the right position in the right sequence
 
 				cout << "Implanted string " << MATRIX_VECTOR[j].oligo_vector[i] << " in sequence number " << unique_rnd[i] << " in position number " << index_vec[i] << "." << endl;
 			
