@@ -17,20 +17,6 @@
 #include <map>
 
 using namespace std;
-unsigned int length = 500;
-unsigned int n_seq = 200;
-vector<string> JASPAR_FILE_vector;
-string JASPAR_F;
-string oligo_perc = "80";
-vector<unsigned int> n_oligo_vector;
-string position = "10";
-string wobble = "0";
-vector<unsigned int> position_vector;
-vector<unsigned int> wobble_vector;
-map<unsigned int,string> position_jaspar_map;
-unsigned int cycles = 1;
-bool flag_JASPAR = 0;
-
 class matrix_class {
 
 	private: 
@@ -99,6 +85,8 @@ class implanting_class{
 			multifasta_outfile_2(multifasta_map_implanted, "random_multifa_implanted"+to_string(i+1)+".fasta");
 		}
 };
+
+void generic_vector_creation(string, vector<unsigned int>&);
 
 void command_line_parser(int, char **);
 void display_help(); 
