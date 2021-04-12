@@ -305,8 +305,6 @@ void check_overlapping(vector<matrix_class> MATRIX_VECTOR){
 void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 
 		map<unsigned int,string>::iterator pos_it = position_jaspar_map.begin();
-		
-
 
 		for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){
 			
@@ -317,10 +315,9 @@ void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 
 				unsigned int index = random_number((pos_it->first - wobble_vector[j]), (pos_it->first + wobble_vector[j]));
 				index_vec.emplace_back(index);
-				cout << index << endl;	
 			}
 
-			for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[j].oligo_vector.size() ; it++, i++){
+			for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first < MATRIX_VECTOR[j].oligo_vector.size() ; it++, i++){
 				it->second.replace(index_vec[i], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
 			}
 			++pos_it;
