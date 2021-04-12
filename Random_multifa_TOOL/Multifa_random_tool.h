@@ -21,10 +21,12 @@ unsigned int length = 500;
 unsigned int n_seq = 200;
 vector<string> JASPAR_FILE_vector;
 string JASPAR_F;
-unsigned int oligo_perc = 80;
-unsigned int n_oligo;
-string position;
+string oligo_perc = "80";
+vector<unsigned int> n_oligo_vector;
+string position = "10";
+string wobble = "0";
 vector<unsigned int> position_vector;
+vector<unsigned int> wobble_vector;
 map<unsigned int,string> position_jaspar_map;
 unsigned int cycles = 1;
 bool flag_JASPAR = 0;
@@ -39,18 +41,19 @@ class matrix_class {
 		vector<vector<unsigned int>> matrix_sum;		
 
 		void read_JASPAR(string);
-		void oligo_creation();
+		void oligo_creation(unsigned int);
 		void check_oligo_number();
 
 	public:
-		matrix_class(string Jaspar_string){
+		matrix_class(string Jaspar_string, unsigned int p){
 			
 			check_oligo_number();
 			read_JASPAR(Jaspar_string);
-			oligo_creation();
+			oligo_creation(p);
 			matrix_size = matrix[0].size();
 		}
 
+		unsigned int n_oligo;
 		vector<string> oligo_vector;
 		unsigned int matrix_size;
 		void print_debug_matrix();
@@ -102,6 +105,8 @@ unsigned int random_number(unsigned int, unsigned int);
 string reverse_complement(string);
 char from_n_to_base(unsigned int);
 void position_vector_creation(string);
+void wobble_vector_creation(string);
+void n_oligo_vector_creation(string);
 void check_overlapping(vector<matrix_class>);
 void check_input();
 void check_positions(vector<matrix_class>);

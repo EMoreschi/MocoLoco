@@ -706,7 +706,7 @@ void map_class::print_debug_maps_positions(){
 
 		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
  
-		outfile << "# Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t" << "Tot_Occ" << "\t" << "PAL" << endl << endl;
 
 		vector<int> sum_topN_kmer;

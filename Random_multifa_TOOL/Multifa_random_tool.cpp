@@ -6,7 +6,8 @@ int main(int argc, char *argv[]){
 	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
 		display_help();
 	}
-	
+
+	n_oligo_vector_creation(oligo_perc);	
 	find_oligo_number();
 	for(unsigned int i=0; i<cycles; i++){
 	check_jaspar_exist(i);
@@ -15,12 +16,17 @@ int main(int argc, char *argv[]){
 
 void find_oligo_number(){
 
-	if(oligo_perc > 100){
+	for(int i=0; i<n_oligo_vector.size(); i++){
+		
+		if(n_oligo_vector[i] > 100){
 
-		cout << "ERROR: The percentage need to be from 0 to 100!" << endl;
-		exit(1);
+			cout << "ERROR: The percentage need to be from 0 to 100!" << endl;
+			exit(1);
+		}
+		n_oligo_vector[i] = (n_oligo_vector[i] * n_seq)/100;
+		cout << n_oligo_vector[i] << endl;
 	}
-		n_oligo = (oligo_perc * n_seq)/100;
+
 }
 
 void check_jaspar_exist(unsigned int i){
@@ -29,24 +35,29 @@ void check_jaspar_exist(unsigned int i){
 		
 		position_vector.clear();
 		position_vector_creation(position);	//position vector creation from input positions, passed as a string
+		wobble_vector_creation(wobble);
 		vector<matrix_class> MATRIX_VECTOR;	//MATRIX_VECTOR initialization
 
 		cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl; //Debug for a beautiful and meaningful output -> here you can check if you have put the input that you wanted
 		cout << "The number of implanting position is: " << position_vector.size() << endl;
 		cout << "The length of multifasta random sequences is: " << length << endl;
 		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
-		cout << "The percentage of oligo randomly generated for each Jaspar matrix is: " << oligo_perc << endl;
-		cout << "The number of oligo randomly generated for each Jaspar matrix is: " << n_oligo << endl << endl;
+		cout << "The number of oligo randomly generated for each Jaspar matrix is: ";
+		
+		for(int i=0; i<n_oligo_vector.size(); i++){
+		cout <<n_oligo_vector[i] << " ";
+		}
+		cout << endl << endl;
 		cout << "-----------------------------------------------------------------------------------" << endl;
 
 		check_input();		//controlling that the number of Jaspar matrices in input are = to number of -p (implanting position) in input. If the control is positive, the map<position,jaspar_name> start to be filled	
+		unsigned int p=0;
+		for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++, p++){	//for each element in the map
 
-		for(map<unsigned int,string>::iterator it = position_jaspar_map.begin(); it != position_jaspar_map.end(); it++){	//for each element in the map
-
-			matrix_class NEW_MATRIX(it->second);		//a new matrix_class is created starting from the jaspar_name string
+			matrix_class NEW_MATRIX(it->second, p);		//a new matrix_class is created starting from the jaspar_name string
 			MATRIX_VECTOR.emplace_back(NEW_MATRIX);		//and a vector of matrix_class is filled
 		}
-
+		
 		if(position_vector.size() > 1){		//if the jaspar input are more then 1
 			check_overlapping(MATRIX_VECTOR);	//checking if -p implanting position in input are different and if the implanting does not overlap
 		}
@@ -66,11 +77,16 @@ void check_jaspar_exist(unsigned int i){
 		cout << "The number of implanting position is: " << position_vector.size() << endl;
 		cout << "The length of multifasta random sequences is: " << length << endl;
 		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
-		cout << "The percentage of oligo randomly generated for each Jaspar matrix is: " << oligo_perc << endl;
-		cout << "The number of oligo randomly generated for each Jaspar matrix is: " << n_oligo << endl << endl;
+		cout << "The number of oligo randomly generated for each Jaspar matrix is: ";
+		
+		for(int i=0; i<n_oligo_vector.size(); i++){
+		cout <<n_oligo_vector[i] << " ";
+		}
+		cout << endl << endl;
 		cout << "-----------------------------------------------------------------------------------" << endl;
 		multifasta_class MULTIFA(length,n_seq,i); 	//generating a random multifasta_class
 	}
+
 }
 
 void multifasta_class::multifasta_map_creation(){
@@ -189,11 +205,12 @@ void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR 
 	file.close();						//Closing file
 }
 
-void matrix_class::oligo_creation(){
+void matrix_class::oligo_creation(unsigned int p){
 	
 	unsigned int strand;
 	string oligo;
-	for(unsigned int j=0; j<n_oligo; j++){
+	
+	for(unsigned int j=0; j<n_oligo_vector[p]; j++){
 	
 		strand = random_number(0,1);
 		oligo.clear();
@@ -230,10 +247,12 @@ void matrix_class::oligo_creation(){
 
 void matrix_class::check_oligo_number(){
 
-	if(n_oligo > n_seq){
-		
-		cerr << "\nERROR: The number of oligo can't be > then n_seq.";
-		exit(1);
+	for(unsigned int i=0; i<n_oligo_vector.size(); i++){
+		if(n_oligo_vector[i] > n_seq){
+
+			cerr << "\nERROR: The number of oligo can't be > then n_seq.";
+			exit(1);
+		}
 	}
 }
 
@@ -286,14 +305,38 @@ void check_overlapping(vector<matrix_class> MATRIX_VECTOR){
 void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 
 		map<unsigned int,string>::iterator pos_it = position_jaspar_map.begin();
+		
+
 
 		for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){
+			
 			unsigned int i=0;
+			vector<unsigned int> index_vec;
+
+			for(unsigned int w=0; w<MATRIX_VECTOR[j].oligo_vector.size(); w++){
+
+				unsigned int index = random_number((pos_it->first - wobble_vector[j]), (pos_it->first + wobble_vector[j]));
+				index_vec.emplace_back(index);
+				cout << index << endl;	
+			}
+
 			for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[j].oligo_vector.size() ; it++, i++){
-				it->second.replace(pos_it->first, MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
+				it->second.replace(index_vec[i], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
 			}
 			++pos_it;
+			index_vec.clear();
 		}
+}
+
+void n_oligo_vector_creation(string position){
+
+	int index;
+	
+	while(index != -1){
+		index = oligo_perc.find(",");
+		n_oligo_vector.emplace_back(stoi(oligo_perc.substr(0,index)));
+		oligo_perc.erase(0,index+1);
+	}
 }
 
 void position_vector_creation(string position){
@@ -306,6 +349,34 @@ void position_vector_creation(string position){
 		position.erase(0,index+1);
 	}
 }
+
+void wobble_vector_creation(string wobble){
+
+	int index;
+	
+	while(index != -1){
+		index = wobble.find(",");
+		wobble_vector.emplace_back(stoi(wobble.substr(0,index)));
+		wobble.erase(0,index+1);
+	}
+
+	if(position_vector.size() < wobble_vector.size()){
+
+		cout << "WARNING: wobbles parameters inserted as input are more then position parameters!" << endl;
+		cout << "Please check your input data. " << endl;
+	}	
+
+	if(position_vector.size() > wobble_vector.size()){
+
+		int difference = position_vector.size() - wobble_vector.size();
+
+		for(int i=0; i<difference; i++){
+
+			wobble_vector.emplace_back(0);
+		}
+	}
+}
+
 /////////////////////////////////////// DEBUG ////////////////////////////////////
 
 
@@ -379,7 +450,7 @@ void print_debug_matrixclass(vector<matrix_class> MATRIX_VECTOR){
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hl:n:c:j:o:p:";
+	const char* const short_opts = "hl:n:c:j:o:p:w:";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -390,6 +461,7 @@ void command_line_parser(int argc, char** argv){
 		{"cycles",   required_argument, nullptr,  'c' },
 		{"oligop",   required_argument, nullptr,  'o' },
 		{"position",   required_argument, nullptr,  'p' },
+		{"wobble",   required_argument, nullptr,  'w' },
 		{nullptr, no_argument, nullptr,  0   }
 	};
 
@@ -410,9 +482,11 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'c' : cycles = stoi(optarg); 
 				   break;
-			case 'o' : oligo_perc = stoi(optarg); 
+			case 'o' : oligo_perc = string(optarg); 
 				   break;
 			case 'p' : position = string(optarg); 
+				   break;
+			case 'w' : wobble = string(optarg); 
 				   break;
 			case 'j' : JASPAR_F = (string(optarg));
 				   is_file_exist(JASPAR_F, ("--jaspar || -j number 1"));
