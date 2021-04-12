@@ -57,7 +57,6 @@ class matrix_class {
 		vector<string> oligo_vector;
 		unsigned int matrix_size;
 		void print_debug_matrix();
-		void print_oligo_vector();
 };
 
 class multifasta_class{
@@ -85,9 +84,11 @@ class implanting_class{
 
 	private:
 		map<unsigned int,string> multifasta_map_implanted;
+		vector<unsigned int> unique_rnd;
 
 		void implanting_oligo(vector<matrix_class>);
 		void multifasta_outfile_2(map<unsigned int,string>, string);
+		void unique_random_generator();
 
 	public:
 
@@ -110,7 +111,6 @@ void n_oligo_vector_creation(string);
 void check_overlapping(vector<matrix_class>);
 void check_input();
 void check_positions(vector<matrix_class>);
-void print_debug_matrixclass(vector<matrix_class>);
 void check_jaspar_exist(unsigned int);
 void find_oligo_number();
 bool is_file_exist(string, string);

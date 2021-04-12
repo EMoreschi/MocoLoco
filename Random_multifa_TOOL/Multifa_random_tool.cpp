@@ -64,7 +64,6 @@ void check_jaspar_exist(unsigned int i){
 		check_positions(MATRIX_VECTOR);		//checking if -p implanting position don't bring the oligos to exceed from the sequences length 
 		multifasta_class MULTIFA(length,n_seq,i); 	//generating a random multifasta_class
 		implanting_class IMPLANTED(MATRIX_VECTOR, MULTIFA.multifasta_map,i);	//implanting the oligos in the position -p gave as input on the multifasta sequences from multifasta_class previouly generated
-		print_debug_matrixclass(MATRIX_VECTOR);		//matrix_class debugging -> printing matrices and oligos generated from them
 	
 		MATRIX_VECTOR.clear();
 	}
@@ -306,26 +305,51 @@ void implanting_class::implanting_oligo(vector<matrix_class> MATRIX_VECTOR){
 		map<unsigned int,string>::iterator pos_it = position_jaspar_map.begin();
 
 		for(unsigned int j=0; j<MATRIX_VECTOR.size(); j++){
-			
-			unsigned int i=0;
+		
+			unique_random_generator();
+
 			vector<unsigned int> index_vec;
-			cout << "Wobble indexes for matrix " << j <<": ";
 			
 			for(unsigned int w=0; w<MATRIX_VECTOR[j].oligo_vector.size(); w++){
 
 				unsigned int index = random_number((pos_it->first - wobble_vector[j]), (pos_it->first + wobble_vector[j]));
 				index_vec.emplace_back(index);
-				cout << index << " ";
 			}
-			cout << endl <<endl;
 
-			for(map<unsigned int,string>::iterator it = multifasta_map_implanted.begin(); it->first <= MATRIX_VECTOR[j].oligo_vector.size() && it!= multifasta_map_implanted.end() ; it++, i++){
+			map<unsigned int, string>::iterator it;
+		
+			cout << "\nStarting implant position: "<< pos_it->first << endl;
+			cout << "Wobble inserted: " << wobble_vector[j] << endl;
+			cout << "Matrix: " << pos_it->second << endl;
+			MATRIX_VECTOR[j].print_debug_matrix();
+			cout << endl;
+
+			for(unsigned int i=0; i<MATRIX_VECTOR[j].oligo_vector.size(); i++){ 
+				
+				it = multifasta_map_implanted.find(unique_rnd[i]);
 				it->second.replace(index_vec[i], MATRIX_VECTOR[j].matrix_size, MATRIX_VECTOR[j].oligo_vector[i]);
-			}
 
+				cout << "Implanted string " << MATRIX_VECTOR[j].oligo_vector[i] << " in sequence number " << unique_rnd[i] << " in position number " << index_vec[i] << "." << endl;
+			
+			}
+				
+			cout << endl << "---------------------------------------------------------------------------------------" << endl;	
 			++pos_it;
+			
 			index_vec.clear();
+			unique_rnd.clear();
 		}
+}
+
+void implanting_class::unique_random_generator(){
+
+	mt19937 eng{random_device{}()};
+	
+	for(unsigned int i=1; i<=n_seq; i++){
+
+		unique_rnd.emplace_back(i);
+	}
+	shuffle(unique_rnd.begin(), unique_rnd.end(), eng);
 }
 
 void n_oligo_vector_creation(string position){
@@ -393,16 +417,6 @@ void matrix_class::print_debug_matrix(){		//Print matrix function
 	}
 }
 
-void matrix_class::print_oligo_vector(){
-	
-	cout << endl;
-	for(unsigned int i=0; i<oligo_vector.size();i++){
-
-		cout << oligo_vector[i] << endl;
-	}
-	cout << "\n\n----------------------------------------------------------------------------"<< "\n\n";
-}
-
 void multifasta_class::multifasta_outfile(map<unsigned int,string> multifasta_map, string filename){
 
 	ofstream outfile;
@@ -431,19 +445,6 @@ void implanting_class::multifasta_outfile_2(map<unsigned int,string> multifasta_
 		outfile << endl;
 	}
 	outfile.close();
-}
-
-void print_debug_matrixclass(vector<matrix_class> MATRIX_VECTOR){
-
-	map<unsigned int,string>::iterator it = position_jaspar_map.begin();
-
-	for (unsigned int i=0; i<MATRIX_VECTOR.size(); i++, it++){
-
-		cout << "\nImplant position: "<< it->first << endl;
-		cout << "Matrix: " << it->second << endl;
-		MATRIX_VECTOR[i].print_debug_matrix();
-		MATRIX_VECTOR[i].print_oligo_vector();
-	}
 }
 
 /////////////////////////////////////// PARSER ///////////////////////////////////
