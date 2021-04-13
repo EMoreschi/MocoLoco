@@ -22,6 +22,10 @@ int main(int argc, char *argv[]){
 
 	generic_vector_creation(oligo_perc, n_oligo_vector);	
 	find_oligo_number();
+        generic_vector_creation(position, position_vector);	//position vector creation from input positions, passed as a string
+	check_oligo_number();
+	check_position_vector();
+	wobble_vector_creation(wobble);
 	
 	for(unsigned int i=0; i<cycles; i++){
 	
@@ -47,11 +51,6 @@ void implanting_cycle(unsigned int i){
 
 	if(position.size() != 0){
 
-		position_vector.clear();
-		generic_vector_creation(position, position_vector);	//position vector creation from input positions, passed as a string
-		check_oligo_number();
-		check_position_vector();
-		wobble_vector_creation(wobble);
 
 		map<vector<unsigned int>, vector<vector<unsigned int>>> jaspar_map;
 		string matrix_name;
@@ -116,6 +115,7 @@ void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&
 		parameters.emplace_back(n_oligo_vector[i]);
 		
 		jaspar_map.insert({parameters,matrix});
+		parameters.clear();
 
 	}	
 }	
