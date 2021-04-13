@@ -1,5 +1,21 @@
 #include "Multifa_random_tool.h"
 
+unsigned int length = 500;
+unsigned int n_seq = 200;
+vector<string> JASPAR_FILE_vector;
+string JASPAR_F;
+string oligo_perc = "80";
+vector<unsigned int>n_oligo_vector;
+string position = "10";
+string wobble = "0";
+vector<unsigned int> position_vector;
+vector<unsigned int> wobble_vector;
+map<unsigned int,string> position_jaspar_map;
+unsigned int cycles = 1;
+bool flag_JASPAR = 0;
+
+
+
 int main(int argc, char *argv[]){
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
@@ -7,7 +23,7 @@ int main(int argc, char *argv[]){
 		display_help();
 	}
 
-	n_oligo_vector_creation(oligo_perc);	
+	generic_vector_creation(oligo_perc, n_oligo_vector);	
 	find_oligo_number();
 	for(unsigned int i=0; i<cycles; i++){
 	check_jaspar_exist(i);
@@ -33,7 +49,7 @@ void check_jaspar_exist(unsigned int i){
 	if(position.size() != 0){
 		
 		position_vector.clear();
-		position_vector_creation(position);	//position vector creation from input positions, passed as a string
+		generic_vector_creation(position, position_vector);	//position vector creation from input positions, passed as a string
 		wobble_vector_creation(wobble);
 		vector<matrix_class> MATRIX_VECTOR;	//MATRIX_VECTOR initialization
 
@@ -353,7 +369,8 @@ void implanting_class::unique_random_generator(){
 	shuffle(unique_rnd.begin(), unique_rnd.end(), eng);
 }
 
-void n_oligo_vector_creation(string position){
+
+void generic_vector_creation(string oligo_perc, vector<unsigned int> &n_oligo_vector){
 
 	int index;
 	
@@ -364,26 +381,10 @@ void n_oligo_vector_creation(string position){
 	}
 }
 
-void position_vector_creation(string position){
-
-	int index;
-	
-	while(index != -1){
-		index = position.find(",");
-		position_vector.emplace_back(stoi(position.substr(0,index)));
-		position.erase(0,index+1);
-	}
-}
 
 void wobble_vector_creation(string wobble){
 
-	int index;
-	
-	while(index != -1){
-		index = wobble.find(",");
-		wobble_vector.emplace_back(stoi(wobble.substr(0,index)));
-		wobble.erase(0,index+1);
-	}
+	generic_vector_creation(wobble,wobble_vector);
 
 	if(position_vector.size() < wobble_vector.size()){
 
