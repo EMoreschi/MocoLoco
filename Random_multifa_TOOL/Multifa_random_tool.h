@@ -19,34 +19,6 @@
 using namespace std;
 
 
-class matrix_class {
-
-	private: 
-
-		string matrix_name;
-		string tf_name;
-		vector<vector<unsigned int>> matrix;
-		vector<vector<unsigned int>> matrix_sum;		
-
-		void read_JASPAR(string);
-		void oligo_creation(unsigned int);
-		void check_oligo_number();
-
-	public:
-		matrix_class(string Jaspar_string, unsigned int p){
-			
-			check_oligo_number();				//checking that oligo number is < n_seq
-			read_JASPAR(Jaspar_string);			//reading jaspar file and saving in matrix variable
-			oligo_creation(p);				//creating a vector of random oligos coming from matrix frequences -> the size of oligos vector follows the input n_oligo_vector values for each matrix
-			matrix_size = matrix[0].size();			//calculating the matrix size -> we need for implanting
-		}
-
-		unsigned int n_oligo;
-		vector<string> oligo_vector;
-		unsigned int matrix_size;
-		void print_debug_matrix();
-};
-
 class multifasta_class{
 
 	private:
@@ -73,17 +45,20 @@ class implanting_class{
 	private:
 		map<unsigned int,string> multifasta_map_implanted;
 		vector<unsigned int> unique_rnd;
+		vector<string> oligo_vector;
 
-		void implanting_oligo(vector<matrix_class>);
+		void implanting_oligo(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 		void multifasta_outfile_2(map<unsigned int,string>, string);
 		void unique_random_generator();
+		void oligo_creation(map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator);
+		void print_debug_matrix(vector<vector<unsigned int>>);
 
 	public:
 
-		implanting_class(vector<matrix_class> MATRIX_VECTOR, map<unsigned int,string> multifasta_map, unsigned int i){
+		implanting_class(map<vector<unsigned int>, vector<vector<unsigned int>>> jaspar_map, map<unsigned int,string> multifasta_map, unsigned int i){
 		
 			multifasta_map_implanted = multifasta_map;	
-			implanting_oligo(MATRIX_VECTOR);		
+			implanting_oligo(jaspar_map);		
 			multifasta_outfile_2(multifasta_map_implanted, "random_multifa_implanted"+to_string(i+1)+".fasta");
 		}
 };
@@ -95,12 +70,14 @@ void display_help();
 unsigned int random_number(unsigned int, unsigned int);
 string reverse_complement(string);
 char from_n_to_base(unsigned int);
-void position_vector_creation(string);
 void wobble_vector_creation(string);
-void n_oligo_vector_creation(string);
-void check_overlapping(vector<matrix_class>);
+void check_oligo_number();
+void check_position_vector();
+void check_overlapping(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 void check_input();
-void check_positions(vector<matrix_class>);
-void check_jaspar_exist(unsigned int);
+void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&, string, string);
+vector<vector<unsigned int>> read_JASPAR(string,string&,string&);
+void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>>);
+void implanting_cycle(unsigned int);
 void find_oligo_number();
 bool is_file_exist(string, string);

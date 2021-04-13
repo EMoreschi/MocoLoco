@@ -4,4 +4,5 @@ a.out
 Test_Output
 Multifasta_random.fasta
 gsl_test.cpp
-Random_multifa_TOOL/random_multifasta.fasta
+Random_multifa_TOOL/copy.cpp
+Random_multifa_TOOL/copy.h
