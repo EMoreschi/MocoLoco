@@ -20,13 +20,13 @@ The tool is contained in the Random_multifa_TOOL directory
 
 `g++ -Wall -o test Multifa_random_tool.cpp`
 
-#### How to run 
+#### How to run (2 possibilities)
 
-To generate random multifasta files and make implants:
+##### To generate random multifasta files and make implants:
 
 `./test -j <JASPAR_FILE_1> <JASPAR_FILE_2> ... <JASPAR_FILE_N> -p <number, number, ....> -l <number> (default 500) -n <number> (default 200) -o <number, number,...> -w <number, number,...> -c <number>` 
 
-To generate random multifasta files:
+##### To generate random multifasta files:
 
 `./test -l <number> (default 500) -n <number> (default 200) -c <number>` 
 
