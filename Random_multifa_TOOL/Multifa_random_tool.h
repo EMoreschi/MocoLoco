@@ -76,6 +76,7 @@ void check_position_vector();
 void check_overlapping(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 void check_input();
 void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&, string, string);
+void ordering_matrix_names();
 vector<vector<unsigned int>> read_JASPAR(string,string&,string&);
 void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>>);
 void implanting_cycle(unsigned int);

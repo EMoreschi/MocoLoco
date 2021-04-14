@@ -7,10 +7,11 @@ string oligo_perc = "80";
 string position = "10";
 string wobble = "0";
 vector<string> JASPAR_FILE_vector;
+vector<string> matrix_n;
+vector<string> matrix_tf;
 vector<unsigned int>n_oligo_vector;
 vector<unsigned int> position_vector;
 vector<unsigned int> wobble_vector;
-//map<unsigned int,string> position_jaspar_map;
 unsigned int cycles = 1;
 
 int main(int argc, char *argv[]){
@@ -70,6 +71,7 @@ void implanting_cycle(unsigned int i){
 
 		check_input();		//controlling that the number of Jaspar matrices in input are = to number of -p (implanting position) in input. If the control is positive, the map<position,jaspar_name> start to be filled	
 		filling_jaspar_map(jaspar_map,matrix_name,tf_name);
+		ordering_matrix_names();
 		multifasta_class MULTIFA(length,n_seq,i); 	//generating a random multifasta_class
 		
 		if(position_vector.size() > 1){		//if the jaspar input are more then 1
@@ -79,7 +81,8 @@ void implanting_cycle(unsigned int i){
 
 		check_exceeding(jaspar_map);		//checking if -p implanting position don't bring the oligos to exceed from the sequences length 
 		implanting_class IMPLANTED(jaspar_map, MULTIFA.multifasta_map,i);	//implanting the oligos in the position -p gave as input on the multifasta sequences from multifasta_class previouly generated
-
+		matrix_n.clear();
+		matrix_tf.clear();	
 	}
 
 	else{
@@ -108,7 +111,9 @@ void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&
 	for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
 
 		vector<vector<unsigned int>> matrix = read_JASPAR(JASPAR_FILE_vector[i],matrix_name,tf_name);
-		
+		matrix_n.emplace_back(matrix_name);		//saving matrix name and tf name in a vector	
+		matrix_tf.emplace_back(tf_name);		//for future printing
+
 		vector<unsigned int> parameters;
 		parameters.emplace_back(position_vector[i]);
 		parameters.emplace_back(wobble_vector[i]);
@@ -239,19 +244,40 @@ vector<vector<unsigned int>> read_JASPAR(string JASPAR_FILE, string& matrix_name
 	return matrix;
 }
 
+void ordering_matrix_names(){
+
+		map<unsigned int,pair<string,string>> names;
+
+		for(unsigned int i=0; i<position_vector.size(); i++){
+
+			pair<string,string> name_tf_pair;
+			name_tf_pair.first = matrix_n[i];
+			name_tf_pair.second = matrix_tf[i];
+			names.insert({position_vector[i],name_tf_pair});
+		}
+		matrix_n.clear();
+		matrix_tf.clear();
+
+		for(map<unsigned int,pair<string,string>>::iterator it = names.begin(); it!=names.end(); it++){
+
+			matrix_n.emplace_back(it->second.first);
+			matrix_tf.emplace_back(it->second.second);
+		}
+}
+
 void implanting_class::oligo_creation(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it){
 
-	unsigned int strand;
-	string oligo;
+		unsigned int strand;
+		string oligo;
 
-	for(unsigned int j=0; j<it->first[2]; j++){
+		for(unsigned int j=0; j<it->first[2]; j++){
 
-		strand = random_number(0,1);
-		oligo.clear();
+			strand = random_number(0,1);
+			oligo.clear();
 
-		for (unsigned int i = 0; i < it->second[0].size(); i++) {			//From 0 to number of columns of line 0
+			for (unsigned int i = 0; i < it->second[0].size(); i++) {			//From 0 to number of columns of line 0
 
-			unsigned int somma = it->second[0][i] + it->second[1][i] + it->second[2][i]+ it->second[3][i];
+				unsigned int somma = it->second[0][i] + it->second[1][i] + it->second[2][i]+ it->second[3][i];
 			unsigned int random_score = random_number(1,somma);
 
 			if(random_score <= it->second[0][i]){
@@ -307,6 +333,10 @@ void check_oligo_number(){
 			cerr << "\nERROR: The number of oligo can't be > then n_seq.";
 			exit(1);
 		}
+		if(n_oligo_vector[i] == 0){
+
+			cerr << "WARNING: There is one or more 0% oligo generation frequence" << endl;
+		}
 	}
 }
 
@@ -322,10 +352,16 @@ void check_input(){
 void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>> jaspar_map){
 
 	for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it != jaspar_map.end(); it++){
+		int is_less_zero = it->first[0] - it->first[1];
+			
+		if((it->first[0] + it->first[1] + it->second.size()) > length){
 
-		if((it->first[0] + it->first[1] + it->second.size()) > length || (it->first[0] - it->first[1]) < 0){
+			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nImplanting position > " << length << " try to be generated.\nPlease check your implanting position!" << endl;
+			exit(1);
+		}
+		if(is_less_zero < 0){
 
-			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nPlease check your implanting position!" << endl;
+			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nImplanting position < 0 try to be generated.\nPlease check your implanting position!" << endl;
 			exit(1);
 		}
 	}
@@ -336,20 +372,17 @@ void check_overlapping(map<vector<unsigned int>,vector<vector<unsigned int>>> ja
 	map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator it_before = jaspar_map.begin();
 	map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator it_after = ++jaspar_map.begin();
 
-	cout << it_before->first[0] << endl;
-	cout << it_before->first[1] << endl;
-	cout << it_before->first[2] << endl;
-	cout << it_before->second[0].size() << endl;
-	cout << it_after->first[0] << endl;
-	cout << it_after->first[1] << endl;
-	cout << it_after->first[2] << endl;
-	cout << it_after->second[0].size() << endl;
-
 	for(unsigned int i=0; i<(position_vector.size()-1); i++, it_after++, it_before++){
 		
-		if((it_after->first[0] - it_after->first[1]) <= (it_before->first[0] + it_before->second[0].size() + it_before->first[1])){
+		if(it_after->first[0] <= (it_before->first[0] + it_before->second[0].size())){
+			cerr << "\nERROR: The oligos coming from matrix " << matrix_n[i] << " and " << matrix_n[i+1] << " that you are trying to implant overlap ---> wrong positions inserted!"<< endl;
+			exit(1);
 
-			cerr << "\nERROR: The oligos coming from matrix " << i+1 << " and " << i+2 << " that you are trying to implant overlap!"<< endl;
+			}
+
+		else if((it_after->first[0] - it_after->first[1]) <= (it_before->first[0] + it_before->second[0].size() + it_before->first[1])){
+
+			cerr << "\nERROR: The oligos coming from matrix " << matrix_n[i] << " and " << matrix_n[i+1] << " that you are trying to implant overlap ---> wrong wobbles inserted!"<< endl;
 			exit(1);
 		}
 	}
@@ -357,7 +390,8 @@ void check_overlapping(map<vector<unsigned int>,vector<vector<unsigned int>>> ja
 
 void implanting_class::implanting_oligo(map<vector<unsigned int>, vector<vector<unsigned int>>> jaspar_map){
 
-		for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it!=jaspar_map.end(); it++){
+		int j=0;
+		for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it!=jaspar_map.end(); it++,j++){
 
 			unique_random_generator();				//generating a vector of unique random numbers from 1 to n_seq (length n_seq)
 			oligo_creation(it);				//creating a vector of random oligos coming from matrix frequences -> the size of oligos vector follows the input n_oligo_vector values for each matrix
@@ -370,8 +404,9 @@ void implanting_class::implanting_oligo(map<vector<unsigned int>, vector<vector<
 			}
 
 			cout << "\nStarting implant position: "<< it->first[0] << endl;
-			cout << "Wobble inserted: " << it->first[1] << endl;
-			//print_debug_matrix(it->second);
+			cout << "Wobble inserted: " << it->first[1] << endl<<endl;
+			cout << matrix_n[j] << ": " << matrix_tf[j] << endl;
+			print_debug_matrix(it->second);
 			cout << endl;
 
 			map<unsigned int, string>::iterator implant_it;
@@ -441,18 +476,16 @@ void wobble_vector_creation(string wobble){
 /////////////////////////////////////// DEBUG ////////////////////////////////////
 
 
-//void implanting_class::print_debug_matrix(vector<vector<unsigned int>> matrix){		//Print matrix function
+void implanting_class::print_debug_matrix(vector<vector<unsigned int>> matrix){		//Print matrix function
 
-//	cout << "\n" << matrix_name << " " << tf_name << ":" << endl;
+	for(unsigned int i=0; i < matrix.size(); i++){
+		for(unsigned int j=0; j<matrix[i].size(); j++){
 
-//	for(unsigned int i=0; i < matrix.size(); i++){
-//		for(unsigned int j=0; j<matrix[i].size(); j++){
-
-//			cout << matrix[i][j] << " ";
-//		}
-//		cout << endl;
-//	}
-//}
+			cout << matrix[i][j] << " ";
+		}
+		cout << endl;
+	}
+}
 
 void multifasta_class::multifasta_outfile(map<unsigned int,string> multifasta_map, string filename){
 
