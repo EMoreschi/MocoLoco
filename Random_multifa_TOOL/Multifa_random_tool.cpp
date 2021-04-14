@@ -18,7 +18,7 @@ int main(int argc, char *argv[]){
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
 
-	if(argc != 1){  
+	if(position.size() != 0){  
 
 		read_input();	
 	}
