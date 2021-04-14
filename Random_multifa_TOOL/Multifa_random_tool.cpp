@@ -333,7 +333,7 @@ void check_oligo_number(){
 			cerr << "\nERROR: The number of oligo can't be > then n_seq.";
 			exit(1);
 		}
-		if(n_oligo_vector[i] == 0){
+		if(n_oligo_vector[i] == 0 || n_oligo_vector.size() != JASPAR_FILE_vector.size()){
 
 			cerr << "WARNING: There is one or more 0% oligo generation frequence" << endl;
 		}
