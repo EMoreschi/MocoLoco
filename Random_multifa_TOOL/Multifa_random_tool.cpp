@@ -3,8 +3,8 @@
 unsigned int length = 500;
 unsigned int n_seq = 200;
 string JASPAR_F;
-string oligo_perc = "80";
-string position = "10";
+string oligo_perc = "0";
+string position;
 string wobble = "0";
 vector<string> JASPAR_FILE_vector;
 vector<string> matrix_n;
@@ -17,22 +17,28 @@ unsigned int cycles = 1;
 int main(int argc, char *argv[]){
 
 	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
-		display_help();
+
+	if(argc != 1){  
+
+		read_input();	
 	}
+
+	for(unsigned int i=0; i<cycles; i++){
+
+		implanting_cycle(i);
+	}
+}
+
+void read_input(){
 
 	generic_vector_creation(oligo_perc, n_oligo_vector);	
 	find_oligo_number();
-        generic_vector_creation(position, position_vector);	//position vector creation from input positions, passed as a string
+	generic_vector_creation(position, position_vector);	//position vector creation from input positions, passed as a string
 	check_oligo_number();
 	check_position_vector();
 	wobble_vector_creation(wobble);
-	
-	for(unsigned int i=0; i<cycles; i++){
-	
-		implanting_cycle(i);
-	}
-}	
+	check_wobble();
+}
 
 void find_oligo_number(){
 
@@ -333,9 +339,21 @@ void check_oligo_number(){
 			cerr << "\nERROR: The number of oligo can't be > then n_seq.";
 			exit(1);
 		}
-		if(n_oligo_vector[i] == 0 || n_oligo_vector.size() != JASPAR_FILE_vector.size()){
+		if(n_oligo_vector[i] == 0 || n_oligo_vector.size() != position_vector.size()){
 
 			cerr << "WARNING: There is one or more 0% oligo generation frequence" << endl;
+		}
+	}
+}
+
+void check_wobble(){
+
+	for(unsigned int i=0; i<wobble_vector.size(); i++){
+
+		if(wobble_vector[i] > 10){
+
+			cerr << "ERROR: The maximum value allowed for wobble parameters is 10.\nPlease check the -w parameters inserted!" << endl;
+			exit(1);
 		}
 	}
 }
@@ -580,11 +598,12 @@ void display_help(){
 
 	cerr << "\n --help || -h show this message" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_FILE_1, JASPAR_FILE_2, ..., JASPAR_FILE_N> to import the jaspar matrices from which the oligos will be generated." << endl;
-	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)" << endl;
-	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DEFAULT: 200)" << endl;
-	cerr << "\n --oligop || -o <number> to insert the percentage of sequences in which the oligos will be implanted (DEFAULT: 80%) ---- NB: The number of sequences extracted from the percentage will be rounded down" << endl;
-	cerr << "\n --position || -p <n1,n2..,nN> to insert the position in Multifasta sequences where you want to implant the oligos (DEFAULT: 10)" << endl;
-	cerr << "\n --cycles || -c <number> to choose how many random multifasta files (and implanted also) this tool will produce" << endl;
+	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)." << endl;
+	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DEFAULT: 200)." << endl;
+	cerr << "\n --oligop || -o <n1,n2,...,nN> to insert the percentage of sequences in which the oligos will be implanted (DEFAULT: 0%) ---- NB: The number of sequences extracted from the percentage will be rounded down." << endl;
+	cerr << "\n --position || -p <n1,n2,...,nN> to insert the position in Multifasta sequences where you want to implant the oligos." << endl;
+	cerr << "\n --wobble || -w <n1,n2,...,nN> to set the wobble parameter for every implanting position. The implanting position, for every oligo, will be randomly choosen between p-w and p+w interval. (DEFAULT: 0)" << endl;
+	cerr << "\n --cycles || -c <number> to choose how many random multifasta files (and implanted also) this tool will produce. (DEFAULT: 1)" << endl;
 	cerr << endl;
 	exit(EXIT_SUCCESS);
 }

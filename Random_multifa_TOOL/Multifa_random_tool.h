@@ -66,6 +66,7 @@ class implanting_class{
 void generic_vector_creation(string, vector<unsigned int>&);
 
 void command_line_parser(int, char **);
+void read_input();
 void display_help(); 
 unsigned int random_number(unsigned int, unsigned int);
 string reverse_complement(string);
@@ -73,6 +74,7 @@ char from_n_to_base(unsigned int);
 void wobble_vector_creation(string);
 void check_oligo_number();
 void check_position_vector();
+void check_wobble();
 void check_overlapping(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 void check_input();
 void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&, string, string);
