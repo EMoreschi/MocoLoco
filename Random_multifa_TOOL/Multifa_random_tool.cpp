@@ -597,7 +597,7 @@ void command_line_parser(int argc, char** argv){
 void display_help(){
 
 	cerr << "\n --help || -h show this message" << endl;
-	cerr << "\n --jaspar || -j <JASPAR_FILE_1, JASPAR_FILE_2, ..., JASPAR_FILE_N> to import the jaspar matrices from which the oligos will be generated." << endl;
+	cerr << "\n --jaspar || -j <JASPAR_FILE_1 JASPAR_FILE_2 ... JASPAR_FILE_N> to import the jaspar matrices from which the oligos will be generated." << endl;
 	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)." << endl;
 	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DEFAULT: 200)." << endl;
 	cerr << "\n --oligop || -o <n1,n2,...,nN> to insert the percentage of sequences in which the oligos will be implanted (DEFAULT: 0%) ---- NB: The number of sequences extracted from the percentage will be rounded down." << endl;

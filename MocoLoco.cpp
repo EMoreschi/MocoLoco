@@ -707,7 +707,8 @@ void map_class::print_debug_maps_positions(){
 		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
  
 		outfile << "#Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t" << "Tot_Occ" << "\t" << "PAL" << endl << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t" << "Tot_Occ" << "\t" << "PAL" << endl;
+
 
 		vector<int> sum_topN_kmer;
 
@@ -733,13 +734,13 @@ void map_class::print_debug_maps_positions(){
 
 					if(find_RC!= vector_kmers_maps_plus[i][j].end()){
 
-					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << it_rev->first+find_RC->second << "FALSE" << endl;
+					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << it_rev->first+find_RC->second << "\t" << "FALSE" << endl;
 
 					}
 
 					else{
 
-					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << reverse_bases << "\t" << "0" << "\t" <<  it_rev->first << "FALSE" << endl;
+					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << reverse_bases << "\t" << "0" << "\t" <<  it_rev->first << "\t" << "FALSE" << endl;
 
 					}
 					
@@ -748,7 +749,7 @@ void map_class::print_debug_maps_positions(){
 
 				else{
 
-					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t\t\t" << it_rev->first*2 << "TRUE" << endl;
+					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << "TRUE" << endl;
 
 				}
 				
@@ -790,8 +791,8 @@ void map_class::print_debug_topN_sumfreq(){
 	for(unsigned int i=0; i<sum_topN_all.size(); i++){
 	
 		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence.txt");
-		outfile << "\n###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":\n" << endl; 
-		outfile << "Position" << "\t" << "Sum" << "\t" << "Frequences" << endl << endl; 
+		outfile << "###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":" << endl; 
+		outfile << "Position" << "\t" << "Sum" << "\t" << "Frequences" << endl; 
 		
 		for(unsigned int j=0; j<sum_topN_all[i].size(); j++){
 			
