@@ -707,7 +707,7 @@ void map_class::print_debug_maps_positions(){
 		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
  
 		outfile << "#Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t" << "Tot_Occ" << "\t" << "PAL" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV"<< "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "Tot_Occ" << "\t" << "PAL" << endl;
 
 
 		vector<int> sum_topN_kmer;
@@ -729,27 +729,44 @@ void map_class::print_debug_maps_positions(){
 				bool palindrome = check_palindrome(it_rev->second);
 
 				if(!palindrome){
-				
-					unordered_map<string,int>::iterator find_RC = vector_kmers_maps_plus[j][i].find(reverse_bases);
+					
+					unsigned int oligo_fwd, oligo_rev, RC_fwd, RC_rev;
+					oligo_fwd = it_rev->first;
 
-					if(find_RC!= vector_kmers_maps_plus[i][j].end()){
+					unordered_map<string,int>::iterator find_oligo_rev = vector_kmers_maps_minus[j][i].find(it_rev->second);
+					unordered_map<string,int>::iterator find_RC_fwd = vector_kmers_maps_plus[j][i].find(reverse_bases);
+					unordered_map<string,int>::iterator find_RC_rev = vector_kmers_maps_minus[j][i].find(reverse_bases);
 
-					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << it_rev->first+find_RC->second << "\t" << "FALSE" << endl;
-
+					if(find_oligo_rev != vector_kmers_maps_minus[j][i].end()){
+						oligo_rev = find_oligo_rev->second;
 					}
-
 					else{
-
-					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << reverse_bases << "\t" << "0" << "\t" <<  it_rev->first << "\t" << "FALSE" << endl;
-
+						oligo_rev = 0;
 					}
+					if(find_RC_fwd!= vector_kmers_maps_plus[j][i].end()){
+						RC_fwd = find_RC_fwd->second;
+					}
+					else{
+						RC_fwd = 0;
+					}
+					if(find_RC_rev!= vector_kmers_maps_minus[j][i].end()){
+						RC_rev = find_RC_rev->second;
+					}
+					else{
+						RC_rev = 0;
+					}
+
+					unsigned int sum_oligo = oligo_fwd + oligo_rev;
+					unsigned int sum_RC = RC_fwd + RC_rev;
+				
+					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first <<"\t" << oligo_rev << "\t" << sum_oligo << "\t" << reverse_bases << "\t" << RC_fwd << "\t" << RC_rev  << "\t" << sum_RC << "\t" << sum_oligo+sum_RC << "\t" << "FALSE" << endl;
 					
 
 				}
 
 				else{
 
-					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << "TRUE" << endl;
+					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << "TRUE" << endl;
 
 				}
 				
