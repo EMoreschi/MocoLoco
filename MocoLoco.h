@@ -195,16 +195,16 @@ class map_class{
 
 	private:
 		
-		vector<vector<unordered_map<string,int>>> vector_kmers_maps_plus;
-		vector<vector<unordered_map<string,int>>> vector_kmers_maps_minus;
+		vector<vector<map<pair<string,string>,pair<int, int>>>> vector_kmers_maps_plus;
+		vector<vector<map<pair<string,string>,pair<int, int>>>> vector_kmers_maps_minus;
 		vector<unordered_map<string,int>> orizzontal_plus_debug;
 		vector<unordered_map<string,int>> orizzontal_minus_debug;
-		vector<unordered_map<string,int>> maps_vector_positions_plus;
-		vector<unordered_map<string,int>> maps_vector_positions_minus;
+		vector<map<pair<string,string>,pair<int, int>>> maps_vector_positions_plus;
+		vector<map<pair<string,string>,pair<int, int>>> maps_vector_positions_minus;
 		unordered_map<string, int> orizzontal_plus;
 		unordered_map<string, int> orizzontal_minus;
-		unordered_map<string, int> vertical_plus;
-		unordered_map<string, int> vertical_minus;
+		map<pair<string,string>,pair<int, int>>  vertical_plus;
+		map<pair<string,string>,pair<int, int>>  vertical_minus;
 		string reverse_bases;
 		vector<int> kmers_vector;
 		vector<vector<int>> sum_topN_all;
@@ -215,6 +215,7 @@ class map_class{
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
 		void or_ver_kmer_count(string,unordered_map<string,int>&, unordered_map<string,int>&);
+		void vertical_kmer_count(string,map<pair<string,string>,pair<int, int>>&,map<pair<string,string>,pair<int, int>>&);
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
 		void print_debug_maps_positions();
@@ -232,9 +233,9 @@ class map_class{
 			table_creation_orizzontal(GEP);
 			table_creation_vertical(GEP);
 			print_debug_orizzontal();
-			print_debug_maps_positions();
-			find_topN_frequence(GEP);
-			print_debug_topN_sumfreq();
+//			print_debug_maps_positions();
+//			find_topN_frequence(GEP);
+//			print_debug_topN_sumfreq();
 
 		}
 

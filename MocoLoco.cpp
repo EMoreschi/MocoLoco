@@ -424,7 +424,7 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 
 				string sequence = GEP[j].return_sequence(GEP[j]);
 				string bases = sequence.substr(i,kmers_vector[k]);
-				or_ver_kmer_count(bases, vertical_plus,vertical_minus);
+				vertical_kmer_count(bases, vertical_plus,vertical_minus);
 			}
 			maps_vector_positions_plus.emplace_back(vertical_plus);
 			maps_vector_positions_minus.emplace_back(vertical_minus);
@@ -459,6 +459,54 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,int> &plus, 
 
 		plus.insert({bases,1});
 		minus.insert({reverse_bases,1});
+	}
+
+
+	bases.clear();
+	reverse_bases.clear();
+}
+
+void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<int, int>>&plus, map<pair<string,string>,pair<int, int>> &minus){
+
+
+
+	map<pair<string,string>,pair<int, int>>::iterator it_plus;
+	map<pair<string,string>,pair<int, int>>::iterator it_plus_rev;
+	map<pair<string,string>,pair<int, int>>::iterator it_minus;
+	map<pair<string,string>,pair<int, int>>::iterator it_minus_rev;
+//	it_plus = plus.find(bases);
+	check_palindrome(bases);
+
+	pair<string,string> pair_bases;
+	pair_bases.first= bases;
+	pair_bases.second= reverse_bases;
+
+	pair<string,string> pair_bases_reverse;
+	pair_bases_reverse.first= reverse_bases;
+	pair_bases_reverse.second= bases;
+
+	it_plus = plus.find(pair_bases);
+	it_plus_rev = plus.find(pair_bases_reverse);
+
+	it_minus = minus.find(pair_bases);
+	it_minus_rev = minus.find(pair_bases_reverse);
+
+	if(it_plus!=plus.end()){
+
+		it_plus->second.first++;
+		it_minus->second.first++;
+//		it_minus->second++;
+	}	
+	if (it_plus==plus.end() && it_plus_rev != plus.end()) {
+         it_plus_rev->second.second++;
+         it_minus_rev->second.second++;
+	
+	}
+
+	else{
+
+		plus.insert({{bases,reverse_bases},{1,0}});
+		minus.insert({{bases,reverse_bases},{1,0}});
 	}
 
 
@@ -607,30 +655,30 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences){
 //
 //}
 
-void map_class::no_RCs_multimap(multimap<int,string>& vertical_multimap, unordered_map<string,int> plus_map){
-	
-	int i=0;
-	for(multimap<int,string>::reverse_iterator it_r = vertical_multimap.rbegin(); i<top_N; it_r++, i++){
-
-		reverse_bases.clear();
-		bool pal = check_palindrome(it_r->second);
-		unordered_map<string,int>::iterator it = plus_map.find(reverse_bases);
-		unordered_map<string,int>::iterator it_2 = plus_map.find(it_r->second);
-	
-		if(pal == 0 && it!=plus_map.end() && it_2!=plus_map.end()){
-			
-			plus_map.erase(it->first);
-		}
-	}		
-	
-	vertical_multimap.clear();
-
-	
-	for(unordered_map<string,int>::iterator it = plus_map.begin(); it != plus_map.end(); it++){ 	
-				
-		vertical_multimap.insert({it->second,it->first});
-	}
-}
+//void map_class::no_RCs_multimap(multimap<int,string>& vertical_multimap, unordered_map<string,int> plus_map){
+//	
+//	int i=0;
+//	for(multimap<int,string>::reverse_iterator it_r = vertical_multimap.rbegin(); i<top_N; it_r++, i++){
+//
+//		reverse_bases.clear();
+//		bool pal = check_palindrome(it_r->second);
+//		unordered_map<string,int>::iterator it = plus_map.find(reverse_bases);
+//		unordered_map<string,int>::iterator it_2 = plus_map.find(it_r->second);
+//	
+//		if(pal == 0 && it!=plus_map.end() && it_2!=plus_map.end()){
+//			
+//			plus_map.erase(it->first);
+//		}
+//	}		
+//	
+//	vertical_multimap.clear();
+//
+//	
+//	for(unordered_map<string,int>::iterator it = plus_map.begin(); it != plus_map.end(); it++){ 	
+//				
+//		vertical_multimap.insert({it->second,it->first});
+//	}
+//}
 
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -778,93 +826,93 @@ void map_class::print_debug_orizzontal(){
 	}
 }
 
-void map_class::print_debug_maps_positions(){
-
-	ofstream outfile;
-	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
-
-		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
- 
-		outfile << "#Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV"<< "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "Tot_Occ" << "\t" << "PAL" << endl;
-
-
-		vector<int> sum_topN_kmer;
-
-		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
-			
-		//	unordered_map<string,int> new_plus = plus_noRCs_creation(vector_kmers_maps_plus[j][i]);
-			multimap<int,string> vertical_multimap;	
-
-			for(unordered_map<string,int>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
-				
-				vertical_multimap.insert({it->second,it->first});
-			}
-		
-			no_RCs_multimap(vertical_multimap, vector_kmers_maps_plus[j][i]);	
-
-			int sum = 0;
-			int c=0;	
-			for(multimap<int,string>::reverse_iterator it_rev = vertical_multimap.rbegin(); c<top_N; c++, it_rev++){
-				
-				reverse_bases.clear();
-				bool palindrome = check_palindrome(it_rev->second);
-
-				if(!palindrome){
-					
-					unsigned int oligo_fwd, oligo_rev, RC_fwd, RC_rev;
-					oligo_fwd = it_rev->first;
-
-					unordered_map<string,int>::iterator find_oligo_rev = vector_kmers_maps_minus[j][i].find(it_rev->second);
-					unordered_map<string,int>::iterator find_RC_fwd = vector_kmers_maps_plus[j][i].find(reverse_bases);
-					unordered_map<string,int>::iterator find_RC_rev = vector_kmers_maps_minus[j][i].find(reverse_bases);
-
-					if(find_oligo_rev != vector_kmers_maps_minus[j][i].end()){
-						oligo_rev = find_oligo_rev->second;
-					}
-					else{
-						oligo_rev = 0;
-					}
-					if(find_RC_fwd!= vector_kmers_maps_plus[j][i].end()){
-						RC_fwd = find_RC_fwd->second;
-					}
-					else{
-						RC_fwd = 0;
-					}
-					if(find_RC_rev!= vector_kmers_maps_minus[j][i].end()){
-						RC_rev = find_RC_rev->second;
-					}
-					else{
-						RC_rev = 0;
-					}
-
-					unsigned int sum_oligo = oligo_fwd + oligo_rev;
-					unsigned int sum_RC = RC_fwd + RC_rev;
-				
-					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first <<"\t" << oligo_rev << "\t" << sum_oligo << "\t" << reverse_bases << "\t" << RC_fwd << "\t" << RC_rev  << "\t" << sum_RC << "\t" << sum_oligo+sum_RC << "\t" << "FALSE" << endl;
-					
-
-				}
-
-				else{
-
-					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << "TRUE" << endl;
-
-				}
-				
-				sum = sum + it_rev->first;
-			}
-
-			sum_topN_kmer.emplace_back(sum);
-		}
-
-		sum_topN_all.emplace_back(sum_topN_kmer);
-		sum_topN_kmer.clear();
-
-		outfile.close();
-	}
-
-}
+//void map_class::print_debug_maps_positions(){
+//
+//	ofstream outfile;
+//	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
+//
+//		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
+// 
+//		outfile << "#Maps vector with kmers occurences counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+//		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV"<< "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "Tot_Occ" << "\t" << "PAL" << endl;
+//
+//
+//		vector<int> sum_topN_kmer;
+//
+//		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
+//			
+//		//	unordered_map<string,int> new_plus = plus_noRCs_creation(vector_kmers_maps_plus[j][i]);
+//			multimap<int,string> vertical_multimap;	
+//
+//			for(unordered_map<string,int>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
+//				
+//				vertical_multimap.insert({it->second,it->first});
+//			}
+//		
+//			no_RCs_multimap(vertical_multimap, vector_kmers_maps_plus[j][i]);	
+//
+//			int sum = 0;
+//			int c=0;	
+//			for(multimap<int,string>::reverse_iterator it_rev = vertical_multimap.rbegin(); c<top_N; c++, it_rev++){
+//				
+//				reverse_bases.clear();
+//				bool palindrome = check_palindrome(it_rev->second);
+//
+//				if(!palindrome){
+//					
+//					unsigned int oligo_fwd, oligo_rev, RC_fwd, RC_rev;
+//					oligo_fwd = it_rev->first;
+//
+//					unordered_map<string,int>::iterator find_oligo_rev = vector_kmers_maps_minus[j][i].find(it_rev->second);
+//					unordered_map<string,int>::iterator find_RC_fwd = vector_kmers_maps_plus[j][i].find(reverse_bases);
+//					unordered_map<string,int>::iterator find_RC_rev = vector_kmers_maps_minus[j][i].find(reverse_bases);
+//
+//					if(find_oligo_rev != vector_kmers_maps_minus[j][i].end()){
+//						oligo_rev = find_oligo_rev->second;
+//					}
+//					else{
+//						oligo_rev = 0;
+//					}
+//					if(find_RC_fwd!= vector_kmers_maps_plus[j][i].end()){
+//						RC_fwd = find_RC_fwd->second;
+//					}
+//					else{
+//						RC_fwd = 0;
+//					}
+//					if(find_RC_rev!= vector_kmers_maps_minus[j][i].end()){
+//						RC_rev = find_RC_rev->second;
+//					}
+//					else{
+//						RC_rev = 0;
+//					}
+//
+//					unsigned int sum_oligo = oligo_fwd + oligo_rev;
+//					unsigned int sum_RC = RC_fwd + RC_rev;
+//				
+//					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first <<"\t" << oligo_rev << "\t" << sum_oligo << "\t" << reverse_bases << "\t" << RC_fwd << "\t" << RC_rev  << "\t" << sum_RC << "\t" << sum_oligo+sum_RC << "\t" << "FALSE" << endl;
+//					
+//
+//				}
+//
+//				else{
+//
+//					outfile << i+1 << "\t" << c+1 << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->second << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << it_rev->first << "\t" << "TRUE" << endl;
+//
+//				}
+//				
+//				sum = sum + it_rev->first;
+//			}
+//
+//			sum_topN_kmer.emplace_back(sum);
+//		}
+//
+//		sum_topN_all.emplace_back(sum_topN_kmer);
+//		sum_topN_kmer.clear();
+//
+//		outfile.close();
+//	}
+//
+//}
 
 void map_class::find_topN_frequence(vector<bed_class> GEP){
 
