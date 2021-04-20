@@ -554,58 +554,84 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences){
 
 }
 
-unordered_map<string,int> map_class::plus_noRCs_creation(unordered_map<string,int> map_plus){	
+//unordered_map<string,int> map_class::plus_noRCs_creation(unordered_map<string,int> map_plus){	
+//
+//	unordered_map<string,int> new_plus;
+//	unordered_map<string,int>::iterator it_plus;
+//	unordered_map<string,int>::iterator it_new_plus;
+//
+//	for(unordered_map<string,int>::iterator it=map_plus.begin(); it!=map_plus.end(); it++){
+//
+//		reverse_bases.clear();
+//		bool pal = check_palindrome(it->first);
+//		it_new_plus = new_plus.find(reverse_bases);
+//
+//		if(it_new_plus == new_plus.end() && pal== 0){
+//
+//			if(pal == 0){
+//				string best = select_the_best(it->first,reverse_bases, map_plus);
+//				it_plus = map_plus.find(best);
+//				new_plus.insert({it_plus->first,it_plus->second});
+//			}
+//			else{
+//				it_plus = map_plus.find(it->first);
+//				new_plus.insert({it_plus->first,it_plus->second});
+//
+//			}
+//
+//		}
+//	}	
+//
+//	return new_plus;
+//}
+//
+//string map_class::select_the_best(string oligo, string oligo_RC, unordered_map<string,int> map_plus){
+//
+//	unordered_map<string,int>::iterator it_oligo = map_plus.find(oligo);
+//	unordered_map<string,int>::iterator it_oligo_RC = map_plus.find(oligo_RC);
+//
+//	if(it_oligo_RC!=map_plus.end()){
+//
+//		if(it_oligo->second >= it_oligo_RC->second){
+//
+//			return oligo;
+//		}
+//		else{
+//			return oligo_RC;
+//		}
+//	}
+//
+//	else{
+//		return oligo;
+//	}
+//
+//}
 
-	unordered_map<string,int> new_plus;
-	unordered_map<string,int>::iterator it_plus;
-	unordered_map<string,int>::iterator it_new_plus;
-
-	for(unordered_map<string,int>::iterator it=map_plus.begin(); it!=map_plus.end(); it++){
+void map_class::no_RCs_multimap(multimap<int,string>& vertical_multimap, unordered_map<string,int> plus_map){
+	
+	int i=0;
+	for(multimap<int,string>::reverse_iterator it_r = vertical_multimap.rbegin(); i<top_N; it_r++, i++){
 
 		reverse_bases.clear();
-		bool pal = check_palindrome(it->first);
-		it_new_plus = new_plus.find(reverse_bases);
-
-		if(it_new_plus == new_plus.end() && pal== 0){
-
-			if(pal == 0){
-				string best = select_the_best(it->first,reverse_bases, map_plus);
-				it_plus = map_plus.find(best);
-				new_plus.insert({it_plus->first,it_plus->second});
-			}
-			else{
-				it_plus = map_plus.find(it->first);
-				new_plus.insert({it_plus->first,it_plus->second});
-
-			}
-
+		bool pal = check_palindrome(it_r->second);
+		unordered_map<string,int>::iterator it = plus_map.find(reverse_bases);
+		unordered_map<string,int>::iterator it_2 = plus_map.find(it_r->second);
+	
+		if(pal == 0 && it!=plus_map.end() && it_2!=plus_map.end()){
+			
+			plus_map.erase(it->first);
 		}
-	}	
+	}		
+	
+	vertical_multimap.clear();
 
-	return new_plus;
+	
+	for(unordered_map<string,int>::iterator it = plus_map.begin(); it != plus_map.end(); it++){ 	
+				
+		vertical_multimap.insert({it->second,it->first});
+	}
 }
 
-string map_class::select_the_best(string oligo, string oligo_RC, unordered_map<string,int> map_plus){
-
-	unordered_map<string,int>::iterator it_oligo = map_plus.find(oligo);
-	unordered_map<string,int>::iterator it_oligo_RC = map_plus.find(oligo_RC);
-
-	if(it_oligo_RC!=map_plus.end()){
-
-		if(it_oligo->second >= it_oligo_RC->second){
-
-			return oligo;
-		}
-		else{
-			return oligo_RC;
-		}
-	}
-
-	else{
-		return oligo;
-	}
-
-}
 
 /////DEBUG/////////////////////////////////////////////////////////
 
@@ -767,14 +793,15 @@ void map_class::print_debug_maps_positions(){
 
 		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
 			
-			unordered_map<string,int> new_plus = plus_noRCs_creation(vector_kmers_maps_plus[j][i]);
+		//	unordered_map<string,int> new_plus = plus_noRCs_creation(vector_kmers_maps_plus[j][i]);
 			multimap<int,string> vertical_multimap;	
 
-			for(unordered_map<string,int>::iterator it = new_plus.begin(); it != new_plus.end(); it++){ 	
+			for(unordered_map<string,int>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
 				
 				vertical_multimap.insert({it->second,it->first});
 			}
-			
+		
+			no_RCs_multimap(vertical_multimap, vector_kmers_maps_plus[j][i]);	
 
 			int sum = 0;
 			int c=0;	

@@ -220,6 +220,7 @@ class map_class{
 		void print_debug_maps_positions();
 		unordered_map<string,int> plus_noRCs_creation(unordered_map<string,int>);
 		string select_the_best(string, string, unordered_map<string,int>);
+		void no_RCs_multimap(multimap<int,string>&, unordered_map<string,int>);
 		void find_topN_frequence(vector<bed_class>);
 		void print_debug_topN_sumfreq();
 
