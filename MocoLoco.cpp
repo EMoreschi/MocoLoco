@@ -554,6 +554,59 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences){
 
 }
 
+unordered_map<string,int> map_class::plus_noRCs_creation(unordered_map<string,int> map_plus){	
+
+	unordered_map<string,int> new_plus;
+	unordered_map<string,int>::iterator it_plus;
+	unordered_map<string,int>::iterator it_new_plus;
+
+	for(unordered_map<string,int>::iterator it=map_plus.begin(); it!=map_plus.end(); it++){
+
+		reverse_bases.clear();
+		bool pal = check_palindrome(it->first);
+		it_new_plus = new_plus.find(reverse_bases);
+
+		if(it_new_plus == new_plus.end() && pal== 0){
+
+			if(pal == 0){
+				string best = select_the_best(it->first,reverse_bases, map_plus);
+				it_plus = map_plus.find(best);
+				new_plus.insert({it_plus->first,it_plus->second});
+			}
+			else{
+				it_plus = map_plus.find(it->first);
+				new_plus.insert({it_plus->first,it_plus->second});
+
+			}
+
+		}
+	}	
+
+	return new_plus;
+}
+
+string map_class::select_the_best(string oligo, string oligo_RC, unordered_map<string,int> map_plus){
+
+	unordered_map<string,int>::iterator it_oligo = map_plus.find(oligo);
+	unordered_map<string,int>::iterator it_oligo_RC = map_plus.find(oligo_RC);
+
+	if(it_oligo_RC!=map_plus.end()){
+
+		if(it_oligo->second >= it_oligo_RC->second){
+
+			return oligo;
+		}
+		else{
+			return oligo_RC;
+		}
+	}
+
+	else{
+		return oligo;
+	}
+
+}
+
 /////DEBUG/////////////////////////////////////////////////////////
 
 unsigned int oligo_class::return_start_coord_oligo(){
@@ -713,13 +766,15 @@ void map_class::print_debug_maps_positions(){
 		vector<int> sum_topN_kmer;
 
 		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
-
+			
+			unordered_map<string,int> new_plus = plus_noRCs_creation(vector_kmers_maps_plus[j][i]);
 			multimap<int,string> vertical_multimap;	
 
-			for(unordered_map<string,int>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
+			for(unordered_map<string,int>::iterator it = new_plus.begin(); it != new_plus.end(); it++){ 	
 				
 				vertical_multimap.insert({it->second,it->first});
 			}
+			
 
 			int sum = 0;
 			int c=0;	

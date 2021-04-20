@@ -218,6 +218,8 @@ class map_class{
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
 		void print_debug_maps_positions();
+		unordered_map<string,int> plus_noRCs_creation(unordered_map<string,int>);
+		string select_the_best(string, string, unordered_map<string,int>);
 		void find_topN_frequence(vector<bed_class>);
 		void print_debug_topN_sumfreq();
 
@@ -244,19 +246,19 @@ class multifasta_class{
 		vector<string> sequences;
 
 		void length_control(vector<string>);
-		void extract_sequences(string);
-		void GEP_creation_MF(vector<string>);
+	void extract_sequences(string);
+	void GEP_creation_MF(vector<string>);
 
-	public:
+public:
 
-		vector<bed_class> GEP;
-		
-		multifasta_class(string MFASTA_FILE){
+	vector<bed_class> GEP;
+	
+	multifasta_class(string MFASTA_FILE){
 
-			extract_sequences(MFASTA_FILE);
-			length_control(sequences);
-			GEP_creation_MF(sequences);
-		}
+		extract_sequences(MFASTA_FILE);
+		length_control(sequences);
+		GEP_creation_MF(sequences);
+	}
 
 };
 
