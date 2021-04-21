@@ -233,7 +233,7 @@ class map_class{
 			table_creation_orizzontal(GEP);
 			table_creation_vertical(GEP);
 			print_debug_orizzontal();
-//			print_debug_maps_positions();
+			print_debug_maps_positions();
 //			find_topN_frequence(GEP);
 //			print_debug_topN_sumfreq();
 
