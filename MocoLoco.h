@@ -206,6 +206,9 @@ class map_class{
 		map<pair<string,string>,pair<int, int>>  vertical_plus;
 		map<pair<string,string>,pair<int, int>>  vertical_minus;
 		string reverse_bases;
+		unsigned int tot_freq;
+		vector<unsigned int> tot_freq_vec;
+		vector<vector<unsigned int>> tot_freq_matrix;
 		vector<int> kmers_vector;
 		vector<vector<int>> sum_topN_all;
 		vector<vector<double>> frequence_topN_all;
@@ -216,12 +219,10 @@ class map_class{
 		void table_creation_vertical(vector<bed_class>);
 		void or_ver_kmer_count(string,unordered_map<string,int>&, unordered_map<string,int>&);
 		void vertical_kmer_count(string,map<pair<string,string>,pair<int, int>>&,map<pair<string,string>,pair<int, int>>&);
+		void select_best(map<pair<string,string>,pair<int,int>>&);
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
 		void print_debug_maps_positions();
-		unordered_map<string,int> plus_noRCs_creation(unordered_map<string,int>);
-		string select_the_best(string, string, unordered_map<string,int>);
-		void no_RCs_multimap(multimap<int,string>&, unordered_map<string,int>);
 		void find_topN_frequence(vector<bed_class>);
 		void print_debug_topN_sumfreq();
 
@@ -234,8 +235,8 @@ class map_class{
 			table_creation_vertical(GEP);
 			print_debug_orizzontal();
 			print_debug_maps_positions();
-//			find_topN_frequence(GEP);
-//			print_debug_topN_sumfreq();
+			find_topN_frequence(GEP);
+			print_debug_topN_sumfreq();
 
 		}
 
