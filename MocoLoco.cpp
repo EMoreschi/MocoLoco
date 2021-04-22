@@ -417,9 +417,11 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
+			vector<unsigned int> tot_freq_vec;
 		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
-			unsigned int tot_freq;
+			unsigned int tot_freq = 0;
+
 			for(unsigned int j=0; j<GEP.size(); j++){
 
 				string sequence = GEP[j].return_sequence(GEP[j]);
@@ -439,7 +441,6 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 		tot_freq_matrix.emplace_back(tot_freq_vec);
 		maps_vector_positions_plus.clear();
 		maps_vector_positions_minus.clear();
-		tot_freq_vec.clear();
 	}
 }
 
@@ -790,7 +791,7 @@ void map_class::print_debug_maps_positions(){
 
 	ofstream outfile;
 	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
-
+		
 		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
 
 		if(DS==1){
@@ -882,8 +883,8 @@ void map_class::print_debug_maps_positions(){
 
 		sum_topN_all.emplace_back(sum_topN_kmer);
 		sum_topN_kmer.clear();
-	}
 	outfile.close();
+	}
 }
 
 void map_class::find_topN_frequence(vector<bed_class> GEP){

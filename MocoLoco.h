@@ -206,7 +206,6 @@ class map_class{
 		map<pair<string,string>,pair<int, int>>  vertical_plus;
 		map<pair<string,string>,pair<int, int>>  vertical_minus;
 		string reverse_bases;
-		vector<unsigned int> tot_freq_vec;
 		vector<vector<unsigned int>> tot_freq_matrix;
 		vector<int> kmers_vector;
 		vector<vector<int>> sum_topN_all;
