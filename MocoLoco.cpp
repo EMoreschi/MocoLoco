@@ -841,11 +841,6 @@ void map_class::print_debug_maps_positions(){
 
 						double tot = ((it_rev->first.first+it_rev->first.second)+(it_rev->first.second+it_rev->first.first));
 						double freq = tot/tot_freq_matrix[j][i];
-						cout << tot << endl;
-						cout << tot_freq_matrix[j][i] << endl;
-						cout << "J " << j << endl;
-						cout << "I " << i << endl;
-						cout << freq << endl;
 						outfile << i+1 << "\t" << c+1;
 						outfile << "\t" << it_rev->second.first << "\t" << it_rev->first.first <<"\t" << it_rev->first.second <<"\t"<< it_rev->first.first+it_rev->first.second << "\t";
 						outfile << "\t" << it_rev->second.second << "\t" << it_rev->first.second <<"\t" << it_rev->first.first <<"\t"<< it_rev->first.second+it_rev->first.first << "\t";
