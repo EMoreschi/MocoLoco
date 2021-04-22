@@ -419,12 +419,12 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 
 		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
-
+			unsigned int tot_freq;
 			for(unsigned int j=0; j<GEP.size(); j++){
 
 				string sequence = GEP[j].return_sequence(GEP[j]);
 				string bases = sequence.substr(i,kmers_vector[k]);
-				vertical_kmer_count(bases, vertical_plus,vertical_minus);
+				vertical_kmer_count(bases, vertical_plus,vertical_minus, tot_freq);
 			}
 			select_best(vertical_plus);
 			maps_vector_positions_plus.emplace_back(vertical_plus);
@@ -432,7 +432,6 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 			vertical_plus.clear();
 			vertical_minus.clear();
 			tot_freq_vec.emplace_back(tot_freq);
-			tot_freq = 0;
 		}
 		
 		vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
@@ -471,7 +470,7 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,int> &plus, 
 	reverse_bases.clear();
 }
 
-void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<int, int>>&plus, map<pair<string,string>,pair<int, int>> &minus){
+void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<int, int>>&plus, map<pair<string,string>,pair<int, int>> &minus, unsigned int& tot_freq){
 
 
 
@@ -842,6 +841,11 @@ void map_class::print_debug_maps_positions(){
 
 						double tot = ((it_rev->first.first+it_rev->first.second)+(it_rev->first.second+it_rev->first.first));
 						double freq = tot/tot_freq_matrix[j][i];
+						cout << tot << endl;
+						cout << tot_freq_matrix[j][i] << endl;
+						cout << "J " << j << endl;
+						cout << "I " << i << endl;
+						cout << freq << endl;
 						outfile << i+1 << "\t" << c+1;
 						outfile << "\t" << it_rev->second.first << "\t" << it_rev->first.first <<"\t" << it_rev->first.second <<"\t"<< it_rev->first.first+it_rev->first.second << "\t";
 						outfile << "\t" << it_rev->second.second << "\t" << it_rev->first.second <<"\t" << it_rev->first.first <<"\t"<< it_rev->first.second+it_rev->first.first << "\t";

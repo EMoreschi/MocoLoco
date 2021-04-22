@@ -206,7 +206,6 @@ class map_class{
 		map<pair<string,string>,pair<int, int>>  vertical_plus;
 		map<pair<string,string>,pair<int, int>>  vertical_minus;
 		string reverse_bases;
-		unsigned int tot_freq;
 		vector<unsigned int> tot_freq_vec;
 		vector<vector<unsigned int>> tot_freq_matrix;
 		vector<int> kmers_vector;
@@ -218,7 +217,7 @@ class map_class{
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
 		void or_ver_kmer_count(string,unordered_map<string,int>&, unordered_map<string,int>&);
-		void vertical_kmer_count(string,map<pair<string,string>,pair<int, int>>&,map<pair<string,string>,pair<int, int>>&);
+		void vertical_kmer_count(string,map<pair<string,string>,pair<int, int>>&,map<pair<string,string>,pair<int, int>>&, unsigned int &);
 		void select_best(map<pair<string,string>,pair<int,int>>&);
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
