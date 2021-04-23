@@ -1061,9 +1061,8 @@ void display_help() 						//Display help function
 	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
 	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal (DEFAULT: 150) " << endl;
-	cerr << "\n --ntop || -n <number>: to decide the top n oligos to classify in vertical sequence occurrences (DEFAULT: 10) " << endl;
+	cerr << "\n --ntop || -n <number>: to decide the top n oligos to classify in positional sequence occurrences (DEFAULT: 10) " << endl;
 	cerr << "\n --mf || -m <multifasta-file>: use multifasta instead of bed file [ -j,-b,-t,-p options not needed ]" << endl;
-	cerr << "\n --ntop || -n <number>: to choose how many oligo of the positional ranks print in k-mers_positional_occurrences.txt file" << endl;
 	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
 	cerr << endl;
 
