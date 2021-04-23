@@ -430,11 +430,12 @@ void implanting_class::implanting_oligo(map<vector<unsigned int>, vector<vector<
 			map<unsigned int, string>::iterator implant_it;
 
 			for(unsigned int i=0; i<it->first[2]; i++){ 	//from 0 to oligo_vector_size() (for every matrix class)
-				
+			
+				unsigned int half = it->second[0].size()/2;	
 				implant_it = multifasta_map_implanted.find(unique_rnd[i]);	//find in multifasta map the unique_rnd[i](random number) sequence
-				implant_it->second.replace(index_vec[i], it->second[0].size(), oligo_vector[i]);		//Implant the oligo generated from jaspar in the right position in the right sequence
+				implant_it->second.replace((index_vec[i]-half), it->second[0].size(), oligo_vector[i]);		//Implant the oligo generated from jaspar in the right position in the right sequence
 
-				cout << "Implanted string " << oligo_vector[i] << " in sequence number " << unique_rnd[i] << " in position number " << index_vec[i] << "." << endl;
+				cout << "Implanted string " << oligo_vector[i] << " in sequence number " << unique_rnd[i] << " centered in position " << index_vec[i] << "." << endl;
 			
 			}
 				

@@ -29,7 +29,7 @@ const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
 string kmers = "6,8,10";
-int top_N = 10;
+unsigned int top_N = 10;
 
 
 class bed_class { //creation public class of bed_class type        
@@ -208,9 +208,10 @@ class map_class{
 		string reverse_bases;
 		vector<vector<unsigned int>> tot_freq_matrix;
 		vector<int> kmers_vector;
-		vector<vector<int>> sum_topN_all;
-		vector<vector<double>> frequence_topN_all;
-
+		vector<double> tot_sum_vec;
+		vector<double> freq_vec;
+		vector<vector<double>> tot_sum_mat;
+		vector<vector<double>> freq_mat;
 
 		void kmers_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
@@ -221,8 +222,8 @@ class map_class{
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
 		void print_debug_maps_positions();
-		void find_topN_frequence(vector<bed_class>);
-		void print_debug_topN_sumfreq();
+		void sum_frequence_best(multimap<pair<int,int>,pair<string,string>>::reverse_iterator, unsigned int, unsigned int);
+		void print_debug_sum_freq();
 
 	public:
 
@@ -233,9 +234,7 @@ class map_class{
 			table_creation_vertical(GEP);
 			print_debug_orizzontal();
 			print_debug_maps_positions();
-			find_topN_frequence(GEP);
-			print_debug_topN_sumfreq();
-
+			print_debug_sum_freq();
 		}
 
 };
