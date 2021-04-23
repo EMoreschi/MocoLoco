@@ -822,60 +822,78 @@ void map_class::print_debug_maps_positions(){
 			multimap<pair<int,int>,pair<string,string>>::reverse_iterator it_r = vertical_multimap.rbegin();
 			sum_frequence_best(it_r,j,i);
 			unsigned int c=0;	
-			string check_pal;
 
 			for(multimap<pair<int, int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); c < top_N; it_rev++, c++ ){
+
+				//Position Rank Oligo Num_Occ_FWD Num_Occ_REV Sum_Occ_Oligo Oligo_RC Num_Occ_RC_FWD Num_Occ_RC_REV Sum_Occ_RC PAL Tot_Occ FREQ
+					 
+				double FREQ, Tot_Occ;
+				unsigned int Position = i+1; 
+				unsigned int Rank = c+1; 
+				string Oligo = it_rev-> second.first ;
+				int Num_Occ_FWD  = it_rev-> first.first; //mettere unsigned
+				string Oligo_RC = it_rev-> second.second ;
+				int Num_Occ_REV, Sum_Occ_Oligo,Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+			        string PAL;
 
 				if(DS==1){
 
 					if (it_rev->second.first== it_rev->second.second){
 						
-						double tot = it_rev->first.first; 
-						double freq = (tot/tot_freq_matrix[j][i]); 
-						check_pal = "TRUE";
-						outfile << i+1 << "\t" << c+1;
-						outfile << "\t" << it_rev->second.first << "\t" << it_rev->first.first <<"\t" << it_rev->first.first <<"\t"<< it_rev->first.first << "\t";
-						outfile << "\t" << it_rev->second.second << "\t" << it_rev->first.first <<"\t" << it_rev->first.first <<"\t"<< it_rev->first.first << "\t";
-						outfile << check_pal <<"\t"<< it_rev->first.first << "\t" << freq << endl; 
+						PAL = "TRUE";
+						Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Tot_Occ = Num_Occ_FWD; 
+						
 					}
 
 					else{
-						check_pal = "FALSE";
+						PAL= "FALSE";
 
-						double tot = ((it_rev->first.first+it_rev->first.second)+(it_rev->first.second+it_rev->first.first));
-						double freq = tot/tot_freq_matrix[j][i];
-						outfile << i+1 << "\t" << c+1;
-						outfile << "\t" << it_rev->second.first << "\t" << it_rev->first.first <<"\t" << it_rev->first.second <<"\t"<< it_rev->first.first+it_rev->first.second << "\t";
-						outfile << "\t" << it_rev->second.second << "\t" << it_rev->first.second <<"\t" << it_rev->first.first <<"\t"<< it_rev->first.second+it_rev->first.first << "\t";
-						outfile << check_pal <<"\t"<< (it_rev->first.first+it_rev->first.second)+(it_rev->first.second+it_rev->first.first) <<"\t"<< freq <<endl; 
+                                        	Num_Occ_REV = it_rev->first.second;
+						Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
+						Num_Occ_RC_FWD = Num_Occ_REV; 
+						Num_Occ_RC_REV = Num_Occ_FWD;
+						Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
+						Tot_Occ = Sum_Occ_RC + Sum_Occ_Oligo; 
+
+
 					}
+						FREQ = Tot_Occ/tot_freq_matrix[j][i];
+
+						outfile << Position << "\t" << Rank;
+						outfile << "\t" << Oligo<< "\t" << Num_Occ_FWD  <<"\t" << Num_Occ_REV <<"\t"<< Sum_Occ_Oligo << "\t";
+						outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD<<"\t" << Num_Occ_RC_REV<<"\t"<< Sum_Occ_RC << "\t";
+						outfile << PAL <<"\t"<< Tot_Occ  << "\t" << FREQ << endl; 
 				}
 
 				else{
 					
 					if (it_rev->second.first== it_rev->second.second){
 
-						check_pal = "TRUE";
-						double tot = it_rev->first.first;
-						double freq = tot/tot_freq_matrix[j][i]; 
-						outfile << i+1 << "\t" << c+1;
-						outfile << "\t" << it_rev->second.first << "\t" << it_rev->first.first << "\t";
-						outfile << "\t" << it_rev->second.second << "\t" << it_rev->first.first << "\t";
-						outfile << check_pal <<"\t"<< it_rev->first.first << "\t" << freq << endl; 
+						PAL= "TRUE";
+						Tot_Occ = Sum_Occ_Oligo = Num_Occ_RC_FWD = Sum_Occ_RC = Num_Occ_FWD;
 					}
 
 					else{
 						
-						check_pal = "FALSE";
-						double tot = (it_rev->first.first+it_rev->first.second);
-						double freq = tot/tot_freq_matrix[j][i]; 
-						outfile << i+1 << "\t" << c+1;
-						outfile << "\t" << it_rev->second.first << "\t" << it_rev->first.first << "\t";
-						outfile << "\t" << it_rev->second.second << "\t" << it_rev->first.second << "\t";
-						outfile << check_pal <<"\t"<< it_rev->first.first+it_rev->first.second << "\t" << freq << endl; 
+						PAL = "FALSE";
+						Tot_Occ  = (it_rev->first.first+it_rev->first.second);
+						Sum_Occ_Oligo = Num_Occ_FWD;
+						Num_Occ_RC_FWD = it_rev ->first.second; 
+						Sum_Occ_RC = Num_Occ_RC_FWD;
+						Tot_Occ = Sum_Occ_RC + Sum_Occ_Oligo; 
+
+
 
 					}
+						FREQ = Tot_Occ/tot_freq_matrix[j][i];
+
+						outfile << Position << "\t" << Rank;
+						outfile << "\t" << Oligo<< "\t" << Num_Occ_FWD  <<"\t" << Sum_Occ_Oligo << "\t";
+						outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD<<"\t" << Sum_Occ_RC << "\t";
+						outfile << PAL <<"\t"<< Tot_Occ  << "\t" << FREQ << endl; 
 				}
+				//Position Rank Oligo Num_Occ_FWD Num_Occ_REV Sum_Occ_Oligo Oligo_RC Num_Occ_RC_FWD Num_Occ_RC_REV Sum_Occ_RC PAL Tot_Occ FREQ
+
 			}
 		}
 		
