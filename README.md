@@ -4,15 +4,15 @@
 
 #### How to compile
 
-`g++ -Wall -o test -Wwrite-strings MocoLoco.cpp`
+`g++ -Wall -o test  MocoLoco.cpp`
 
 #### How to run (2 possibilities)
 
-`./test -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -n <number> (optional)`-ss(optional)
+`./test -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -n <number> (optional) -ss(optional)`
 
-`./test -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) `-ss(optional)
+`./test -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -ss(optional)`
 
-### Multifa_random_tool
+### Multifa random tool
 
 The tool is contained in the Random_multifa_TOOL directory
 

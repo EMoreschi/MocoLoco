@@ -444,12 +444,12 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 	}
 }
 
-void map_class::or_ver_kmer_count(string bases,unordered_map<string,int> &plus, unordered_map<string,int> &minus){
+void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int> &plus, unordered_map<string,unsigned int> &minus){
 
 
 
-	unordered_map<string,int>::iterator it_plus;
-	unordered_map<string,int>::iterator it_minus;
+	unordered_map<string,unsigned int>::iterator it_plus;
+	unordered_map<string,unsigned int>::iterator it_minus;
 	it_plus = plus.find(bases);
 	check_palindrome(bases);
 	it_minus = minus.find(reverse_bases);
@@ -471,14 +471,14 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,int> &plus, 
 	reverse_bases.clear();
 }
 
-void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<int, int>>&plus, map<pair<string,string>,pair<int, int>> &minus, unsigned int& tot_freq){
+void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<unsigned int, unsigned int>>&plus, map<pair<string,string>,pair<unsigned int, unsigned int>> &minus, unsigned int& tot_freq){
 
 
 
-	map<pair<string,string>,pair<int, int>>::iterator it_plus;
-	map<pair<string,string>,pair<int, int>>::iterator it_plus_rev;
-	map<pair<string,string>,pair<int, int>>::iterator it_minus;
-	map<pair<string,string>,pair<int, int>>::iterator it_minus_rev;
+	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus;
+	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus_rev;
+	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus;
+	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus_rev;
 
 	bool pal = check_palindrome(bases);
 
@@ -530,18 +530,18 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<in
 	reverse_bases.clear();
 }
 
-void map_class::select_best(map<pair<string,string>,pair<int,int>>& vertical_plus){
+void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>& vertical_plus){
 
-	map<pair<string,string>,pair<int,int>> copy;
+	map<pair<string,string>,pair<unsigned int,unsigned int>> copy;
 	
-	for(map<pair<string,string>,pair<int,int>>::iterator it = vertical_plus.begin(); it!=vertical_plus.end(); it++){
+	for(map<pair<string,string>,pair<unsigned int,unsigned int>>::iterator it = vertical_plus.begin(); it!=vertical_plus.end(); it++){
 
 		if(it->second.first < it->second.second){
 		
 			string oligo1 = it->first.second;	
 			string oligo2 = it->first.first;
-			int occ1 = it->second.second;
-			int occ2 = it->second.first;
+			unsigned int occ1 = it->second.second;
+			unsigned int occ2 = it->second.first;
 			
 			copy.insert({{oligo1,oligo2},{occ1,occ2}});		
 		}
@@ -762,19 +762,19 @@ void map_class::print_debug_orizzontal(){
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+".txt");	
 		
-		multimap<int,string> orizzontal_output;
+		multimap<unsigned int,string> orizzontal_output;
 
-		for (unordered_map<string,int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
+		for (unordered_map<string,unsigned int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
 			orizzontal_output.insert({it->second, it->first});	
 		}	      
 		
-		for (multimap<int,string>::reverse_iterator it_rev = orizzontal_output.rbegin(); it_rev!=orizzontal_output.rend(); it_rev++){
+		for (multimap<unsigned int,string>::reverse_iterator it_rev = orizzontal_output.rbegin(); it_rev!=orizzontal_output.rend(); it_rev++){
 			reverse_bases.clear();	
 			bool palindrome = check_palindrome(it_rev->second);
 
 			if(!palindrome){
 				
-				unordered_map<string,int>::iterator find_RC = orizzontal_minus_debug[i].find(reverse_bases);
+				unordered_map<string,unsigned int>::iterator find_RC = orizzontal_minus_debug[i].find(reverse_bases);
 				outfile << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << endl;
 			}
 
@@ -808,22 +808,22 @@ void map_class::print_debug_maps_positions(){
 
 		}
 
-		vector<int> sum_topN_kmer;
+		vector<unsigned int> sum_topN_kmer;
 
 		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
 
-			multimap<pair<int, int>,pair<string,string>> vertical_multimap;	
+			multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap;	
 
-			for(map<pair<string,string>,pair<int, int>>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
+			for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
 
 				vertical_multimap.insert({it->second,it->first});
 			}
 			
-			multimap<pair<int,int>,pair<string,string>>::reverse_iterator it_r = vertical_multimap.rbegin();
+			multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_r = vertical_multimap.rbegin();
 			sum_frequence_best(it_r,j,i);
 			unsigned int c=0;	
 
-			for(multimap<pair<int, int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); c < top_N; it_rev++, c++ ){
+			for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); c < top_N; it_rev++, c++ ){
 
 				//Position Rank Oligo Num_Occ_FWD Num_Occ_REV Sum_Occ_Oligo Oligo_RC Num_Occ_RC_FWD Num_Occ_RC_REV Sum_Occ_RC PAL Tot_Occ FREQ
 					 
@@ -831,9 +831,9 @@ void map_class::print_debug_maps_positions(){
 				unsigned int Position = i+1; 
 				unsigned int Rank = c+1; 
 				string Oligo = it_rev-> second.first ;
-				int Num_Occ_FWD  = it_rev-> first.first; //mettere unsigned
+				unsigned int Num_Occ_FWD  = it_rev-> first.first; //mettere unsigned
 				string Oligo_RC = it_rev-> second.second ;
-				int Num_Occ_REV, Sum_Occ_Oligo,Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+				unsigned int Num_Occ_REV, Sum_Occ_Oligo,Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
 			        string PAL;
 
 				if(DS==1){
@@ -906,7 +906,7 @@ void map_class::print_debug_maps_positions(){
 	}
 }
 
-void map_class::sum_frequence_best(multimap<pair<int,int>,pair<string,string>>::reverse_iterator it_rev, unsigned int j, unsigned int i){
+void map_class::sum_frequence_best(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev, unsigned int j, unsigned int i){
 		
 	unsigned int sum=0;
 	double freq;

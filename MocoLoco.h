@@ -195,19 +195,19 @@ class map_class{
 
 	private:
 		
-		vector<vector<map<pair<string,string>,pair<int, int>>>> vector_kmers_maps_plus;
-		vector<vector<map<pair<string,string>,pair<int, int>>>> vector_kmers_maps_minus;
-		vector<unordered_map<string,int>> orizzontal_plus_debug;
-		vector<unordered_map<string,int>> orizzontal_minus_debug;
-		vector<map<pair<string,string>,pair<int, int>>> maps_vector_positions_plus;
-		vector<map<pair<string,string>,pair<int, int>>> maps_vector_positions_minus;
-		unordered_map<string, int> orizzontal_plus;
-		unordered_map<string, int> orizzontal_minus;
-		map<pair<string,string>,pair<int, int>>  vertical_plus;
-		map<pair<string,string>,pair<int, int>>  vertical_minus;
+		vector<vector<map<pair<string,string>,pair<unsigned int, unsigned int>>>> vector_kmers_maps_plus;
+		vector<vector<map<pair<string,string>,pair<unsigned int, unsigned int>>>> vector_kmers_maps_minus;
+		vector<unordered_map<string,unsigned int>> orizzontal_plus_debug;
+		vector<unordered_map<string,unsigned int>> orizzontal_minus_debug;
+		vector<map<pair<string,string>,pair<unsigned int, unsigned int>>> maps_vector_positions_plus;
+		vector<map<pair<string,string>,pair<unsigned int, unsigned int>>> maps_vector_positions_minus;
+		unordered_map<string, unsigned int> orizzontal_plus;
+		unordered_map<string, unsigned int> orizzontal_minus;
+		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_plus;
+		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_minus;
 		string reverse_bases;
 		vector<vector<unsigned int>> tot_freq_matrix;
-		vector<int> kmers_vector;
+		vector<unsigned int> kmers_vector;
 		vector<double> tot_sum_vec;
 		vector<double> freq_vec;
 		vector<vector<double>> tot_sum_mat;
@@ -216,13 +216,13 @@ class map_class{
 		void kmers_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
-		void or_ver_kmer_count(string,unordered_map<string,int>&, unordered_map<string,int>&);
-		void vertical_kmer_count(string,map<pair<string,string>,pair<int, int>>&,map<pair<string,string>,pair<int, int>>&, unsigned int &);
-		void select_best(map<pair<string,string>,pair<int,int>>&);
+		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
+		void vertical_kmer_count(string,map<pair<string,string>,pair<unsigned int, unsigned int>>&,map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int &);
+		void select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>&);
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
 		void print_debug_maps_positions();
-		void sum_frequence_best(multimap<pair<int,int>,pair<string,string>>::reverse_iterator, unsigned int, unsigned int);
+		void sum_frequence_best(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator, unsigned int, unsigned int);
 		void print_debug_sum_freq();
 
 	public:
