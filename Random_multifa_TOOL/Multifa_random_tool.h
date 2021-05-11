@@ -50,7 +50,7 @@ class implanting_class{
 		void implanting_oligo(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 		void multifasta_outfile_2(map<unsigned int,string>, string);
 		void unique_random_generator();
-		void oligo_creation(map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator);
+		void oligo_creation(map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator, int);
 		void print_debug_matrix(vector<vector<unsigned int>>);
 
 	public:
@@ -77,6 +77,7 @@ void check_position_vector();
 void check_wobble();
 void check_overlapping(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 void check_input();
+void freq_strand_plus_vec();
 void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&, string, string);
 void ordering_matrix_names();
 vector<vector<unsigned int>> read_JASPAR(string,string&,string&);

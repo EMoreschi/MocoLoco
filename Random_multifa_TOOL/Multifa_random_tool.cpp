@@ -13,6 +13,9 @@ vector<unsigned int>n_oligo_vector;
 vector<unsigned int> position_vector;
 vector<unsigned int> wobble_vector;
 unsigned int cycles = 1;
+unsigned int freq_strand_plus = 50;
+vector<bool> plus_minus;
+vector<vector<bool>> plus_minus_matrix;
 
 int main(int argc, char *argv[]){
 
@@ -38,6 +41,7 @@ void read_input(){
 	check_position_vector();
 	wobble_vector_creation(wobble);
 	check_wobble();
+	freq_strand_plus_vec();
 }
 
 void find_oligo_number(){
@@ -52,6 +56,29 @@ void find_oligo_number(){
 		n_oligo_vector[i] = (n_oligo_vector[i] * n_seq)/100;
 	}
 
+}
+
+void freq_strand_plus_vec(){
+
+	for(unsigned int i=0; i<n_oligo_vector.size(); i++){
+		
+		mt19937 eng{random_device{}()};
+		unsigned int number_plus = (freq_strand_plus*n_oligo_vector[i]/100);
+
+		for(unsigned int j=1; j<=n_oligo_vector[i]; j++){
+			
+			if(j<=number_plus){
+				
+				plus_minus.emplace_back(0);
+			}
+			else{
+				plus_minus.emplace_back(1);
+			}
+		}
+		shuffle(plus_minus.begin(), plus_minus.end(),eng);	
+		plus_minus_matrix.emplace_back(plus_minus);
+		plus_minus.clear();	
+	}
 }
 
 void implanting_cycle(unsigned int i){
@@ -271,14 +298,14 @@ void ordering_matrix_names(){
 		}
 }
 
-void implanting_class::oligo_creation(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it){
+void implanting_class::oligo_creation(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it, int n){
 
 		unsigned int strand;
 		string oligo;
 
 		for(unsigned int j=0; j<it->first[2]; j++){
 
-			strand = random_number(0,1);
+			strand = plus_minus_matrix[n][j];
 			oligo.clear();
 
 			for (unsigned int i = 0; i < it->second[0].size(); i++) {			//From 0 to number of columns of line 0
@@ -412,7 +439,7 @@ void implanting_class::implanting_oligo(map<vector<unsigned int>, vector<vector<
 		for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it!=jaspar_map.end(); it++,j++){
 
 			unique_random_generator();				//generating a vector of unique random numbers from 1 to n_seq (length n_seq)
-			oligo_creation(it);				//creating a vector of random oligos coming from matrix frequences -> the size of oligos vector follows the input n_oligo_vector values for each matrix
+			oligo_creation(it,j);				//creating a vector of random oligos coming from matrix frequences -> the size of oligos vector follows the input n_oligo_vector values for each matrix
 			vector<unsigned int> index_vec;
 			
 			for(unsigned int w=0; w < it->first[2]; w++){	//Generating a vector of new indexes starting from input position and adding wobble
@@ -540,7 +567,7 @@ void implanting_class::multifasta_outfile_2(map<unsigned int,string> multifasta_
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hl:n:c:j:o:p:w:";
+	const char* const short_opts = "hl:n:c:j:o:p:w:f:";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -552,6 +579,7 @@ void command_line_parser(int argc, char** argv){
 		{"oligop",   required_argument, nullptr,  'o' },
 		{"position",   required_argument, nullptr,  'p' },
 		{"wobble",   required_argument, nullptr,  'w' },
+		{"freq",   required_argument, nullptr,  'f' },
 		{nullptr, no_argument, nullptr,  0   }
 	};
 
@@ -577,6 +605,8 @@ void command_line_parser(int argc, char** argv){
 			case 'p' : position = string(optarg); 
 				   break;
 			case 'w' : wobble = string(optarg); 
+				   break;
+			case 'f' : freq_strand_plus = stoi(optarg); 
 				   break;
 			case 'j' : JASPAR_F = (string(optarg));
 				   is_file_exist(JASPAR_F, ("--jaspar || -j number 1"));
