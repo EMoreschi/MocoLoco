@@ -828,13 +828,13 @@ void map_class::print_debug_maps_positions(){
 				//Position Rank Oligo Num_Occ_FWD Num_Occ_REV Sum_Occ_Oligo Oligo_RC Num_Occ_RC_FWD Num_Occ_RC_REV Sum_Occ_RC PAL Tot_Occ FREQ
 				
 					 
-				double FREQ, Tot_Occ;
+				double FREQ, Sum_Occ_Oligo;
 				unsigned int Position = i+1; 
 				unsigned int Rank = c+1; 
 				string Oligo = it_rev-> second.first ;
 				unsigned int Num_Occ_FWD  = it_rev-> first.first; //mettere unsigned
 				string Oligo_RC = it_rev-> second.second ;
-				unsigned int Num_Occ_REV, Sum_Occ_Oligo,Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+				unsigned int Num_Occ_REV, Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
 			        string PAL;
                                 Num_Occ_REV = it_rev->first.second;
 
@@ -842,7 +842,7 @@ void map_class::print_debug_maps_positions(){
 					if (it_rev->second.first== it_rev->second.second){
 						
 						PAL = "TRUE";
-						Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Tot_Occ = Num_Occ_FWD; 
+						Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD; 
 						
 					}
 
@@ -856,13 +856,13 @@ void map_class::print_debug_maps_positions(){
 
 
 					}
-						FREQ = Tot_Occ/tot_freq_matrix[j][i];
+						FREQ = Sum_Occ_Oligo/tot_freq_matrix[j][i];
 
 						outfile << Position << "\t" << Rank;
 						outfile << "\t" << Oligo<< "\t" << Num_Occ_FWD  <<"\t" << Num_Occ_REV <<"\t"<< Sum_Occ_Oligo << "\t";
 						outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD<<"\t" << Num_Occ_RC_REV<<"\t"<< Sum_Occ_RC << "\t";
-						outfile << PAL <<"\t"<< Sum_Occ_Oligo  << "\t" << FREQ << endl; 
-
+						outfile << PAL <<"\t"<< Sum_Occ_Oligo  << "\t" << FREQ; 
+						outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
 
 				//Position Rank Oligo Num_Occ_FWD Num_Occ_REV Sum_Occ_Oligo Oligo_RC Num_Occ_RC_FWD Num_Occ_RC_REV Sum_Occ_RC PAL Tot_Occ FREQ
 
