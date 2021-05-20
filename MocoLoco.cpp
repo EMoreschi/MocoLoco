@@ -403,7 +403,6 @@ void map_class::table_creation_orizzontal(vector<bed_class> GEP){
 				or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
 			}
 		}
-
 		orizzontal_plus_debug.emplace_back(orizzontal_plus);
 		orizzontal_minus_debug.emplace_back(orizzontal_minus);
 		orizzontal_plus.clear();
@@ -428,6 +427,7 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 				string bases = sequence.substr(i,kmers_vector[k]);
 				vertical_kmer_count(bases, vertical_plus,vertical_minus, tot_freq);
 			}
+			
 			select_best(vertical_plus);
 			maps_vector_positions_plus.emplace_back(vertical_plus);
 			maps_vector_positions_minus.emplace_back(vertical_minus);
@@ -445,8 +445,6 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 }
 
 void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int> &plus, unordered_map<string,unsigned int> &minus){
-
-
 
 	unordered_map<string,unsigned int>::iterator it_plus;
 	unordered_map<string,unsigned int>::iterator it_minus;
@@ -758,32 +756,38 @@ void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug functi
 void map_class::print_debug_orizzontal(){
 
 	for(unsigned int i=0; i<orizzontal_plus_debug.size(); i++){
-		
+
 		ofstream outfile;
 		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+".txt");	
-		
+
 		multimap<unsigned int,string> orizzontal_output;
 
 		for (unordered_map<string,unsigned int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
 			orizzontal_output.insert({it->second, it->first});	
 		}	      
-		
-		for (multimap<unsigned int,string>::reverse_iterator it_rev = orizzontal_output.rbegin(); it_rev!=orizzontal_output.rend(); it_rev++){
-			reverse_bases.clear();	
-			bool palindrome = check_palindrome(it_rev->second);
 
-			if(!palindrome){
-				
-				unordered_map<string,unsigned int>::iterator find_RC = orizzontal_minus_debug[i].find(reverse_bases);
-				outfile << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << endl;
+		for (multimap<unsigned int,string>::reverse_iterator it_rev = orizzontal_output.rbegin(); it_rev!=orizzontal_output.rend(); it_rev++){
+
+			if(DS==1){
+				reverse_bases.clear();	
+				bool palindrome = check_palindrome(it_rev->second);
+
+				if(!palindrome){
+
+					unordered_map<string,unsigned int>::iterator find_RC = orizzontal_minus_debug[i].find(reverse_bases);
+					outfile << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << endl;
+				}
+
+				else{
+					outfile << it_rev->second << "\t" << it_rev->first <<  endl;
+				}
 			}
 
 			else{
 				outfile << it_rev->second << "\t" << it_rev->first <<  endl;
-			
 			}
 		}
-	outfile.close();
+		outfile.close();
 	}
 }
 
@@ -804,7 +808,7 @@ void map_class::print_debug_maps_positions(){
 		else{
 
 			outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-			outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << endl;
+			outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << endl;
 
 		}
 
@@ -838,7 +842,7 @@ void map_class::print_debug_maps_positions(){
 			        string PAL;
                                 Num_Occ_REV = it_rev->first.second;
 
-
+					if(DS==1){
 					if (it_rev->second.first== it_rev->second.second){
 						
 						PAL = "TRUE";
@@ -865,7 +869,31 @@ void map_class::print_debug_maps_positions(){
 						outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
 
 				//Position Rank Oligo Num_Occ_FWD Num_Occ_REV Sum_Occ_Oligo Oligo_RC Num_Occ_RC_FWD Num_Occ_RC_REV Sum_Occ_RC PAL Tot_Occ FREQ
+					}
 
+					else{
+						
+						double Num_Occ_FWD_double = Num_Occ_FWD;
+						FREQ = Num_Occ_FWD_double/tot_freq_matrix[j][i];
+
+						if (it_rev->second.first== it_rev->second.second){
+
+							PAL = "TRUE";	
+							Num_Occ_RC_FWD = Num_Occ_FWD;
+							}
+						else{
+							PAL = "FALSE";
+							Num_Occ_RC_FWD = Num_Occ_REV;
+
+						}
+
+							outfile << Position << "\t" << Rank;
+							outfile << "\t" << Oligo << "\t" << Num_Occ_FWD;
+							outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD;
+							outfile << "\t" << PAL << "\t" << FREQ; 
+							outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
+						
+					}
 			}
 		}
 		
