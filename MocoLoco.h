@@ -207,11 +207,8 @@ class map_class{
 		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_minus;
 		string reverse_bases;
 		vector<vector<unsigned int>> tot_freq_matrix;
+		vector<vector<unsigned int>> tot_sum_matrix;
 		vector<unsigned int> kmers_vector;
-		vector<double> tot_sum_vec;
-		vector<double> freq_vec;
-		vector<vector<double>> tot_sum_mat;
-		vector<vector<double>> freq_mat;
 
 		void kmers_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
@@ -222,8 +219,7 @@ class map_class{
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
 		void print_debug_maps_positions();
-		void sum_frequence_best(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator, unsigned int, unsigned int);
-		void print_debug_sum_freq();
+		void TopN_sum_and_freq();
 
 	public:
 
@@ -234,7 +230,7 @@ class map_class{
 			table_creation_vertical(GEP);
 			print_debug_orizzontal();
 			print_debug_maps_positions();
-			print_debug_sum_freq();
+			TopN_sum_and_freq();
 		}
 
 };

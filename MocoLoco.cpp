@@ -416,7 +416,8 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
-			vector<unsigned int> tot_freq_vec;
+		vector<unsigned int> tot_freq_vec;
+		
 		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
 			unsigned int tot_freq = 0;
@@ -427,7 +428,7 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 				string bases = sequence.substr(i,kmers_vector[k]);
 				vertical_kmer_count(bases, vertical_plus,vertical_minus, tot_freq);
 			}
-			
+
 			select_best(vertical_plus);
 			maps_vector_positions_plus.emplace_back(vertical_plus);
 			maps_vector_positions_minus.emplace_back(vertical_minus);
@@ -435,7 +436,7 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 			vertical_minus.clear();
 			tot_freq_vec.emplace_back(tot_freq);
 		}
-		
+
 		vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
 		vector_kmers_maps_minus.emplace_back(maps_vector_positions_minus);
 		tot_freq_matrix.emplace_back(tot_freq_vec);
@@ -811,8 +812,8 @@ void map_class::print_debug_maps_positions(){
 			outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << endl;
 
 		}
-
-		vector<unsigned int> sum_topN_kmer;
+		
+		vector<unsigned int> tot_sum_vec;
 
 		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
 
@@ -823,15 +824,11 @@ void map_class::print_debug_maps_positions(){
 				vertical_multimap.insert({it->second,it->first});
 			}
 			
-			multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_r = vertical_multimap.rbegin();
-			sum_frequence_best(it_r,j,i);
-			unsigned int c=0;	
+			unsigned int c=0;
+			unsigned int sum_for_TopN_pos = 0;	
 
 			for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend() && c < top_N; it_rev++, c++ ){
 
-				//Position Rank Oligo Num_Occ_FWD Num_Occ_REV Sum_Occ_Oligo Oligo_RC Num_Occ_RC_FWD Num_Occ_RC_REV Sum_Occ_RC PAL Tot_Occ FREQ
-				
-					 
 				double FREQ, Sum_Occ_Oligo;
 				unsigned int Position = i+1; 
 				unsigned int Rank = c+1; 
@@ -867,8 +864,9 @@ void map_class::print_debug_maps_positions(){
 						outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD<<"\t" << Num_Occ_RC_REV<<"\t"<< Sum_Occ_RC << "\t";
 						outfile << PAL <<"\t"<< Sum_Occ_Oligo  << "\t" << FREQ; 
 						outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
+						
+						sum_for_TopN_pos = sum_for_TopN_pos + Sum_Occ_Oligo;
 
-				//Position Rank Oligo Num_Occ_FWD Num_Occ_REV Sum_Occ_Oligo Oligo_RC Num_Occ_RC_FWD Num_Occ_RC_REV Sum_Occ_RC PAL Tot_Occ FREQ
 					}
 
 					else{
@@ -893,65 +891,34 @@ void map_class::print_debug_maps_positions(){
 							outfile << "\t" << PAL << "\t" << FREQ; 
 							outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
 						
+							sum_for_TopN_pos = sum_for_TopN_pos + Num_Occ_FWD;
 					}
 			}
+		
+			tot_sum_vec.emplace_back(sum_for_TopN_pos);
 		}
 		
-		tot_sum_mat.emplace_back(tot_sum_vec);
-		freq_mat.emplace_back(freq_vec);
-
+		tot_sum_matrix.emplace_back(tot_sum_vec);
 		tot_sum_vec.clear();
-		freq_vec.clear();
 		outfile.close();
 	}
 }
 
-void map_class::sum_frequence_best(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev, unsigned int j, unsigned int i){
-		
-	unsigned int sum=0;
-	double freq;
-	double sum_tot;
+void map_class::TopN_sum_and_freq(){
 
-	for(unsigned int n = 0; n<top_N; it_rev++, n++){
-		
-		if(DS==1){
-			if(it_rev->second.first == it_rev->second.second){
-				sum = sum + it_rev->first.first; 
-			}
-			else{
-				sum = sum + (it_rev->first.first+it_rev->first.second)+(it_rev->first.second+it_rev->first.first); 
-			}
-		}
-		else{
-			if(it_rev->second.first == it_rev->second.second){
-				sum = sum + it_rev->first.first; 
-			}
-			else{
-				sum = sum + it_rev->first.first + it_rev->first.second;
-			}
-		}
-	}
-	
-	sum_tot = sum;
-	freq = sum_tot/tot_freq_matrix[j][i];
-
-	tot_sum_vec.emplace_back(sum_tot);
-	freq_vec.emplace_back(freq);	
-}
-
-void map_class::print_debug_sum_freq(){
-	
 	ofstream outfile;
 
-	for(unsigned int i=0; i<tot_sum_mat.size(); i++){
+	for(unsigned int i=0; i<tot_sum_matrix.size(); i++){
 	
 		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence.txt");
 		outfile << "###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":" << endl; 
 		outfile << "Position" << "\t" << "Sum" << "\t" << "Frequences" << endl; 
 		
-		for(unsigned int j=0; j<tot_sum_mat[i].size(); j++){
-			
-			outfile << j+1 << "\t" << tot_sum_mat[i][j] << "\t" << freq_mat[i][j] << endl; 
+		for(unsigned int j=0; j<tot_sum_matrix[i].size(); j++){
+		
+		double sum = tot_sum_matrix[i][j];		//Put as double to dont loose the precision	
+		double frequence = sum/tot_freq_matrix[i][j];	
+		outfile << j+1 << "\t" << tot_sum_matrix[i][j] << "\t" << frequence << endl; 
 
 		}
 		outfile.close();
