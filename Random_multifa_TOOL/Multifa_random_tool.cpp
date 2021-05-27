@@ -13,7 +13,8 @@ vector<unsigned int>n_oligo_vector;
 vector<unsigned int> position_vector;
 vector<unsigned int> wobble_vector;
 unsigned int cycles = 1;
-unsigned int freq_strand_plus = 50;
+string freq_strand_plus = "50,50,50";
+vector<unsigned int> freq_strand_plus_vector;
 vector<bool> plus_minus;
 vector<vector<bool>> plus_minus_matrix;
 
@@ -41,7 +42,7 @@ void read_input(){
 	check_position_vector();
 	wobble_vector_creation(wobble);
 	check_wobble();
-	freq_strand_plus_vec();
+	generic_vector_creation(freq_strand_plus, freq_strand_plus_vector);
 }
 
 void find_oligo_number(){
@@ -58,17 +59,17 @@ void find_oligo_number(){
 
 }
 
-void freq_strand_plus_vec(){
+void freq_strand_plus_matrix(map<vector<unsigned int>, vector<vector<unsigned int>>>& jaspar_map){
 
-	for(unsigned int i=0; i<n_oligo_vector.size(); i++){
-		
+	for(map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it != jaspar_map.end(); it++){
+
 		mt19937 eng{random_device{}()};
-		unsigned int number_plus = (freq_strand_plus*n_oligo_vector[i]/100);
+		unsigned int number_plus = (it->first[3]*it->first[2]/100);
 
-		for(unsigned int j=1; j<=n_oligo_vector[i]; j++){
-			
+		for(unsigned int j=1; j<=it->first[2]; j++){
+
 			if(j<=number_plus){
-				
+
 				plus_minus.emplace_back(0);
 			}
 			else{
@@ -94,17 +95,40 @@ void implanting_cycle(unsigned int i){
 		cout << "The number of implanting position is: " << position_vector.size() << endl;
 		cout << "The length of multifasta random sequences is: " << length << endl;
 		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
-		cout << "The number of oligo randomly generated for each Jaspar matrix is: ";
+		cout << "The Jaspar matrices inserted as input are: ";
+
+		for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
+			cout <<JASPAR_FILE_vector[i] << " ";
+		}
+		cout << endl;
+
+		cout << "The implanting positions for each Jaspar matrix are: ";
+
+		for(unsigned int i=0; i<position_vector.size(); i++){
+			cout <<position_vector[i] << " ";
+		}
+		cout << endl;
+
+		cout << "The number of oligos randomly generated for each Jaspar matrix are: ";
 
 		for(unsigned int i=0; i<n_oligo_vector.size(); i++){
 			cout <<n_oligo_vector[i] << " ";
 		}
+		cout << endl;
+
+		cout << "The frequences of fwd strand oligo generation for each Jaspar matrix are: ";
+
+		for(unsigned int i=0; i<freq_strand_plus_vector.size(); i++){
+			cout <<freq_strand_plus_vector[i] << "% ";
+		}
+
 		cout << endl << endl;
 		cout << "-----------------------------------------------------------------------------------" << endl;
 
 		check_input();		//controlling that the number of Jaspar matrices in input are = to number of -p (implanting position) in input. If the control is positive, the map<position,jaspar_name> start to be filled	
 		filling_jaspar_map(jaspar_map,matrix_name,tf_name);
 		ordering_matrix_names();
+		freq_strand_plus_matrix(jaspar_map);
 		multifasta_class MULTIFA(length,n_seq,i); 	//generating a random multifasta_class
 		
 		if(position_vector.size() > 1){		//if the jaspar input are more then 1
@@ -151,6 +175,7 @@ void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&
 		parameters.emplace_back(position_vector[i]);
 		parameters.emplace_back(wobble_vector[i]);
 		parameters.emplace_back(n_oligo_vector[i]);
+		parameters.emplace_back(freq_strand_plus_vector[i]);
 		
 		jaspar_map.insert({parameters,matrix});
 		parameters.clear();
@@ -606,7 +631,7 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'w' : wobble = string(optarg); 
 				   break;
-			case 'f' : freq_strand_plus = stoi(optarg); 
+			case 'f' : freq_strand_plus = string(optarg); 
 				   break;
 			case 'j' : JASPAR_F = (string(optarg));
 				   is_file_exist(JASPAR_F, ("--jaspar || -j number 1"));

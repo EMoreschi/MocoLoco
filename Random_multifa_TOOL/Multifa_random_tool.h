@@ -77,7 +77,7 @@ void check_position_vector();
 void check_wobble();
 void check_overlapping(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 void check_input();
-void freq_strand_plus_vec();
+void freq_strand_plus_matrix(map<vector<unsigned int>, vector<vector<unsigned int>>>&);
 void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&, string, string);
 void ordering_matrix_names();
 vector<vector<unsigned int>> read_JASPAR(string,string&,string&);
