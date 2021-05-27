@@ -759,8 +759,15 @@ void map_class::print_debug_orizzontal(){
 	for(unsigned int i=0; i<orizzontal_plus_debug.size(); i++){
 
 		ofstream outfile;
-		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+".txt");	
 
+		if(DS==1){
+		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"DS.txt");	
+		}
+
+		else{
+		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"SS.txt");	
+		}
+		
 		multimap<unsigned int,string> orizzontal_output;
 
 		for (unordered_map<string,unsigned int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
@@ -797,9 +804,9 @@ void map_class::print_debug_maps_positions(){
 	ofstream outfile;
 	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
 		
-		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+".txt");
-
 		if(DS==1){
+		
+			outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"DS.txt");
 			
 			outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 			outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << endl;
@@ -807,6 +814,7 @@ void map_class::print_debug_maps_positions(){
 		}
 
 		else{
+			outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"SS.txt");
 
 			outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 			outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << endl;
@@ -909,8 +917,15 @@ void map_class::TopN_sum_and_freq(){
 	ofstream outfile;
 
 	for(unsigned int i=0; i<tot_sum_matrix.size(); i++){
-	
-		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence.txt");
+		
+		if(DS==1){	
+		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_DS.txt");
+		}
+		
+		else{
+		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_SS.txt");
+		}
+
 		outfile << "###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":" << endl; 
 		outfile << "Position" << "\t" << "Sum" << "\t" << "Frequences" << endl; 
 		
