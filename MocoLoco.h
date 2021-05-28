@@ -219,6 +219,9 @@ class map_class{
 		bool check_palindrome(string);
 		void print_debug_orizzontal();
 		void print_debug_maps_positions();
+		ofstream outfile_header(unsigned int);
+		multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap_creation(unsigned int, unsigned int);	
+		void outfile_ranking(unsigned int, unsigned int, unsigned int&, unsigned int&, multimap<pair<unsigned int, unsigned int>, pair<string,string>>&, ofstream& outfile);
 		void TopN_sum_and_freq();
 
 	public:

@@ -801,115 +801,138 @@ void map_class::print_debug_orizzontal(){
 
 void map_class::print_debug_maps_positions(){
 
-	ofstream outfile;
 	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
-		
-		if(DS==1){
-		
-			outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"DS.txt");
-			
-			outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-			outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << endl;
 
-		}
+		ofstream outfile = outfile_header(j);
 
-		else{
-			outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"SS.txt");
-
-			outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-			outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << endl;
-
-		}
-		
 		vector<unsigned int> tot_sum_vec;
 
 		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
 
-			multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap;	
+			multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap = vertical_multimap_creation(j,i);	
 
-			for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
-
-				vertical_multimap.insert({it->second,it->first});
-			}
-			
 			unsigned int c=0;
 			unsigned int sum_for_TopN_pos = 0;	
 
-			for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend() && c < top_N; it_rev++, c++ ){
+			outfile_ranking(i,j,c, sum_for_TopN_pos, vertical_multimap, outfile);
 
-				double FREQ, Sum_Occ_Oligo;
-				unsigned int Position = i+1; 
-				unsigned int Rank = c+1; 
-				string Oligo = it_rev-> second.first ;
-				unsigned int Num_Occ_FWD  = it_rev-> first.first; //mettere unsigned
-				string Oligo_RC = it_rev-> second.second ;
-				unsigned int Num_Occ_REV, Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
-			        string PAL;
-                                Num_Occ_REV = it_rev->first.second;
-
-					if(DS==1){
-					if (it_rev->second.first== it_rev->second.second){
-						
-						PAL = "TRUE";
-						Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD; 
-						
-					}
-
-					else{
-						PAL= "FALSE";
-
-						Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
-						Num_Occ_RC_FWD = Num_Occ_REV; 
-						Num_Occ_RC_REV = Num_Occ_FWD;
-						Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
-
-
-					}
-						FREQ = Sum_Occ_Oligo/tot_freq_matrix[j][i];
-
-						outfile << Position << "\t" << Rank;
-						outfile << "\t" << Oligo<< "\t" << Num_Occ_FWD  <<"\t" << Num_Occ_REV <<"\t"<< Sum_Occ_Oligo << "\t";
-						outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD<<"\t" << Num_Occ_RC_REV<<"\t"<< Sum_Occ_RC << "\t";
-						outfile << PAL <<"\t"<< Sum_Occ_Oligo  << "\t" << FREQ; 
-						outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
-						
-						sum_for_TopN_pos = sum_for_TopN_pos + Sum_Occ_Oligo;
-
-					}
-
-					else{
-						
-						double Num_Occ_FWD_double = Num_Occ_FWD;
-						FREQ = Num_Occ_FWD_double/tot_freq_matrix[j][i];
-
-						if (it_rev->second.first== it_rev->second.second){
-
-							PAL = "TRUE";	
-							Num_Occ_RC_FWD = Num_Occ_FWD;
-							}
-						else{
-							PAL = "FALSE";
-							Num_Occ_RC_FWD = Num_Occ_REV;
-
-						}
-
-							outfile << Position << "\t" << Rank;
-							outfile << "\t" << Oligo << "\t" << Num_Occ_FWD;
-							outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD;
-							outfile << "\t" << PAL << "\t" << FREQ; 
-							outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
-						
-							sum_for_TopN_pos = sum_for_TopN_pos + Num_Occ_FWD;
-					}
-			}
-		
 			tot_sum_vec.emplace_back(sum_for_TopN_pos);
 		}
-		
+
 		tot_sum_matrix.emplace_back(tot_sum_vec);
 		tot_sum_vec.clear();
 		outfile.close();
 	}
+}
+
+ofstream map_class::outfile_header(unsigned int j){
+
+
+	ofstream outfile;
+
+	if(DS==1){
+
+		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"DS.txt");
+
+		outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << endl;
+
+	}
+
+	else{
+		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"SS.txt");
+
+		outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << endl;
+
+	}
+	return outfile;	
+}
+
+
+multimap<pair<unsigned int, unsigned int>,pair<string,string>> map_class::vertical_multimap_creation(unsigned int j, unsigned int i){
+
+	multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap;
+
+	for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
+
+		vertical_multimap.insert({it->second,it->first});
+	}
+
+	return vertical_multimap;
+}
+
+void map_class::outfile_ranking(unsigned int i, unsigned int j, unsigned int& c, unsigned int& sum_for_TopN_pos, multimap<pair<unsigned int, unsigned int>, pair<string,string>>& vertical_multimap, ofstream& outfile){
+
+	for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend() && c < top_N; it_rev++, c++ ){
+
+
+		double FREQ, Sum_Occ_Oligo;
+		unsigned int Position = i+1; 
+		unsigned int Rank = c+1; 
+		string Oligo = it_rev-> second.first ;
+		unsigned int Num_Occ_FWD  = it_rev-> first.first; //mettere unsigned
+		string Oligo_RC = it_rev-> second.second ;
+		unsigned int Num_Occ_REV, Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+		string PAL;
+		Num_Occ_REV = it_rev->first.second;
+
+		if(DS==1){
+			if (it_rev->second.first== it_rev->second.second){
+
+				PAL = "TRUE";
+				Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD; 
+
+			}
+
+			else{
+				PAL= "FALSE";
+
+				Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
+				Num_Occ_RC_FWD = Num_Occ_REV; 
+				Num_Occ_RC_REV = Num_Occ_FWD;
+				Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
+
+
+			}
+			FREQ = Sum_Occ_Oligo/tot_freq_matrix[j][i];
+
+			outfile << Position << "\t" << Rank;
+			outfile << "\t" << Oligo<< "\t" << Num_Occ_FWD  <<"\t" << Num_Occ_REV <<"\t"<< Sum_Occ_Oligo << "\t";
+			outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD<<"\t" << Num_Occ_RC_REV<<"\t"<< Sum_Occ_RC << "\t";
+			outfile << PAL <<"\t"<< Sum_Occ_Oligo  << "\t" << FREQ; 
+			outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
+
+			sum_for_TopN_pos = sum_for_TopN_pos + Sum_Occ_Oligo;
+
+		}
+
+		else{
+
+			double Num_Occ_FWD_double = Num_Occ_FWD;
+			FREQ = Num_Occ_FWD_double/tot_freq_matrix[j][i];
+
+			if (it_rev->second.first== it_rev->second.second){
+
+				PAL = "TRUE";	
+				Num_Occ_RC_FWD = Num_Occ_FWD;
+			}
+			else{
+				PAL = "FALSE";
+				Num_Occ_RC_FWD = Num_Occ_REV;
+
+			}
+
+			outfile << Position << "\t" << Rank;
+			outfile << "\t" << Oligo << "\t" << Num_Occ_FWD;
+			outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD;
+			outfile << "\t" << PAL << "\t" << FREQ; 
+			outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
+
+			sum_for_TopN_pos = sum_for_TopN_pos + Num_Occ_FWD;
+		}
+	}
+
 }
 
 void map_class::TopN_sum_and_freq(){
