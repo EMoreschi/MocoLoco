@@ -688,6 +688,41 @@ unsigned int bed_class::return_end_coord(){
 	return end_coord;
 }
 
+string p_value_class::return_oligo(){
+
+	return oligo;
+}
+
+unsigned int p_value_class::return_K(){
+
+	return K;
+}
+
+unsigned int p_value_class::return_N1(){
+
+	return N1;
+}
+
+unsigned int p_value_class::return_N2(){
+
+	return N2;
+}
+
+unsigned int p_value_class::return_T(){
+
+	return T;
+}
+
+unsigned int p_value_class::return_position(){
+
+	return position;
+}
+
+unsigned int p_value_class::return_rank(){
+
+	return rank;
+}
+
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
 
 	M.print_debug_matrix(matrix, " ");
@@ -761,13 +796,13 @@ void map_class::print_debug_orizzontal(){
 		ofstream outfile;
 
 		if(DS==1){
-		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"DS.txt");	
+			outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"DS.txt");	
 		}
 
 		else{
-		outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"SS.txt");	
+			outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"SS.txt");	
 		}
-		
+
 		multimap<unsigned int,string> orizzontal_output;
 
 		for (unordered_map<string,unsigned int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
@@ -784,15 +819,19 @@ void map_class::print_debug_orizzontal(){
 
 					unordered_map<string,unsigned int>::iterator find_RC = orizzontal_minus_debug[i].find(reverse_bases);
 					outfile << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << endl;
+					total_oligo_N2 = total_oligo_N2 + it_rev->first;
+
 				}
 
 				else{
 					outfile << it_rev->second << "\t" << it_rev->first <<  endl;
+					total_oligo_N2 = total_oligo_N2 + it_rev->first;
 				}
 			}
 
 			else{
 				outfile << it_rev->second << "\t" << it_rev->first <<  endl;
+				total_oligo_N2 = total_oligo_N2 + it_rev->first;
 			}
 		}
 		outfile.close();
@@ -814,14 +853,16 @@ void map_class::print_debug_maps_positions(){
 			unsigned int c=0;
 			unsigned int sum_for_TopN_pos = 0;	
 
-			outfile_ranking(i,j,c, sum_for_TopN_pos, vertical_multimap, outfile);
+			outfile_ranking(j,i,c, sum_for_TopN_pos, vertical_multimap, outfile);
 
 			tot_sum_vec.emplace_back(sum_for_TopN_pos);
 		}
-
+		P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR);
+		P_VALUE_VECTOR.clear();
 		tot_sum_matrix.emplace_back(tot_sum_vec);
 		tot_sum_vec.clear();
 		outfile.close();
+
 	}
 }
 
@@ -862,7 +903,7 @@ multimap<pair<unsigned int, unsigned int>,pair<string,string>> map_class::vertic
 	return vertical_multimap;
 }
 
-void map_class::outfile_ranking(unsigned int i, unsigned int j, unsigned int& c, unsigned int& sum_for_TopN_pos, multimap<pair<unsigned int, unsigned int>, pair<string,string>>& vertical_multimap, ofstream& outfile){
+void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c, unsigned int& sum_for_TopN_pos, multimap<pair<unsigned int, unsigned int>, pair<string,string>>& vertical_multimap, ofstream& outfile){
 
 	for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend() && c < top_N; it_rev++, c++ ){
 
@@ -895,22 +936,40 @@ void map_class::outfile_ranking(unsigned int i, unsigned int j, unsigned int& c,
 
 
 			}
+
 			FREQ = Sum_Occ_Oligo/tot_freq_matrix[j][i];
+			unsigned int K = Sum_Occ_Oligo;
+			it_N1 = orizzontal_plus_debug[0].find(Oligo); 
+			unsigned int N1 = it_N1->second;
+			unsigned int N2 = total_oligo_N2-N1;
+			unsigned int T = tot_freq_matrix[j][i];
+			
+			double p_value =  gsl_cdf_hypergeometric_Q(K,N1,N2,T);
+			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c);
+			P_VALUE_VECTOR.emplace_back(P_VALUE_CLASS);
 
 			outfile << Position << "\t" << Rank;
 			outfile << "\t" << Oligo<< "\t" << Num_Occ_FWD  <<"\t" << Num_Occ_REV <<"\t"<< Sum_Occ_Oligo << "\t";
 			outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD<<"\t" << Num_Occ_RC_REV<<"\t"<< Sum_Occ_RC << "\t";
 			outfile << PAL <<"\t"<< Sum_Occ_Oligo  << "\t" << FREQ; 
-			outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
+			outfile << "\t" <<  p_value << endl;
 
 			sum_for_TopN_pos = sum_for_TopN_pos + Sum_Occ_Oligo;
-
 		}
 
 		else{
 
 			double Num_Occ_FWD_double = Num_Occ_FWD;
 			FREQ = Num_Occ_FWD_double/tot_freq_matrix[j][i];
+			unsigned int K = Num_Occ_FWD;
+			it_N1 = orizzontal_plus_debug[0].find(Oligo); 
+			unsigned int N1 = it_N1->second;
+			unsigned int N2 = total_oligo_N2 - N1;
+			unsigned int T = tot_freq_matrix[j][i];
+
+			double p_value = gsl_cdf_hypergeometric_Q(K,N1,N2,T);
+			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c);
+			P_VALUE_VECTOR.emplace_back(P_VALUE_CLASS);
 
 			if (it_rev->second.first== it_rev->second.second){
 
@@ -927,12 +986,11 @@ void map_class::outfile_ranking(unsigned int i, unsigned int j, unsigned int& c,
 			outfile << "\t" << Oligo << "\t" << Num_Occ_FWD;
 			outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD;
 			outfile << "\t" << PAL << "\t" << FREQ; 
-			outfile << "\t" <<  tot_freq_matrix[j][i] << endl;
+			outfile << "\t" << p_value << endl;
 
 			sum_for_TopN_pos = sum_for_TopN_pos + Num_Occ_FWD;
 		}
 	}
-
 }
 
 void map_class::TopN_sum_and_freq(){
@@ -960,6 +1018,25 @@ void map_class::TopN_sum_and_freq(){
 
 		}
 		outfile.close();
+	}
+}
+
+void map_class::P_VALUE_MATRIX_debug(){
+	
+	ofstream outfile;
+
+	outfile.open("Controllo_parametri.txt");
+	outfile << "Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << endl << endl;
+	
+	for(unsigned int i = 0; i<P_VALUE_MATRIX[0].size(); i++){
+
+		outfile << P_VALUE_MATRIX[0][i].return_position() << " "; 
+		outfile << P_VALUE_MATRIX[0][i].return_rank() << " "; 
+		outfile << P_VALUE_MATRIX[0][i].return_oligo() << " "; 
+		outfile << P_VALUE_MATRIX[0][i].return_K() << " "; 
+		outfile << P_VALUE_MATRIX[0][i].return_N1() << " "; 
+		outfile << P_VALUE_MATRIX[0][i].return_N2() << " "; 
+		outfile << P_VALUE_MATRIX[0][i].return_T() << endl; 
 	}
 }
 

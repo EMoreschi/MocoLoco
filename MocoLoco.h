@@ -6,6 +6,9 @@
 #include <cmath>
 #include <iterator>
 #include <list>
+#include <gsl/gsl_sf.h>
+#include <gsl/gsl_cdf.h>
+#include <gsl/gsl_sf_bessel.h>
 #include <vector>
 #include <algorithm>
 #include <map>
@@ -191,6 +194,41 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 };
 
+class p_value_class{
+
+	private:
+
+		unsigned int K;
+		unsigned int N1;
+		unsigned int N2;
+		unsigned int T;
+		string oligo;
+		unsigned int position;
+		unsigned int rank;
+
+	public:
+
+		p_value_class(unsigned int k, unsigned int n1, unsigned int n2, unsigned int t, string oli, unsigned int i, unsigned int c){
+
+			K = k;
+			N1 = n1;
+			N2 = n2;
+			T = t;
+			oligo = oli;
+			position = i+1;
+			rank = c+1;
+
+		}
+
+		string return_oligo();
+		unsigned int return_K();
+		unsigned int return_N1();
+		unsigned int return_N2();
+		unsigned int return_T();
+		unsigned int return_position();
+		unsigned int return_rank();
+};
+
 class map_class{
 
 	private:
@@ -209,6 +247,10 @@ class map_class{
 		vector<vector<unsigned int>> tot_freq_matrix;
 		vector<vector<unsigned int>> tot_sum_matrix;
 		vector<unsigned int> kmers_vector;
+		unordered_map<string,unsigned int>::iterator it_N1;
+		unsigned int total_oligo_N2;
+		vector<p_value_class> P_VALUE_VECTOR;
+		vector<vector<p_value_class>> P_VALUE_MATRIX;
 
 		void kmers_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
@@ -223,6 +265,7 @@ class map_class{
 		multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap_creation(unsigned int, unsigned int);	
 		void outfile_ranking(unsigned int, unsigned int, unsigned int&, unsigned int&, multimap<pair<unsigned int, unsigned int>, pair<string,string>>&, ofstream& outfile);
 		void TopN_sum_and_freq();
+		void P_VALUE_MATRIX_debug();
 
 	public:
 
@@ -234,6 +277,7 @@ class map_class{
 			print_debug_orizzontal();
 			print_debug_maps_positions();
 			TopN_sum_and_freq();
+			P_VALUE_MATRIX_debug();
 		}
 
 };
