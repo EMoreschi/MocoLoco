@@ -862,8 +862,9 @@ void map_class::print_debug_maps_positions(){
 		tot_sum_matrix.emplace_back(tot_sum_vec);
 		tot_sum_vec.clear();
 		outfile.close();
-
+		
 	}
+	P_VALUE_MATRIX_debug();
 }
 
 ofstream map_class::outfile_header(unsigned int j){
@@ -939,7 +940,7 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 
 			FREQ = Sum_Occ_Oligo/tot_freq_matrix[j][i];
 			unsigned int K = Sum_Occ_Oligo;
-			it_N1 = orizzontal_plus_debug[0].find(Oligo); 
+			it_N1 = orizzontal_plus_debug[j].find(Oligo); 
 			unsigned int N1 = it_N1->second;
 			unsigned int N2 = total_oligo_N2-N1;
 			unsigned int T = tot_freq_matrix[j][i];
@@ -1022,21 +1023,25 @@ void map_class::TopN_sum_and_freq(){
 }
 
 void map_class::P_VALUE_MATRIX_debug(){
-	
+
 	ofstream outfile;
-
-	outfile.open("Controllo_parametri.txt");
-	outfile << "Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << endl << endl;
 	
-	for(unsigned int i = 0; i<P_VALUE_MATRIX[0].size(); i++){
+	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
+		outfile.open("Controllo_parametri_"+to_string(kmers_vector[j])+"-mers.txt");
+		outfile << "Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << endl << endl;
+		
+		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
 
-		outfile << P_VALUE_MATRIX[0][i].return_position() << " "; 
-		outfile << P_VALUE_MATRIX[0][i].return_rank() << " "; 
-		outfile << P_VALUE_MATRIX[0][i].return_oligo() << " "; 
-		outfile << P_VALUE_MATRIX[0][i].return_K() << " "; 
-		outfile << P_VALUE_MATRIX[0][i].return_N1() << " "; 
-		outfile << P_VALUE_MATRIX[0][i].return_N2() << " "; 
-		outfile << P_VALUE_MATRIX[0][i].return_T() << endl; 
+			outfile << P_VALUE_MATRIX[j][i].return_position() << " "; 
+			outfile << P_VALUE_MATRIX[j][i].return_rank() << " "; 
+			outfile << P_VALUE_MATRIX[j][i].return_oligo() << " "; 
+			outfile << P_VALUE_MATRIX[j][i].return_K() << " "; 
+			outfile << P_VALUE_MATRIX[j][i].return_N1() << " "; 
+			outfile << P_VALUE_MATRIX[j][i].return_N2() << " "; 
+			outfile << P_VALUE_MATRIX[j][i].return_T() << endl; 
+		}
+	
+		outfile.close();
 	}
 }
 

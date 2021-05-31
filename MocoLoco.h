@@ -277,9 +277,7 @@ class map_class{
 			print_debug_orizzontal();
 			print_debug_maps_positions();
 			TopN_sum_and_freq();
-			P_VALUE_MATRIX_debug();
 		}
-
 };
 
 class multifasta_class{
