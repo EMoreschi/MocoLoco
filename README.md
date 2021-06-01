@@ -33,3 +33,12 @@ The tool is contained in the Random_multifa_TOOL directory
 #### this script uses the twobit.c and twobit.h file from
 https://github.com/andrelmartins/TwoBit 
 
+#### this script uses the gsl-2.6 library 
+
+The current stable version of GSL is always available from ftp.gnu.org
+in the directory /pub/gnu/gsl.
+
+A list of mirror sites can be found at http://www.gnu.org/order/ftp.html
+
+The project homepage is http://www.gnu.org/software/gsl/
+
