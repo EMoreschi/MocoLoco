@@ -205,10 +205,11 @@ class p_value_class{
 		string oligo;
 		unsigned int position;
 		unsigned int rank;
+		double p_val;
 
 	public:
 
-		p_value_class(unsigned int k, unsigned int n1, unsigned int n2, unsigned int t, string oli, unsigned int i, unsigned int c){
+		p_value_class(unsigned int k, unsigned int n1, unsigned int n2, unsigned int t, string oli, unsigned int i, unsigned int c, double p){
 
 			K = k;
 			N1 = n1;
@@ -217,6 +218,7 @@ class p_value_class{
 			oligo = oli;
 			position = i+1;
 			rank = c+1;
+			p_val = p;
 
 		}
 
@@ -227,6 +229,7 @@ class p_value_class{
 		unsigned int return_T();
 		unsigned int return_position();
 		unsigned int return_rank();
+		double return_p_val();
 };
 
 class map_class{

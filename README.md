@@ -4,7 +4,7 @@
 
 #### How to compile
 
-`g++ -Wall -o test  MocoLoco.cpp`
+`g++ -Wall -o test  MocoLoco.cpp -lgsl`
 
 #### How to run (2 possibilities)
 
@@ -12,7 +12,7 @@
 
 `./test -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -ss(optional)`
 
-### Multifa random tool
+## Multifa random tool
 
 The tool is contained in the Random_multifa_TOOL directory
 
@@ -24,7 +24,7 @@ The tool is contained in the Random_multifa_TOOL directory
 
 ##### To generate random multifasta files and make implants:
 
-`./test -j <JASPAR_FILE_1> <JASPAR_FILE_2> ... <JASPAR_FILE_N> -p <number, number, ....> -l <number> (default 500) -n <number> (default 200) -o <number, number,...> -w <number, number,...> -c <number>` 
+`./test -j <JASPAR_FILE_1> <JASPAR_FILE_2> ... <JASPAR_FILE_N> -p <number, number, ....> -l <number> (default 500) -n <number> (default 200) -o <number, number,...> -w <number, number,...> -c <number>` -f <number, number,..> 
 
 ##### To generate random multifasta files:
 

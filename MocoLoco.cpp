@@ -723,6 +723,11 @@ unsigned int p_value_class::return_rank(){
 	return rank;
 }
 
+double p_value_class::return_p_val(){
+
+	return p_val;
+}
+
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
 
 	M.print_debug_matrix(matrix, " ");
@@ -796,11 +801,11 @@ void map_class::print_debug_orizzontal(){
 		ofstream outfile;
 
 		if(DS==1){
-			outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"DS.txt");	
+			outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"_DS.txt");	
 		}
 
 		else{
-			outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"SS.txt");	
+			outfile.open(to_string(kmers_vector[i])+"-mers_occurrences_"+alias_file+"_SS.txt");	
 		}
 
 		multimap<unsigned int,string> orizzontal_output;
@@ -874,18 +879,18 @@ ofstream map_class::outfile_header(unsigned int j){
 
 	if(DS==1){
 
-		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"DS.txt");
+		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"_DS.txt");
 
 		outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
 
 	}
 
 	else{
-		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"SS.txt");
+		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"_SS.txt");
 
 		outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
 
 	}
 	return outfile;	
@@ -946,7 +951,7 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			unsigned int T = tot_freq_matrix[j][i];
 			
 			double p_value =  gsl_cdf_hypergeometric_Q(K,N1,N2,T);
-			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c);
+			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
 			P_VALUE_VECTOR.emplace_back(P_VALUE_CLASS);
 
 			outfile << Position << "\t" << Rank;
@@ -963,13 +968,13 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			double Num_Occ_FWD_double = Num_Occ_FWD;
 			FREQ = Num_Occ_FWD_double/tot_freq_matrix[j][i];
 			unsigned int K = Num_Occ_FWD;
-			it_N1 = orizzontal_plus_debug[0].find(Oligo); 
+			it_N1 = orizzontal_plus_debug[j].find(Oligo); 
 			unsigned int N1 = it_N1->second;
 			unsigned int N2 = total_oligo_N2 - N1;
 			unsigned int T = tot_freq_matrix[j][i];
 
 			double p_value = gsl_cdf_hypergeometric_Q(K,N1,N2,T);
-			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c);
+			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
 			P_VALUE_VECTOR.emplace_back(P_VALUE_CLASS);
 
 			if (it_rev->second.first== it_rev->second.second){
@@ -1027,18 +1032,20 @@ void map_class::P_VALUE_MATRIX_debug(){
 	ofstream outfile;
 	
 	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
-		outfile.open("Controllo_parametri_"+to_string(kmers_vector[j])+"-mers.txt");
-		outfile << "Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << endl << endl;
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control.txt");
+		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << endl;
 		
 		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
 
-			outfile << P_VALUE_MATRIX[j][i].return_position() << " "; 
-			outfile << P_VALUE_MATRIX[j][i].return_rank() << " "; 
-			outfile << P_VALUE_MATRIX[j][i].return_oligo() << " "; 
-			outfile << P_VALUE_MATRIX[j][i].return_K() << " "; 
-			outfile << P_VALUE_MATRIX[j][i].return_N1() << " "; 
-			outfile << P_VALUE_MATRIX[j][i].return_N2() << " "; 
-			outfile << P_VALUE_MATRIX[j][i].return_T() << endl; 
+			outfile << P_VALUE_MATRIX[j][i].return_position() << "\t"; 
+			outfile << P_VALUE_MATRIX[j][i].return_rank() << "\t"; 
+			outfile << P_VALUE_MATRIX[j][i].return_oligo() << "\t"; 
+			outfile << P_VALUE_MATRIX[j][i].return_K() << "\t"; 
+			outfile << P_VALUE_MATRIX[j][i].return_N1() << "\t"; 
+			outfile << P_VALUE_MATRIX[j][i].return_N2() << "\t"; 
+			outfile << P_VALUE_MATRIX[j][i].return_T() << "\t"; 
+			outfile << P_VALUE_MATRIX[j][i].return_p_val() << endl; 
 		}
 	
 		outfile.close();
