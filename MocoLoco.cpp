@@ -945,8 +945,9 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 
 			FREQ = Sum_Occ_Oligo/tot_freq_matrix[j][i];
 			unsigned int K = Sum_Occ_Oligo;
-			it_N1 = orizzontal_plus_debug[j].find(Oligo); 
-			unsigned int N1 = it_N1->second;
+			it_N1_plus = orizzontal_plus_debug[j].find(Oligo); 
+			it_N1_minus = orizzontal_minus_debug[j].find(Oligo_RC); 
+			unsigned int N1 = it_N1_plus->second + it_N1_minus->second;
 			unsigned int N2 = total_oligo_N2-N1;
 			unsigned int T = tot_freq_matrix[j][i];
 			
@@ -968,8 +969,8 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			double Num_Occ_FWD_double = Num_Occ_FWD;
 			FREQ = Num_Occ_FWD_double/tot_freq_matrix[j][i];
 			unsigned int K = Num_Occ_FWD;
-			it_N1 = orizzontal_plus_debug[j].find(Oligo); 
-			unsigned int N1 = it_N1->second;
+			it_N1_plus = orizzontal_plus_debug[j].find(Oligo); 
+			unsigned int N1 = it_N1_plus->second;
 			unsigned int N2 = total_oligo_N2 - N1;
 			unsigned int T = tot_freq_matrix[j][i];
 

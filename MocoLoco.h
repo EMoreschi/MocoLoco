@@ -250,7 +250,8 @@ class map_class{
 		vector<vector<unsigned int>> tot_freq_matrix;
 		vector<vector<unsigned int>> tot_sum_matrix;
 		vector<unsigned int> kmers_vector;
-		unordered_map<string,unsigned int>::iterator it_N1;
+		unordered_map<string,unsigned int>::iterator it_N1_plus;
+		unordered_map<string,unsigned int>::iterator it_N1_minus;
 		unsigned int total_oligo_N2;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
