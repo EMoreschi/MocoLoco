@@ -421,6 +421,7 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
 			unsigned int tot_freq = 0;
+			T_parameter = 0;
 
 			for(unsigned int j=0; j<GEP.size(); j++){
 
@@ -484,13 +485,16 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 	if(DS == 1){	
 		if(!pal){
 			tot_freq = tot_freq+2;
+			T_parameter = T_parameter+1;
 		}
 		else{
 			tot_freq++;
+			T_parameter = T_parameter+1;
 		}
 	}
 	else{
 		tot_freq++;
+		T_parameter = T_parameter+1;
 	}
 
 	pair<string,string> pair_bases;
@@ -809,6 +813,7 @@ void map_class::print_debug_orizzontal(){
 		}
 
 		multimap<unsigned int,string> orizzontal_output;
+		total_oligo_N2 = 0;
 
 		for (unordered_map<string,unsigned int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
 			orizzontal_output.insert({it->second, it->first});	
@@ -839,6 +844,7 @@ void map_class::print_debug_orizzontal(){
 				total_oligo_N2 = total_oligo_N2 + it_rev->first;
 			}
 		}
+		total_oligo_N2_vector.emplace_back(total_oligo_N2);
 		outfile.close();
 	}
 }
@@ -954,8 +960,8 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			else{
 				N1 = it_N1_plus->second;
 			}
-			unsigned int N2 = total_oligo_N2-N1;
-			unsigned int T = tot_freq_matrix[j][i];
+			unsigned int N2 = total_oligo_N2_vector[j]-N1;
+			unsigned int T = T_parameter;
 			
 			double p_value =  gsl_cdf_hypergeometric_Q(K,N1,N2,T);
 			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
@@ -977,8 +983,8 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			unsigned int K = Num_Occ_FWD;
 			it_N1_plus = orizzontal_plus_debug[j].find(Oligo); 
 			unsigned int N1 = it_N1_plus->second;
-			unsigned int N2 = total_oligo_N2 - N1;
-			unsigned int T = tot_freq_matrix[j][i];
+			unsigned int N2 = total_oligo_N2_vector[j] - N1;
+			unsigned int T = T_parameter;
 
 			double p_value = gsl_cdf_hypergeometric_Q(K,N1,N2,T);
 			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
