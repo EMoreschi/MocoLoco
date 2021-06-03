@@ -206,6 +206,7 @@ class p_value_class{
 		unsigned int position;
 		unsigned int rank;
 		double p_val;
+		double p_val_log10;
 
 	public:
 
@@ -219,6 +220,7 @@ class p_value_class{
 			position = i+1;
 			rank = c+1;
 			p_val = p;
+			p_val_log10 = log10(p_val);
 
 		}
 
@@ -230,6 +232,7 @@ class p_value_class{
 		unsigned int return_position();
 		unsigned int return_rank();
 		double return_p_val();
+		double return_p_val_log10();
 };
 
 class map_class{
@@ -253,8 +256,8 @@ class map_class{
 		unordered_map<string,unsigned int>::iterator it_N1_plus;
 		unordered_map<string,unsigned int>::iterator it_N1_minus;
 		unsigned int total_oligo_N2;
-		unsigned int T_parameter;
 		vector<unsigned int> total_oligo_N2_vector;
+		unsigned int sequences_number_T;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
 
@@ -272,6 +275,7 @@ class map_class{
 		void outfile_ranking(unsigned int, unsigned int, unsigned int&, unsigned int&, multimap<pair<unsigned int, unsigned int>, pair<string,string>>&, ofstream& outfile);
 		void TopN_sum_and_freq();
 		void P_VALUE_MATRIX_debug();
+		void N2_calculation();
 
 	public:
 
@@ -280,6 +284,8 @@ class map_class{
 			kmers_vector_creation(kmers);
 			table_creation_orizzontal(GEP);
 			table_creation_vertical(GEP);
+			N2_calculation();
+			sequences_number_T = GEP.size();
 			print_debug_orizzontal();
 			print_debug_maps_positions();
 			TopN_sum_and_freq();

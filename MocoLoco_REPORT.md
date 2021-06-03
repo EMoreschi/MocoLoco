@@ -1,23 +1,29 @@
-NSTRUCTION and REPORT MocoLoco.cpp and MocoLoco.h files project
+## **INSTRUCTION** and **REPORT** MocoLoco.cpp and MocoLoco.h files project
+<br>  
+<br>  
 
-The program has two different ways to be executed.
+### The program has **two different ways to be executed**.
 
-    1. With BED, TwoBit and Jaspar files in input.
-    2. With Multifasta file in input.
+   1. BED, TwoBit and Jaspar files in input.
+   2. Multifasta file in input.
 
-In both cases to compile the program the command needed is:
+<br>  
 
-	g++ -o test -Wall Mocoloco.cpp -lgsl
+### To **compile** the program the command needed in both cases is:
 
-To execute it 2 different ways have been implemented:
+     	g++ -o test -Wall Mocoloco.cpp -lgsl -lgslclbas
+<br>  
 
-    1. BED,TwoBit,Jaspar input:
+### To **execute** it 2 different ways have been implemented:
+
+1. BED,TwoBit,Jaspar input:
        
        ./test -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -n <number> (optional) -ss(optional)`
 
-    2. Multifasta input:
+2. Multifasta input:
        
        ./test -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -ss(optional)
+<br>  
 
 The output is composed by 3 different files .txt for each k inserted as input. We can have different file compositions, following if the analysis has made on Double Strand or Single Strand.
 		

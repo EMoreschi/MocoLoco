@@ -421,7 +421,6 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
 			unsigned int tot_freq = 0;
-			T_parameter = 0;
 
 			for(unsigned int j=0; j<GEP.size(); j++){
 
@@ -485,16 +484,13 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 	if(DS == 1){	
 		if(!pal){
 			tot_freq = tot_freq+2;
-			T_parameter = T_parameter+1;
 		}
 		else{
 			tot_freq++;
-			T_parameter = T_parameter+1;
 		}
 	}
 	else{
 		tot_freq++;
-		T_parameter = T_parameter+1;
 	}
 
 	pair<string,string> pair_bases;
@@ -555,6 +551,18 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 	}
 	vertical_plus.clear();
 	vertical_plus = copy;
+}
+
+void map_class::N2_calculation(){
+	
+	for(unsigned int i = 0; i<orizzontal_plus_debug.size(); i++){
+		
+		total_oligo_N2 = 0;
+		total_oligo_N2 = accumulate(begin(orizzontal_plus_debug[i]), end(orizzontal_plus_debug[i]), 0, [] (unsigned int val, const unordered_map<string,int>::value_type& p) {return val + p.second;});
+		total_oligo_N2_vector.emplace_back(total_oligo_N2);
+		
+	}	
+
 }
 
 bool map_class::check_palindrome(string bases){
@@ -732,6 +740,11 @@ double p_value_class::return_p_val(){
 	return p_val;
 }
 
+double p_value_class::return_p_val_log10(){
+
+	return p_val_log10;
+}
+
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
 
 	M.print_debug_matrix(matrix, " ");
@@ -813,7 +826,6 @@ void map_class::print_debug_orizzontal(){
 		}
 
 		multimap<unsigned int,string> orizzontal_output;
-		total_oligo_N2 = 0;
 
 		for (unordered_map<string,unsigned int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
 			orizzontal_output.insert({it->second, it->first});	
@@ -829,22 +841,18 @@ void map_class::print_debug_orizzontal(){
 
 					unordered_map<string,unsigned int>::iterator find_RC = orizzontal_minus_debug[i].find(reverse_bases);
 					outfile << it_rev->second << "\t" << it_rev->first << "\t" << find_RC->first << "\t" << find_RC->second << "\t" << endl;
-					total_oligo_N2 = total_oligo_N2 + it_rev->first;
 
 				}
 
 				else{
 					outfile << it_rev->second << "\t" << it_rev->first <<  endl;
-					total_oligo_N2 = total_oligo_N2 + it_rev->first;
 				}
 			}
 
 			else{
 				outfile << it_rev->second << "\t" << it_rev->first <<  endl;
-				total_oligo_N2 = total_oligo_N2 + it_rev->first;
 			}
 		}
-		total_oligo_N2_vector.emplace_back(total_oligo_N2);
 		outfile.close();
 	}
 }
@@ -961,7 +969,7 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 				N1 = it_N1_plus->second;
 			}
 			unsigned int N2 = total_oligo_N2_vector[j]-N1;
-			unsigned int T = T_parameter;
+			unsigned int T = sequences_number_T;
 			
 			double p_value =  gsl_cdf_hypergeometric_Q(K,N1,N2,T);
 			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
@@ -984,7 +992,7 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			it_N1_plus = orizzontal_plus_debug[j].find(Oligo); 
 			unsigned int N1 = it_N1_plus->second;
 			unsigned int N2 = total_oligo_N2_vector[j] - N1;
-			unsigned int T = T_parameter;
+			unsigned int T = sequences_number_T;
 
 			double p_value = gsl_cdf_hypergeometric_Q(K,N1,N2,T);
 			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
@@ -1045,9 +1053,9 @@ void map_class::P_VALUE_MATRIX_debug(){
 	ofstream outfile;
 	
 	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
-		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control.txt");
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+".txt");
 		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10" << endl;
 		
 		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
 
@@ -1058,7 +1066,8 @@ void map_class::P_VALUE_MATRIX_debug(){
 			outfile << P_VALUE_MATRIX[j][i].return_N1() << "\t"; 
 			outfile << P_VALUE_MATRIX[j][i].return_N2() << "\t"; 
 			outfile << P_VALUE_MATRIX[j][i].return_T() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_p_val() << endl; 
+			outfile << P_VALUE_MATRIX[j][i].return_p_val() << "\t"; 
+			outfile << P_VALUE_MATRIX[j][i].return_p_val_log10() << endl; 
 		}
 	
 		outfile.close();
