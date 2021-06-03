@@ -253,6 +253,7 @@ class map_class{
 		unordered_map<string,unsigned int>::iterator it_N1_plus;
 		unordered_map<string,unsigned int>::iterator it_N1_minus;
 		unsigned int total_oligo_N2;
+		vector<unsigned int> total_oligo_N2_vector;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
 

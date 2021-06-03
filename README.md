@@ -4,7 +4,7 @@
 
 #### How to compile
 
-`g++ -Wall -o test  MocoLoco.cpp -lgsl`
+`g++ -Wall -o test  MocoLoco.cpp -lgsl -lgslcblas`
 
 #### How to run (2 possibilities)
 

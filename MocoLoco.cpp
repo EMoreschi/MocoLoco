@@ -809,6 +809,7 @@ void map_class::print_debug_orizzontal(){
 		}
 
 		multimap<unsigned int,string> orizzontal_output;
+		total_oligo_N2 = 0;
 
 		for (unordered_map<string,unsigned int>::iterator it = orizzontal_plus_debug[i].begin() ; it != orizzontal_plus_debug[i].end(); it++ ){
 			orizzontal_output.insert({it->second, it->first});	
@@ -839,6 +840,8 @@ void map_class::print_debug_orizzontal(){
 				total_oligo_N2 = total_oligo_N2 + it_rev->first;
 			}
 		}
+		total_oligo_N2_vector.emplace_back(total_oligo_N2);
+		cout << "N22222 " << total_oligo_N2 << endl;
 		outfile.close();
 	}
 }
@@ -954,7 +957,7 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			else{
 				N1 = it_N1_plus->second;
 			}
-			unsigned int N2 = total_oligo_N2-N1;
+			unsigned int N2 = total_oligo_N2_vector[j]-N1;
 			unsigned int T = tot_freq_matrix[j][i];
 			
 			double p_value =  gsl_cdf_hypergeometric_Q(K,N1,N2,T);
