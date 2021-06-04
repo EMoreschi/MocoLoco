@@ -54,12 +54,9 @@ jobs:
       - name: Run myc test
         run: ./test -b Test_Bed/cMyc_hESC_mm10.bed -t Genomes/mm10/mm10.2bit -j Jaspar_2020/MA0147.2.jaspar
         
-      - name: mv all artifax into testing
-        run: 'mv *.txt testing/' 
-
       - uses: actions/upload-artifact@v2
         with:
           name: testing 
-          path: testing
+          path: '*.txt'
       
 
