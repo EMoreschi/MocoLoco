@@ -33,6 +33,9 @@ jobs:
       - name: Run a multi-line script
         run: g++ -o test -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
       
+      - name: Run NFY test
+        run: ls
+
       - name: hg38 genome download 
         run: cat get_hg38.script | bash
         working-directory: Genomes/hg38
@@ -46,12 +49,7 @@ jobs:
         working-directory: Genomes/mm10
 
       - name: Run NFY test
-        run: pwd
-        working-directory: $GITHUB_WORKSPACE
-
-      - name: Run NFY test
         run: ./test -b Test_Bed/nfy_k562_hg19.bed -t Genomes/hg19/hg19.2bit -j Jaspar_2020/MA0060.1.jaspar
-        working-directory: $GITHUB_WORKSPACE
 
         #      - name: Run myc test
         #        run: bash test.sh
