@@ -36,9 +36,9 @@ jobs:
       - name: Run NFY test
         run: ls
 
-      - name: hg38 genome download 
-        run: cat get_hg38.script | bash
-        working-directory: Genomes/hg38
+        #      - name: hg38 genome download 
+        #        run: cat get_hg38.script | bash
+        #        working-directory: Genomes/hg38
 
       - name: hg19 genome download 
         run: cat get_hg19.script | bash
@@ -51,21 +51,12 @@ jobs:
       - name: Run NFY test
         run: ./test -b Test_Bed/nfy_k562_hg19.bed -t Genomes/hg19/hg19.2bit -j Jaspar_2020/MA0060.1.jaspar
 
-        #      - name: Run myc test
-        #        run: bash test.sh
-        #        working-directory: testing
-        #     
-        #      - name: create mf 
-        #        run: bash test.sh
-        #        working-directory: testing
-        #
-        #      - name: Run mf test
-        #        run: bash test.sh
-        #        working-directory: testing
+      - name: Run myc test
+        run: ./test -b Test_Bed/cMyc_hESC_mm10.bed -t Genomes/mm10/mm10.2bit -j Jaspar_2020/MA0147.2.jaspar
 
       - uses: actions/upload-artifact@v2
         with:
           name: testing 
-          path: testing
+          path: *mers*
       
 
