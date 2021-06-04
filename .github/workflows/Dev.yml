@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI on brach Dev
+name: CI on brach Dev test NFY myc 
 
 # Controls when the action will run. 
 on:
@@ -26,12 +26,12 @@ jobs:
       - uses: actions/checkout@v2
 
       # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: sudo apt install build-essential
+      - name: install dep for compilation and gsl
+        run: sudo apt install build-essential libgsl-dev
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
-        run: g++ -o test -Wall $GITHUB_WORKSPACE/*.cpp 
+        run: g++ -o test -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
       
       - name: hg38 genome download 
         run: cat get_hg38.script | bash
@@ -41,10 +41,26 @@ jobs:
         run: cat get_hg19.script | bash
         working-directory: Genomes/hg19
 
-      - name: Run a multi-line script
-        run: bash test.sh
-        working-directory: testing
-     
+      - name: mm10 genome download 
+        run: cat get_mm10.script | bash
+        working-directory: Genomes/mm10
+
+      - name: Run NFY test
+        run: ./test -b Test_Bed/nfy_k562_hg19.bed -t Genomes/hg19/hg19.2bit -j Jaspar_2020/MA0060.1.jaspar
+        working-directory: $GITHUB_WORKSPACE
+
+        #      - name: Run myc test
+        #        run: bash test.sh
+        #        working-directory: testing
+        #     
+        #      - name: create mf 
+        #        run: bash test.sh
+        #        working-directory: testing
+        #
+        #      - name: Run mf test
+        #        run: bash test.sh
+        #        working-directory: testing
+
       - uses: actions/upload-artifact@v2
         with:
           name: testing 
