@@ -53,7 +53,20 @@ jobs:
 
       - name: Run myc test
         run: ./test -b Test_Bed/cMyc_hESC_mm10.bed -t Genomes/mm10/mm10.2bit -j Jaspar_2020/MA0147.2.jaspar
+      
+        # Runs a set of commands using the runners shell
+      - name: Compiling multifasta random tool
+        run: g++ -o random_multifa -Wall $GITHUB_WORKSPACE/Random_multifa_TOOL/Multifa_random_tool.cpp
         
+      - name: Run multifasta random tool
+        run: ./test -n 1000 -l 300 -j Jaspar_2020/MA000.0_prova.jaspar Jaspar_2020/MA000.0_prova2.jaspar -p 50,125 -o 50,100 -w 2,5 -f 60,90
+
+      - name: Run a multi-line script
+        run: g++ -o test -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
+
+      - name: Run implanted multifasta test
+        run: ./test -m random_multifa_implanted1.fasta
+      
       - uses: actions/upload-artifact@v2
         with:
           name: testing 
