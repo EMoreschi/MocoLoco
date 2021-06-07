@@ -299,19 +299,19 @@ class multifasta_class{
 		vector<string> sequences;
 
 		void length_control(vector<string>);
-	void extract_sequences(string);
-	void GEP_creation_MF(vector<string>);
+		void extract_sequences(string);
+		void GEP_creation_MF(vector<string>);
 
-public:
+	public:
 
-	vector<bed_class> GEP;
-	
-	multifasta_class(string MFASTA_FILE){
+		vector<bed_class> GEP;
 
-		extract_sequences(MFASTA_FILE);
-		length_control(sequences);
-		GEP_creation_MF(sequences);
-	}
+		multifasta_class(string MFASTA_FILE){
+
+			extract_sequences(MFASTA_FILE);
+			length_control(sequences);
+			GEP_creation_MF(sequences);
+		}
 
 };
 

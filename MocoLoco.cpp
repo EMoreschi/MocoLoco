@@ -249,8 +249,6 @@ void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 
-//	cout << "Calculating the log matrix...\n";
-
 	for(unsigned int i=0; i < matrix.size(); i++){
 		vector<double> baseQ;
 		double value_log;
