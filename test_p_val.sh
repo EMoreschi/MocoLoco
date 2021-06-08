@@ -6,18 +6,21 @@ N_seq=$3;
 Seq_length=300;
 Wobble=0;
 Frequence_FWD=50;
-K=8;
-Output=$4;
+K=$4;
+Output=$5;
+Filename="-mers_positional_occurrences__DS.txt";
 
 Line=$(cat $Matrix | sed -n '2p' | gawk '{ print NF}');
 Half_line=$(($(($Line - 3)) / 2));
 Initial_position=$(($Position - $Half_line));
 
-echo $Line;
-echo $Half_line;
-echo $Initial_position;
+#if matrix length is even, then $Line%2 != 0 
+if (( $Line%2 != 0 )) 
+then
+	Initial_position=$(($Initial_position+1));
+fi
 
-i=1
+i=1;
 
 while [ $i -ne 100 ]
 do
@@ -30,7 +33,7 @@ do
 	
 	touch $Output;
 	
-	awk -v pos=$Initial_position '$1 == pos && $2 == 1 {print $line}' 8-mers_positional_occurrences__DS.txt >> $Output;
+	awk -v pos=$Initial_position '$1 == pos && $2 == 1 {print $line}' $K$Filename >> $Output;
 	
 	i=$(($i+1));
 done
