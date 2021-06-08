@@ -13,7 +13,7 @@
 
 ### To **compile** the program the command needed in both cases is:
 
-      g++ -o test -Wall Mocoloco.cpp -lgsl -lgslclbas
+      g++ -o test -Wall Mocoloco.cpp -lgsl -lgslcblas
 <br>  
 
 ### To **execute** it 2 different ways have been implemented:
