@@ -18,11 +18,6 @@ then
 	Initial_position=$(($Initial_position+1));
 fi
 
-echo $Line_char_number;
-echo $K;
-echo $Half_line:
-echo $Initial_position;
-
 i=1;
 
 echo "IMPLANTING_FREQ	POSITION	RANK	OLIGO	OLIGO_FWD_OCC	OLIGO_REV_OCC	SUM_OLIGO_OCC	OLIGO_RC	OLIGO_RC_FWD_OCC	OLIGO_RC_REV_OCC	SUM_OLIGO_RC_OCC	PALINDROME	TOT_SUM	FREQ	P_VALUE" >> $Output;
