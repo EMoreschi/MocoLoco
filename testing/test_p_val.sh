@@ -14,7 +14,7 @@ Line_char_number=$(cat $Matrix | sed -n '2p' | gawk '{ print NF}');
 Half_line=$(($(($Line_char_number - 3)) / 2));
 Initial_position=$(($Position - $Half_line));
 
-#if matrix length is even, then $Line_char_number%2 != 0 
+#if matrix length is even, then $Line_char_number%2 != 0 -> made to ensure it extracts from the starting implant position
 if (( $Line_char_number%2 != 0 )) 
 then
 	Initial_position=$(($Initial_position+1));
