@@ -24,7 +24,7 @@ i=1;
 
 echo "IMPLANTING_FREQ	POSITION	RANK	OLIGO	OLIGO_FWD_OCC	OLIGO_REV_OCC	SUM_OLIGO_OCC	OLIGO_RC	OLIGO_RC_FWD_OCC	OLIGO_RC_REV_OCC	SUM_OLIGO_RC_OCC	PALINDROME	TOT_SUM	FREQ	P_VALUE" >> $Output;
 
-while [ $i -ne 100 ]
+while [ $i -ne 101 ]
 do
 	
 	g++ -o test -Wall ../Random_multifa_TOOL/Multifa_random_tool.cpp;
