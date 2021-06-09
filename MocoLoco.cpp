@@ -970,6 +970,7 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			unsigned int T = sequences_number_T;
 			
 			double p_value =  gsl_cdf_hypergeometric_Q(K,N1,N2,T);
+			p_value = check_p_value(p_value);
 			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
 			P_VALUE_VECTOR.emplace_back(P_VALUE_CLASS);
 
@@ -993,6 +994,7 @@ void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c,
 			unsigned int T = sequences_number_T;
 
 			double p_value = gsl_cdf_hypergeometric_Q(K,N1,N2,T);
+			p_value = check_p_value(p_value);
 			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
 			P_VALUE_VECTOR.emplace_back(P_VALUE_CLASS);
 
@@ -1044,6 +1046,16 @@ void map_class::TopN_sum_and_freq(){
 		}
 		outfile.close();
 	}
+}
+
+double map_class::check_p_value(double p){
+
+	if(p == 0){
+		
+		p = 1.000001e-300;
+	}
+	
+	return p;
 }
 
 void map_class::P_VALUE_MATRIX_debug(){

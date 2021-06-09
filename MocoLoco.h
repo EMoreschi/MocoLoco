@@ -220,7 +220,7 @@ class p_value_class{
 			position = i+1;
 			rank = c+1;
 			p_val = p;
-			p_val_log10 = log10(p_val);
+			p_val_log10 = (log10(p_val) * -1);
 
 		}
 
@@ -276,6 +276,7 @@ class map_class{
 		void TopN_sum_and_freq();
 		void P_VALUE_MATRIX_debug();
 		void N2_calculation();
+		double check_p_value(double);
 
 	public:
 
