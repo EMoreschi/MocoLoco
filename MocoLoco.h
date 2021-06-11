@@ -194,105 +194,6 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 };
 
-class p_value_class{
-
-	private:
-
-		unsigned int K;
-		unsigned int N1;
-		unsigned int N2;
-		unsigned int T;
-		string oligo;
-		unsigned int position;
-		unsigned int rank;
-		double p_val;
-		double p_val_log10;
-
-	public:
-
-		p_value_class(unsigned int k, unsigned int n1, unsigned int n2, unsigned int t, string oli, unsigned int i, unsigned int c, double p){
-
-			K = k;
-			N1 = n1;
-			N2 = n2;
-			T = t;
-			oligo = oli;
-			position = i+1;
-			rank = c+1;
-			p_val = p;
-			p_val_log10 = (log10(p_val) * -1);
-
-		}
-
-		string return_oligo();
-		unsigned int return_K();
-		unsigned int return_N1();
-		unsigned int return_N2();
-		unsigned int return_T();
-		unsigned int return_position();
-		unsigned int return_rank();
-		double return_p_val();
-		double return_p_val_log10();
-};
-
-class map_class{
-
-	private:
-		
-		vector<vector<map<pair<string,string>,pair<unsigned int, unsigned int>>>> vector_kmers_maps_plus;
-		vector<vector<map<pair<string,string>,pair<unsigned int, unsigned int>>>> vector_kmers_maps_minus;
-		vector<unordered_map<string,unsigned int>> orizzontal_plus_debug;
-		vector<unordered_map<string,unsigned int>> orizzontal_minus_debug;
-		vector<map<pair<string,string>,pair<unsigned int, unsigned int>>> maps_vector_positions_plus;
-		vector<map<pair<string,string>,pair<unsigned int, unsigned int>>> maps_vector_positions_minus;
-		unordered_map<string, unsigned int> orizzontal_plus;
-		unordered_map<string, unsigned int> orizzontal_minus;
-		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_plus;
-		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_minus;
-		string reverse_bases;
-		vector<vector<unsigned int>> tot_freq_matrix;
-		vector<vector<unsigned int>> tot_sum_matrix;
-		vector<unsigned int> kmers_vector;
-		unordered_map<string,unsigned int>::iterator it_N1_plus;
-		unordered_map<string,unsigned int>::iterator it_N1_minus;
-		unsigned int total_oligo_N2;
-		vector<unsigned int> total_oligo_N2_vector;
-		unsigned int sequences_number_T;
-		vector<p_value_class> P_VALUE_VECTOR;
-		vector<vector<p_value_class>> P_VALUE_MATRIX;
-
-		void kmers_vector_creation(string);
-		void table_creation_orizzontal(vector<bed_class>);
-		void table_creation_vertical(vector<bed_class>);
-		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
-		void vertical_kmer_count(string,map<pair<string,string>,pair<unsigned int, unsigned int>>&,map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int &);
-		void select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>&);
-		bool check_palindrome(string);
-		void print_debug_orizzontal();
-		void print_debug_maps_positions();
-		ofstream outfile_header(unsigned int);
-		multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap_creation(unsigned int, unsigned int);	
-		void outfile_ranking(unsigned int, unsigned int, unsigned int&, unsigned int&, multimap<pair<unsigned int, unsigned int>, pair<string,string>>&, ofstream& outfile);
-		void TopN_sum_and_freq();
-		void P_VALUE_MATRIX_debug();
-		void N2_calculation();
-		double check_p_value(double);
-
-	public:
-
-		map_class(vector<bed_class> GEP, string kmers){
-
-			kmers_vector_creation(kmers);
-			table_creation_orizzontal(GEP);
-			table_creation_vertical(GEP);
-			N2_calculation();
-			sequences_number_T = GEP.size();
-			print_debug_orizzontal();
-			print_debug_maps_positions();
-			TopN_sum_and_freq();
-		}
-};
-
 class multifasta_class{
 
 	private:
@@ -314,6 +215,97 @@ class multifasta_class{
 			GEP_creation_MF(sequences);
 		}
 
+};
+
+class p_value_class{
+
+	private:
+
+		vector<unsigned int> K_vec;
+		vector<unsigned int> N1_vec;
+		vector<unsigned int> N2_vec;
+		unsigned int T;
+		vector<double> p_value_vec;
+		string reverse_bases;
+		string oligo;
+		string oligo_RC;
+		multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap;
+		unordered_map<string,unsigned int>::iterator it_N1_plus;
+		unordered_map<string,unsigned int>::iterator it_N1_minus;
+		unsigned int total_oligo_N2;
+		unsigned int position;
+		unsigned int rank;
+		double p_val;
+		double p_val_log10;
+
+		multimap<pair<unsigned int,unsigned int>, pair<string,string>>  multimap_creation(map<pair<string,string>,pair<unsigned int,unsigned int>>);
+		void filling_KNT_vectors(unordered_map<string,unsigned int>);
+		void N2_calculation(unordered_map<string,unsigned int>);
+		bool check_palindrome2(string);
+		void calculating_p_value();
+		double check_p_value(double);
+
+	public:
+
+		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t){
+			
+			T = t;
+			vertical_multimap = multimap_creation(pair_map);
+			N2_calculation(orizzontal_map);
+			filling_KNT_vectors(orizzontal_map);
+			calculating_p_value();	
+		}
+};
+
+class map_class{
+
+	private:
+		
+		vector<vector<map<pair<string,string>,pair<unsigned int, unsigned int>>>> vector_kmers_maps_plus;
+		vector<vector<map<pair<string,string>,pair<unsigned int, unsigned int>>>> vector_kmers_maps_minus;
+		vector<unordered_map<string,unsigned int>> orizzontal_plus_debug;
+		vector<unordered_map<string,unsigned int>> orizzontal_minus_debug;
+		vector<map<pair<string,string>,pair<unsigned int, unsigned int>>> maps_vector_positions_plus;
+		vector<map<pair<string,string>,pair<unsigned int, unsigned int>>> maps_vector_positions_minus;
+		unordered_map<string, unsigned int> orizzontal_plus;
+		unordered_map<string, unsigned int> orizzontal_minus;
+		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_plus;
+		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_minus;
+		string reverse_bases;
+		vector<vector<unsigned int>> tot_freq_matrix;
+		vector<vector<unsigned int>> tot_sum_matrix;
+		vector<unsigned int> kmers_vector;
+		unsigned int sequences_number_T;
+		vector<p_value_class> P_VALUE_VECTOR;
+		vector<vector<p_value_class>> P_VALUE_MATRIX;
+
+		void kmers_vector_creation(string);
+		void table_creation_orizzontal(vector<bed_class>);
+		void table_creation_vertical(vector<bed_class>);
+		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
+		void vertical_kmer_count(string,map<pair<string,string>,pair<unsigned int, unsigned int>>&,map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int &);
+		void select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>&);
+		void print_debug_orizzontal();
+		bool check_palindrome(string);
+		void P_VALUE_MATRIX_creation();
+		ofstream outfile_header(unsigned int);
+		void TopN_sum_and_freq();
+		void P_VALUE_MATRIX_debug();
+		double check_p_value(double);
+
+	public:
+
+		map_class(vector<bed_class> GEP, string kmers){
+
+			kmers_vector_creation(kmers);
+			table_creation_orizzontal(GEP);
+			table_creation_vertical(GEP);
+			sequences_number_T = GEP.size();
+			print_debug_orizzontal();
+			P_VALUE_MATRIX_creation();
+
+			//TopN_sum_and_freq();
+		}
 };
 
 void GEP_path();

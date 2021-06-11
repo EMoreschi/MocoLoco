@@ -551,19 +551,42 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 	vertical_plus = copy;
 }
 
-void map_class::N2_calculation(){
+void p_value_class::N2_calculation(unordered_map<string,unsigned int> orizzontal_map){
 	
-	for(unsigned int i = 0; i<orizzontal_plus_debug.size(); i++){
-		
 		total_oligo_N2 = 0;
-		total_oligo_N2 = accumulate(begin(orizzontal_plus_debug[i]), end(orizzontal_plus_debug[i]), 0, [] (unsigned int val, const unordered_map<string,int>::value_type& p) {return val + p.second;});
-		total_oligo_N2_vector.emplace_back(total_oligo_N2);
-		
-	}	
-
+		total_oligo_N2 = accumulate(begin(orizzontal_map), end(orizzontal_map), 0, [] (unsigned int val, const unordered_map<string,int>::value_type& p) {return val + p.second;});
 }
 
 bool map_class::check_palindrome(string bases){
+
+	for(unsigned int i=0; i<bases.size(); i++){
+
+		char base;
+		base = bases[i];
+		switch (base) {
+
+			case 'A' : reverse_bases.append("T"); 
+				   break;
+			case 'T' : reverse_bases.append("A"); 
+				   break;
+			case 'G' : reverse_bases.append("C"); 
+				   break;
+			case 'C' : reverse_bases.append("G"); 
+				   break;
+			case 'N' : reverse_bases.append("N"); 
+				   break;
+		}
+	}
+
+	reverse(reverse_bases.begin(), reverse_bases.end());
+	if (reverse_bases == bases){
+		return true;
+	}
+	else {return false;}
+
+}
+
+bool p_value_class::check_palindrome2(string bases){
 
 	for(unsigned int i=0; i<bases.size(); i++){
 
@@ -651,6 +674,91 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences){
 
 }
 
+void map_class::P_VALUE_MATRIX_creation(){
+
+	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
+
+		//ofstream outfile = outfile_header(j);
+
+		vector<unsigned int> tot_sum_vec;
+
+		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
+
+			unsigned int c=0;
+
+			p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j], sequences_number_T);
+			P_VALUE_VECTOR.emplace_back(P); //creating a vector for every position
+
+		}
+		P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR); //creating a vector for every k
+		P_VALUE_VECTOR.clear();
+		//outfile.close();
+		
+	}
+	P_VALUE_MATRIX_debug();
+}
+
+
+multimap<pair<unsigned int, unsigned int>,pair<string,string>> p_value_class::multimap_creation(map<pair<string,string>, pair<unsigned int,unsigned int>> pair_map){
+	
+	for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = pair_map.begin(); it != pair_map.end(); it++){ 	
+				
+		vertical_multimap.insert({it->second,it->first});
+	}
+			
+	return vertical_multimap;
+}
+
+void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizzontal_map){
+
+	unsigned int K;
+	unsigned int N1;
+	unsigned int N2;
+
+	for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend(); it_rev++){
+
+		bool pal = check_palindrome2(it_rev->second.first);
+
+		if(pal == 1){
+
+			K = it_rev->first.first + it_rev->first.second;
+		}
+		else{
+
+			K = it_rev->first.first;
+		}
+
+		it_N1_plus = orizzontal_map.find(it_rev->second.first);
+		it_N1_minus = orizzontal_map.find(it_rev->second.second);
+
+		if(it_N1_minus != orizzontal_map.end()){
+
+			N1 = it_N1_plus->second + it_N1_minus->second;
+		}
+		else{
+			N1 = it_N1_plus->second;
+		}
+		
+		N2 = total_oligo_N2 - N1;
+
+		K_vec.emplace_back(K);
+		N1_vec.emplace_back(N1);
+		N2_vec.emplace_back(N2);
+				
+	}
+
+}
+
+void p_value_class::calculating_p_value(){
+
+	for(int i=0; i<K_vec.size(); i++){
+
+		double p_value =  gsl_cdf_hypergeometric_Q(K_vec[i],N1_vec[i],N2_vec[i],T);
+		p_value = check_p_value(p_value);
+		p_value_vec.emplace_back(p_value);	
+	}
+}
+
 /////DEBUG/////////////////////////////////////////////////////////
 
 unsigned int oligo_class::return_start_coord_oligo(){
@@ -701,46 +809,6 @@ unsigned int bed_class::return_end_coord(){
 string p_value_class::return_oligo(){
 
 	return oligo;
-}
-
-unsigned int p_value_class::return_K(){
-
-	return K;
-}
-
-unsigned int p_value_class::return_N1(){
-
-	return N1;
-}
-
-unsigned int p_value_class::return_N2(){
-
-	return N2;
-}
-
-unsigned int p_value_class::return_T(){
-
-	return T;
-}
-
-unsigned int p_value_class::return_position(){
-
-	return position;
-}
-
-unsigned int p_value_class::return_rank(){
-
-	return rank;
-}
-
-double p_value_class::return_p_val(){
-
-	return p_val;
-}
-
-double p_value_class::return_p_val_log10(){
-
-	return p_val_log10;
 }
 
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
@@ -855,234 +923,94 @@ void map_class::print_debug_orizzontal(){
 	}
 }
 
-void map_class::print_debug_maps_positions(){
-
-	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
-
-		ofstream outfile = outfile_header(j);
-
-		vector<unsigned int> tot_sum_vec;
-
-		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
-
-			multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap = vertical_multimap_creation(j,i);	
-
-			unsigned int c=0;
-			unsigned int sum_for_TopN_pos = 0;	
-
-			outfile_ranking(j,i,c, sum_for_TopN_pos, vertical_multimap, outfile);
-
-			tot_sum_vec.emplace_back(sum_for_TopN_pos);
-		}
-		P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR);
-		P_VALUE_VECTOR.clear();
-		tot_sum_matrix.emplace_back(tot_sum_vec);
-		tot_sum_vec.clear();
-		outfile.close();
-		
-	}
-	P_VALUE_MATRIX_debug();
-}
-
-ofstream map_class::outfile_header(unsigned int j){
+//ofstream map_class::outfile_header(unsigned int j){
+//
+//
+//	ofstream outfile;
+//
+//	if(DS==1){
+//
+//		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"_DS.txt");
+//
+//		outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+//		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
+//
+//	}
+//
+//	else{
+//		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"_SS.txt");
+//
+//		outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+//		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
+//
+//	}
+//	return outfile;	
+//}
 
 
-	ofstream outfile;
+//void map_class::TopN_sum_and_freq(){
+//
+//	ofstream outfile;
+//
+//	for(unsigned int i=0; i<tot_sum_matrix.size(); i++){
+//		
+//		if(DS==1){	
+//		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_DS.txt");
+//		}
+//		
+//		else{
+//		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_SS.txt");
+//		}
+//
+//		outfile << "###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":" << endl; 
+//		outfile << "Position" << "\t" << "Sum" << "\t" << "Frequences" << endl; 
+//		
+//		for(unsigned int j=0; j<tot_sum_matrix[i].size(); j++){
+//		
+//		double sum = tot_sum_matrix[i][j];		//Put as double to dont loose the precision	
+//		double frequence = sum/tot_freq_matrix[i][j];	
+//		outfile << j+1 << "\t" << tot_sum_matrix[i][j] << "\t" << frequence << endl; 
+//
+//		}
+//		outfile.close();
+//	}
+//}
 
-	if(DS==1){
-
-		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"_DS.txt");
-
-		outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
-
-	}
-
-	else{
-		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"_SS.txt");
-
-		outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
-
-	}
-	return outfile;	
-}
-
-
-multimap<pair<unsigned int, unsigned int>,pair<string,string>> map_class::vertical_multimap_creation(unsigned int j, unsigned int i){
-
-	multimap<pair<unsigned int, unsigned int>,pair<string,string>> vertical_multimap;
-
-	for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end(); it++){ 	
-
-		vertical_multimap.insert({it->second,it->first});
-	}
-
-	return vertical_multimap;
-}
-
-void map_class::outfile_ranking(unsigned int j, unsigned int i, unsigned int& c, unsigned int& sum_for_TopN_pos, multimap<pair<unsigned int, unsigned int>, pair<string,string>>& vertical_multimap, ofstream& outfile){
-
-	for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend() && c < top_N; it_rev++, c++ ){
-
-
-		double FREQ, Sum_Occ_Oligo;
-		unsigned int Position = i+1; 
-		unsigned int Rank = c+1; 
-		string Oligo = it_rev-> second.first ;
-		unsigned int Num_Occ_FWD  = it_rev-> first.first; //mettere unsigned
-		string Oligo_RC = it_rev-> second.second ;
-		unsigned int Num_Occ_REV, Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
-		string PAL;
-		Num_Occ_REV = it_rev->first.second;
-
-		if(DS==1){
-			if (it_rev->second.first== it_rev->second.second){
-
-				PAL = "TRUE";
-				Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD; 
-
-			}
-
-			else{
-				PAL= "FALSE";
-
-				Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
-				Num_Occ_RC_FWD = Num_Occ_REV; 
-				Num_Occ_RC_REV = Num_Occ_FWD;
-				Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
-
-
-			}
-
-			FREQ = Sum_Occ_Oligo/tot_freq_matrix[j][i];
-			unsigned int K = Sum_Occ_Oligo;
-			it_N1_plus = orizzontal_plus_debug[j].find(Oligo); 
-			it_N1_minus = orizzontal_plus_debug[j].find(Oligo_RC); 
-			unsigned int N1;
-			if(it_N1_minus != orizzontal_plus_debug[j].end()){
-				N1 = it_N1_plus->second + it_N1_minus->second;
-			}
-			else{
-				N1 = it_N1_plus->second;
-			}
-			unsigned int N2 = total_oligo_N2_vector[j]-N1;
-			unsigned int T = sequences_number_T;
-			
-			double p_value =  gsl_cdf_hypergeometric_Q(K,N1,N2,T);
-			p_value = check_p_value(p_value);
-			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
-			P_VALUE_VECTOR.emplace_back(P_VALUE_CLASS);
-
-			outfile << Position << "\t" << Rank;
-			outfile << "\t" << Oligo<< "\t" << Num_Occ_FWD  <<"\t" << Num_Occ_REV <<"\t"<< Sum_Occ_Oligo << "\t";
-			outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD<<"\t" << Num_Occ_RC_REV<<"\t"<< Sum_Occ_RC << "\t";
-			outfile << PAL <<"\t"<< Sum_Occ_Oligo  << "\t" << FREQ; 
-			outfile << "\t" <<  p_value << endl;
-
-			sum_for_TopN_pos = sum_for_TopN_pos + Sum_Occ_Oligo;
-		}
-
-		else{
-
-			double Num_Occ_FWD_double = Num_Occ_FWD;
-			FREQ = Num_Occ_FWD_double/tot_freq_matrix[j][i];
-			unsigned int K = Num_Occ_FWD;
-			it_N1_plus = orizzontal_plus_debug[j].find(Oligo); 
-			unsigned int N1 = it_N1_plus->second;
-			unsigned int N2 = total_oligo_N2_vector[j] - N1;
-			unsigned int T = sequences_number_T;
-
-			double p_value = gsl_cdf_hypergeometric_Q(K,N1,N2,T);
-			p_value = check_p_value(p_value);
-			p_value_class P_VALUE_CLASS(K, N1, N2, T, Oligo, i, c, p_value);
-			P_VALUE_VECTOR.emplace_back(P_VALUE_CLASS);
-
-			if (it_rev->second.first== it_rev->second.second){
-
-				PAL = "TRUE";	
-				Num_Occ_RC_FWD = Num_Occ_FWD;
-			}
-			else{
-				PAL = "FALSE";
-				Num_Occ_RC_FWD = Num_Occ_REV;
-
-			}
-
-			outfile << Position << "\t" << Rank;
-			outfile << "\t" << Oligo << "\t" << Num_Occ_FWD;
-			outfile << "\t" << Oligo_RC<< "\t" << Num_Occ_RC_FWD;
-			outfile << "\t" << PAL << "\t" << FREQ; 
-			outfile << "\t" << p_value << endl;
-
-			sum_for_TopN_pos = sum_for_TopN_pos + Num_Occ_FWD;
-		}
-	}
-}
-
-void map_class::TopN_sum_and_freq(){
-
-	ofstream outfile;
-
-	for(unsigned int i=0; i<tot_sum_matrix.size(); i++){
-		
-		if(DS==1){	
-		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_DS.txt");
-		}
-		
-		else{
-		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_SS.txt");
-		}
-
-		outfile << "###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":" << endl; 
-		outfile << "Position" << "\t" << "Sum" << "\t" << "Frequences" << endl; 
-		
-		for(unsigned int j=0; j<tot_sum_matrix[i].size(); j++){
-		
-		double sum = tot_sum_matrix[i][j];		//Put as double to dont loose the precision	
-		double frequence = sum/tot_freq_matrix[i][j];	
-		outfile << j+1 << "\t" << tot_sum_matrix[i][j] << "\t" << frequence << endl; 
-
-		}
-		outfile.close();
-	}
-}
-
-double map_class::check_p_value(double p){
-
-	if(p == 0){
-		
-		p = 1.000001e-300;
-	}
-	
-	return p;
-}
-
-void map_class::P_VALUE_MATRIX_debug(){
-
-	ofstream outfile;
-	
-	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
-		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+".txt");
-		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10" << endl;
-		
-		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
-
-			outfile << P_VALUE_MATRIX[j][i].return_position() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_rank() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_oligo() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_K() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_N1() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_N2() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_T() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_p_val() << "\t"; 
-			outfile << P_VALUE_MATRIX[j][i].return_p_val_log10() << endl; 
-		}
-	
-		outfile.close();
-	}
-}
+//double p_value_class::check_p_value(double p){
+//
+//	if(p == 0){
+//		
+//		p = 1.000001e-300;
+//	}
+//	
+//	return p;
+//}
+//
+//void map_class::P_VALUE_MATRIX_debug(){
+//
+//	ofstream outfile;
+//	
+//	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
+//		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+".txt");
+//		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
+//		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10" << endl;
+//		
+//		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
+//
+//			outfile << P_VALUE_MATRIX[j][i].return_position() << "\t"; 
+//			outfile << P_VALUE_MATRIX[j][i].return_rank() << "\t"; 
+//			outfile << P_VALUE_MATRIX[j][i].return_oligo() << "\t"; 
+//			outfile << P_VALUE_MATRIX[j][i].return_K() << "\t"; 
+//			outfile << P_VALUE_MATRIX[j][i].return_N1() << "\t"; 
+//			outfile << P_VALUE_MATRIX[j][i].return_N2() << "\t"; 
+//			outfile << P_VALUE_MATRIX[j][i].return_T() << "\t"; 
+//			outfile << P_VALUE_MATRIX[j][i].return_p_val() << "\t"; 
+//			outfile << P_VALUE_MATRIX[j][i].return_p_val_log10() << endl; 
+//		}
+//	
+//		outfile.close();
+//	}
+//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
