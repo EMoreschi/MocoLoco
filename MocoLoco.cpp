@@ -695,7 +695,7 @@ void map_class::P_VALUE_MATRIX_creation(){
 		//outfile.close();
 		
 	}
-	P_VALUE_MATRIX_debug();
+	//P_VALUE_MATRIX_debug();
 }
 
 
@@ -747,6 +747,7 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 				
 	}
 
+
 }
 
 void p_value_class::calculating_p_value(){
@@ -757,6 +758,47 @@ void p_value_class::calculating_p_value(){
 		p_value = check_p_value(p_value);
 		p_value_vec.emplace_back(p_value);	
 	}
+}
+
+double p_value_class::check_p_value(double p){
+
+	if(p == 0){
+		
+		p = 1.000001e-300;
+	}
+	
+	return p;
+}
+
+void p_value_class::sorting_p_value(){
+
+	unsigned int i=0;
+	for(multimap<pair<unsigned int, unsigned int>, pair<string, string>>::iterator it = vertical_multimap.begin(); it!=vertical_multimap.end(); it++){
+		
+		
+		p_value_sort.insert({p_value_vec[i], it->second.first});
+		i = i+1;
+	}
+
+}
+
+void p_value_class::print_debug_p_value(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map){
+	
+	unsigned int i=0;
+	unsigned int oligo_occ;
+	
+	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
+
+	for(multimap<double,string>::iterator it_2 = p_value_sort.begin(); it_2!=p_value_sort.end(); it_2++){
+		
+		pair<string,string> oligo_oligoRC;
+		bool pal = check_palindrome2(it_2->second);
+		oligo_oligoRC = make_pair(it_2->second,reverse_bases);
+		it_multi = pair_map.find(oligo_oligoRC);	
+		cout << i << ": "<< it_2->first << "\t" << it_2->second << "\t" << it_multi->second.first << "\t" << reverse_bases << "\t" << it_multi->second.second << endl;
+		i++;
+	}
+	cout << endl;
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -806,10 +848,6 @@ unsigned int bed_class::return_end_coord(){
 	return end_coord;
 }
 
-string p_value_class::return_oligo(){
-
-	return oligo;
-}
 
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
 
@@ -976,15 +1014,6 @@ void map_class::print_debug_orizzontal(){
 //	}
 //}
 
-//double p_value_class::check_p_value(double p){
-//
-//	if(p == 0){
-//		
-//		p = 1.000001e-300;
-//	}
-//	
-//	return p;
-//}
 //
 //void map_class::P_VALUE_MATRIX_debug(){
 //
