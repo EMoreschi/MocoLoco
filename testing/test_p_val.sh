@@ -23,7 +23,7 @@ i=1;
 echo "IMPLANTING_FREQ	POSITION	RANK	OLIGO	OLIGO_FWD_OCC	OLIGO_REV_OCC	SUM_OLIGO_OCC	OLIGO_RC	OLIGO_RC_FWD_OCC	OLIGO_RC_REV_OCC	SUM_OLIGO_RC_OCC	PALINDROME	TOT_SUM	FREQ	P_VALUE" >> $Output;
 
 g++ -o random -Wall ../Random_multifa_TOOL/Multifa_random_tool.cpp;
-g++ -o mocoloco -Wall ../MocoLoco.cpp -lgsl -lgslcblas &&
+g++ -o mocoloco -Wall ../MocoLoco.cpp -lgsl -lgslcblas;
 
 while [ $i -ne 101 ]
 do
@@ -41,6 +41,8 @@ done
 rm *mer*;
 rm random_multifa_1.fasta;
 rm random_multifa_implanted1.fasta;
+rm random;
+rm mocoloco;
 
 
 
