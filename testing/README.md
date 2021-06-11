@@ -9,7 +9,7 @@
 
 Example:
 
-    bash test_p_val.sh MA0060.1.jaspar 50 500 300 8 Output_example.txt
+    bash test_p_val.sh ../Jaspar_2020/MA0060.1.jaspar 50 500 300 8 Output_example.txt
 
 ### **Output**
 
