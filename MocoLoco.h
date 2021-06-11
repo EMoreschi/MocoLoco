@@ -237,8 +237,7 @@ class p_value_class{
 		unsigned int rank;
 		double p_val;
 		double p_val_log10;
-		multimap<double,string> p_value_sort;
-		map<pair<string,string>, pair<unsigned int, unsigned int>> pair_map_2;
+		multimap<double,pair<string,string>> p_value_sort;
 
 		multimap<pair<unsigned int,unsigned int>, pair<string,string>>  multimap_creation(map<pair<string,string>,pair<unsigned int,unsigned int>>);
 		void filling_KNT_vectors(unordered_map<string,unsigned int>);
@@ -247,11 +246,11 @@ class p_value_class{
 		void calculating_p_value();
 		double check_p_value(double);
 		void sorting_p_value();
-		void print_debug_p_value(map<pair<string,string>,pair<unsigned int, unsigned int>>);
+		void print_debug_p_value(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int);
 
 	public:
 
-		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t){
+		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t, unsigned int position){
 		
 			T = t;
 			vertical_multimap = multimap_creation(pair_map);
@@ -259,7 +258,7 @@ class p_value_class{
 			filling_KNT_vectors(orizzontal_map);
 			calculating_p_value();
 			sorting_p_value();
-			print_debug_p_value(pair_map);	
+			print_debug_p_value(pair_map, position);	
 		}
 };
 

@@ -686,7 +686,7 @@ void map_class::P_VALUE_MATRIX_creation(){
 
 			unsigned int c=0;
 
-			p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j], sequences_number_T);
+			p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j], sequences_number_T, i);
 			P_VALUE_VECTOR.emplace_back(P); //creating a vector for every position
 
 		}
@@ -775,27 +775,58 @@ void p_value_class::sorting_p_value(){
 	unsigned int i=0;
 	for(multimap<pair<unsigned int, unsigned int>, pair<string, string>>::iterator it = vertical_multimap.begin(); it!=vertical_multimap.end(); it++){
 		
-		
-		p_value_sort.insert({p_value_vec[i], it->second.first});
+			
+		p_value_sort.insert({p_value_vec[i],{it->second.first, it->second.second}});
 		i = i+1;
 	}
 
 }
 
-void p_value_class::print_debug_p_value(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map){
+void p_value_class::print_debug_p_value(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position){
 	
 	unsigned int i=0;
-	unsigned int oligo_occ;
 	
 	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
 
-	for(multimap<double,string>::iterator it_2 = p_value_sort.begin(); it_2!=p_value_sort.end(); it_2++){
+	for(multimap<double,pair<string,string>>::iterator it_2 = p_value_sort.begin(); it_2!=p_value_sort.end(); it_2++){
 		
-		pair<string,string> oligo_oligoRC;
-		bool pal = check_palindrome2(it_2->second);
-		oligo_oligoRC = make_pair(it_2->second,reverse_bases);
-		it_multi = pair_map.find(oligo_oligoRC);	
-		cout << i << ": "<< it_2->first << "\t" << it_2->second << "\t" << it_multi->second.first << "\t" << reverse_bases << "\t" << it_multi->second.second << endl;
+		double FREQ, Sum_Occ_Oligo;
+		it_multi = pair_map.find(it_2->second);
+		string Oligo = it_multi->first.first;
+		string Oligo_RC = it_multi->first.second;
+		unsigned int Num_Occ_FWD = it_multi->second.first;
+		unsigned int Num_Occ_REV = it_multi->second.second;
+		bool pal = check_palindrome2(Oligo);
+		unsigned int Position = position;
+		unsigned int Rank = i;
+		string PAL;
+		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+		double P_VAL = it_2->first;
+
+		if(DS==1){
+
+			if(pal == 1){
+			
+				cout << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << "**inserire_k_corrente**" << "):" << endl;
+				cout << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
+
+				PAL = "TRUE";
+				Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
+			}
+
+			else{
+				PAL = "FALSE";
+				Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
+				Num_Occ_RC_FWD = Num_Occ_REV;
+				Num_Occ_RC_REV = Num_Occ_FWD;
+				Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
+			}
+			
+			cout << position+1 << "\t" << Rank << "\t";
+			cout << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
+			cout << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
+			cout << PAL << "\t" << Sum_Occ_Oligo << "\t" << "****FREQ****" << "\t" << P_VAL << endl;	
+		}	
 		i++;
 	}
 	cout << endl;
