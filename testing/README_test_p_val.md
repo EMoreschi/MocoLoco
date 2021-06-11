@@ -27,6 +27,4 @@ Output lines example:<br>
 ### **Notes**
 The script <i><u>test_p_val.sh</i></u> implants sequences from Jaspar Matrix Oligo generation using <i><u>Multifa_random_TOOL.cpp</i></u> tool.<br>
 The implanting position provided as input indicates where implanted oligos are centered. <br>
-For example if a Jaspar M. generates 11 bases length oligos and the position provided is 50, Multifa_random_TOOL.cpp ensures implanting starts on 45th position.<br>
-For this reason the testing script <i><u>test_p_val.sh</i></u> extracts from <i><u>k-mers_positional_occurrenced__DS.txt</i></u> the line corresponding to the beginning of the implant (in the previous example it would be the 45th line and not the 50th).
-
+For example if a Jaspar M. generates 11 bases length oligos, the position provided is 50 and K is 7, Multifa_random_TOOL.cpp ensures analysis starts on 47th position.<br>
