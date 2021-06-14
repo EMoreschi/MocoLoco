@@ -3,710 +3,711 @@
 int main(int argc, char *argv[]){
 
 
-	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
-		display_help();
-	}
+if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
+	display_help();
+}
 
-	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	GEP_path();							//Calling to GEP pathway
+command_line_parser(argc, argv);					//Parser function called to handle aguments
+GEP_path();							//Calling to GEP pathway
 
-	return 0;
+return 0;
 }
 
 void  GEP_path(){
 
-	if(MFASTA_FILE.size() == 0){	
-		
-		coordinator_class C;
-		C.print_debug_GEP(C.GEP);
-		map_class MAP(C.GEP,kmers);
-	}
+if(MFASTA_FILE.size() == 0){	
+	
+	coordinator_class C;
+	C.print_debug_GEP(C.GEP);
+	map_class MAP(C.GEP,kmers);
+}
 
-	else{
+else{
 
-		multifasta_class MULTI(MFASTA_FILE);
-		map_class MAP(MULTI.GEP,kmers);
-	}		
+	multifasta_class MULTI(MFASTA_FILE);
+	map_class MAP(MULTI.GEP,kmers);
+}		
 }
 
 void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
 
-	istringstream mystream(line);					//Split the line word by word and extract chromosome coordinates (chr, start, end)
-	mystream >> chr_coord >> start_coord >> end_coord;		
+istringstream mystream(line);					//Split the line word by word and extract chromosome coordinates (chr, start, end)
+mystream >> chr_coord >> start_coord >> end_coord;		
 
 }
 
 void bed_class::centering_function ( unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
-	//following an input half_length value (overhead added to the end)
-	unsigned int center = (start + end)/2;						
-	start_coord = center - half_length;			//No overhead for start
-	end_coord = center + half_length +overhead;		//Overhead for end
+//following an input half_length value (overhead added to the end)
+unsigned int center = (start + end)/2;						
+start_coord = center - half_length;			//No overhead for start
+end_coord = center + half_length +overhead;		//Overhead for end
 }
 
 void bed_class::flag_control( unsigned int start,  unsigned int end){ 	//Flag control function: start coordinates must be < then end coordinates
 
-	if(start > end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
-		flag = 0;
-	}
-	else{ flag = 1;}
+if(start > end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
+	flag = 0;
+}
+else{ flag = 1;}
 }
 
 void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
-	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
+cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
 
-	ifstream in(Bed_file); 						//Opening file in lecture mode
-	TwoBit * tb;				//Creating a TwoBit* variable called tb
-	tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
-	string line; 							//defining line string
+ifstream in(Bed_file); 						//Opening file in lecture mode
+TwoBit * tb;				//Creating a TwoBit* variable called tb
+tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
+string line; 							//defining line string
 
-	unsigned int n_line = 1;							//line counter initialization
+unsigned int n_line = 1;							//line counter initialization
 
-	while(getline(in,line)){  					//reading input file line by line with getline function
+while(getline(in,line)){  					//reading input file line by line with getline function
 
-		if(line.empty())   					//if line is empty or commented --> continue
-			continue;
-		if(line[0]=='#')
-			continue;
+	if(line.empty())   					//if line is empty or commented --> continue
+		continue;
+	if(line[0]=='#')
+		continue;
 
-		bed_class new_class(half_length,line,tb, n_line);  //Called the object constructor passing the Bed line, half_length P, twobit file tb, and the line counter n_line
-		GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
+	bed_class new_class(half_length,line,tb, n_line);  //Called the object constructor passing the Bed line, half_length P, twobit file tb, and the line counter n_line
+	GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
 
-		n_line = n_line + 1;					//pass to next line 
+	n_line = n_line + 1;					//pass to next line 
 
-	}
+}
 }
 
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
 
-	cout << "- [5] Analyzing sequences using Jaspar matrix\n";
+cout << "- [5] Analyzing sequences using Jaspar matrix\n";
 
-	for(unsigned int i=0; i<GEP.size(); i++){
-		string sequence = GEP[i].return_sequence(GEP[i]);
-		string chr_coord = GEP[i].return_chr_coord_GEP();
-		unsigned int start_coord = GEP[i].return_start_coord_GEP();
+for(unsigned int i=0; i<GEP.size(); i++){
+	string sequence = GEP[i].return_sequence(GEP[i]);
+	string chr_coord = GEP[i].return_chr_coord_GEP();
+	unsigned int start_coord = GEP[i].return_start_coord_GEP();
 
 
-		oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
+	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
+	oligos_vector.emplace_back(SHIFTING);
+
+	if(DS == 1){
+
+		oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
 		oligos_vector.emplace_back(SHIFTING);
+	}
+}	
 
-		if(DS == 1){
-
-			oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
-			oligos_vector.emplace_back(SHIFTING);
-		}
-	}	
-
-	cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
+cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
 }
 
 void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
 
-	if(DS == 1){
-		vector<oligo_class> comparison;
-		for(unsigned int i=0; i<oligos_vec.size(); i+=2){
+if(DS == 1){
+	vector<oligo_class> comparison;
+	for(unsigned int i=0; i<oligos_vec.size(); i+=2){
 
-			double best_score_norm_positive = oligos_vec[i].return_best_score_normalized();
-			double best_score_norm_negative = oligos_vec[i+1].return_best_score_normalized(); 
-			if(best_score_norm_positive >= best_score_norm_negative){
+		double best_score_norm_positive = oligos_vec[i].return_best_score_normalized();
+		double best_score_norm_negative = oligos_vec[i+1].return_best_score_normalized(); 
+		if(best_score_norm_positive >= best_score_norm_negative){
 
-				comparison.emplace_back(oligos_vec[i]);
-			}
-			else{
-				comparison.emplace_back(oligos_vec[i+1]);
-			}
+			comparison.emplace_back(oligos_vec[i]);
 		}
-		oligos_vector = comparison;
+		else{
+			comparison.emplace_back(oligos_vec[i+1]);
+		}
 	}
+	oligos_vector = comparison;
+}
 }
 
 void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsigned int s_iterator){
-	
-	double sum_scores = 0;
 
-	if(s_iterator < sequence.size() - matrix[0].size() ) {
+double sum_scores = 0;
 
-		for(unsigned int i=0; i< matrix[0].size(); i++){
+if(s_iterator < sequence.size() - matrix[0].size() ) {
 
-			switch(sequence[i+s_iterator]){
+	for(unsigned int i=0; i< matrix[0].size(); i++){
 
-				case 'A':
+		switch(sequence[i+s_iterator]){
 
-					sum_scores = sum_scores + matrix[0][i];
-					break;
+			case 'A':
 
-				case 'C':
+				sum_scores = sum_scores + matrix[0][i];
+				break;
 
-					sum_scores = sum_scores + matrix[1][i];
-					break;
+			case 'C':
 
-				case 'G':
+				sum_scores = sum_scores + matrix[1][i];
+				break;
 
-					sum_scores = sum_scores + matrix[2][i];
-					break;
+			case 'G':
 
-				case 'T':
+				sum_scores = sum_scores + matrix[2][i];
+				break;
 
-					sum_scores = sum_scores + matrix[3][i];
-					break;
+			case 'T':
 
-				default:
+				sum_scores = sum_scores + matrix[3][i];
+				break;
 
-					sum_scores = sum_scores + o_matrix_mins[i];
-					break;
+			default:
 
-			}
+				sum_scores = sum_scores + o_matrix_mins[i];
+				break;
+
 		}
-
-		oligo_scores.emplace_back(sum_scores);
-		shifting(matrix, sequence, s_iterator+1);
-
 	}
+
+	oligo_scores.emplace_back(sum_scores);
+	shifting(matrix, sequence, s_iterator+1);
+
+}
 
 }
 
 void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
-	cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
+cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
 
-	ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
-	string line;							
-	while(getline(file,line)){					//For each line of the file do:
+ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
+string line;							
+while(getline(file,line)){					//For each line of the file do:
 
-		if(line[0]=='>'){					//If line start with ">"
-			istringstream mystream(line);			
-			mystream >> matrix_name >> tf_name;			//Extract the first two words and put into matrix_name string variable and tf_name string variable
+	if(line[0]=='>'){					//If line start with ">"
+		istringstream mystream(line);			
+		mystream >> matrix_name >> tf_name;			//Extract the first two words and put into matrix_name string variable and tf_name string variable
+	}
+
+	else{							//Else, if line does not start with ">"
+		line.erase(0,line.find('[') +1);		//Take line charachters after "["...
+		line.erase(line.find(']'));			//...and line charachters before "]"
+		vector<double> baseQ;				//Initializing baseQ vector of double
+		istringstream mystream(line);			//Splitting the line in words
+		for (double num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
+			baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
 		}
-
-		else{							//Else, if line does not start with ">"
-			line.erase(0,line.find('[') +1);		//Take line charachters after "["...
-			line.erase(line.find(']'));			//...and line charachters before "]"
-			vector<double> baseQ;				//Initializing baseQ vector of double
-			istringstream mystream(line);			//Splitting the line in words
-			for (double num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
-				baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
-			}
-			matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
-
-		}
+		matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
 
 	}
-	file.close();						//Closing file
+
+}
+file.close();						//Closing file
 }
 
 vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 
-	vector<double> col_sum;						//Vector of columns sum
-	double sum = 0;							//Sum initialized as 0
+vector<double> col_sum;						//Vector of columns sum
+double sum = 0;							//Sum initialized as 0
 
-	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
-		for (unsigned int j = 0; j < 4; j++){				//From 0 to 4 (line number)
+for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
+	for (unsigned int j = 0; j < 4; j++){				//From 0 to 4 (line number)
 
-			sum = sum + matrix[j][i];			//Calculate the sum of columns
-		}
-
-		col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
-		sum = 0;						//Restore the sum to 0 for the next column
+		sum = sum + matrix[j][i];			//Calculate the sum of columns
 	}
-	return col_sum;
+
+	col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
+	sum = 0;						//Restore the sum to 0 for the next column
+}
+return col_sum;
 }
 
 void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
 
-	cout << "- [3] Jaspar Matrix normalization\n";
+cout << "- [3] Jaspar Matrix normalization\n";
 
-	double norm;							//Norm variable initialized
-	vector<double> col_sum = find_col_sum(matrix);
+double norm;							//Norm variable initialized
+vector<double> col_sum = find_col_sum(matrix);
 
-	for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
-		vector<double> baseQ;				//baseQ vector to store the lines initialized
-		for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+	vector<double> baseQ;				//baseQ vector to store the lines initialized
+	for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
-			norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
-			baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
-		}
-
-		norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
+		norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
+		baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
 	}
+
+	norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
+}
 }
 
 void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
 //	cout << "Second Matrix normalization...\n";
 
-	vector<double> col_sum = find_col_sum(matrix);
+vector<double> col_sum = find_col_sum(matrix);
 
-	for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
-		vector<double> baseQ;				//baseQ vector to store the lines initialized
-		for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+	vector<double> baseQ;				//baseQ vector to store the lines initialized
+	for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
-			norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
-		}
+		norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
 	}
+}
 }
 
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 
-	for(unsigned int i=0; i < matrix.size(); i++){
-		vector<double> baseQ;
-		double value_log;
+for(unsigned int i=0; i < matrix.size(); i++){
+	vector<double> baseQ;
+	double value_log;
 
-		for(unsigned int j=0; j < norm_matrix[i].size(); j++){
+	for(unsigned int j=0; j < norm_matrix[i].size(); j++){
 
-			value_log = log(norm_matrix[i][j]);
-			baseQ.emplace_back(value_log);
-		}
-		matrix_log.emplace_back(baseQ);
+		value_log = log(norm_matrix[i][j]);
+		baseQ.emplace_back(value_log);
 	}
-	
-	cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
+	matrix_log.emplace_back(baseQ);
+}
+
+cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
 }
 
 
 vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> matrix){
 
-	vector<vector<double>> inv_matrix = matrix;
-	reverse(inv_matrix.begin(), inv_matrix.end());
-	for (int i = 0; i < 4; i++) {		//From 0 to number of matrix lines
-		vector<double> baseQ;
-		reverse(inv_matrix[i].begin(), inv_matrix[i].end());
-	}
-	return inv_matrix;
+vector<vector<double>> inv_matrix = matrix;
+reverse(inv_matrix.begin(), inv_matrix.end());
+for (int i = 0; i < 4; i++) {		//From 0 to number of matrix lines
+	vector<double> baseQ;
+	reverse(inv_matrix[i].begin(), inv_matrix[i].end());
+}
+return inv_matrix;
 
 }
 
 void oligo_class::find_minmax(vector<vector<double>> matrix){
 
-	for(unsigned int i=0; i < matrix[0].size(); i++){
-		vector<double> colum;		   	
-		for(unsigned int j=0; j < matrix.size(); j++){
-			colum.emplace_back(matrix[j][i]);
-		}
-		o_matrix_mins.emplace_back(*min_element(colum.begin(),colum.end()));
-		o_matrix_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
+for(unsigned int i=0; i < matrix[0].size(); i++){
+	vector<double> colum;		   	
+	for(unsigned int j=0; j < matrix.size(); j++){
+		colum.emplace_back(matrix[j][i]);
 	}
-	min_possible_score = accumulate(o_matrix_mins.begin(), o_matrix_mins.end(), 0.0);
-	max_possible_score = accumulate(o_matrix_maxes.begin(), o_matrix_maxes.end(), 0.0);
+	o_matrix_mins.emplace_back(*min_element(colum.begin(),colum.end()));
+	o_matrix_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
+}
+min_possible_score = accumulate(o_matrix_mins.begin(), o_matrix_mins.end(), 0.0);
+max_possible_score = accumulate(o_matrix_maxes.begin(), o_matrix_maxes.end(), 0.0);
 
 }	
 
 unsigned int oligo_class::find_best_score(vector<double> oligo_scores){
 
-	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
+best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
 
-	vector<int> positions;
-	vector<int> dist_center;
-	unsigned int matches = 0;
-	int min_distance;
-	vector<int>::iterator itr;
+vector<int> positions;
+vector<int> dist_center;
+unsigned int matches = 0;
+int min_distance;
+vector<int>::iterator itr;
 
-	for(unsigned int i=0; i < oligo_scores.size(); i++){
+for(unsigned int i=0; i < oligo_scores.size(); i++){
 
-		if(oligo_scores[i] == best_score){
+	if(oligo_scores[i] == best_score){
 
-			matches = matches + 1;
-			positions.emplace_back(i);
-		}
+		matches = matches + 1;
+		positions.emplace_back(i);
 	}
-	if(matches > 1){ 
+}
+if(matches > 1){ 
 
-		for (int& p: positions){
-			int distance;
-			distance = abs( p - half_length); 
-			dist_center.emplace_back(distance);
-		}
-
-		min_distance = *min_element(dist_center.begin(), dist_center.end());
-		itr = find(dist_center.begin(),dist_center.end(), min_distance);
-		unsigned int index = distance(dist_center.begin(), itr);
-		return positions[index];
-
+	for (int& p: positions){
+		int distance;
+		distance = abs( p - half_length); 
+		dist_center.emplace_back(distance);
 	}
-	return positions[0];
+
+	min_distance = *min_element(dist_center.begin(), dist_center.end());
+	itr = find(dist_center.begin(),dist_center.end(), min_distance);
+	unsigned int index = distance(dist_center.begin(), itr);
+	return positions[index];
+
+}
+return positions[0];
 }
 
 void oligo_class::best_score_normalization(){
-	
-	best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
+
+best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
 
 }
 
 void oligo_class::find_best_sequence(string sequence, unsigned int local_position, unsigned int length){
-	
-	best_oligo_seq = sequence.substr(local_position,length);
+
+best_oligo_seq = sequence.substr(local_position,length);
 }
 
 void oligo_class::find_coordinate(unsigned int local_position, unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
-	
-	chr_coord_oligo = chr_coord_GEP;
-	start_coord_oligo = start_coord_GEP + local_position;
-	end_coord_oligo = start_coord_oligo + length;
+
+chr_coord_oligo = chr_coord_GEP;
+start_coord_oligo = start_coord_GEP + local_position;
+end_coord_oligo = start_coord_oligo + length;
 
 }
 
 void coordinator_class::centering_oligo(){
 
-	TwoBit * tb;
-	tb = twobit_open(TWOBIT_FILE.c_str());
-	int center_oligo ;
+TwoBit * tb;
+tb = twobit_open(TWOBIT_FILE.c_str());
+int center_oligo ;
 
-	for(unsigned int i=0; i<oligos_vector.size(); i++){
-		center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
-		GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
-		GEP[i].extract_seq(tb,0);
-	}
+for(unsigned int i=0; i<oligos_vector.size(); i++){
+	center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
+	GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
+	GEP[i].extract_seq(tb,0);
+}
 }
 
 void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
-	//extracted from Bed line
-	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		string chrom = chr_coord;		//Put in chrom the string of chr_coord
-		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
-	}
-	else {		
-		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
-		//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
-	}
+//extracted from Bed line
+if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+	string chrom = chr_coord;		//Put in chrom the string of chr_coord
+	sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
+}
+else {		
+	cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
+	//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
+}
 }
 
 void map_class::kmers_vector_creation(string kmers){
 
-	int index;
-	
-	while(index != -1){
-		index = kmers.find(",");
-		kmers_vector.emplace_back(stoi(kmers.substr(0,index)));
-		kmers.erase(0,index+1);
-	}
+int index;
+
+while(index != -1){
+	index = kmers.find(",");
+	kmers_vector.emplace_back(stoi(kmers.substr(0,index)));
+	kmers.erase(0,index+1);
+}
 }
 
 void map_class::table_creation_orizzontal(vector<bed_class> GEP){ 
 
-	if (MFASTA_FILE.size() ==0) 
-		cout << "- [7] Counting all k-mers occurrences for sequence and positions  \n";
-	else
-		cout << "- [4] Counting all k-mers occurrences for sequence and positions  \n";
+if (MFASTA_FILE.size() ==0) 
+	cout << "- [7] Counting all k-mers occurrences for sequence and positions  \n";
+else
+	cout << "- [4] Counting all k-mers occurrences for sequence and positions  \n";
 
-	for(unsigned int k=0; k<kmers_vector.size(); k++){
+for(unsigned int k=0; k<kmers_vector.size(); k++){
 
-		for(unsigned int j=0; j<GEP.size(); j++){
+	for(unsigned int j=0; j<GEP.size(); j++){
 
-			string sequence = GEP[j].return_sequence(GEP[j]);
+		string sequence = GEP[j].return_sequence(GEP[j]);
 
-			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
+		for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
 
-				string bases = sequence.substr(i,kmers_vector[k]);
-				or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
-			}
+			string bases = sequence.substr(i,kmers_vector[k]);
+			or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
 		}
-		orizzontal_plus_debug.emplace_back(orizzontal_plus);
-		orizzontal_minus_debug.emplace_back(orizzontal_minus);
-		orizzontal_plus.clear();
-		orizzontal_minus.clear();
 	}
+	orizzontal_plus_debug.emplace_back(orizzontal_plus);
+	orizzontal_minus_debug.emplace_back(orizzontal_minus);
+	orizzontal_plus.clear();
+	orizzontal_minus.clear();
+}
 }
 
 void map_class::table_creation_vertical(vector<bed_class> GEP){
 
-	string seq_length = GEP[0].return_sequence(GEP[0]);
+string seq_length = GEP[0].return_sequence(GEP[0]);
 
-	for(unsigned int k=0; k<kmers_vector.size(); k++){
+for(unsigned int k=0; k<kmers_vector.size(); k++){
 
-		vector<unsigned int> tot_freq_vec;
-		
-		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
+	vector<unsigned int> tot_freq_vec;
+	
+	for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
-			unsigned int tot_freq = 0;
+		unsigned int tot_freq = 0;
 
-			for(unsigned int j=0; j<GEP.size(); j++){
+		for(unsigned int j=0; j<GEP.size(); j++){
 
-				string sequence = GEP[j].return_sequence(GEP[j]);
-				string bases = sequence.substr(i,kmers_vector[k]);
-				vertical_kmer_count(bases, vertical_plus,vertical_minus, tot_freq);
-			}
-
-			select_best(vertical_plus);
-			maps_vector_positions_plus.emplace_back(vertical_plus);
-			maps_vector_positions_minus.emplace_back(vertical_minus);
-			vertical_plus.clear();
-			vertical_minus.clear();
-			tot_freq_vec.emplace_back(tot_freq);
+			string sequence = GEP[j].return_sequence(GEP[j]);
+			string bases = sequence.substr(i,kmers_vector[k]);
+			vertical_kmer_count(bases, vertical_plus,vertical_minus, tot_freq);
 		}
-
-		vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
-		vector_kmers_maps_minus.emplace_back(maps_vector_positions_minus);
-		tot_freq_matrix.emplace_back(tot_freq_vec);
-		maps_vector_positions_plus.clear();
-		maps_vector_positions_minus.clear();
+		
+		if(DS==1){
+		select_best(vertical_plus);
+		}
+		maps_vector_positions_plus.emplace_back(vertical_plus);
+		maps_vector_positions_minus.emplace_back(vertical_minus);
+		vertical_plus.clear();
+		vertical_minus.clear();
+		tot_freq_vec.emplace_back(tot_freq);
 	}
+
+	vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
+	vector_kmers_maps_minus.emplace_back(maps_vector_positions_minus);
+	tot_freq_matrix.emplace_back(tot_freq_vec);
+	maps_vector_positions_plus.clear();
+	maps_vector_positions_minus.clear();
+}
 }
 
 void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int> &plus, unordered_map<string,unsigned int> &minus){
 
-	unordered_map<string,unsigned int>::iterator it_plus;
-	unordered_map<string,unsigned int>::iterator it_minus;
-	it_plus = plus.find(bases);
-	check_palindrome(bases);
-	it_minus = minus.find(reverse_bases);
+unordered_map<string,unsigned int>::iterator it_plus;
+unordered_map<string,unsigned int>::iterator it_minus;
+it_plus = plus.find(bases);
+check_palindrome(bases);
+it_minus = minus.find(reverse_bases);
 
-	if(it_plus!=plus.end()){
+if(it_plus!=plus.end()){
 
-		it_plus->second++;
-		it_minus->second++;
-	}
+	it_plus->second++;
+	it_minus->second++;
+}
 
-	else{
+else{
 
-		plus.insert({bases,1});
-		minus.insert({reverse_bases,1});
-	}
+	plus.insert({bases,1});
+	minus.insert({reverse_bases,1});
+}
 
 
-	bases.clear();
-	reverse_bases.clear();
+bases.clear();
+reverse_bases.clear();
 }
 
 void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<unsigned int, unsigned int>>&plus, map<pair<string,string>,pair<unsigned int, unsigned int>> &minus, unsigned int& tot_freq){
 
 
 
-	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus;
-	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus_rev;
-	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus;
-	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus_rev;
+map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus;
+map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus_rev;
+map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus;
+map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus_rev;
 
-	bool pal = check_palindrome(bases);
+bool pal = check_palindrome(bases);
 
-	if(DS == 1){	
-		if(!pal){
-			tot_freq = tot_freq+2;
-		}
-		else{
-			tot_freq++;
-		}
+if(DS == 1){	
+	if(!pal){
+		tot_freq = tot_freq+2;
 	}
 	else{
 		tot_freq++;
 	}
+}
+else{
+	tot_freq++;
+}
 
-	pair<string,string> pair_bases;
-	pair_bases.first= bases;
-	pair_bases.second= reverse_bases;
+pair<string,string> pair_bases;
+pair_bases.first= bases;
+pair_bases.second= reverse_bases;
 
-	pair<string,string> pair_bases_reverse;
-	pair_bases_reverse.first= reverse_bases;
-	pair_bases_reverse.second= bases;
+pair<string,string> pair_bases_reverse;
+pair_bases_reverse.first= reverse_bases;
+pair_bases_reverse.second= bases;
 
-	it_plus = plus.find(make_pair(bases, reverse_bases));
-	it_plus_rev = plus.find(make_pair(reverse_bases, bases));
+it_plus = plus.find(make_pair(bases, reverse_bases));
+it_plus_rev = plus.find(make_pair(reverse_bases, bases));
 
-	it_minus = minus.find(pair_bases);
-	it_minus_rev = minus.find(pair_bases_reverse);
+it_minus = minus.find(pair_bases);
+it_minus_rev = minus.find(pair_bases_reverse);
 
-	if(it_plus!=plus.end()){
+if(it_plus!=plus.end()){
 
-		it_plus->second.first++;
-		it_minus->second.first++;
-	}	
-	if (it_plus==plus.end() && it_plus_rev != plus.end()) {
-		it_plus_rev->second.second++;
-		it_minus_rev->second.second++;
+	it_plus->second.first++;
+	it_minus->second.first++;
+}	
+if (it_plus==plus.end() && it_plus_rev != plus.end()) {
+	it_plus_rev->second.second++;
+	it_minus_rev->second.second++;
 
-	}
+}
 
-	else{
+else{
 
-		plus.insert({{bases,reverse_bases},{1,0}});
-		minus.insert({{bases,reverse_bases},{1,0}});
-	}
+	plus.insert({{bases,reverse_bases},{1,0}});
+	minus.insert({{bases,reverse_bases},{1,0}});
+}
 
 
-	bases.clear();
-	reverse_bases.clear();
+bases.clear();
+reverse_bases.clear();
 }
 
 void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>& vertical_plus){
 
-	map<pair<string,string>,pair<unsigned int,unsigned int>> copy;
+map<pair<string,string>,pair<unsigned int,unsigned int>> copy;
+
+for(map<pair<string,string>,pair<unsigned int,unsigned int>>::iterator it = vertical_plus.begin(); it!=vertical_plus.end(); it++){
+
+	if(it->second.first < it->second.second){
 	
-	for(map<pair<string,string>,pair<unsigned int,unsigned int>>::iterator it = vertical_plus.begin(); it!=vertical_plus.end(); it++){
-
-		if(it->second.first < it->second.second){
+		string oligo1 = it->first.second;	
+		string oligo2 = it->first.first;
+		unsigned int occ1 = it->second.second;
+		unsigned int occ2 = it->second.first;
 		
-			string oligo1 = it->first.second;	
-			string oligo2 = it->first.first;
-			unsigned int occ1 = it->second.second;
-			unsigned int occ2 = it->second.first;
-			
-			copy.insert({{oligo1,oligo2},{occ1,occ2}});		
-		}
-		else{
-
-			copy.insert({{it->first.first, it->first.second},{it->second.first,it->second.second}});		
-		}
+		copy.insert({{oligo1,oligo2},{occ1,occ2}});		
 	}
-	vertical_plus.clear();
-	vertical_plus = copy;
+	else{
+
+		copy.insert({{it->first.first, it->first.second},{it->second.first,it->second.second}});		
+	}
+}
+vertical_plus.clear();
+vertical_plus = copy;
 }
 
 void p_value_class::N2_calculation(unordered_map<string,unsigned int> orizzontal_map){
-	
-		total_oligo_N2 = 0;
-		total_oligo_N2 = accumulate(begin(orizzontal_map), end(orizzontal_map), 0, [] (unsigned int val, const unordered_map<string,int>::value_type& p) {return val + p.second;});
+
+	total_oligo_N2 = 0;
+	total_oligo_N2 = accumulate(begin(orizzontal_map), end(orizzontal_map), 0, [] (unsigned int val, const unordered_map<string,int>::value_type& p) {return val + p.second;});
 }
 
 bool map_class::check_palindrome(string bases){
 
-	for(unsigned int i=0; i<bases.size(); i++){
+for(unsigned int i=0; i<bases.size(); i++){
 
-		char base;
-		base = bases[i];
-		switch (base) {
+	char base;
+	base = bases[i];
+	switch (base) {
 
-			case 'A' : reverse_bases.append("T"); 
-				   break;
-			case 'T' : reverse_bases.append("A"); 
-				   break;
-			case 'G' : reverse_bases.append("C"); 
-				   break;
-			case 'C' : reverse_bases.append("G"); 
-				   break;
-			case 'N' : reverse_bases.append("N"); 
-				   break;
-		}
+		case 'A' : reverse_bases.append("T"); 
+			   break;
+		case 'T' : reverse_bases.append("A"); 
+			   break;
+		case 'G' : reverse_bases.append("C"); 
+			   break;
+		case 'C' : reverse_bases.append("G"); 
+			   break;
+		case 'N' : reverse_bases.append("N"); 
+			   break;
 	}
+}
 
-	reverse(reverse_bases.begin(), reverse_bases.end());
-	if (reverse_bases == bases){
-		return true;
-	}
-	else {return false;}
+reverse(reverse_bases.begin(), reverse_bases.end());
+if (reverse_bases == bases){
+	return true;
+}
+else {return false;}
 
 }
 
 bool p_value_class::check_palindrome2(string bases){
 
-	for(unsigned int i=0; i<bases.size(); i++){
+reverse_bases.clear();
+for(unsigned int i=0; i<bases.size(); i++){
 
-		char base;
-		base = bases[i];
-		switch (base) {
+	char base;
+	base = bases[i];
+	switch (base) {
 
-			case 'A' : reverse_bases.append("T"); 
-				   break;
-			case 'T' : reverse_bases.append("A"); 
-				   break;
-			case 'G' : reverse_bases.append("C"); 
-				   break;
-			case 'C' : reverse_bases.append("G"); 
-				   break;
-			case 'N' : reverse_bases.append("N"); 
-				   break;
-		}
+		case 'A' : reverse_bases.append("T"); 
+			   break;
+		case 'T' : reverse_bases.append("A"); 
+			   break;
+		case 'G' : reverse_bases.append("C"); 
+			   break;
+		case 'C' : reverse_bases.append("G"); 
+			   break;
+		case 'N' : reverse_bases.append("N"); 
+			   break;
 	}
+}
 
-	reverse(reverse_bases.begin(), reverse_bases.end());
-	if (reverse_bases == bases){
-		return true;
-	}
-	else {return false;}
+reverse(reverse_bases.begin(), reverse_bases.end());
+if (reverse_bases == bases){
+	return true;
+}
+else {return false;}
 
 }
 
 void multifasta_class::length_control(vector<string> sequences){
 
-	cout << "- [2] Multifasta Sequences length check\n";
+cout << "- [2] Multifasta Sequences length check\n";
 
-	unsigned int size = sequences[0].size();
+unsigned int size = sequences[0].size();
 
-	for(unsigned int i=0; i<sequences.size(); i++){
+for(unsigned int i=0; i<sequences.size(); i++){
 
-		if(sequences[i].size() != size){
+	if(sequences[i].size() != size){
 
-			cerr << "Sequences are not of the same length!" << endl;
-			exit(1);
-		}
+		cerr << "Sequences are not of the same length!" << endl;
+		exit(1);
 	}
+}
 }
 
 void multifasta_class::extract_sequences(string MFasta_file){
-	
-	cout << "\n- [1] Extracting sequences from MultiFasta file \n";
 
-	ifstream file(MFasta_file);
-	string line;
-	string current_sequence;
-	bool first_line = 1;
+cout << "\n- [1] Extracting sequences from MultiFasta file \n";
 
-	while(getline(file,line)){
+ifstream file(MFasta_file);
+string line;
+string current_sequence;
+bool first_line = 1;
 
-		if(line[0] == '>' && !first_line){
-			
-			sequences.emplace_back(current_sequence);
-			current_sequence.clear();
-			
-			}
+while(getline(file,line)){
 
-		else if (!first_line){
-			
-			if(line[0] != ' ' && line.size() != 0){	
-			transform(line.begin(), line.end(), line.begin(), ::toupper);	
-			current_sequence = current_sequence + line; 
-			}
+	if(line[0] == '>' && !first_line){
+		
+		sequences.emplace_back(current_sequence);
+		current_sequence.clear();
+		
 		}
 
-		first_line = 0;	
+	else if (!first_line){
+		
+		if(line[0] != ' ' && line.size() != 0){	
+		transform(line.begin(), line.end(), line.begin(), ::toupper);	
+		current_sequence = current_sequence + line; 
+		}
 	}
-	sequences.emplace_back(current_sequence);
+
+	first_line = 0;	
+}
+sequences.emplace_back(current_sequence);
 }
 
 void multifasta_class::GEP_creation_MF(vector<string> sequences){
 
-	cout << "- [3] Sorting Multifasta sequences\n";
+cout << "- [3] Sorting Multifasta sequences\n";
 
-	for(unsigned int i=0; i<sequences.size(); i++){
+for(unsigned int i=0; i<sequences.size(); i++){
 
-		bed_class new_class(sequences[i]);
-		GEP.emplace_back(new_class);
-	}
+	bed_class new_class(sequences[i]);
+	GEP.emplace_back(new_class);
+}
 
 }
 
 void map_class::P_VALUE_MATRIX_creation(){
 
-	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
+for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
 
-		//ofstream outfile = outfile_header(j);
+	ofstream outfile = outfile_header(j);
 
-		vector<unsigned int> tot_sum_vec;
+	vector<unsigned int> tot_sum_vec;
 
-		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
+	for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
 
-			unsigned int c=0;
+		p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j], sequences_number_T, i, outfile);
+		P_VALUE_VECTOR.emplace_back(P); //creating a vector for every position
 
-			p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j], sequences_number_T, i);
-			P_VALUE_VECTOR.emplace_back(P); //creating a vector for every position
-
-		}
-		P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR); //creating a vector for every k
-		P_VALUE_VECTOR.clear();
-		//outfile.close();
-		
 	}
-	//P_VALUE_MATRIX_debug();
+	P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR); //creating a vector for every k
+	P_VALUE_VECTOR.clear();
+	outfile.close();
+	
+}
+//P_VALUE_MATRIX_debug();
 }
 
 
 multimap<pair<unsigned int, unsigned int>,pair<string,string>> p_value_class::multimap_creation(map<pair<string,string>, pair<unsigned int,unsigned int>> pair_map){
-	
-	for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = pair_map.begin(); it != pair_map.end(); it++){ 	
-				
-		vertical_multimap.insert({it->second,it->first});
-	}
+
+for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = pair_map.begin(); it != pair_map.end(); it++){ 	
 			
-	return vertical_multimap;
+	vertical_multimap.insert({it->second,it->first});
+}
+		
+return vertical_multimap;
 }
 
 void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizzontal_map){
@@ -719,7 +720,7 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 
 		bool pal = check_palindrome2(it_rev->second.first);
 
-		if(pal == 1){
+		if(pal == 0){
 
 			K = it_rev->first.first + it_rev->first.second;
 		}
@@ -727,7 +728,6 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 
 			K = it_rev->first.first;
 		}
-
 		it_N1_plus = orizzontal_map.find(it_rev->second.first);
 		it_N1_minus = orizzontal_map.find(it_rev->second.second);
 
@@ -738,21 +738,19 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 		else{
 			N1 = it_N1_plus->second;
 		}
-		
+
 		N2 = total_oligo_N2 - N1;
 
 		K_vec.emplace_back(K);
 		N1_vec.emplace_back(N1);
 		N2_vec.emplace_back(N2);
-				
+
 	}
-
-
 }
 
 void p_value_class::calculating_p_value(){
 
-	for(int i=0; i<K_vec.size(); i++){
+	for(unsigned int i=0; i<K_vec.size(); i++){
 
 		double p_value =  gsl_cdf_hypergeometric_Q(K_vec[i],N1_vec[i],N2_vec[i],T);
 		p_value = check_p_value(p_value);
@@ -763,73 +761,103 @@ void p_value_class::calculating_p_value(){
 double p_value_class::check_p_value(double p){
 
 	if(p == 0){
-		
+
 		p = 1.000001e-300;
 	}
-	
+
 	return p;
 }
 
 void p_value_class::sorting_p_value(){
 
+	vector<unsigned int> KNT;
 	unsigned int i=0;
-	for(multimap<pair<unsigned int, unsigned int>, pair<string, string>>::iterator it = vertical_multimap.begin(); it!=vertical_multimap.end(); it++){
-		
-			
-		p_value_sort.insert({p_value_vec[i],{it->second.first, it->second.second}});
-		i = i+1;
-	}
+	for(multimap<pair<unsigned int, unsigned int>, pair<string, string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend(); it_rev++){
 
+		KNT.emplace_back(K_vec[i]);	
+		KNT.emplace_back(N1_vec[i]);	
+		KNT.emplace_back(N2_vec[i]);	
+		KNT.emplace_back(T);	
+
+		p_value_sort.insert({p_value_vec[i],{it_rev->second.first, it_rev->second.second}});
+		p_value_KNT.insert({p_value_vec[i],{it_rev->second.first, KNT}}); 
+		i = i+1;
+		KNT.clear();
+	}
 }
 
-void p_value_class::print_debug_p_value(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position){
-	
-	unsigned int i=0;
-	
-	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
+void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile){
 
-	for(multimap<double,pair<string,string>>::iterator it_2 = p_value_sort.begin(); it_2!=p_value_sort.end(); it_2++){
+unsigned int i=0;
+unsigned int c=0;
+
+multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
+
+for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
+	
+	double FREQ, Sum_Occ_Oligo;
+	it_multi = pair_map.find(it_pair->second);
+	string Oligo = it_multi->first.first;
+	string Oligo_RC = it_multi->first.second;
+	unsigned int Num_Occ_FWD = it_multi->second.first;
+	unsigned int Num_Occ_REV = it_multi->second.second;
+	bool pal = check_palindrome2(Oligo);
+	unsigned int Rank = i;
+	string PAL;
+	unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+	double P_VAL = it_pair->first;
+
+		if(pal == 1){
 		
-		double FREQ, Sum_Occ_Oligo;
-		it_multi = pair_map.find(it_2->second);
-		string Oligo = it_multi->first.first;
-		string Oligo_RC = it_multi->first.second;
-		unsigned int Num_Occ_FWD = it_multi->second.first;
-		unsigned int Num_Occ_REV = it_multi->second.second;
-		bool pal = check_palindrome2(Oligo);
-		unsigned int Position = position;
-		unsigned int Rank = i;
-		string PAL;
-		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
-		double P_VAL = it_2->first;
+			PAL = "TRUE";
+			Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
+		}
 
-		if(DS==1){
+		else{
+			PAL = "FALSE";
+			Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
+			Num_Occ_RC_FWD = Num_Occ_REV;
+			Num_Occ_RC_REV = Num_Occ_FWD;
+			Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
+		}
+		
+		outfile << position+1 << "\t" << Rank+1 << "\t";
+		outfile << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
+		outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
+		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << "****FREQ****" << "\t" << P_VAL << endl;	
+	i++;
+}
+}
 
-			if(pal == 1){
-			
-				cout << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << "**inserire_k_corrente**" << "):" << endl;
-				cout << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
+void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile){
 
-				PAL = "TRUE";
-				Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
-			}
+unsigned int c,i=0;
 
-			else{
-				PAL = "FALSE";
-				Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
-				Num_Occ_RC_FWD = Num_Occ_REV;
-				Num_Occ_RC_REV = Num_Occ_FWD;
-				Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
-			}
-			
-			cout << position+1 << "\t" << Rank << "\t";
-			cout << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
-			cout << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
-			cout << PAL << "\t" << Sum_Occ_Oligo << "\t" << "****FREQ****" << "\t" << P_VAL << endl;	
-		}	
-		i++;
+multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
+
+for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++){
+	
+	double FREQ, Num_Occ_FWD;
+	it_multi = pair_map.find(it_pair->second);
+	string Oligo = it_multi->first.first;
+	unsigned int Num_Occ_Oligo = it_multi->second.first;
+	bool pal = check_palindrome2(Oligo);
+	unsigned int Rank = i;
+	string PAL;
+	double P_VAL = it_pair->first;
+	Num_Occ_FWD = Num_Occ_Oligo;
+		
+	if(pal == 0){
+	
+		PAL = "FALSE";
 	}
-	cout << endl;
+	else{	PAL = "TRUE";}
+			
+	outfile << position+1 << "\t" << Rank+1 << "\t";
+	outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
+	outfile << PAL << "\t" << "****FREQ****" << "\t" << P_VAL << endl;	
+	c++,i++;
+}
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -858,25 +886,35 @@ vector<vector<double>> matrix_class::return_inverse_log_matrix(){
 
 	return inverse_matrix_log;
 }
+
 vector<vector<double>> matrix_class::return_log_matrix(){
 
 	return matrix_log;
 }
+
 string bed_class::return_sequence(bed_class){
 
 	return sequence;
 }
+
 string bed_class::return_chr_coord(){
 
 	return chr_coord;
 }
+
 unsigned int bed_class::return_start_coord(){
 
 	return start_coord;
 }
+
 unsigned int bed_class::return_end_coord(){
 
 	return end_coord;
+}
+
+multimap<double,pair<string,vector<unsigned int>>> p_value_class::return_p_value_KNT(){
+
+	return p_value_KNT;
 }
 
 
@@ -992,29 +1030,29 @@ void map_class::print_debug_orizzontal(){
 	}
 }
 
-//ofstream map_class::outfile_header(unsigned int j){
-//
-//
-//	ofstream outfile;
-//
-//	if(DS==1){
-//
-//		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"_DS.txt");
-//
-//		outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-//		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
-//
-//	}
-//
-//	else{
-//		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"_SS.txt");
-//
-//		outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
-//		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC" << "\t"  << "PAL" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
-//
-//	}
-//	return outfile;	
-//}
+ofstream map_class::outfile_header(unsigned int j){
+
+
+	ofstream outfile;
+
+	if(DS==1){
+
+		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"DS.txt");
+
+		outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
+
+	}
+
+	else{
+		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"SS.txt");
+
+		outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "PAL" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
+
+	}
+	return outfile;	
+}
 
 
 //void map_class::TopN_sum_and_freq(){
@@ -1046,31 +1084,37 @@ void map_class::print_debug_orizzontal(){
 //}
 
 //
-//void map_class::P_VALUE_MATRIX_debug(){
-//
-//	ofstream outfile;
-//	
-//	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
-//		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+".txt");
-//		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
-//		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10" << endl;
-//		
-//		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
-//
-//			outfile << P_VALUE_MATRIX[j][i].return_position() << "\t"; 
-//			outfile << P_VALUE_MATRIX[j][i].return_rank() << "\t"; 
-//			outfile << P_VALUE_MATRIX[j][i].return_oligo() << "\t"; 
-//			outfile << P_VALUE_MATRIX[j][i].return_K() << "\t"; 
-//			outfile << P_VALUE_MATRIX[j][i].return_N1() << "\t"; 
-//			outfile << P_VALUE_MATRIX[j][i].return_N2() << "\t"; 
-//			outfile << P_VALUE_MATRIX[j][i].return_T() << "\t"; 
-//			outfile << P_VALUE_MATRIX[j][i].return_p_val() << "\t"; 
-//			outfile << P_VALUE_MATRIX[j][i].return_p_val_log10() << endl; 
-//		}
-//	
-//		outfile.close();
-//	}
-//}
+void map_class::p_value_parameters_debug(){
+
+	ofstream outfile;
+
+	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+".txt");
+		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10" << endl;
+
+		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
+
+			multimap<double,pair<string,vector<unsigned int>>> KNT_multimap = P_VALUE_MATRIX[j][i].return_p_value_KNT();
+			unsigned int rank = 0;
+
+			for(multimap<double,pair<string,vector<unsigned int>>>::iterator it = KNT_multimap.begin(); it != KNT_multimap.end() && rank<top_N; it++, rank++){
+
+				outfile << i+1 << "\t";
+				outfile << rank+1 << "\t";
+				outfile << it->second.first << "\t";
+				outfile << it->second.second[0] << "\t";
+				outfile << it->second.second[1] << "\t";
+				outfile << it->second.second[2] << "\t";
+				outfile << it->second.second[3] << "\t";
+				outfile << it->first << "\t";
+				outfile << log10(it->first)*-1 << endl;
+			}
+
+		}
+		outfile.close();
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

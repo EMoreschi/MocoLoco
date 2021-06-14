@@ -238,6 +238,7 @@ class p_value_class{
 		double p_val;
 		double p_val_log10;
 		multimap<double,pair<string,string>> p_value_sort;
+		multimap<double,pair<string,vector<unsigned int>>> p_value_KNT;
 
 		multimap<pair<unsigned int,unsigned int>, pair<string,string>>  multimap_creation(map<pair<string,string>,pair<unsigned int,unsigned int>>);
 		void filling_KNT_vectors(unordered_map<string,unsigned int>);
@@ -246,11 +247,12 @@ class p_value_class{
 		void calculating_p_value();
 		double check_p_value(double);
 		void sorting_p_value();
-		void print_debug_p_value(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int);
+		void print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&);
+		void print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&);
 
 	public:
 
-		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t, unsigned int position){
+		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t, unsigned int position, ofstream &outfile){
 		
 			T = t;
 			vertical_multimap = multimap_creation(pair_map);
@@ -258,8 +260,16 @@ class p_value_class{
 			filling_KNT_vectors(orizzontal_map);
 			calculating_p_value();
 			sorting_p_value();
-			print_debug_p_value(pair_map, position);	
+			
+			if(DS==1){
+			print_debug_p_value_DS(pair_map, position, outfile);	
+			}
+			else{
+			print_debug_p_value_SS(pair_map, position, outfile);	
+			}
 		}
+
+		multimap<double,pair<string,vector<unsigned int>>> return_p_value_KNT();
 };
 
 class map_class{
@@ -295,7 +305,7 @@ class map_class{
 		void P_VALUE_MATRIX_creation();
 		ofstream outfile_header(unsigned int);
 		//void TopN_sum_and_freq();
-		//void P_VALUE_MATRIX_debug();
+		void p_value_parameters_debug();
 		double check_p_value(double);
 
 	public:
@@ -308,7 +318,7 @@ class map_class{
 			sequences_number_T = GEP.size();
 			print_debug_orizzontal();
 			P_VALUE_MATRIX_creation();
-
+			p_value_parameters_debug();
 			//TopN_sum_and_freq();
 		}
 };
