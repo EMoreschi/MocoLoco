@@ -235,6 +235,7 @@ class p_value_class{
 		unsigned int total_oligo_N2;
 		unsigned int position;
 		unsigned int rank;
+		unsigned int sum_top_N;
 		double p_val;
 		double p_val_log10;
 		multimap<double,pair<string,string>> p_value_sort;
@@ -247,12 +248,12 @@ class p_value_class{
 		void calculating_p_value();
 		double check_p_value(double);
 		void sorting_p_value();
-		void print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&);
-		void print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&);
+		void print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int);
+		void print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int);
 
 	public:
 
-		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t, unsigned int position, ofstream &outfile){
+		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t, unsigned int position, ofstream &outfile, unsigned int freq){
 		
 			T = t;
 			vertical_multimap = multimap_creation(pair_map);
@@ -262,14 +263,15 @@ class p_value_class{
 			sorting_p_value();
 			
 			if(DS==1){
-			print_debug_p_value_DS(pair_map, position, outfile);	
+			print_debug_p_value_DS(pair_map, position, outfile, freq);	
 			}
 			else{
-			print_debug_p_value_SS(pair_map, position, outfile);	
+			print_debug_p_value_SS(pair_map, position, outfile, freq);	
 			}
 		}
 
 		multimap<double,pair<string,vector<unsigned int>>> return_p_value_KNT();
+		unsigned int return_sum_top_N();
 };
 
 class map_class{
@@ -288,6 +290,7 @@ class map_class{
 		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_minus;
 		string reverse_bases;
 		vector<vector<unsigned int>> tot_freq_matrix;
+		vector<unsigned int> tot_sum_vector;
 		vector<vector<unsigned int>> tot_sum_matrix;
 		vector<unsigned int> kmers_vector;
 		unsigned int sequences_number_T;
@@ -304,7 +307,7 @@ class map_class{
 		bool check_palindrome(string);
 		void P_VALUE_MATRIX_creation();
 		ofstream outfile_header(unsigned int);
-		//void TopN_sum_and_freq();
+		void TopN_sum_and_freq();
 		void p_value_parameters_debug();
 		double check_p_value(double);
 
@@ -319,7 +322,7 @@ class map_class{
 			print_debug_orizzontal();
 			P_VALUE_MATRIX_creation();
 			p_value_parameters_debug();
-			//TopN_sum_and_freq();
+			TopN_sum_and_freq();
 		}
 };
 

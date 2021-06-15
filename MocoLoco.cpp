@@ -679,24 +679,23 @@ for(unsigned int i=0; i<sequences.size(); i++){
 
 void map_class::P_VALUE_MATRIX_creation(){
 
-for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
+	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
 
-	ofstream outfile = outfile_header(j);
+		ofstream outfile = outfile_header(j);
 
-	vector<unsigned int> tot_sum_vec;
+		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
 
-	for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
-
-		p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j], sequences_number_T, i, outfile);
-		P_VALUE_VECTOR.emplace_back(P); //creating a vector for every position
+			p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j], sequences_number_T, i, outfile, tot_freq_matrix[j][i]);
+			P_VALUE_VECTOR.emplace_back(P); //creating a vector for every position
+			tot_sum_vector.emplace_back(P.return_sum_top_N());
+		}
+		P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR); //creating a vector for every k
+		P_VALUE_VECTOR.clear();
+		tot_sum_matrix.emplace_back(tot_sum_vector);
+		tot_sum_vector.clear();
+		outfile.close();
 
 	}
-	P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR); //creating a vector for every k
-	P_VALUE_VECTOR.clear();
-	outfile.close();
-	
-}
-//P_VALUE_MATRIX_debug();
 }
 
 
@@ -720,7 +719,7 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 
 		bool pal = check_palindrome2(it_rev->second.first);
 
-		if(pal == 0){
+		if(pal == 0 && DS == 1){
 
 			K = it_rev->first.first + it_rev->first.second;
 		}
@@ -731,7 +730,7 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 		it_N1_plus = orizzontal_map.find(it_rev->second.first);
 		it_N1_minus = orizzontal_map.find(it_rev->second.second);
 
-		if(it_N1_minus != orizzontal_map.end()){
+		if(it_N1_minus != orizzontal_map.end() && DS == 1){
 
 			N1 = it_N1_plus->second + it_N1_minus->second;
 		}
@@ -786,10 +785,11 @@ void p_value_class::sorting_p_value(){
 	}
 }
 
-void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile){
+void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
 
 unsigned int i=0;
 unsigned int c=0;
+sum_top_N = 0;
 
 multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
 
@@ -811,6 +811,7 @@ for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(
 		
 			PAL = "TRUE";
 			Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
+			FREQ = Sum_Occ_Oligo/freq;
 		}
 
 		else{
@@ -819,23 +820,27 @@ for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(
 			Num_Occ_RC_FWD = Num_Occ_REV;
 			Num_Occ_RC_REV = Num_Occ_FWD;
 			Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
+			FREQ = Sum_Occ_Oligo/freq;
 		}
 		
 		outfile << position+1 << "\t" << Rank+1 << "\t";
 		outfile << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
 		outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
-		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << "****FREQ****" << "\t" << P_VAL << endl;	
-	i++;
+		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL << endl;	
+		sum_top_N = sum_top_N + Sum_Occ_Oligo;
+		i++;
 }
 }
 
-void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile){
+void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
 
-unsigned int c,i=0;
+unsigned int c = 0;
+unsigned int i = 0;
+sum_top_N = 0;
 
 multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
 
-for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++){
+for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
 	
 	double FREQ, Num_Occ_FWD;
 	it_multi = pair_map.find(it_pair->second);
@@ -846,6 +851,7 @@ for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(
 	string PAL;
 	double P_VAL = it_pair->first;
 	Num_Occ_FWD = Num_Occ_Oligo;
+	FREQ = Num_Occ_FWD/freq;
 		
 	if(pal == 0){
 	
@@ -855,8 +861,9 @@ for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(
 			
 	outfile << position+1 << "\t" << Rank+1 << "\t";
 	outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
-	outfile << PAL << "\t" << "****FREQ****" << "\t" << P_VAL << endl;	
-	c++,i++;
+	outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;	
+	i++;
+	sum_top_N = sum_top_N + Num_Occ_FWD;
 }
 }
 
@@ -917,6 +924,10 @@ multimap<double,pair<string,vector<unsigned int>>> p_value_class::return_p_value
 	return p_value_KNT;
 }
 
+unsigned int p_value_class::return_sum_top_N(){
+
+	return sum_top_N;
+}
 
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
 
@@ -1055,41 +1066,47 @@ ofstream map_class::outfile_header(unsigned int j){
 }
 
 
-//void map_class::TopN_sum_and_freq(){
-//
-//	ofstream outfile;
-//
-//	for(unsigned int i=0; i<tot_sum_matrix.size(); i++){
-//		
-//		if(DS==1){	
-//		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_DS.txt");
-//		}
-//		
-//		else{
-//		outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_SS.txt");
-//		}
-//
-//		outfile << "###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":" << endl; 
-//		outfile << "Position" << "\t" << "Sum" << "\t" << "Frequences" << endl; 
-//		
-//		for(unsigned int j=0; j<tot_sum_matrix[i].size(); j++){
-//		
-//		double sum = tot_sum_matrix[i][j];		//Put as double to dont loose the precision	
-//		double frequence = sum/tot_freq_matrix[i][j];	
-//		outfile << j+1 << "\t" << tot_sum_matrix[i][j] << "\t" << frequence << endl; 
-//
-//		}
-//		outfile.close();
-//	}
-//}
+void map_class::TopN_sum_and_freq(){
 
-//
+	ofstream outfile;
+
+	for(unsigned int i=0; i<tot_sum_matrix.size(); i++){
+
+		if(DS==1){	
+			outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_DS.txt");
+		}
+
+		else{
+			outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_SS.txt");
+		}
+
+		outfile << "###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":" << endl; 
+		outfile << "Position" << "\t" << "Sum" << "\t" << "Frequences" << endl; 
+
+		for(unsigned int j=0; j<tot_sum_matrix[i].size(); j++){
+
+			double sum = tot_sum_matrix[i][j];		//Put as double to dont loose the precision	
+			double frequence = sum/tot_freq_matrix[i][j];	
+			outfile << j+1 << "\t" << tot_sum_matrix[i][j] << "\t" << frequence << endl; 
+
+		}
+		outfile.close();
+	}
+}
+
 void map_class::p_value_parameters_debug(){
 
 	ofstream outfile;
 
 	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
-		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+".txt");
+		
+		if(DS == 1){
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+"DS.txt");
+		}
+		else{
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+"SS.txt");
+		}
+
 		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
 		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10" << endl;
 
