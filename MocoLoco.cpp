@@ -785,30 +785,57 @@ void p_value_class::sorting_p_value(){
 	}
 }
 
+void p_value_class::checking_ordering(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream &outfile, unsigned int freq){
+
+	if(ordering == "p"){
+
+		if(DS==1){
+
+			print_debug_p_value_DS(pair_map, position, outfile, freq);	
+		}	
+
+		else{
+
+			print_debug_p_value_SS(pair_map, position, outfile, freq);	
+		}
+	}
+
+	else{
+		if(DS == 1){
+
+			print_debug_occurrences_DS(pair_map, position, outfile, freq, p_value_vec);	
+		}
+
+		else{
+
+			print_debug_occurrences_SS(pair_map, position, outfile, freq, p_value_vec);	
+		}
+	}
+}
+
 void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
 
-unsigned int i=0;
-unsigned int c=0;
-sum_top_N = 0;
+	unsigned int c=0;
+	sum_top_N = 0;
 
-multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
+	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
 
-for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
-	
-	double FREQ, Sum_Occ_Oligo;
-	it_multi = pair_map.find(it_pair->second);
-	string Oligo = it_multi->first.first;
-	string Oligo_RC = it_multi->first.second;
-	unsigned int Num_Occ_FWD = it_multi->second.first;
-	unsigned int Num_Occ_REV = it_multi->second.second;
-	bool pal = check_palindrome2(Oligo);
-	unsigned int Rank = i;
-	string PAL;
-	unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
-	double P_VAL = it_pair->first;
+	for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
+
+		double FREQ, Sum_Occ_Oligo;
+		it_multi = pair_map.find(it_pair->second);
+		string Oligo = it_multi->first.first;
+		string Oligo_RC = it_multi->first.second;
+		unsigned int Num_Occ_FWD = it_multi->second.first;
+		unsigned int Num_Occ_REV = it_multi->second.second;
+		bool pal = check_palindrome2(Oligo);
+		unsigned int Rank = c;
+		string PAL;
+		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+		double P_VAL = it_pair->first;
 
 		if(pal == 1){
-		
+
 			PAL = "TRUE";
 			Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
 			FREQ = Sum_Occ_Oligo/freq;
@@ -822,49 +849,119 @@ for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(
 			Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
 			FREQ = Sum_Occ_Oligo/freq;
 		}
-		
+
 		outfile << position+1 << "\t" << Rank+1 << "\t";
 		outfile << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
 		outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
 		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL << endl;	
 		sum_top_N = sum_top_N + Sum_Occ_Oligo;
-		i++;
-}
+	}
 }
 
 void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
 
-unsigned int c = 0;
-unsigned int i = 0;
-sum_top_N = 0;
+	unsigned int c = 0;
+	sum_top_N = 0;
 
-multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
+	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
 
-for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
-	
-	double FREQ, Num_Occ_FWD;
-	it_multi = pair_map.find(it_pair->second);
-	string Oligo = it_multi->first.first;
-	unsigned int Num_Occ_Oligo = it_multi->second.first;
-	bool pal = check_palindrome2(Oligo);
-	unsigned int Rank = i;
-	string PAL;
-	double P_VAL = it_pair->first;
-	Num_Occ_FWD = Num_Occ_Oligo;
-	FREQ = Num_Occ_FWD/freq;
-		
-	if(pal == 0){
-	
-		PAL = "FALSE";
+	for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
+
+		double FREQ, Num_Occ_FWD;
+		it_multi = pair_map.find(it_pair->second);
+		string Oligo = it_multi->first.first;
+		unsigned int Num_Occ_Oligo = it_multi->second.first;
+		bool pal = check_palindrome2(Oligo);
+		unsigned int Rank = c;
+		string PAL;
+		double P_VAL = it_pair->first;
+		Num_Occ_FWD = Num_Occ_Oligo;
+		FREQ = Num_Occ_FWD/freq;
+
+		if(pal == 0){
+
+			PAL = "FALSE";
+		}
+		else{	PAL = "TRUE";}
+
+		outfile << position+1 << "\t" << Rank+1 << "\t";
+		outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
+		outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;	
+		sum_top_N = sum_top_N + Num_Occ_FWD;
 	}
-	else{	PAL = "TRUE";}
-			
-	outfile << position+1 << "\t" << Rank+1 << "\t";
-	outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
-	outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;	
-	i++;
-	sum_top_N = sum_top_N + Num_Occ_FWD;
 }
+
+void p_value_class::print_debug_occurrences_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq, vector<double> p_value_vec){
+
+	unsigned int c=0;
+	sum_top_N = 0;
+
+	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
+
+		double FREQ, Sum_Occ_Oligo;
+		string Oligo = it_rev->second.first;
+		string Oligo_RC = it_rev->second.second;
+		unsigned int Num_Occ_FWD = it_rev->first.first;
+		unsigned int Num_Occ_REV = it_rev->first.second;
+		bool pal = check_palindrome2(Oligo);
+		unsigned int Rank = c;
+		string PAL;
+		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+		double P_VAL = p_value_vec[c];
+
+		if(pal == 1){
+
+			PAL = "TRUE";
+			Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
+			FREQ = Sum_Occ_Oligo/freq;
+		}
+
+		else{
+			PAL = "FALSE";
+			Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
+			Num_Occ_RC_FWD = Num_Occ_REV;
+			Num_Occ_RC_REV = Num_Occ_FWD;
+			Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
+			FREQ = Sum_Occ_Oligo/freq;
+		}
+
+		outfile << position+1 << "\t" << Rank+1 << "\t";
+		outfile << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
+		outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
+		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL << endl;	
+		sum_top_N = sum_top_N + Sum_Occ_Oligo;
+	}
+}
+
+void p_value_class::print_debug_occurrences_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq, vector<double> p_value_vec){
+
+	unsigned int c = 0;
+	sum_top_N = 0;
+
+
+	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
+
+		double FREQ, Num_Occ_FWD;
+		string Oligo = it_rev->second.first;
+		unsigned int Num_Occ_Oligo = it_rev->first.first;
+		bool pal = check_palindrome2(Oligo);
+		unsigned int Rank = c;
+		string PAL;
+		double P_VAL = p_value_vec[c];
+		Num_Occ_FWD = Num_Occ_Oligo;
+		FREQ = Num_Occ_FWD/freq;
+
+		if(pal == 0){
+
+			PAL = "FALSE";
+		}
+		else{	PAL = "TRUE";}
+
+		outfile << position+1 << "\t" << Rank+1 << "\t";
+		outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
+		outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;	
+		sum_top_N = sum_top_N + Num_Occ_FWD;
+	}
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -924,9 +1021,39 @@ multimap<double,pair<string,vector<unsigned int>>> p_value_class::return_p_value
 	return p_value_KNT;
 }
 
+multimap<pair<unsigned int,unsigned int>, pair<string,string>> p_value_class::return_vertical_multimap(){
+
+	return vertical_multimap;
+}
+
 unsigned int p_value_class::return_sum_top_N(){
 
 	return sum_top_N;
+}
+
+vector<unsigned int> p_value_class::return_K_vec(){
+
+	return K_vec;
+}
+
+vector<unsigned int> p_value_class::return_N1_vec(){
+
+	return N1_vec;
+}
+
+vector<unsigned int> p_value_class::return_N2_vec(){
+
+	return N2_vec;
+}
+
+unsigned int p_value_class::return_T(){
+
+	return T;
+}
+
+vector<double> p_value_class::return_p_value_vec(){
+
+	return p_value_vec;
 }
 
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
@@ -1047,16 +1174,31 @@ ofstream map_class::outfile_header(unsigned int j){
 	ofstream outfile;
 
 	if(DS==1){
-
-		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"DS.txt");
-
+		
+		if(ordering == "p"){
+		
+			outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"DS_p_val.txt");
+		}
+		else{
+		
+			outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"DS_occ.txt");
+		}
+		
 		outfile << "#Maps vector with kmers occurences (Double Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_FWD" << "\t" << "Num_Occ_REV" << "\t" << "Sum_Occ_Oligo" << "\t" << "Oligo_RC" << "\t" << "Num_Occ_RC_FWD" << "\t" << "Num_Occ_RC_REV" << "\t" << "Sum_Occ_RC" << "\t" << "PAL" << "\t" << "Tot_Occ" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
 
 	}
 
 	else{
-		outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"SS.txt");
+		
+		if(ordering == "p"){
+		
+			outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"SS_p_val.txt");
+		}
+		else{
+		
+			outfile.open(to_string(kmers_vector[j])+"-mers_positional_occurrences_"+alias_file+"SS_occ.txt");
+		}
 
 		outfile << "#Maps vector with kmers occurences (Single Strand) counted for positions in sequence (for k = " << kmers_vector[j] << "):" << endl;
 		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "Num_Occ_Oligo" << "\t" << "PAL" << "\t" << "FREQ" << "\t" << "P_VALUE" << endl;
@@ -1072,12 +1214,20 @@ void map_class::TopN_sum_and_freq(){
 
 	for(unsigned int i=0; i<tot_sum_matrix.size(); i++){
 
-		if(DS==1){	
-			outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_DS.txt");
+		if(DS==1 && ordering == "p"){	
+			outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_DS_p_val.txt");
+		}
+		
+		else if(DS==1 && ordering != "p"){	
+			outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_DS_occ.txt");
+		}
+
+		else if(DS==0 && ordering == "p"){	
+			outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_SS_p_val.txt");
 		}
 
 		else{
-			outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_SS.txt");
+			outfile.open(to_string(kmers_vector[i])+"-mers_Top"+to_string(top_N)+"_sum_and_frequence_SS_occ.txt");
 		}
 
 		outfile << "###Top " << top_N << " occurrences sum with k = " << kmers_vector[i] << ":" << endl; 
@@ -1094,17 +1244,17 @@ void map_class::TopN_sum_and_freq(){
 	}
 }
 
-void map_class::p_value_parameters_debug(){
+void map_class::p_value_parameters_debug_p_val(){
 
 	ofstream outfile;
 
 	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
 		
 		if(DS == 1){
-		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+"DS.txt");
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_p_val_"+BED_FILE+"DS.txt");
 		}
 		else{
-		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_"+BED_FILE+"SS.txt");
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_p_val_"+BED_FILE+"SS.txt");
 		}
 
 		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
@@ -1133,13 +1283,56 @@ void map_class::p_value_parameters_debug(){
 	}
 }
 
+void map_class::p_value_parameters_debug_occ(){
+
+	ofstream outfile;
+
+	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
+		
+		if(DS == 1){
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_occ_"+BED_FILE+"DS.txt");
+		}
+		else{
+		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_occ_"+BED_FILE+"SS.txt");
+		}
+
+		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
+		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10" << endl;
+
+		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
+
+			multimap<pair<unsigned int,unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
+			unsigned int rank = 0;
+			vector<unsigned int> K_vec = P_VALUE_MATRIX[j][i].return_K_vec();
+			vector<unsigned int> N1_vec = P_VALUE_MATRIX[j][i].return_N1_vec();
+			vector<unsigned int> N2_vec = P_VALUE_MATRIX[j][i].return_N2_vec();
+			unsigned int T = P_VALUE_MATRIX[j][i].return_T();
+			vector<double> p_value_vec = P_VALUE_MATRIX[j][i].return_p_value_vec();
+
+			for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend() && rank<top_N; it_rev++, rank++){
+
+				outfile << i+1 << "\t";
+				outfile << rank+1 << "\t";
+				outfile << it_rev->second.first << "\t";
+				outfile << K_vec[rank] << "\t";
+				outfile << N1_vec[rank] << "\t";
+				outfile << N2_vec[rank] << "\t";
+				outfile << T << "\t";
+				outfile << p_value_vec[rank] << "\t";
+				outfile << log10(p_value_vec[rank])*-1 << endl;
+			}
+
+		}
+		outfile.close();
+	}
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:m:t:n:s";
+	const char* const short_opts = "hp:k:b:j:m:o:t:n:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -1148,6 +1341,7 @@ void command_line_parser(int argc, char** argv){
 		{"ntop",      required_argument, nullptr,  'n' },
 		{"kmer",   required_argument, nullptr,  'k' },
 		{"bed",    required_argument, nullptr,  'b' },
+		{"ordering",    required_argument, nullptr,  'o' },
 		{"jaspar",   required_argument, nullptr,  'j' },
 		{"mf",   required_argument, nullptr,  'm' },
 		{"twobit",   required_argument, nullptr,  't' },
@@ -1178,6 +1372,11 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 't' : TWOBIT_FILE = string(optarg);
 				   is_file_exist(TWOBIT_FILE, "--twobit || -t ");
+				   break;
+			case 'o' : ordering = string(optarg);
+				   if(ordering != "p"){
+					   cerr << "ERROR: Wrong -o parameter inserted, please check help." << endl;
+					   exit(1);}
 				   break;
 			case 'k' : kmers.clear();
 				   kmers = string(optarg);
@@ -1228,8 +1427,7 @@ void check_input_file(){
 	}
 }
 
-void display_help() 						//Display help function
-{
+void display_help(){
 	cerr << "\n --help || -h show this message" << endl;
 	cerr << "\n --bed || -b <file_bed>: input bed file" << endl;
 	cerr << "\n --kmer || -k <n1,n2,..,nN>:input at least one k-mer length (DEFAULT: 6,8,10) " << endl;
@@ -1239,6 +1437,7 @@ void display_help() 						//Display help function
 	cerr << "\n --ntop || -n <number>: to decide the top n oligos to classify in positional sequence occurrences (DEFAULT: 10) " << endl;
 	cerr << "\n --mf || -m <multifasta-file>: use multifasta instead of bed file [ -j,-b,-t,-p options not needed ]" << endl;
 	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
+	cerr << "\n -o || --ordering 'p' to order the top N oligos by p-value and not by occurrences. (DEFAULT: ordering by occurrences)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
