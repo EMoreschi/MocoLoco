@@ -28,6 +28,7 @@ string TWOBIT_FILE;	//initializing const char variable for Twobit_file input rea
 string JASPAR_FILE;
 string alias_file;
 string MFASTA_FILE;
+string ordering;
 const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
@@ -248,8 +249,11 @@ class p_value_class{
 		void calculating_p_value();
 		double check_p_value(double);
 		void sorting_p_value();
+		void checking_ordering(map<pair<string,string>,pair<unsigned int,unsigned int>>, unsigned int, ofstream&, unsigned int);
 		void print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int);
 		void print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int);
+		void print_debug_occurrences_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int, vector<double>);
+		void print_debug_occurrences_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int, vector<double>);
 
 	public:
 
@@ -261,17 +265,17 @@ class p_value_class{
 			filling_KNT_vectors(orizzontal_map);
 			calculating_p_value();
 			sorting_p_value();
-			
-			if(DS==1){
-			print_debug_p_value_DS(pair_map, position, outfile, freq);	
-			}
-			else{
-			print_debug_p_value_SS(pair_map, position, outfile, freq);	
-			}
+			checking_ordering(pair_map, position, outfile, freq);		
 		}
 
 		multimap<double,pair<string,vector<unsigned int>>> return_p_value_KNT();
+		multimap<pair<unsigned int,unsigned int>,pair<string,string>> return_vertical_multimap();
 		unsigned int return_sum_top_N();
+		vector<unsigned int> return_K_vec();
+		vector<unsigned int> return_N1_vec();
+		vector<unsigned int> return_N2_vec();
+		unsigned int return_T();
+		vector<double> return_p_value_vec();
 };
 
 class map_class{
@@ -308,7 +312,8 @@ class map_class{
 		void P_VALUE_MATRIX_creation();
 		ofstream outfile_header(unsigned int);
 		void TopN_sum_and_freq();
-		void p_value_parameters_debug();
+		void p_value_parameters_debug_p_val();
+		void p_value_parameters_debug_occ();
 		double check_p_value(double);
 
 	public:
@@ -321,8 +326,14 @@ class map_class{
 			sequences_number_T = GEP.size();
 			print_debug_orizzontal();
 			P_VALUE_MATRIX_creation();
-			p_value_parameters_debug();
+			if(ordering == "p"){
+			p_value_parameters_debug_p_val();
+			}
+			else{
+			p_value_parameters_debug_occ();
+			}
 			TopN_sum_and_freq();
+			
 		}
 };
 
