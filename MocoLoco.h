@@ -278,6 +278,35 @@ class p_value_class{
 		vector<double> return_p_value_vec();
 };
 
+class humming_class{
+	
+	private:
+
+
+		multimap<pair<unsigned int,unsigned int>, pair<string,string>> vertical_multimap;
+		vector<string> best_oligos;
+		string real_best_oligo;
+		vector<string> similar_oligos;
+
+		void find_best_oligos();
+		void checking_best_oligo(unsigned int);
+		void find_distanced_oligos(string, unsigned int);
+		string select_real_best_oligo(unsigned int);
+		bool is_similar_oligo(string, string, unsigned int);
+		void print_debug_humming(unsigned int);
+
+	public:
+
+		humming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position){
+
+			vertical_multimap = v_multimap;
+			find_best_oligos();
+			checking_best_oligo(distance);
+			print_debug_humming(position);
+
+		}
+};
+
 class map_class{
 
 	private:
@@ -300,6 +329,8 @@ class map_class{
 		unsigned int sequences_number_T;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
+		vector<humming_class> HUMMING_VECTOR;
+		vector<vector<humming_class>> HUMMING_MATRIX;
 
 		void kmers_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
@@ -310,6 +341,7 @@ class map_class{
 		void print_debug_orizzontal();
 		bool check_palindrome(string);
 		void P_VALUE_MATRIX_creation();
+		void HUMMING_MATRIX_creation();
 		ofstream outfile_header(unsigned int);
 		void TopN_sum_and_freq();
 		void p_value_parameters_debug_p_val();
@@ -333,9 +365,10 @@ class map_class{
 			p_value_parameters_debug_occ();
 			}
 			TopN_sum_and_freq();
-			
+			HUMMING_MATRIX_creation();
 		}
 };
+
 
 void GEP_path();
 void command_line_parser(int, char **);
