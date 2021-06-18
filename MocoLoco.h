@@ -286,23 +286,33 @@ class humming_class{
 		multimap<pair<unsigned int,unsigned int>, pair<string,string>> vertical_multimap;
 		vector<string> best_oligos;
 		string real_best_oligo;
+		unsigned int real_best_oligo_occurrences;
 		vector<string> similar_oligos;
+		vector<unsigned int> similar_oligos_occurrences;
+		double tot_similar_occurrences;
+		double FREQUENCE_1;
+		double FREQUENCE_2;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
 		void find_distanced_oligos(string, unsigned int);
 		string select_real_best_oligo(unsigned int);
 		bool is_similar_oligo(string, string, unsigned int);
-		void print_debug_humming(unsigned int);
+		void print_debug_humming(unsigned int, ofstream&);
+		double frquence_1_calculation(unsigned int);
+		double frquence_2_calculation(unordered_map<string,unsigned int>);
+		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>);
 
 	public:
 
-		humming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position){
+		humming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map, ofstream& outfile){
 
 			vertical_multimap = v_multimap;
 			find_best_oligos();
 			checking_best_oligo(distance);
-			print_debug_humming(position);
+			FREQUENCE_1 = frquence_1_calculation(freq);
+			FREQUENCE_2 = frquence_2_calculation(orizzontal_map);
+			print_debug_humming(position, outfile);
 
 		}
 };
@@ -343,6 +353,7 @@ class map_class{
 		void P_VALUE_MATRIX_creation();
 		void HUMMING_MATRIX_creation();
 		ofstream outfile_header(unsigned int);
+		ofstream outfile_header_humming(unsigned int);
 		void TopN_sum_and_freq();
 		void p_value_parameters_debug_p_val();
 		void p_value_parameters_debug_occ();
