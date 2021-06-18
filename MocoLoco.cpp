@@ -1014,13 +1014,17 @@ void humming_class::checking_best_oligo(unsigned int distance){
 
 string humming_class::select_real_best_oligo(unsigned int distance){
 	
-	unsigned int max_similarity = 0;
+	unsigned int max_similarity;
 	unsigned int index;
 
 	for(unsigned int i=0; i<best_oligos.size(); i++){
 
 		find_distanced_oligos(best_oligos[i], distance);
 		
+		if(i==0){
+			max_similarity = similar_oligos.size();
+			index = 0;
+		}	
 		cout << "The oligo " << best_oligos[i] << " has " << similar_oligos.size() << " similar oligos." << endl;
 
 		if(similar_oligos.size() > max_similarity){
@@ -1076,14 +1080,8 @@ bool humming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned in
 			counter++;	
 		}
 	}
-
-	if(counter <= distance){
-
-		return 1;
-	}
-	else{
-		return 0;
-	}
+	
+	return(counter<=distance);
 }
 
 void humming_class::print_debug_humming(unsigned int position){
