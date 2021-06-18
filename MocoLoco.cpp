@@ -974,7 +974,7 @@ void map_class::HUMMING_MATRIX_creation(){
 
 			multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
 
-			humming_class H(vertical_multimap,1,i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], outfile);
+			humming_class H(vertical_multimap,1,i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile);
 			HUMMING_VECTOR.emplace_back(H);
 		}
 
@@ -1074,7 +1074,7 @@ bool humming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned in
 	
 	unsigned int counter = 0;
 
-	for(unsigned int i = 0; i<oligo_1.size(); i++){
+	for(unsigned int i = 0; i<oligo_1.size() && counter <= distance; i++){
 
 		if(oligo_1[i] != oligo_2[i]){
 			
@@ -1100,24 +1100,29 @@ double humming_class::frquence_1_calculation(unsigned int freq){
 	return FREQ_1;
 }
 
-double humming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map){
+double humming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
+	
 
-	unsigned int total_orizzontal_occurrences = finding_orizzontal_occurrences(orizzontal_map);
+	unsigned int total_orizzontal_occurrences = finding_orizzontal_occurrences(orizzontal_map_plus, orizzontal_map_minus);
 
 	double FREQ_2 = tot_similar_occurrences/total_orizzontal_occurrences;
 
 	return FREQ_2;
 }
 
-unsigned int humming_class::finding_orizzontal_occurrences(unordered_map<string,unsigned int> orizzontal_map){
+unsigned int humming_class::finding_orizzontal_occurrences(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
 
-	unordered_map<string,unsigned int>::iterator it = orizzontal_map.begin();
-	unsigned int total_orizz_occ = 0;
-
+	unordered_map<string,unsigned int>::iterator it = orizzontal_map_plus.find(real_best_oligo);
+	unsigned int total_orizz_occ = it->second;
+	
 	for(unsigned int i=0; i<similar_oligos.size(); i++){
 		
-		it = orizzontal_map.find(similar_oligos[i]);
-		total_orizz_occ = total_orizz_occ + it->second;
+		it = orizzontal_map_plus.find(similar_oligos[i]);
+		if(it == orizzontal_map_plus.end()){
+			
+			it = orizzontal_map_minus.find(similar_oligos[i]);
+		}
+		total_orizz_occ = (total_orizz_occ + it->second);
 	}
 
 	return total_orizz_occ;

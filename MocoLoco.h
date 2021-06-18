@@ -300,20 +300,19 @@ class humming_class{
 		bool is_similar_oligo(string, string, unsigned int);
 		void print_debug_humming(unsigned int, ofstream&);
 		double frquence_1_calculation(unsigned int);
-		double frquence_2_calculation(unordered_map<string,unsigned int>);
-		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>);
+		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
+		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 
 	public:
 
-		humming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map, ofstream& outfile){
+		humming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile){
 
 			vertical_multimap = v_multimap;
 			find_best_oligos();
 			checking_best_oligo(distance);
 			FREQUENCE_1 = frquence_1_calculation(freq);
-			FREQUENCE_2 = frquence_2_calculation(orizzontal_map);
+			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus); 
 			print_debug_humming(position, outfile);
-
 		}
 };
 
