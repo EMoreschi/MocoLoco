@@ -19,13 +19,13 @@ if(MFASTA_FILE.size() == 0){
 	
 	coordinator_class C;
 	C.print_debug_GEP(C.GEP);
-	map_class MAP(C.GEP,kmers);
+	map_class MAP(C.GEP,kmers,dist);
 }
 
 else{
 
 	multifasta_class MULTI(MFASTA_FILE);
-	map_class MAP(MULTI.GEP,kmers);
+	map_class MAP(MULTI.GEP,kmers,dist);
 }		
 }
 
@@ -371,15 +371,18 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){			//Extract sequen
 	}
 }
 
-void map_class::kmers_vector_creation(string kmers){
+vector<unsigned int> map_class::generic_vector_creation(string numbers){
 
 	int index;
+	vector<unsigned int> vec;
 
 	while(index != -1){
-		index = kmers.find(",");
-		kmers_vector.emplace_back(stoi(kmers.substr(0,index)));
-		kmers.erase(0,index+1);
+		index = numbers.find(",");
+		vec.emplace_back(stoi(numbers.substr(0,index)));
+		numbers.erase(0,index+1);
 	}
+
+	return vec;
 }
 
 void map_class::table_creation_orizzontal(vector<bed_class> GEP){ 
@@ -974,7 +977,7 @@ void map_class::HUMMING_MATRIX_creation(){
 
 			multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
 
-			humming_class H(vertical_multimap,1,i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile);
+			humming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile);
 			HUMMING_VECTOR.emplace_back(H);
 		}
 
@@ -1500,14 +1503,14 @@ ofstream map_class::outfile_header_humming(unsigned int j){
 		
 		outfile.open(to_string(kmers_vector[j])+"-mers_humming_"+alias_file+"DS.txt");
 		
-		outfile << "#For each best oligo in positions, a table representing humming distance oligos and 2 different frequences (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#For each best oligo in positions, a table representing humming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):" << endl;
 		outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+humming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2" << endl;
 
 	}
 	else{
 		outfile.open(to_string(kmers_vector[j])+"-mers_humming_"+alias_file+"SS.txt");
 		
-		outfile << "#For each best oligo in positions, a table representing humming distance oligos and 2 different frequences (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#For each best oligo in positions, a table representing humming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):" << endl;
 		outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+humming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2" << endl;
 
 	}
@@ -1529,7 +1532,7 @@ void humming_class::print_debug_humming(unsigned int position, ofstream& outfile
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:m:o:t:n:s";
+	const char* const short_opts = "hp:k:b:j:m:d:o:t:n:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -1537,6 +1540,7 @@ void command_line_parser(int argc, char** argv){
 		{"param",      required_argument, nullptr,  'p' },
 		{"ntop",      required_argument, nullptr,  'n' },
 		{"kmer",   required_argument, nullptr,  'k' },
+		{"distance",   required_argument, nullptr,  'd' },
 		{"bed",    required_argument, nullptr,  'b' },
 		{"ordering",    required_argument, nullptr,  'o' },
 		{"jaspar",   required_argument, nullptr,  'j' },
@@ -1578,6 +1582,9 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'k' : kmers.clear();
 				   kmers = string(optarg);
+				   break;
+			case 'd' : dist.clear();
+				   dist = string(optarg);
 				   break;
 			case 's' : DS = 0;
 				   break;
@@ -1628,14 +1635,15 @@ void check_input_file(){
 void display_help(){
 	cerr << "\n --help || -h show this message" << endl;
 	cerr << "\n --bed || -b <file_bed>: input bed file" << endl;
-	cerr << "\n --kmer || -k <n1,n2,..,nN>:input at least one k-mer length (DEFAULT: 6,8,10) " << endl;
+	cerr << "\n --kmer || -k <n1,n2,..,nN>: to select k-mers length for the analysis(DEFAULT: 6,8,10) " << endl;
 	cerr << "\n --twobit || -t <file_twobit>: input twobit file" << endl;
 	cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file" << endl;
-	cerr << "\n --param || -p <half_length>: input half_length to select bases number to keep around the chip seq signal (DEFAULT: 150) " << endl;
+	cerr << "\n --param || -p <half_length>: half_length to select bases number to keep around the chip seq signal (DEFAULT: 150) " << endl;
 	cerr << "\n --ntop || -n <number>: to decide the top n oligos to classify in positional sequence occurrences (DEFAULT: 10) " << endl;
 	cerr << "\n --mf || -m <multifasta-file>: use multifasta instead of bed file [ -j,-b,-t,-p options not needed ]" << endl;
 	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
 	cerr << "\n -o || --ordering 'p' to order the top N oligos by p-value and not by occurrences. (DEFAULT: ordering by occurrences)" << endl;
+	cerr << "\n --distance || -d <n1,n2,...,nN> to select the humming distances. (DEFAULT: 1,2,3)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);

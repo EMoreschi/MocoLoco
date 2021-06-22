@@ -33,6 +33,7 @@ const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
 string kmers = "6,8,10";
+string dist = "1,2,3";
 unsigned int top_N = 10;
 
 
@@ -335,13 +336,14 @@ class map_class{
 		vector<unsigned int> tot_sum_vector;
 		vector<vector<unsigned int>> tot_sum_matrix;
 		vector<unsigned int> kmers_vector;
+		vector<unsigned int> distance_vector;
 		unsigned int sequences_number_T;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
 		vector<humming_class> HUMMING_VECTOR;
 		vector<vector<humming_class>> HUMMING_MATRIX;
 
-		void kmers_vector_creation(string);
+		vector<unsigned int> generic_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
 		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
@@ -360,9 +362,10 @@ class map_class{
 
 	public:
 
-		map_class(vector<bed_class> GEP, string kmers){
+		map_class(vector<bed_class> GEP, string kmers, string dist){
 
-			kmers_vector_creation(kmers);
+			kmers_vector = generic_vector_creation(kmers);
+			distance_vector = generic_vector_creation(dist);
 			table_creation_orizzontal(GEP);
 			table_creation_vertical(GEP);
 			sequences_number_T = GEP.size();
