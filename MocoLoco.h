@@ -26,13 +26,14 @@ string BED_FILE; 		//initializing const char variarible for Bed_file input readi
 int half_length = 150; 		//default half_length 150
 string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 string JASPAR_FILE;
-string alias_file;
+string alias_file = "multifasta_";
 string MFASTA_FILE;
 string ordering;
 const unsigned int overhead = 25;
 const double pseudoc = 0.01;
 bool DS = 1;
 string kmers = "6,8,10";
+string dist = "1,2,3";
 unsigned int top_N = 10;
 
 
@@ -278,6 +279,44 @@ class p_value_class{
 		vector<double> return_p_value_vec();
 };
 
+class humming_class{
+	
+	private:
+
+
+		multimap<pair<unsigned int,unsigned int>, pair<string,string>> vertical_multimap;
+		vector<string> best_oligos;
+		string real_best_oligo;
+		unsigned int real_best_oligo_occurrences;
+		vector<string> similar_oligos;
+		vector<unsigned int> similar_oligos_occurrences;
+		double tot_similar_occurrences;
+		double FREQUENCE_1;
+		double FREQUENCE_2;
+
+		void find_best_oligos();
+		void checking_best_oligo(unsigned int);
+		void find_distanced_oligos(string, unsigned int);
+		string select_real_best_oligo(unsigned int);
+		bool is_similar_oligo(string, string, unsigned int);
+		void print_debug_humming(unsigned int, ofstream&);
+		double frquence_1_calculation(unsigned int);
+		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
+		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
+
+	public:
+
+		humming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile){
+
+			vertical_multimap = v_multimap;
+			find_best_oligos();
+			checking_best_oligo(distance);
+			FREQUENCE_1 = frquence_1_calculation(freq);
+			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus); 
+			print_debug_humming(position, outfile);
+		}
+};
+
 class map_class{
 
 	private:
@@ -297,11 +336,14 @@ class map_class{
 		vector<unsigned int> tot_sum_vector;
 		vector<vector<unsigned int>> tot_sum_matrix;
 		vector<unsigned int> kmers_vector;
+		vector<unsigned int> distance_vector;
 		unsigned int sequences_number_T;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
+		vector<humming_class> HUMMING_VECTOR;
+		vector<vector<humming_class>> HUMMING_MATRIX;
 
-		void kmers_vector_creation(string);
+		vector<unsigned int> generic_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
 		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
@@ -310,7 +352,9 @@ class map_class{
 		void print_debug_orizzontal();
 		bool check_palindrome(string);
 		void P_VALUE_MATRIX_creation();
+		void HUMMING_MATRIX_creation();
 		ofstream outfile_header(unsigned int);
+		ofstream outfile_header_humming(unsigned int);
 		void TopN_sum_and_freq();
 		void p_value_parameters_debug_p_val();
 		void p_value_parameters_debug_occ();
@@ -318,9 +362,10 @@ class map_class{
 
 	public:
 
-		map_class(vector<bed_class> GEP, string kmers){
+		map_class(vector<bed_class> GEP, string kmers, string dist){
 
-			kmers_vector_creation(kmers);
+			kmers_vector = generic_vector_creation(kmers);
+			distance_vector = generic_vector_creation(dist);
 			table_creation_orizzontal(GEP);
 			table_creation_vertical(GEP);
 			sequences_number_T = GEP.size();
@@ -333,9 +378,10 @@ class map_class{
 			p_value_parameters_debug_occ();
 			}
 			TopN_sum_and_freq();
-			
+			HUMMING_MATRIX_creation();
 		}
 };
+
 
 void GEP_path();
 void command_line_parser(int, char **);
