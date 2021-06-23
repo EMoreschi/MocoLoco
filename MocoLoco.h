@@ -26,7 +26,7 @@ string BED_FILE; 		//initializing const char variarible for Bed_file input readi
 int half_length = 150; 		//default half_length 150
 string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
 string JASPAR_FILE;
-string alias_file;
+string alias_file = "multifasta_";
 string MFASTA_FILE;
 string ordering;
 const unsigned int overhead = 25;
