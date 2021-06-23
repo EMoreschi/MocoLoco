@@ -359,6 +359,7 @@ class map_class{
 		void p_value_parameters_debug_p_val();
 		void p_value_parameters_debug_occ();
 		double check_p_value(double);
+		void check_kmer_dist();
 
 	public:
 
@@ -366,6 +367,7 @@ class map_class{
 
 			kmers_vector = generic_vector_creation(kmers);
 			distance_vector = generic_vector_creation(dist);
+			check_kmer_dist();			
 			table_creation_orizzontal(GEP);
 			table_creation_vertical(GEP);
 			sequences_number_T = GEP.size();

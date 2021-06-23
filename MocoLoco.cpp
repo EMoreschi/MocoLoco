@@ -3,30 +3,41 @@
 int main(int argc, char *argv[]){
 
 
-if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
-	display_help();
-}
+	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
+		display_help();
+	}
 
-command_line_parser(argc, argv);					//Parser function called to handle aguments
-GEP_path();							//Calling to GEP pathway
+	command_line_parser(argc, argv);					//Parser function called to handle aguments
+	GEP_path();							//Calling to GEP pathway
 
-return 0;
+	return 0;
 }
 
 void  GEP_path(){
 
-if(MFASTA_FILE.size() == 0){	
-	
-	coordinator_class C;
-	C.print_debug_GEP(C.GEP);
-	map_class MAP(C.GEP,kmers,dist);
+	if(MFASTA_FILE.size() == 0){	
+
+		coordinator_class C;
+		C.print_debug_GEP(C.GEP);
+		map_class MAP(C.GEP,kmers,dist);
+	}
+
+	else{
+
+		multifasta_class MULTI(MFASTA_FILE);
+		map_class MAP(MULTI.GEP,kmers,dist);
+	}		
 }
 
-else{
+void map_class::check_kmer_dist(){
+	
+	if(kmers_vector.size() != distance_vector.size()){
+		
+		cerr << "\nERROR: Please insert an equal number of k-mers and distance parameters!" << endl;
+		display_help();
+		exit(1);
+	}
 
-	multifasta_class MULTI(MFASTA_FILE);
-	map_class MAP(MULTI.GEP,kmers,dist);
-}		
 }
 
 void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
