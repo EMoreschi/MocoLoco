@@ -1142,6 +1142,49 @@ unsigned int humming_class::finding_orizzontal_occurrences(unordered_map<string,
 	return total_orizz_occ;
 }
 
+void humming_class::PWM_hamming_creation(){
+
+	unsigned int counter_A = 0;
+	unsigned int counter_C = 0;
+	unsigned int counter_G = 0;
+	unsigned int counter_T = 0;
+	vector<unsigned int> vec_A, vec_C, vec_G, vec_T;
+	
+	for(unsigned int character = 0; character < similar_oligos[0].size(); character++){
+
+		counter_A = 0;
+		counter_C = 0;
+		counter_G = 0;
+		counter_T = 0;
+
+		for(unsigned int oligo = 0; oligo < similar_oligos.size(); oligo++){
+
+			switch(similar_oligos[oligo][character]){
+
+
+				case 'A' : counter_A = counter_A + similar_oligos_occurrences[oligo]; 
+					   break;
+				case 'C' : counter_C = counter_C + similar_oligos_occurrences[oligo]; 
+					   break;
+				case 'G' : counter_G = counter_G + similar_oligos_occurrences[oligo];
+					   break;
+				case 'T' :  counter_T = counter_T + similar_oligos_occurrences[oligo]; 
+					   break;
+			}
+		}
+
+		vec_A.emplace_back(counter_A);
+		vec_C.emplace_back(counter_C);
+		vec_G.emplace_back(counter_G);
+		vec_T.emplace_back(counter_T);
+	}
+	
+	PWM_hamming.emplace_back(vec_A);
+	PWM_hamming.emplace_back(vec_C);
+	PWM_hamming.emplace_back(vec_G);
+	PWM_hamming.emplace_back(vec_T);
+}
+
 /////DEBUG/////////////////////////////////////////////////////////
 
 unsigned int oligo_class::return_start_coord_oligo(){
@@ -1536,6 +1579,25 @@ void humming_class::print_debug_humming(unsigned int position, ofstream& outfile
 	outfile << position+1 << "\t" << real_best_oligo << "\t" << real_best_oligo_occurrences << "\t" << similar_oligos.size() << "\t" << tot_similar_occurrences << "\t" << FREQUENCE_1 << "\t" << FREQUENCE_2 << endl;
 
 }
+
+void humming_class::print_debug_PWM_hamming(){
+	
+	for(unsigned int i=0; i<similar_oligos.size(); i++){
+
+		cout << similar_oligos[i] << " (" << similar_oligos_occurrences[i] << ") ";
+	}
+	cout << endl;
+
+	for(unsigned int i = 0; i< PWM_hamming.size(); i++){
+		for(unsigned int j = 0; j<PWM_hamming[i].size(); j++){
+
+			cout << PWM_hamming[i][j] << " ";
+		}
+		cout << endl;
+	}
+	cout << endl;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

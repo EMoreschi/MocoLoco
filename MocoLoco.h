@@ -293,6 +293,7 @@ class humming_class{
 		double tot_similar_occurrences;
 		double FREQUENCE_1;
 		double FREQUENCE_2;
+		vector<vector<unsigned int>> PWM_hamming;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
@@ -303,6 +304,8 @@ class humming_class{
 		double frquence_1_calculation(unsigned int);
 		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
+		void PWM_hamming_creation();
+		void print_debug_PWM_hamming();
 
 	public:
 
@@ -311,10 +314,15 @@ class humming_class{
 			vertical_multimap = v_multimap;
 			find_best_oligos();
 			checking_best_oligo(distance);
+			similar_oligos.emplace_back(real_best_oligo);
+			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
 			FREQUENCE_1 = frquence_1_calculation(freq);
 			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus); 
 			print_debug_humming(position, outfile);
+			PWM_hamming_creation();
+			print_debug_PWM_hamming();
 		}
+
 };
 
 class map_class{
