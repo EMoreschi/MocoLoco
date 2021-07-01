@@ -982,13 +982,13 @@ void map_class::HUMMING_MATRIX_creation(){
 	
 	for(unsigned int j=0; j<P_VALUE_MATRIX.size(); j++){
 
-		ofstream outfile = outfile_header_humming(j);
+		ofstream outfile = outfile_header_hamming(j);
 		
 		for(unsigned int i=0; i<P_VALUE_MATRIX[j].size(); i++){
 
 			multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
 
-			humming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile);
+			hamming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile);
 			HUMMING_VECTOR.emplace_back(H);
 		}
 
@@ -998,7 +998,7 @@ void map_class::HUMMING_MATRIX_creation(){
 	}
 }
 
-void humming_class::find_best_oligos(){
+void hamming_class::find_best_oligos(){
 	
 	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin();
 	real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
@@ -1010,7 +1010,7 @@ void humming_class::find_best_oligos(){
 	}
 }
 
-void humming_class::checking_best_oligo(unsigned int distance){
+void hamming_class::checking_best_oligo(unsigned int distance){
 	
 	if(best_oligos.size() == 1){
 		
@@ -1026,7 +1026,7 @@ void humming_class::checking_best_oligo(unsigned int distance){
 
 }
 
-string humming_class::select_real_best_oligo(unsigned int distance){
+string hamming_class::select_real_best_oligo(unsigned int distance){
 	
 	unsigned int max_similarity;
 	unsigned int index;
@@ -1053,7 +1053,7 @@ string humming_class::select_real_best_oligo(unsigned int distance){
 	return best_oligos[index];
 }
 
-void humming_class::find_distanced_oligos(string best, unsigned int distance){
+void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 
 	bool is_similar;
 
@@ -1084,7 +1084,7 @@ void humming_class::find_distanced_oligos(string best, unsigned int distance){
 	}
 }
 
-bool humming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned int distance){
+bool hamming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned int distance){
 	
 	unsigned int counter = 0;
 
@@ -1099,7 +1099,7 @@ bool humming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned in
 	return(counter<=distance);
 }
 
-double humming_class::frquence_1_calculation(unsigned int freq){
+double hamming_class::frquence_1_calculation(unsigned int freq){
 
 	tot_similar_occurrences = real_best_oligo_occurrences;
 
@@ -1114,7 +1114,7 @@ double humming_class::frquence_1_calculation(unsigned int freq){
 	return FREQ_1;
 }
 
-double humming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
+double hamming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
 	
 
 	unsigned int total_orizzontal_occurrences = finding_orizzontal_occurrences(orizzontal_map_plus, orizzontal_map_minus);
@@ -1124,7 +1124,7 @@ double humming_class::frquence_2_calculation(unordered_map<string,unsigned int> 
 	return FREQ_2;
 }
 
-unsigned int humming_class::finding_orizzontal_occurrences(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
+unsigned int hamming_class::finding_orizzontal_occurrences(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
 
 	unordered_map<string,unsigned int>::iterator it = orizzontal_map_plus.find(real_best_oligo);
 	unsigned int total_orizz_occ = it->second;
@@ -1140,6 +1140,49 @@ unsigned int humming_class::finding_orizzontal_occurrences(unordered_map<string,
 	}
 
 	return total_orizz_occ;
+}
+
+void hamming_class::PWM_hamming_creation(){
+
+	unsigned int counter_A = 0;
+	unsigned int counter_C = 0;
+	unsigned int counter_G = 0;
+	unsigned int counter_T = 0;
+	vector<unsigned int> vec_A, vec_C, vec_G, vec_T;
+	
+	for(unsigned int character = 0; character < similar_oligos[0].size(); character++){
+
+		counter_A = 0;
+		counter_C = 0;
+		counter_G = 0;
+		counter_T = 0;
+
+		for(unsigned int oligo = 0; oligo < similar_oligos.size(); oligo++){
+
+			switch(similar_oligos[oligo][character]){
+
+
+				case 'A' : counter_A = counter_A + similar_oligos_occurrences[oligo]; 
+					   break;
+				case 'C' : counter_C = counter_C + similar_oligos_occurrences[oligo]; 
+					   break;
+				case 'G' : counter_G = counter_G + similar_oligos_occurrences[oligo];
+					   break;
+				case 'T' :  counter_T = counter_T + similar_oligos_occurrences[oligo]; 
+					   break;
+			}
+		}
+
+		vec_A.emplace_back(counter_A);
+		vec_C.emplace_back(counter_C);
+		vec_G.emplace_back(counter_G);
+		vec_T.emplace_back(counter_T);
+	}
+	
+	PWM_hamming.emplace_back(vec_A);
+	PWM_hamming.emplace_back(vec_C);
+	PWM_hamming.emplace_back(vec_G);
+	PWM_hamming.emplace_back(vec_T);
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -1232,6 +1275,21 @@ unsigned int p_value_class::return_T(){
 vector<double> p_value_class::return_p_value_vec(){
 
 	return p_value_vec;
+}
+
+string hamming_class::return_real_best_oligo(){
+
+	return real_best_oligo;
+}
+
+unsigned int hamming_class::return_similar_oligo_size(){
+
+	return similar_oligos.size();
+}
+
+vector<vector<unsigned int>> hamming_class::return_PWM_hamming(){
+
+	return PWM_hamming;
 }
 
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
@@ -1505,24 +1563,24 @@ void map_class::p_value_parameters_debug_occ(){
 	}
 }
 
-ofstream map_class::outfile_header_humming(unsigned int j){
+ofstream map_class::outfile_header_hamming(unsigned int j){
 
 
 	ofstream outfile;
 
 	if(DS==1){
 		
-		outfile.open(to_string(kmers_vector[j])+"-mers_humming_"+alias_file+"DS.txt");
+		outfile.open(to_string(kmers_vector[j])+"-mers_hamming_"+alias_file+"DS.txt");
 		
-		outfile << "#For each best oligo in positions, a table representing humming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+humming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2" << endl;
+		outfile << "#For each best oligo in positions, a table representing hamming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+hamming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2" << endl;
 
 	}
 	else{
-		outfile.open(to_string(kmers_vector[j])+"-mers_humming_"+alias_file+"SS.txt");
+		outfile.open(to_string(kmers_vector[j])+"-mers_hamming_"+alias_file+"SS.txt");
 		
-		outfile << "#For each best oligo in positions, a table representing humming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):" << endl;
-		outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+humming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2" << endl;
+		outfile << "#For each best oligo in positions, a table representing hamming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):" << endl;
+		outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+hamming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2" << endl;
 
 	}
 		
@@ -1531,11 +1589,67 @@ ofstream map_class::outfile_header_humming(unsigned int j){
 
 
 
-void humming_class::print_debug_humming(unsigned int position, ofstream& outfile){
+void hamming_class::print_debug_hamming(unsigned int position, ofstream& outfile){
 
 	outfile << position+1 << "\t" << real_best_oligo << "\t" << real_best_oligo_occurrences << "\t" << similar_oligos.size() << "\t" << tot_similar_occurrences << "\t" << FREQUENCE_1 << "\t" << FREQUENCE_2 << endl;
 
 }
+
+void map_class::Outfile_PWM_hamming(){
+
+	ofstream outfile;
+
+	for(unsigned int j=0; j<kmers_vector.size(); j++){
+
+		if(DS == 1){
+
+			outfile.open(to_string(kmers_vector[j])+"-mers_PWM_hamming_matrices_"+alias_file+"DS.txt");
+
+			print_debug_PWM_hamming(outfile, j);
+			outfile.close();
+		}
+
+		else{
+
+			outfile.open(to_string(kmers_vector[j])+"-mers_PWM_hamming_matrices_"+alias_file+"SS.txt");
+
+			print_debug_PWM_hamming(outfile, j);
+			outfile.close();
+		}
+	}
+}
+
+void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j){
+
+	outfile << "#PWM Matrices calculated from the best oligo for each position and his hamming distanced oligos" << endl << endl;
+	string best_oligo;
+	unsigned int neighbour_numb;
+	vector<vector<unsigned int>> PWM_hamming;
+	string ACGT = "ACGT";
+
+	for(unsigned int position = 1; position <= HUMMING_MATRIX[j].size(); position++){
+
+		best_oligo = HUMMING_MATRIX[j][position-1].return_real_best_oligo();	
+		neighbour_numb = HUMMING_MATRIX[j][position-1].return_similar_oligo_size();
+		PWM_hamming = HUMMING_MATRIX[j][position-1].return_PWM_hamming();
+
+		outfile << "#Position " << position << ": \n#PWM calculated from oligo " << best_oligo << " and his " << neighbour_numb << " hamming distanced neighbours. " << endl << endl;
+
+		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
+			
+			outfile << ACGT[i] << "\t" << "[" << "\t";
+
+			for(unsigned int j = 0; j<PWM_hamming[i].size(); j++){
+
+				outfile << PWM_hamming[i][j] << "\t";
+			}
+			outfile << "]" << endl;
+		}
+		outfile << endl;
+		outfile << "-------------------------------------------------------------------" << endl;	
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1654,7 +1768,7 @@ void display_help(){
 	cerr << "\n --mf || -m <multifasta-file>: use multifasta instead of bed file [ -j,-b,-t,-p options not needed ]" << endl;
 	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
 	cerr << "\n -o || --ordering 'p' to order the top N oligos by p-value and not by occurrences. (DEFAULT: ordering by occurrences)" << endl;
-	cerr << "\n --distance || -d <n1,n2,...,nN> to select the humming distances. (DEFAULT: 1,2,3)" << endl;
+	cerr << "\n --distance || -d <n1,n2,...,nN> to select the hamming distances. (DEFAULT: 1,2,3)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);

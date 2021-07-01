@@ -279,7 +279,7 @@ class p_value_class{
 		vector<double> return_p_value_vec();
 };
 
-class humming_class{
+class hamming_class{
 	
 	private:
 
@@ -293,28 +293,38 @@ class humming_class{
 		double tot_similar_occurrences;
 		double FREQUENCE_1;
 		double FREQUENCE_2;
+		vector<vector<unsigned int>> PWM_hamming;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
 		void find_distanced_oligos(string, unsigned int);
 		string select_real_best_oligo(unsigned int);
 		bool is_similar_oligo(string, string, unsigned int);
-		void print_debug_humming(unsigned int, ofstream&);
+		void print_debug_hamming(unsigned int, ofstream&);
 		double frquence_1_calculation(unsigned int);
 		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
+		void PWM_hamming_creation();
 
 	public:
 
-		humming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile){
 
 			vertical_multimap = v_multimap;
 			find_best_oligos();
 			checking_best_oligo(distance);
+			similar_oligos.emplace_back(real_best_oligo);
+			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
 			FREQUENCE_1 = frquence_1_calculation(freq);
 			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus); 
-			print_debug_humming(position, outfile);
+			print_debug_hamming(position, outfile);
+			PWM_hamming_creation();
 		}
+
+		string return_real_best_oligo();
+		unsigned int return_similar_oligo_size();
+		vector<vector<unsigned int>> return_PWM_hamming();
+
 };
 
 class map_class{
@@ -340,8 +350,8 @@ class map_class{
 		unsigned int sequences_number_T;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
-		vector<humming_class> HUMMING_VECTOR;
-		vector<vector<humming_class>> HUMMING_MATRIX;
+		vector<hamming_class> HUMMING_VECTOR;
+		vector<vector<hamming_class>> HUMMING_MATRIX;
 
 		vector<unsigned int> generic_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
@@ -354,12 +364,14 @@ class map_class{
 		void P_VALUE_MATRIX_creation();
 		void HUMMING_MATRIX_creation();
 		ofstream outfile_header(unsigned int);
-		ofstream outfile_header_humming(unsigned int);
+		ofstream outfile_header_hamming(unsigned int);
 		void TopN_sum_and_freq();
 		void p_value_parameters_debug_p_val();
 		void p_value_parameters_debug_occ();
 		double check_p_value(double);
 		void check_kmer_dist();
+		void Outfile_PWM_hamming();
+		void print_debug_PWM_hamming(ofstream&, unsigned int);
 
 	public:
 
@@ -381,6 +393,7 @@ class map_class{
 			}
 			TopN_sum_and_freq();
 			HUMMING_MATRIX_creation();
+			Outfile_PWM_hamming();
 		}
 };
 
