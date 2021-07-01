@@ -1606,13 +1606,15 @@ void map_class::Outfile_PWM_hamming(){
 			outfile.open(to_string(kmers_vector[j])+"-mers_PWM_hamming_matrices_"+alias_file+"DS.txt");
 
 			print_debug_PWM_hamming(outfile, j);
+			outfile.close();
 		}
 
 		else{
 
-			outfile.open(to_string(kmers_vector[j])+"-mers_PWM_hamming_matrices_"+alias_file+"DS.txt");
+			outfile.open(to_string(kmers_vector[j])+"-mers_PWM_hamming_matrices_"+alias_file+"SS.txt");
 
 			print_debug_PWM_hamming(outfile, j);
+			outfile.close();
 		}
 	}
 }
@@ -1623,9 +1625,9 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j){
 	string best_oligo;
 	unsigned int neighbour_numb;
 	vector<vector<unsigned int>> PWM_hamming;
-	string ATCG = "ATCG";
+	string ACGT = "ACGT";
 
-	for(unsigned int position = 1; position <= HUMMING_MATRIX[0].size(); position++){
+	for(unsigned int position = 1; position <= HUMMING_MATRIX[j].size(); position++){
 
 		best_oligo = HUMMING_MATRIX[j][position-1].return_real_best_oligo();	
 		neighbour_numb = HUMMING_MATRIX[j][position-1].return_similar_oligo_size();
@@ -1635,7 +1637,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j){
 
 		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
 			
-			outfile << ATCG[i] << "\t" << "[" << "\t";
+			outfile << ACGT[i] << "\t" << "[" << "\t";
 
 			for(unsigned int j = 0; j<PWM_hamming[i].size(); j++){
 
