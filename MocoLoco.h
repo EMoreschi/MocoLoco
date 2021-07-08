@@ -302,7 +302,7 @@ class hamming_class{
 		bool is_similar_oligo(string, string, unsigned int);
 		void print_debug_hamming(unsigned int, ofstream&);
 		double frquence_1_calculation(unsigned int);
-		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
+		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>, unsigned int);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 		void PWM_hamming_creation();
 
@@ -316,7 +316,7 @@ class hamming_class{
 			similar_oligos.emplace_back(real_best_oligo);
 			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
 			FREQUENCE_1 = frquence_1_calculation(freq);
-			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus); 
+			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
 			print_debug_hamming(position, outfile);
 			PWM_hamming_creation();
 		}

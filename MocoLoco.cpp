@@ -1046,7 +1046,8 @@ string hamming_class::select_real_best_oligo(unsigned int distance){
 			index = i;
 		}
 
-		similar_oligos.clear();
+		similar_oligos.clear(); //migliorare 
+		similar_oligos_occurrences.clear();  
 
 	}
 	
@@ -1102,7 +1103,7 @@ bool hamming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned in
 double hamming_class::frquence_1_calculation(unsigned int freq){
 
 	tot_similar_occurrences = real_best_oligo_occurrences;
-
+	
 	for(unsigned int i=0; i<similar_oligos_occurrences.size(); i++){
 
 		tot_similar_occurrences = tot_similar_occurrences + similar_oligos_occurrences[i];
@@ -1114,11 +1115,10 @@ double hamming_class::frquence_1_calculation(unsigned int freq){
 	return FREQ_1;
 }
 
-double hamming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
+double hamming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, unsigned int position){
 	
 
 	unsigned int total_orizzontal_occurrences = finding_orizzontal_occurrences(orizzontal_map_plus, orizzontal_map_minus);
-
 	double FREQ_2 = tot_similar_occurrences/total_orizzontal_occurrences;
 
 	return FREQ_2;
