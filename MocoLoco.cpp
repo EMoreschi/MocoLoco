@@ -90,7 +90,7 @@ while(getline(in,line)){  					//reading input file line by line with getline fu
 
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
 
-cout << "- [5] Analyzing sequences using Jaspar matrix\n";
+//cout << "- [5] Analyzing sequences using Jaspar matrix\n";
 
 for(unsigned int i=0; i<GEP.size(); i++){
 	string sequence = GEP[i].return_sequence(GEP[i]);
@@ -176,7 +176,7 @@ if(s_iterator < sequence.size() - matrix[0].size() ) {
 
 }
 
-void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
+vector<vector<double>> coordinator_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
 
 cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
 
@@ -202,7 +202,9 @@ while(getline(file,line)){					//For each line of the file do:
 	}
 
 }
-file.close();						//Closing file
+file.close();	//Closing file
+
+return matrix;
 }
 
 vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
@@ -224,7 +226,7 @@ return col_sum;
 
 void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
 
-cout << "- [3] Jaspar Matrix normalization\n";
+//cout << "- [3] Jaspar Matrix normalization\n";
 
 double norm;							//Norm variable initialized
 vector<double> col_sum = find_col_sum(matrix);
@@ -272,7 +274,7 @@ for(unsigned int i=0; i < matrix.size(); i++){
 	matrix_log.emplace_back(baseQ);
 }
 
-cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
+//cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
 }
 
 
@@ -978,7 +980,7 @@ void p_value_class::print_debug_occurrences_SS(map<pair<string,string>,pair<unsi
 	}
 }
 
-void map_class::HUMMING_MATRIX_creation(){
+void map_class::HUMMING_MATRIX_creation(vector<bed_class> GEP){
 	
 	for(unsigned int j=0; j<P_VALUE_MATRIX.size(); j++){
 
@@ -988,12 +990,14 @@ void map_class::HUMMING_MATRIX_creation(){
 
 			multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
 
-			hamming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile);
+			hamming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, Z_TEST_VECTOR, GEP);
 			HUMMING_VECTOR.emplace_back(H);
 		}
 
 		HUMMING_MATRIX.emplace_back(HUMMING_VECTOR);
+		Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
 		HUMMING_VECTOR.clear();
+		Z_TEST_VECTOR.clear();
 		outfile.close();
 	}
 }
@@ -1144,11 +1148,11 @@ unsigned int hamming_class::finding_orizzontal_occurrences(unordered_map<string,
 
 void hamming_class::PWM_hamming_creation(){
 
-	unsigned int counter_A = 0;
-	unsigned int counter_C = 0;
-	unsigned int counter_G = 0;
-	unsigned int counter_T = 0;
-	vector<unsigned int> vec_A, vec_C, vec_G, vec_T;
+	double counter_A = 0;
+	double counter_C = 0;
+	double counter_G = 0;
+	double counter_T = 0;
+	vector<double> vec_A, vec_C, vec_G, vec_T;
 	
 	for(unsigned int character = 0; character < similar_oligos[0].size(); character++){
 
@@ -1183,6 +1187,59 @@ void hamming_class::PWM_hamming_creation(){
 	PWM_hamming.emplace_back(vec_C);
 	PWM_hamming.emplace_back(vec_G);
 	PWM_hamming.emplace_back(vec_T);
+}
+
+void hamming_class::Z_test_calculation(vector<z_test_class>& Z_TEST_VECTOR, vector<bed_class> GEP){
+
+	if(FREQUENCE_1 >= 0.2){
+
+		z_test_class Z(PWM_hamming, GEP);
+		Z_TEST_VECTOR.emplace_back(Z);
+	}
+}
+
+void z_test_class::oligos_vector_creation_PWM(vector<oligo_class>& oligos_vector, vector<bed_class> GEP){
+
+	for(unsigned int i=0; i<GEP.size(); i++){
+		string sequence = GEP[i].return_sequence(GEP[i]);
+		string chr_coord = GEP[i].return_chr_coord_GEP();
+		unsigned int start_coord = GEP[i].return_start_coord_GEP();
+
+
+		oligo_class SHIFTING_PWM(matrix_log, sequence, chr_coord, start_coord, '+');
+		oligos_vector.emplace_back(SHIFTING_PWM);
+
+		if(DS == 1){
+
+			oligo_class SHIFTING_PWM(inverse_matrix_log, sequence, chr_coord, start_coord, '-');
+			oligos_vector.emplace_back(SHIFTING_PWM);
+		}
+	}	
+}
+
+void z_test_class::global_mean_calculation(){
+	
+	vector<double> scores_vector;
+	vector<double> total_score_vector;
+
+	for(unsigned int oligo_cl = 0; oligo_cl < oligos_vector_PWM.size(); oligo_cl++){
+		
+		scores_vector = oligos_vector_PWM[oligo_cl].return_oligo_scores();
+
+		for(unsigned int score = 0; score < scores_vector.size(); score++){
+
+			total_score_vector.emplace_back(scores_vector[score]);
+		}
+	}
+
+	
+	double tot_sum = accumulate(total_score_vector.begin(), total_score_vector.end(), 0.0);
+	double tot_sq_sum = inner_product(total_score_vector.begin(), total_score_vector.end(), total_score_vector.begin(), 0.0);
+	global_mean = tot_sum/total_score_vector.size();
+	global_dev_std = sqrt(tot_sq_sum/total_score_vector.size() - global_mean * global_mean);
+	
+	cout << "\nLA GLOBAL MEAN: " << global_mean << endl;
+	cout << "LA GLOBAL STD_DEV E': " << global_dev_std << endl;
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -1287,9 +1344,14 @@ unsigned int hamming_class::return_similar_oligo_size(){
 	return similar_oligos.size();
 }
 
-vector<vector<unsigned int>> hamming_class::return_PWM_hamming(){
+vector<vector<double>> hamming_class::return_PWM_hamming(){
 
 	return PWM_hamming;
+}
+
+vector<double> oligo_class::return_oligo_scores(){
+
+	return oligo_scores;
 }
 
 void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
@@ -1345,7 +1407,7 @@ void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug functi
 
 }
 
-void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug function to print the best oligo features
+void oligo_class::oligos_vector_debug(){	//Debug function to print the best oligo features
 
 	cout << endl;
 	cout << "Sequence: " << global_sequence << endl;
@@ -1624,7 +1686,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j){
 	outfile << "#PWM Matrices calculated from the best oligo for each position and his hamming distanced oligos" << endl << endl;
 	string best_oligo;
 	unsigned int neighbour_numb;
-	vector<vector<unsigned int>> PWM_hamming;
+	vector<vector<double>> PWM_hamming;
 	string ACGT = "ACGT";
 
 	for(unsigned int position = 1; position <= HUMMING_MATRIX[j].size(); position++){
@@ -1650,6 +1712,37 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j){
 	}
 }
 
+void z_test_class::print_debug_oligo_vec(vector<vector<double>> PWM_hamming){
+
+	cout << endl << endl;
+	
+	for(int i=0; i<PWM_hamming.size(); i++){
+		for(int j=0; j<PWM_hamming[0].size(); j++){
+
+			cout << PWM_hamming[i][j] << " ";
+		}
+		cout << endl;
+	}
+	cout << endl;
+
+	for(int i=0; i<matrix_log.size(); i++){
+		for(int j=0; j<matrix_log[0].size(); j++){
+
+			cout << matrix_log[i][j] << " ";
+		}
+		cout << endl;
+	}
+	cout << endl;
+	
+	for(int i=0; i<inverse_matrix_log.size(); i++){
+		for(int j=0; j<inverse_matrix_log[0].size(); j++){
+
+			cout << inverse_matrix_log[i][j] << " ";
+		}
+		cout << endl;
+	}
+	cout << "-------------------------------------------------------" << endl;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

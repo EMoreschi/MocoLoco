@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <numeric>
 #include <cmath>
 #include <iterator>
 #include <list>
@@ -96,7 +97,6 @@ class matrix_class {
 		void matrix_normalization_pseudoc(vector<vector<double>>, double);
 		void matrix_normalization(vector<vector<double>>);
 		void matrix_logarithmic(vector<vector<double>>);
-		void read_JASPAR(string);
 		vector<vector<double>> reverse_matrix(vector<vector<double>>);
 		vector<double> find_col_sum(vector<vector<double>>);
 		void print_debug_matrix(vector<vector<double>>, string);
@@ -104,9 +104,11 @@ class matrix_class {
 
 
 	public:
-		matrix_class(string JASPAR_FILE){
+		matrix_class(vector<vector<double>> mat, string name, string tf){
 
-			read_JASPAR(JASPAR_FILE);
+			matrix = mat;
+			matrix_name = name;
+			tf_name = tf;
 			matrix_normalization_pseudoc(matrix, pseudoc);			//Calling matrix normalization function
 			matrix_normalization(norm_matrix);
 			matrix_logarithmic(norm_matrix);
@@ -162,15 +164,19 @@ class oligo_class{
 		}
 
 		void shifting(vector<vector<double>>, string, unsigned int);
-		void oligos_vector_debug(oligo_class);
+		void oligos_vector_debug();
 		unsigned int return_start_coord_oligo();
 		double return_best_score_normalized();
+		vector<double> return_oligo_scores();
 };
 
 class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and Oligos_vector
 
 	private:
 
+		vector<vector<double>> matrix;
+		string matrix_name;
+		string tf_name;
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
 		void centering_oligo();
@@ -183,10 +189,12 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 		void GEP_creation(string, string, vector<bed_class>&);
 		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
 		void print_debug_GEP(vector <bed_class>);
+		vector<vector<double>> read_JASPAR(string);
 
 		coordinator_class(){
 			GEP_creation(BED_FILE, TWOBIT_FILE, GEP);
-			matrix_class M(JASPAR_FILE);
+			matrix = read_JASPAR(JASPAR_FILE);
+			matrix_class M(matrix, matrix_name, tf_name);
 			matrix_log = M.return_log_matrix();
 			inverse_matrix_log = M.return_inverse_log_matrix();
 			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
@@ -279,6 +287,37 @@ class p_value_class{
 		vector<double> return_p_value_vec();
 };
 
+class z_test_class{
+
+	private:
+
+		double global_mean;
+		double global_dev_std;
+		double local_mean;
+		double local_dev_std;
+		vector<vector<double>> matrix_log;
+		vector<vector<double>> inverse_matrix_log;
+		vector<oligo_class> oligos_vector_PWM;
+
+		void print_debug_oligo_vec(vector<vector<double>>);	
+		void oligos_vector_creation_PWM(vector<oligo_class>&, vector<bed_class>);
+		void global_mean_calculation();
+
+
+	public:
+
+		z_test_class(vector<vector<double>> PWM_hamming, vector<bed_class> GEP){
+			
+			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
+			matrix_log = PWM_hamming_mat.return_log_matrix();
+			inverse_matrix_log = PWM_hamming_mat.return_inverse_log_matrix();
+			oligos_vector_creation_PWM(oligos_vector_PWM, GEP);
+			global_mean_calculation();
+			print_debug_oligo_vec(PWM_hamming);
+		}
+
+};
+
 class hamming_class{
 	
 	private:
@@ -293,7 +332,7 @@ class hamming_class{
 		double tot_similar_occurrences;
 		double FREQUENCE_1;
 		double FREQUENCE_2;
-		vector<vector<unsigned int>> PWM_hamming;
+		vector<vector<double>> PWM_hamming;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
@@ -305,10 +344,11 @@ class hamming_class{
 		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>, unsigned int);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 		void PWM_hamming_creation();
+		void Z_test_calculation(vector<z_test_class>&, vector<bed_class>);
 
 	public:
 
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<z_test_class>& Z_TEST_VECTOR, vector<bed_class> GEP){
 
 			vertical_multimap = v_multimap;
 			find_best_oligos();
@@ -319,11 +359,12 @@ class hamming_class{
 			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
 			print_debug_hamming(position, outfile);
 			PWM_hamming_creation();
+			Z_test_calculation(Z_TEST_VECTOR, GEP);
 		}
 
 		string return_real_best_oligo();
 		unsigned int return_similar_oligo_size();
-		vector<vector<unsigned int>> return_PWM_hamming();
+		vector<vector<double>> return_PWM_hamming();
 
 };
 
@@ -352,7 +393,9 @@ class map_class{
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
 		vector<hamming_class> HUMMING_VECTOR;
 		vector<vector<hamming_class>> HUMMING_MATRIX;
-
+		vector<z_test_class> Z_TEST_VECTOR;
+		vector<vector<z_test_class>> Z_TEST_MATRIX;
+		
 		vector<unsigned int> generic_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
@@ -362,7 +405,7 @@ class map_class{
 		void print_debug_orizzontal();
 		bool check_palindrome(string);
 		void P_VALUE_MATRIX_creation();
-		void HUMMING_MATRIX_creation();
+		void HUMMING_MATRIX_creation(vector<bed_class>);
 		ofstream outfile_header(unsigned int);
 		ofstream outfile_header_hamming(unsigned int);
 		void TopN_sum_and_freq();
@@ -392,7 +435,7 @@ class map_class{
 			p_value_parameters_debug_occ();
 			}
 			TopN_sum_and_freq();
-			HUMMING_MATRIX_creation();
+			HUMMING_MATRIX_creation(GEP);
 			Outfile_PWM_hamming();
 		}
 };
