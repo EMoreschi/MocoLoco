@@ -121,92 +121,109 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 	}
 }
 
+//Function to create oligos_vector (a oligo class vector)
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
 
-//cout << "- [5] Analyzing sequences using Jaspar matrix\n";
+	cout << "- [5] Analyzing sequences using Jaspar matrix\n";
 
-for(unsigned int i=0; i<GEP.size(); i++){
-	string sequence = GEP[i].return_sequence(GEP[i]);
-	string chr_coord = GEP[i].return_chr_coord_GEP();
-	unsigned int start_coord = GEP[i].return_start_coord_GEP();
+	//For every sequences into GEP vector
+	for(unsigned int i=0; i<GEP.size(); i++){
 
+		string sequence = GEP[i].return_sequence(GEP[i]);
+		string chr_coord = GEP[i].return_chr_coord_GEP();
+		unsigned int start_coord = GEP[i].return_start_coord_GEP();
 
-	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
-	oligos_vector.emplace_back(SHIFTING);
+		//Calling the oligo_class constructor to analyze the shifting of the sequence on log_matrix (FWD strand analysis)
+		oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
 
+		//The oligo class just created is saved into oligos_vector (oligo_class vector)
+		oligos_vector.emplace_back(SHIFTING);
+
+		//If the analysis is on DS calling the oligo_class constructor to analyze the shifting of sequence on inverse_log_matrix (REVERSE strande analysis)
+		if(DS == 1){
+
+			oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
+			oligos_vector.emplace_back(SHIFTING);
+		}
+	}	
+
+	cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
+}
+
+//Function useful, if the analysis is performed on DS, to choose from the best FWD strand oligo and the best REV strand oligo the best one to keep as "Best oligo" --> The oligos vector is divided in half and only the best strand for each sequence is kept
+void coordinator_class::best_strand(){
+	
+	//Only if the analysis is on Double Strand
 	if(DS == 1){
 
-		oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
-		oligos_vector.emplace_back(SHIFTING);
-	}
-}	
+		vector<oligo_class> comparison;
+		
+		for(unsigned int i=0; i<oligos_vector.size(); i+=2){
+			
+			//The comparison is made by oligo_class in i position against the oligo class in i+1 position (The fwd and rev strand of the same sequence, which are consecutive into the oligos_vector)
+			double best_score_norm_positive = oligos_vector[i].return_best_score_normalized();
+			double best_score_norm_negative = oligos_vector[i+1].return_best_score_normalized();
 
-cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
-}
+			if(best_score_norm_positive >= best_score_norm_negative){
 
-void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
+				comparison.emplace_back(oligos_vector[i]);
+			}
 
-if(DS == 1){
-	vector<oligo_class> comparison;
-	for(unsigned int i=0; i<oligos_vec.size(); i+=2){
-
-		double best_score_norm_positive = oligos_vec[i].return_best_score_normalized();
-		double best_score_norm_negative = oligos_vec[i+1].return_best_score_normalized(); 
-		if(best_score_norm_positive >= best_score_norm_negative){
-
-			comparison.emplace_back(oligos_vec[i]);
+			else{
+				comparison.emplace_back(oligos_vector[i+1]);
+			}
 		}
-		else{
-			comparison.emplace_back(oligos_vec[i+1]);
-		}
+
+		//The new oligos_vector is replaced by comparison vector, which contains only the best strand
+		oligos_vector = comparison;
 	}
-	oligos_vector = comparison;
-}
 }
 
+//Function to calculate the score of a general oligo against a JASPAR matrix
 void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsigned int s_iterator){
 
-double sum_scores = 0;
+	double sum_scores = 0;
+	
+	//For each oligo in the current sequence a score is calculated
+	if(s_iterator < sequence.size() - matrix[0].size() ) {
 
-if(s_iterator < sequence.size() - matrix[0].size() ) {
+		for(unsigned int i=0; i< matrix[0].size(); i++){
 
-	for(unsigned int i=0; i< matrix[0].size(); i++){
+			switch(sequence[i+s_iterator]){
 
-		switch(sequence[i+s_iterator]){
+				case 'A':
 
-			case 'A':
+					sum_scores = sum_scores + matrix[0][i];
+					break;
 
-				sum_scores = sum_scores + matrix[0][i];
-				break;
+				case 'C':
 
-			case 'C':
+					sum_scores = sum_scores + matrix[1][i];
+					break;
 
-				sum_scores = sum_scores + matrix[1][i];
-				break;
+				case 'G':
 
-			case 'G':
+					sum_scores = sum_scores + matrix[2][i];
+					break;
 
-				sum_scores = sum_scores + matrix[2][i];
-				break;
+				case 'T':
 
-			case 'T':
+					sum_scores = sum_scores + matrix[3][i];
+					break;
 
-				sum_scores = sum_scores + matrix[3][i];
-				break;
+				default:
 
-			default:
-
-				sum_scores = sum_scores + o_matrix_mins[i];
-				break;
-
+					sum_scores = sum_scores + o_matrix_mins[i];
+					break;
+			}
 		}
+		
+		//The total score of an oligo is saved into an oligo_scores vector
+		oligo_scores.emplace_back(sum_scores);
+
+		//Then the function is recalled recursively shifting on the next oligo thanks to the iterator progression
+		shifting(matrix, sequence, s_iterator+1);
 	}
-
-	oligo_scores.emplace_back(sum_scores);
-	shifting(matrix, sequence, s_iterator+1);
-
-}
-
 }
 
 //Function to read JASPAR PWM file, extract values and create a matrix class
@@ -346,18 +363,24 @@ vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> matri
 
 }
 
+//Finding the best and the worst score that an oligo can reach based on current JASPAR matrix
 void oligo_class::find_minmax(vector<vector<double>> matrix){
 
-for(unsigned int i=0; i < matrix[0].size(); i++){
-	vector<double> colum;		   	
-	for(unsigned int j=0; j < matrix.size(); j++){
-		colum.emplace_back(matrix[j][i]);
+	//Extract the mins and the maxes from each columns, saved into vectors and their total sum will be the best and the worst score that an oligo can reach
+	for(unsigned int i=0; i < matrix[0].size(); i++){
+
+		vector<double> colum;		   	
+		for(unsigned int j=0; j < matrix.size(); j++){
+
+			colum.emplace_back(matrix[j][i]);
+		}
+
+		o_matrix_mins.emplace_back(*min_element(colum.begin(),colum.end()));
+		o_matrix_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
 	}
-	o_matrix_mins.emplace_back(*min_element(colum.begin(),colum.end()));
-	o_matrix_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
-}
-min_possible_score = accumulate(o_matrix_mins.begin(), o_matrix_mins.end(), 0.0);
-max_possible_score = accumulate(o_matrix_maxes.begin(), o_matrix_maxes.end(), 0.0);
+
+	min_possible_score = accumulate(o_matrix_mins.begin(), o_matrix_mins.end(), 0.0);
+	max_possible_score = accumulate(o_matrix_maxes.begin(), o_matrix_maxes.end(), 0.0);
 
 }	
 
@@ -414,14 +437,18 @@ void oligo_class::find_coordinate(unsigned int local_position, unsigned int leng
 	end_coord_oligo = start_coord_oligo + length;
 
 }
-
+	
+//Function to re-set the genomic coordinates and the sequences window --> centered on the best oligo found for each sequence
 void coordinator_class::centering_oligo(){
 
 	TwoBit * tb;
 	tb = twobit_open(TWOBIT_FILE.c_str());
 	int center_oligo ;
-
+	
+	//To center on the best oligo, centering_function and extract_seq functions from bed_class need to be recalled with updated input parameters
 	for(unsigned int i=0; i<oligos_vector.size(); i++){
+
+		//The center of the window is exactly on the center of the best oligo (which length depends to the JASPAR matrix size)
 		center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
 		GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
 		GEP[i].extract_seq(tb,0);
@@ -1416,16 +1443,17 @@ vector<double> oligo_class::return_oligo_scores(){
 	return oligo_scores;
 }
 
-void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
+//Function to matrix debugging --> it prints the scores extracted from JASPAR file, the normalized scores, the logarithmic scores and the logarithmic score of transposed matrix
+void matrix_class::debug_matrix(matrix_class M){
 
 	M.print_debug_matrix(matrix, " ");
 	M.print_debug_matrix(norm_matrix, " NORMALIZED");
-	M.print_debug_matrix(inverse_norm_matrix, " INVERSE NORMALIZED MATRIX");
 	M.print_debug_matrix(matrix_log, " LOGARITHMIC MATRIX");
 	M.print_debug_matrix(inverse_matrix_log, " INVERSE LOGARITHMIC MATRIX");
 }
 
-void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){		//Print matrix function
+//Function to matrix debugging --> it prints the scores extracted from JASPAR file, the matrix name and the tf name
+void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){
 
 	cout << "\n" << matrix_name << " " << tf_name << type << ":" << endl;
 
@@ -1434,42 +1462,48 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 
 			cout << matrix[i][j] << " ";
 		}
+
 		cout << endl;
 	}
-
 }
-
 
 //Debug function: Print sequences and coordinates from GEP vector into a .fasta file to check if the sequences extraction is correct
 void coordinator_class::print_debug_GEP(vector<bed_class> GEP){
-	
+
 	//Twobit_JASPAR_Bed used to create GEP vector saved into alias file to name the outputs	
 	alias_file = (TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
-	
+
+	//Output file .bed carrying the centered coordinates
 	ofstream outfile;	
 	JASPAR_FILE = JASPAR_FILE.erase(JASPAR_FILE.find_last_of("."), JASPAR_FILE.size());
 	outfile.open(alias_file);
-	
+
 	for(unsigned int i=0; i<GEP.size(); i++){
+
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
 		unsigned int end_coord = GEP[i].return_end_coord();
-		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
+		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;
 	}
-	outfile.close();
-	
-	BED_FILE = BED_FILE.erase(BED_FILE.find_last_of("."), BED_FILE.size());
-	outfile.open(alias_file+".fasta");
-	for(unsigned int i=0; i<GEP.size(); i++){
-		string chr_coord = GEP[i].return_chr_coord();
-		unsigned int start_coord = GEP[i].return_start_coord();
-		unsigned int end_coord = GEP[i].return_end_coord();
-		string sequence = GEP[i].return_sequence(GEP[i]);					//Printing sequence
-		outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	//Printing chr, start and end coordinates
-		outfile << sequence << endl;
-	}
+
 	outfile.close();
 
+	//Output file .fasta carrying the centered coordinates and the sequences extracted
+	BED_FILE = BED_FILE.erase(BED_FILE.find_last_of("."), BED_FILE.size());
+	outfile.open(alias_file+".fasta");
+
+	for(unsigned int i=0; i<GEP.size(); i++){
+
+		string chr_coord = GEP[i].return_chr_coord();
+		unsigned int start_coord = GEP[i].return_start_coord();
+		unsigned int end_coord = GEP[i].return_end_coord();
+		string sequence = GEP[i].return_sequence(GEP[i]);				
+
+		outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	
+		outfile << sequence << endl;
+	}
+
+	outfile.close();
 }
 
 void oligo_class::oligos_vector_debug(){	//Debug function to print the best oligo features

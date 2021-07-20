@@ -169,7 +169,11 @@ class oligo_class{
 
 			global_sequence = sequence;
 			strand = strand_sign;
-			find_minmax(matrix);		
+
+			//Function to annotate in min_possible_score and max_possible_score the worst and the best score that an oligo can reach based on the current jaspar matrix
+			find_minmax(matrix);
+			
+			//for each oligo in the current sequence a total score of similarity is calculated against the JASPAR matrix
 			shifting(matrix, sequence, 0);
 			local_position = find_best_score(oligo_scores);
 			best_score_normalization();
@@ -193,29 +197,47 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 		string tf_name;
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
+		vector<oligo_class> oligos_vector;
+
 		void centering_oligo();
-		void best_strand(vector<oligo_class>);
+		void best_strand();
+		void GEP_creation(vector<bed_class>&);
+		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
+		vector<vector<double>> read_JASPAR();
 
 
 	public:
-		vector<oligo_class> oligos_vector;
-		vector<bed_class> GEP; 
-		void GEP_creation(vector<bed_class>&);
-		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
-		void print_debug_GEP(vector <bed_class>);
-		vector<vector<double>> read_JASPAR();
 
-		coordinator_class(){	//coordinator class constructor
-			GEP_creation(GEP);	//function to create GEP vector
-			matrix = read_JASPAR();	//reading Jaspar file and returning scores as a matrix of double
-			matrix_class M(matrix, matrix_name, tf_name);	//Creating matrix class: input matrix scores, name and tf matrix name
-			matrix_log = M.return_log_matrix();	//Return to get in this class the log_matrix calculated in matrix class
-			inverse_matrix_log = M.return_inverse_log_matrix();	//Return to get in this class the inverse_log_matrix calculated in matrix class
+		coordinator_class(){
+
+			//GEP (vector of bed class) creation. An empty GEP vector is passed by reference to be filled and saved in this class
+			GEP_creation(GEP);
+
+			//reading Jaspar file and returning scores as a matrix of double, saved in a variable called matrix
+			matrix = read_JASPAR();
+
+			//Creating matrix class: input matrix scores, name and tf matrix name
+			matrix_class M(matrix, matrix_name, tf_name);
+
+			//matrix_log and inverse_matrix_log calculated are returned from Matrix class to be saved here --> These are the two matrices on which the analysis will be performed
+			matrix_log = M.return_log_matrix();
+			inverse_matrix_log = M.return_inverse_log_matrix();
+
+			//The sequences are shifting on the matrix and, for each position, an oligo score is calculated, based on log and inverse_log matrices
+			//An oligo_class is created for each sequence shifting to analyze all oligo scores.
+			//All the information are saved on oligos_vector, which is an oligo_class vector passed by reference to this function and filled sequence by sequence.
 			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
-			best_strand(oligos_vector);
+
+			//If the analysis is performed on Double Strand the function best_strend is useful to select if an oligo has the best score on FWD or REV strand, discarding the other
+			best_strand();
+
+			//The best oligo selected for each sequence becomes the new center of the window, resetting the GEP coordinates
 			centering_oligo();
 		}
-
+		
+		vector<bed_class> GEP;
+		
+		void print_debug_GEP(vector <bed_class>);
 };
 
 class multifasta_class{
