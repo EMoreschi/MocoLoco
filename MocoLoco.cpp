@@ -52,52 +52,73 @@ void map_class::check_kmer_dist(){
 	}
 }
 
-void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
+void bed_class::read_line(string line){ 
 
-istringstream mystream(line);					//Split the line word by word and extract chromosome coordinates (chr, start, end)
-mystream >> chr_coord >> start_coord >> end_coord;		
+	//Split the line word by word and extract chromosome coordinates (chr, start, end)
+	istringstream mystream(line);
+	mystream >> chr_coord >> start_coord >> end_coord;		
+
+}
+
+void bed_class::centering_function ( unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead){
+
+	unsigned int center = (start + end)/2;						
+
+	//No overhead for start coordinates but overhead added to end coordinates
+	start_coord = center - half_length;
+	end_coord = center + half_length +overhead;
 
 }
 
-void bed_class::centering_function ( unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
-//following an input half_length value (overhead added to the end)
-unsigned int center = (start + end)/2;						
-start_coord = center - half_length;			//No overhead for start
-end_coord = center + half_length +overhead;		//Overhead for end
+//Flag control function: start coordinates must be < then end coordinates
+void bed_class::flag_control( unsigned int start,  unsigned int end){
+
+	//if start coordinates are >  end coordinates flag is setted to 0 --> WARNING printed to warn users
+	if(start > end){
+
+		flag = 0;
+	}
+
+	else{ 
+		flag = 1;
+	}
 }
 
-void bed_class::flag_control( unsigned int start,  unsigned int end){ 	//Flag control function: start coordinates must be < then end coordinates
+//Function to read BED and 2Bit files and create GEP (vector of bed class)
+void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 
-if(start > end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
-	flag = 0;
-}
-else{ flag = 1;}
-}
+	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
 
-void coordinator_class::GEP_creation(vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
+	ifstream in(BED_FILE); 					
+	TwoBit * tb;
 
-cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
+	//Opening 2Bit file with twobit_open function from andrelmartens code and saved in tb variable 
+	tb = twobit_open(TWOBIT_FILE.c_str()); 
 
-ifstream in(BED_FILE); 						//Opening file in lecture mode
-TwoBit * tb;				//Creating a TwoBit* variable called tb
-tb = twobit_open(TWOBIT_FILE.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
-string line; 							//defining line string
+	string line;
 
-unsigned int n_line = 1;							//line counter initialization
+	//Line counter initialization
+	unsigned int n_line = 1;
 
-while(getline(in,line)){  					//reading input file line by line with getline function
+	//For each line in BED file create a bed class called bed_line in which chr, start and end coordinate are ridden, centered and saved
+	//Then the Fasta sequence is extracted from Twobit genome following the coordinated and saved into a string variable
+	while(getline(in,line)){
 
-	if(line.empty())   					//if line is empty or commented --> continue
-		continue;
-	if(line[0]=='#')
-		continue;
 
-	bed_class new_class(line,tb, n_line);  //Called the object constructor passing the Bed line, half_length P, twobit file tb, and the line counter n_line
-	GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
+		//if line is empty or commented --> continue
+		if(line.empty() || line[0] == '#'){
 
-	n_line = n_line + 1;					//pass to next line 
+			continue;
+		}
 
-}
+		bed_class bed_line(line,tb, n_line);
+
+		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector og bed class)
+		GEP.emplace_back(bed_line);	
+
+		n_line = n_line + 1;		 
+
+	}
 }
 
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
@@ -188,112 +209,140 @@ if(s_iterator < sequence.size() - matrix[0].size() ) {
 
 }
 
-vector<vector<double>> coordinator_class::read_JASPAR(){	//Function to read JASPAR PWM file, extract values and create a matrix class
+//Function to read JASPAR PWM file, extract values and create a matrix class
+vector<vector<double>> coordinator_class::read_JASPAR(){
 
 	cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
 
-	ifstream file(JASPAR_FILE);	//opening JASPAR PWM file
-	string line;							
-	while(getline(file,line)){	//For each line of the file do:
+	ifstream file(JASPAR_FILE);
+	string line;		
 
-		if(line[0]=='>'){	//If line start with ">"
+	//For each line of the JASPAR file	
+	while(getline(file,line)){
+
+		//If the line start with '>' character save the words into matrix_name string and into tf_name string
+		if(line[0]=='>'){
+
 			istringstream mystream(line);			
-			mystream >> matrix_name >> tf_name;	//Extract the first two words and put into matrix_name string variable and tf_name string variable
+			mystream >> matrix_name >> tf_name;
 		}
 
-		else{	//Else, if line does not start with ">"
-			line.erase(0,line.find('[') +1);	//Take line charachters after "["...
-			line.erase(line.find(']'));	//...and line charachters before "]"
-			vector<double> baseQ;	//Initializing baseQ vector of double
-			istringstream mystream(line);	//Splitting the line in words
-			for (double num; mystream >> num;){	//Put every word(number of matrix), ricorsively, in double variable num
-				baseQ.emplace_back(num);	//Put every number(num) in baseQ vector
-			}
-			matrix.emplace_back(baseQ);	//Put baseQ vector (corrisponding to matrix line values) in our matrix
+		//If the line does not start with '>' delete the '[',']' and 'A,T,C,G' characters, extract the scores and save them into a scores matrix
+		else{
+			
+			//Deleting from line the first character (A,T,C,G), the '[' and the ']' characters
+			line.erase(0,line.find('[') +1);
+			line.erase(line.find(']'));
 
+			vector<double> scores_line;	
+			istringstream mystream(line);
+			
+			//For each words (number) in line put the current number in num variables
+			for (double num; mystream >> num;){
+
+				scores_line.emplace_back(num);
+			}
+
+			matrix.emplace_back(scores_line);
 		}
 
 	}
-	file.close();	//Closing file
+
+	file.close();
+
+	//Cout of step 3/4 here because the normalization and reverse function will be re-utilized during the workflow
 	cout << "- [3] Jaspar Matrix normalization\n";
 	cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
 
 	return matrix;
 }
 
+//Function which saves into a vector called col_sum all the score column sums --> This is made to perform the next Normalization step faster
 vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 
-	vector<double> col_sum;						//Vector of columns sum
-	double sum = 0;							//Sum initialized as 0
+	vector<double> col_sum;						
+	double sum = 0;							
 
-	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
-		for (unsigned int j = 0; j < 4; j++){				//From 0 to 4 (line number)
+	for (unsigned int i = 0; i < matrix[0].size(); i++) {		
+		for (unsigned int j = 0; j < 4; j++){			
 
-			sum = sum + matrix[j][i];			//Calculate the sum of columns
+			sum = sum + matrix[j][i];			
 		}
 
-		col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
-		sum = 0;						//Restore the sum to 0 for the next column
+		col_sum.emplace_back(sum);				
+		sum = 0;						
 	}
+
 	return col_sum;
 }
 
+//Function useful to normalize matrix scores and adding a pseudocount to them
 void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix){  
 
-	double norm;							//Norm variable initialized
+	double normalized_score;
+
+	//Calculate and save the scores column sum into a vector to perform a faster normalization step	
 	vector<double> col_sum = find_col_sum(matrix);
 
-	for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+	for (unsigned int i = 0; i < matrix.size(); i++) {		
 
-		vector<double> baseQ;				//baseQ vector to store the lines initialized
-		for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+		vector<double> normalized_matrix_line;
+		for (unsigned int j = 0; j < matrix[i].size(); j++){
 
-			norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
-			baseQ.emplace_back(norm + pseudoc);		//Put norm value (with p added) in baseQ vector
+			normalized_score = matrix[i][j]/col_sum[j];
+			normalized_matrix_line.emplace_back(normalized_score + pseudoc);
 		}
 
-		norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
+		norm_matrix.emplace_back(normalized_matrix_line);
 	}
 }
 
+//Function to perform a second normalization on matrix scores (without a pseudocount addition)
 void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
+	//Calculate and save again the scores column sum into a vector to perform a faster normalization step
 	vector<double> col_sum = find_col_sum(matrix);
 
-	for (unsigned int i = 0; i < matrix.size(); i++) {	//From 0 to number of matrix lines
+	for (unsigned int i = 0; i < matrix.size(); i++) {
 
-		vector<double> baseQ;	//baseQ vector to store the lines initialized
-		for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+		for (unsigned int j = 0; j < matrix[i].size(); j++){
 
-			norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
+			//Substitution of first normalized values with new normalized ones
+			norm_matrix[i][j] = matrix[i][j]/col_sum[j];
 		}
 	}
 }
 
+//Function to calculate, from the normalized matrix, the logarithmic values of the scores and creates a new matrix called matrix_log
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 
 	for(unsigned int i=0; i < matrix.size(); i++){
-		vector<double> baseQ;
-		double value_log;
+		
+		vector<double> log_matrix_line;
+		double log_scores;
 
 		for(unsigned int j=0; j < norm_matrix[i].size(); j++){
 
-			value_log = log(norm_matrix[i][j]);
-			baseQ.emplace_back(value_log);
+			log_scores = log(norm_matrix[i][j]);
+			log_matrix_line.emplace_back(log_scores);
 		}
-		matrix_log.emplace_back(baseQ);
+
+		matrix_log.emplace_back(log_matrix_line);
 	}
 }
 
+//Function which return the Transposed matrix from a matrix in input
 vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> matrix){
 
-	vector<vector<double>> inv_matrix = matrix;
-	reverse(inv_matrix.begin(), inv_matrix.end());
-	for (int i = 0; i < 4; i++) {		//From 0 to number of matrix lines
-		vector<double> baseQ;
-		reverse(inv_matrix[i].begin(), inv_matrix[i].end());
+	vector<vector<double>> rev_matrix = matrix;
+	reverse(rev_matrix.begin(), rev_matrix.end());
+
+	for (int i = 0; i < 4; i++) {
+
+		reverse(rev_matrix[i].begin(), rev_matrix[i].end());
 	}
-	return inv_matrix;
+
+	return rev_matrix;
 
 }
 
