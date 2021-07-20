@@ -23,9 +23,9 @@
 
 using namespace std;
 
-string BED_FILE; 		//initializing const char variarible for Bed_file input reading
-int half_length = 150; 		//default half_length 150
-string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
+string BED_FILE;
+int half_length = 150;
+string TWOBIT_FILE;
 string JASPAR_FILE;
 string alias_file = "multifasta_";
 string MFASTA_FILE;
@@ -38,9 +38,9 @@ string dist = "1,2,3";
 unsigned int top_N = 10;
 
 
-class bed_class { //creation public class of bed_class type        
+class bed_class {         
 
-	private:	//field definition
+	private:
 
 		string chr_coord;
 		unsigned int start_coord;
@@ -51,8 +51,9 @@ class bed_class { //creation public class of bed_class type
 		void read_line(string);
 		void flag_control(unsigned int, unsigned int);
 
-	public:				//field definition
-		
+	public:	
+
+		//Bed class constructor if input is a Multifasta file
 		bed_class(string seq){
 
 			chr_coord = "MULTIFASTA";
@@ -60,15 +61,23 @@ class bed_class { //creation public class of bed_class type
 			end_coord = 0;
 			sequence = seq;
 		}
+		
+		//Bed class constructor if input are Bed-Twobit-Jaspar files
+		bed_class(string line, TwoBit* tb,unsigned int n_line){
 
-		bed_class(unsigned int p, string line, TwoBit* tb,unsigned int n_line){
+			//Take line from bed file and extract chr_coord, start_coord and end_coord
+			read_line(line);
 
-			read_line(line);					//reading bed line
-			flag_control(start_coord,end_coord);			//controlling coordinates
-			centering_function(start_coord, end_coord, p, overhead);		//centering the coordinates
-			extract_seq(tb, n_line);				//extracting the sequence
+			//check if start coordinates are not greather then end coordinates
+			flag_control(start_coord,end_coord);
 
+			//Set the new start and end coordinates following p (half_length) input and add overhead to end coordinates
+			centering_function(start_coord, end_coord, half_length, overhead);
+
+			//Extract from twobit genome the sequence following chr, start and end coordinates
+			extract_seq(tb, n_line);
 		}
+
 		string return_sequence(bed_class);
 		string return_chr_coord_GEP();
 		unsigned int return_start_coord_GEP();
@@ -82,7 +91,7 @@ class bed_class { //creation public class of bed_class type
 
 class matrix_class {
 
-	private: //field definition
+	private: 
 
 		string matrix_name;
 		string tf_name;
@@ -94,27 +103,32 @@ class matrix_class {
 		vector<double> col_sum;		
 
 
-		void matrix_normalization_pseudoc(vector<vector<double>>, double);
+		void matrix_normalization_pseudoc(vector<vector<double>>);
 		void matrix_normalization(vector<vector<double>>);
 		void matrix_logarithmic(vector<vector<double>>);
 		vector<vector<double>> reverse_matrix(vector<vector<double>>);
 		vector<double> find_col_sum(vector<vector<double>>);
 		void print_debug_matrix(vector<vector<double>>, string);
 
-
-
 	public:
+
 		matrix_class(vector<vector<double>> mat, string name, string tf){
 
-			matrix = mat;
-			matrix_name = name;
+			matrix = mat;	
+			matrix_name = name;	
 			tf_name = tf;
-			matrix_normalization_pseudoc(matrix, pseudoc);			//Calling matrix normalization function
-			matrix_normalization(norm_matrix);
-			matrix_logarithmic(norm_matrix);
-			inverse_norm_matrix = reverse_matrix(norm_matrix);
-			inverse_matrix_log = reverse_matrix(matrix_log);
 
+			//Function to normalize the matrix scores and add a pseudocount
+			matrix_normalization_pseudoc(matrix);
+
+			//Function to normalize again the matrix after pseudocount addition
+			matrix_normalization(norm_matrix);
+
+			//Function to calculate logarithmic matrix from normalized matrix
+			matrix_logarithmic(norm_matrix);
+
+			//Function to reverse the logarithmic normalized matrix to read the oligo in reverse strand
+			inverse_matrix_log = reverse_matrix(matrix_log);
 		}
 
 		void debug_matrix(matrix_class);
@@ -186,17 +200,17 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 	public:
 		vector<oligo_class> oligos_vector;
 		vector<bed_class> GEP; 
-		void GEP_creation(string, string, vector<bed_class>&);
+		void GEP_creation(vector<bed_class>&);
 		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
 		void print_debug_GEP(vector <bed_class>);
-		vector<vector<double>> read_JASPAR(string);
+		vector<vector<double>> read_JASPAR();
 
-		coordinator_class(){
-			GEP_creation(BED_FILE, TWOBIT_FILE, GEP);
-			matrix = read_JASPAR(JASPAR_FILE);
-			matrix_class M(matrix, matrix_name, tf_name);
-			matrix_log = M.return_log_matrix();
-			inverse_matrix_log = M.return_inverse_log_matrix();
+		coordinator_class(){	//coordinator class constructor
+			GEP_creation(GEP);	//function to create GEP vector
+			matrix = read_JASPAR();	//reading Jaspar file and returning scores as a matrix of double
+			matrix_class M(matrix, matrix_name, tf_name);	//Creating matrix class: input matrix scores, name and tf matrix name
+			matrix_log = M.return_log_matrix();	//Return to get in this class the log_matrix calculated in matrix class
+			inverse_matrix_log = M.return_inverse_log_matrix();	//Return to get in this class the inverse_log_matrix calculated in matrix class
 			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
 			best_strand(oligos_vector);
 			centering_oligo();

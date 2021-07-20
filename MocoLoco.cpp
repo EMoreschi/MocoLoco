@@ -1,43 +1,55 @@
-#include "MocoLoco.h"
+#include "MocoLoco.h" 
 
 int main(int argc, char *argv[]){
 
 
-	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
+	//If arguments number is 1 means that no input file has been inserted - display help
+	if(argc == 1){
+
 		display_help();
 	}
 
-	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	GEP_path();							//Calling to GEP pathway
+	command_line_parser(argc, argv);
+	GEP_path();
 
 	return 0;
 }
 
+//Function to choose the pathway to follow. 2 input options:
+//1) Bed-Twobit-Jaspar input
+//2) Multifasta input
 void  GEP_path(){
 
+	//if the input is Bed-Twobit-Jaspar	
 	if(MFASTA_FILE.size() == 0){	
 
-		coordinator_class C;
+		coordinator_class C; 
+		
+		//Create a .fasta file to check if the coordinates and the sequences extracted are correct
 		C.print_debug_GEP(C.GEP);
+		
+		//Creating map class: input are GEP vector created from bed-twobit analysis, kmers, hamming distance
 		map_class MAP(C.GEP,kmers,dist);
 	}
 
+	//else if the input is a Multifasta file
 	else{
 
 		multifasta_class MULTI(MFASTA_FILE);
+		
+		//Creating a Map class: input are GEP vector created from multifasta file analysis, kmers, hamming distance
 		map_class MAP(MULTI.GEP,kmers,dist);
 	}		
 }
 
 void map_class::check_kmer_dist(){
-	
+
 	if(kmers_vector.size() != distance_vector.size()){
-		
+
 		cerr << "\nERROR: Please insert an equal number of k-mers and distance parameters!" << endl;
 		display_help();
 		exit(1);
 	}
-
 }
 
 void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
@@ -62,13 +74,13 @@ if(start > end){		//if start coordinates are > or == then end coordinates, flag 
 else{ flag = 1;}
 }
 
-void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
+void coordinator_class::GEP_creation(vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
 
 cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
 
-ifstream in(Bed_file); 						//Opening file in lecture mode
+ifstream in(BED_FILE); 						//Opening file in lecture mode
 TwoBit * tb;				//Creating a TwoBit* variable called tb
-tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
+tb = twobit_open(TWOBIT_FILE.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
 string line; 							//defining line string
 
 unsigned int n_line = 1;							//line counter initialization
@@ -80,7 +92,7 @@ while(getline(in,line)){  					//reading input file line by line with getline fu
 	if(line[0]=='#')
 		continue;
 
-	bed_class new_class(half_length,line,tb, n_line);  //Called the object constructor passing the Bed line, half_length P, twobit file tb, and the line counter n_line
+	bed_class new_class(line,tb, n_line);  //Called the object constructor passing the Bed line, half_length P, twobit file tb, and the line counter n_line
 	GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
 
 	n_line = n_line + 1;					//pass to next line 
@@ -176,117 +188,112 @@ if(s_iterator < sequence.size() - matrix[0].size() ) {
 
 }
 
-vector<vector<double>> coordinator_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
+vector<vector<double>> coordinator_class::read_JASPAR(){	//Function to read JASPAR PWM file, extract values and create a matrix class
 
-cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
+	cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
 
-ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
-string line;							
-while(getline(file,line)){					//For each line of the file do:
+	ifstream file(JASPAR_FILE);	//opening JASPAR PWM file
+	string line;							
+	while(getline(file,line)){	//For each line of the file do:
 
-	if(line[0]=='>'){					//If line start with ">"
-		istringstream mystream(line);			
-		mystream >> matrix_name >> tf_name;			//Extract the first two words and put into matrix_name string variable and tf_name string variable
-	}
-
-	else{							//Else, if line does not start with ">"
-		line.erase(0,line.find('[') +1);		//Take line charachters after "["...
-		line.erase(line.find(']'));			//...and line charachters before "]"
-		vector<double> baseQ;				//Initializing baseQ vector of double
-		istringstream mystream(line);			//Splitting the line in words
-		for (double num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
-			baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
+		if(line[0]=='>'){	//If line start with ">"
+			istringstream mystream(line);			
+			mystream >> matrix_name >> tf_name;	//Extract the first two words and put into matrix_name string variable and tf_name string variable
 		}
-		matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
+
+		else{	//Else, if line does not start with ">"
+			line.erase(0,line.find('[') +1);	//Take line charachters after "["...
+			line.erase(line.find(']'));	//...and line charachters before "]"
+			vector<double> baseQ;	//Initializing baseQ vector of double
+			istringstream mystream(line);	//Splitting the line in words
+			for (double num; mystream >> num;){	//Put every word(number of matrix), ricorsively, in double variable num
+				baseQ.emplace_back(num);	//Put every number(num) in baseQ vector
+			}
+			matrix.emplace_back(baseQ);	//Put baseQ vector (corrisponding to matrix line values) in our matrix
+
+		}
 
 	}
+	file.close();	//Closing file
+	cout << "- [3] Jaspar Matrix normalization\n";
+	cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
 
-}
-file.close();	//Closing file
-
-return matrix;
+	return matrix;
 }
 
 vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 
-vector<double> col_sum;						//Vector of columns sum
-double sum = 0;							//Sum initialized as 0
+	vector<double> col_sum;						//Vector of columns sum
+	double sum = 0;							//Sum initialized as 0
 
-for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
-	for (unsigned int j = 0; j < 4; j++){				//From 0 to 4 (line number)
+	for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
+		for (unsigned int j = 0; j < 4; j++){				//From 0 to 4 (line number)
 
-		sum = sum + matrix[j][i];			//Calculate the sum of columns
+			sum = sum + matrix[j][i];			//Calculate the sum of columns
+		}
+
+		col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
+		sum = 0;						//Restore the sum to 0 for the next column
 	}
-
-	col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
-	sum = 0;						//Restore the sum to 0 for the next column
-}
-return col_sum;
+	return col_sum;
 }
 
-void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
+void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix){  
 
-//cout << "- [3] Jaspar Matrix normalization\n";
+	double norm;							//Norm variable initialized
+	vector<double> col_sum = find_col_sum(matrix);
 
-double norm;							//Norm variable initialized
-vector<double> col_sum = find_col_sum(matrix);
+	for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
 
-for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+		vector<double> baseQ;				//baseQ vector to store the lines initialized
+		for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
-	vector<double> baseQ;				//baseQ vector to store the lines initialized
-	for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+			norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
+			baseQ.emplace_back(norm + pseudoc);		//Put norm value (with p added) in baseQ vector
+		}
 
-		norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
-		baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
+		norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
 	}
-
-	norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
-}
 }
 
 void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
-//	cout << "Second Matrix normalization...\n";
+	vector<double> col_sum = find_col_sum(matrix);
 
-vector<double> col_sum = find_col_sum(matrix);
+	for (unsigned int i = 0; i < matrix.size(); i++) {	//From 0 to number of matrix lines
 
-for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+		vector<double> baseQ;	//baseQ vector to store the lines initialized
+		for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
 
-	vector<double> baseQ;				//baseQ vector to store the lines initialized
-	for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
-
-		norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
+			norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
+		}
 	}
-}
 }
 
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 
-for(unsigned int i=0; i < matrix.size(); i++){
-	vector<double> baseQ;
-	double value_log;
+	for(unsigned int i=0; i < matrix.size(); i++){
+		vector<double> baseQ;
+		double value_log;
 
-	for(unsigned int j=0; j < norm_matrix[i].size(); j++){
+		for(unsigned int j=0; j < norm_matrix[i].size(); j++){
 
-		value_log = log(norm_matrix[i][j]);
-		baseQ.emplace_back(value_log);
+			value_log = log(norm_matrix[i][j]);
+			baseQ.emplace_back(value_log);
+		}
+		matrix_log.emplace_back(baseQ);
 	}
-	matrix_log.emplace_back(baseQ);
 }
-
-//cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
-}
-
 
 vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> matrix){
 
-vector<vector<double>> inv_matrix = matrix;
-reverse(inv_matrix.begin(), inv_matrix.end());
-for (int i = 0; i < 4; i++) {		//From 0 to number of matrix lines
-	vector<double> baseQ;
-	reverse(inv_matrix[i].begin(), inv_matrix[i].end());
-}
-return inv_matrix;
+	vector<vector<double>> inv_matrix = matrix;
+	reverse(inv_matrix.begin(), inv_matrix.end());
+	for (int i = 0; i < 4; i++) {		//From 0 to number of matrix lines
+		vector<double> baseQ;
+		reverse(inv_matrix[i].begin(), inv_matrix[i].end());
+	}
+	return inv_matrix;
 
 }
 
@@ -372,15 +379,21 @@ void coordinator_class::centering_oligo(){
 	}
 }
 
-void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
-	//extracted from Bed line
-	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		string chrom = chr_coord;		//Put in chrom the string of chr_coord
-		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
+//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates extracted from Bed line
+void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
+
+	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+	if(flag == 1){	
+		
+		string chrom = chr_coord;
+
+		//Extract the sequence from the object with the twobit_sequence function
+		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1);
 	}
+
+	//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
 	else {		
 		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
-		//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
 	}
 }
 
@@ -1378,9 +1391,12 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 }
 
 
-void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug function: Print the GEP vector to control the working flow
+//Debug function: Print sequences and coordinates from GEP vector into a .fasta file to check if the sequences extraction is correct
+void coordinator_class::print_debug_GEP(vector<bed_class> GEP){
 	
+	//Twobit_JASPAR_Bed used to create GEP vector saved into alias file to name the outputs	
 	alias_file = (TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
+	
 	ofstream outfile;	
 	JASPAR_FILE = JASPAR_FILE.erase(JASPAR_FILE.find_last_of("."), JASPAR_FILE.size());
 	outfile.open(alias_file);
