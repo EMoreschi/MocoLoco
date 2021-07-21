@@ -159,9 +159,9 @@ class oligo_class{
 		char strand;
 
 		void find_minmax(vector<vector<double>>);
-		unsigned int find_best_score(vector<double>);
-		void find_coordinate(unsigned int, unsigned int, string, unsigned int);
-		void find_best_sequence(string, unsigned int, unsigned int);
+		unsigned int find_best_score();
+		void find_coordinate(unsigned int, string, unsigned int);
+		void find_best_sequence(string, unsigned int);
 		void best_score_normalization();
 
 	public:
@@ -175,10 +175,18 @@ class oligo_class{
 			
 			//for each oligo in the current sequence a total score of similarity is calculated against the JASPAR matrix
 			shifting(matrix, sequence, 0);
-			local_position = find_best_score(oligo_scores);
+
+			//Find the best score position and save it into local_position variable (If find more than one select as best the nearest to the center
+			local_position = find_best_score();
+
+			//Function to normalize the best score with the normalization formula
 			best_score_normalization();
-			find_best_sequence(sequence, local_position, matrix[0].size());
-			find_coordinate(local_position, matrix[0].size(), chr_coord_GEP, start_coord_GEP);
+
+			//Function to extract and save the best oligo sequence
+			find_best_sequence(sequence, matrix[0].size());
+
+			//The coordinates of the best oligo are saved --> It will be useful to center the window on the best oligo
+			find_coordinate(matrix[0].size(), chr_coord_GEP, start_coord_GEP);
 		}
 
 		void shifting(vector<vector<double>>, string, unsigned int);
@@ -228,10 +236,10 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			//All the information are saved on oligos_vector, which is an oligo_class vector passed by reference to this function and filled sequence by sequence.
 			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
 
-			//If the analysis is performed on Double Strand the function best_strend is useful to select if an oligo has the best score on FWD or REV strand, discarding the other
+			//If the analysis is performed on Double Strand the function best_strand is useful to select if an oligo has the best score on FWD or REV strand, discarding the other
 			best_strand();
 
-			//The best oligo selected for each sequence becomes the new center of the window, resetting the GEP coordinates
+			//The best oligo selected for each sequence becames the new center of the window, re-setting the GEP coordinates
 			centering_oligo();
 		}
 		
@@ -247,7 +255,7 @@ class multifasta_class{
 		vector<string> sequences;
 
 		void length_control(vector<string>);
-		void extract_sequences(string);
+		void extract_sequences();
 		void GEP_creation_MF(vector<string>);
 
 	public:
@@ -255,8 +263,9 @@ class multifasta_class{
 		vector<bed_class> GEP;
 
 		multifasta_class(string MFASTA_FILE){
-
-			extract_sequences(MFASTA_FILE);
+			
+			//Firstly the fasta sequences from multifasta file are extracted and saved into a vector of strings
+			extract_sequences();
 			length_control(sequences);
 			GEP_creation_MF(sequences);
 		}

@@ -35,10 +35,10 @@ void  GEP_path(){
 	//else if the input is a Multifasta file
 	else{
 
-		multifasta_class MULTI(MFASTA_FILE);
+		multifasta_class MULTIFA(MFASTA_FILE);
 		
 		//Creating a Map class: input are GEP vector created from multifasta file analysis, kmers, hamming distance
-		map_class MAP(MULTI.GEP,kmers,dist);
+		map_class MAP(MULTIFA.GEP,kmers,dist);
 	}		
 }
 
@@ -384,53 +384,72 @@ void oligo_class::find_minmax(vector<vector<double>> matrix){
 
 }	
 
-unsigned int oligo_class::find_best_score(vector<double> oligo_scores){
+//Function to find the best oligo score. From every sequence from GEP the best oligo is calculated and both oligo and position in the window are saved
+unsigned int oligo_class::find_best_score(){
 
-best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
+	//Extracting the best score from oligo_scores with function max_element
+	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
 
-vector<int> positions;
-vector<int> dist_center;
-unsigned int matches = 0;
-int min_distance;
-vector<int>::iterator itr;
+	vector<int> positions;
+	vector<int> dist_center;
+	unsigned int matches = 0;
+	int min_distance;
+	vector<int>::iterator itr;
 
-for(unsigned int i=0; i < oligo_scores.size(); i++){
+	//Check if there are more than one oligo with the best score --> if any count their numbers and save their position in sequence into a position vector
+	for(unsigned int i=0; i < oligo_scores.size(); i++){
 
-	if(oligo_scores[i] == best_score){
+		if(oligo_scores[i] == best_score){
 
-		matches = matches + 1;
-		positions.emplace_back(i);
-	}
-}
-if(matches > 1){ 
-
-	for (int& p: positions){
-		int distance;
-		distance = abs( p - half_length); 
-		dist_center.emplace_back(distance);
+			matches = matches + 1;
+			positions.emplace_back(i);
+		}
 	}
 
-	min_distance = *min_element(dist_center.begin(), dist_center.end());
-	itr = find(dist_center.begin(),dist_center.end(), min_distance);
-	unsigned int index = distance(dist_center.begin(), itr);
-	return positions[index];
+	//If more than one oligo carries the best score calculate distances and select the nearest to the center
+	if(matches > 1){ 
+
+		for (int& p: positions){
+
+			int distance;
+
+			//The distance from the center need to be calculated as an absolute value (no negative values)
+			distance = abs( p - half_length); 
+			dist_center.emplace_back(distance);
+		}
+
+		//Once distances have been calculated select as best the one who is the nearest to the sequence center --> select the min element from distance vector
+		min_distance = *min_element(dist_center.begin(), dist_center.end());
+
+		//Find min_distance on dist_centre vector and save its index
+		itr = find(dist_center.begin(),dist_center.end(), min_distance);
+		unsigned int index = distance(dist_center.begin(), itr);
+
+		//Index of min_distance on distance vector == the corrisponding position in the positions vector
+		return positions[index];
+
+	}
+
+	//If just one best oligo score has been found return its position (it is the first and the only element in positions vector)
+	return positions[0];
 
 }
-return positions[0];
-}
 
+//Best score normalization with normalization formula (The parameter to normalize have already been calculated and saved into the class)
 void oligo_class::best_score_normalization(){
 
 	best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
 
 }
 
-void oligo_class::find_best_sequence(string sequence, unsigned int local_position, unsigned int length){
+//The oligo which has generated the best score is extracted from fasta sequence and saved into best_oligo_seq variable
+void oligo_class::find_best_sequence(string sequence, unsigned int length){
 
 	best_oligo_seq = sequence.substr(local_position,length);
 }
 
-void oligo_class::find_coordinate(unsigned int local_position, unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
+//Best oligo coordinates are saved
+void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
 
 	chr_coord_oligo = chr_coord_GEP;
 	start_coord_oligo = start_coord_GEP + local_position;
@@ -739,17 +758,21 @@ void multifasta_class::length_control(vector<string> sequences){
 	}
 }
 
-void multifasta_class::extract_sequences(string MFasta_file){
+//Function to extract fasta sequences from a Multifasta file and save them into a vector of string
+void multifasta_class::extract_sequences(){
 
 	cout << "\n- [1] Extracting sequences from MultiFasta file \n";
 
-	ifstream file(MFasta_file);
+	ifstream file(MFASTA_FILE);
 	string line;
 	string current_sequence;
+
+	//First line is flagged to 1 to ignore it
 	bool first_line = 1;
-
+	 
 	while(getline(file,line)){
-
+		
+		//If the current line is
 		if(line[0] == '>' && !first_line){
 
 			sequences.emplace_back(current_sequence);
@@ -764,7 +787,8 @@ void multifasta_class::extract_sequences(string MFasta_file){
 				current_sequence = current_sequence + line; 
 			}
 		}
-
+		
+		//After the first cicle the first line flag is set to 0
 		first_line = 0;	
 	}
 	sequences.emplace_back(current_sequence);
@@ -1139,7 +1163,7 @@ string hamming_class::select_real_best_oligo(unsigned int distance){
 			index = i;
 		}
 
-		similar_oligos.clear(); //migliorare 
+		similar_oligos.clear(); 
 		similar_oligos_occurrences.clear();  
 
 	}
