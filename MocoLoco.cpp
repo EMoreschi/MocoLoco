@@ -1302,30 +1302,39 @@ void hamming_class::PWM_hamming_creation(){
 	PWM_hamming.emplace_back(vec_T);
 }
 
-void hamming_class::Z_test_calculation(vector<z_test_class>& Z_TEST_VECTOR, vector<bed_class> GEP){
+void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 
-	if(FREQUENCE_1 >= 0.2){
+	for(unsigned int i=0; i<HUMMING_MATRIX.size(); i++){
+		for (unsigned int j=0; j<HUMMING_MATRIX[i].size(); j++){
 
-		z_test_class Z(PWM_hamming, GEP);
-		Z_TEST_VECTOR.emplace_back(Z);
+			vector<vector<double>> PWM_matrix = HUMMING_MATRIX[i][j].return_PWM_hamming();
+			double Frequence_1 = HUMMING_MATRIX[i][j].return_FREQUENCE_1();
+
+			if(Frequence_1 >= 0.2){
+
+				z_test_class Z(PWM_matrix, GEP);
+				Z_TEST_VECTOR.emplace_back(Z);
+			}
+		}
+
+		Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
 	}
 }
 
-void z_test_class::oligos_vector_creation_PWM(vector<oligo_class>& oligos_vector, vector<bed_class> GEP){
+void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
 
 	for(unsigned int i=0; i<GEP.size(); i++){
-		string sequence = GEP[i].return_sequence(GEP[i]);
-		string chr_coord = GEP[i].return_chr_coord_GEP();
-		unsigned int start_coord = GEP[i].return_start_coord_GEP();
-
-
-		oligo_class SHIFTING_PWM(matrix_log, sequence, chr_coord, start_coord, '+');
-		oligos_vector.emplace_back(SHIFTING_PWM);
-
+	
+		string sequence = GEP[i].return_sequence(GEP[i]);	
+		oligo_class SHIFTING_PWM(matrix_log, sequence);
+		
+		all_global_scores.emplace_back(SHIFTING_PWM.return_oligo_scores());
+	
 		if(DS == 1){
 
-			oligo_class SHIFTING_PWM(inverse_matrix_log, sequence, chr_coord, start_coord, '-');
-			oligos_vector.emplace_back(SHIFTING_PWM);
+			oligo_class SHIFTING_PWM(inverse_matrix_log, sequence);
+			
+			all_global_scores.emplace_back(SHIFTING_PWM.return_oligo_scores());
 		}
 	}	
 }
@@ -1465,6 +1474,11 @@ vector<vector<double>> hamming_class::return_PWM_hamming(){
 vector<double> oligo_class::return_oligo_scores(){
 
 	return oligo_scores;
+}
+
+double hamming_class::return_FREQUENCE_1(){
+
+	return FREQUENCE_1;
 }
 
 //Function to matrix debugging --> it prints the scores extracted from JASPAR file, the normalized scores, the logarithmic scores and the logarithmic score of transposed matrix

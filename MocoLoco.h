@@ -188,6 +188,12 @@ class oligo_class{
 			//The coordinates of the best oligo are saved --> It will be useful to center the window on the best oligo
 			find_coordinate(matrix[0].size(), chr_coord_GEP, start_coord_GEP);
 		}
+		
+		oligo_class(vector<vector<double>> matrix, string sequence){
+			
+			global_sequence = sequence;
+
+		}
 
 		void shifting(vector<vector<double>>, string, unsigned int);
 		void oligos_vector_debug();
@@ -342,10 +348,10 @@ class z_test_class{
 		double local_dev_std;
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
-		vector<oligo_class> oligos_vector_PWM;
+		vector<double> all_global_scores;
 
 		void print_debug_oligo_vec(vector<vector<double>>);	
-		void oligos_vector_creation_PWM(vector<oligo_class>&, vector<bed_class>);
+		void oligos_vector_creation_PWM(vector<bed_class>);
 		void global_mean_calculation();
 
 
@@ -355,8 +361,10 @@ class z_test_class{
 			
 			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
 			matrix_log = PWM_hamming_mat.return_log_matrix();
+			if(DS==1){
 			inverse_matrix_log = PWM_hamming_mat.return_inverse_log_matrix();
-			oligos_vector_creation_PWM(oligos_vector_PWM, GEP);
+			}
+			oligos_vector_creation_PWM(GEP);
 			global_mean_calculation();
 			print_debug_oligo_vec(PWM_hamming);
 		}
@@ -389,7 +397,6 @@ class hamming_class{
 		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>, unsigned int);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 		void PWM_hamming_creation();
-		void Z_test_calculation(vector<z_test_class>&, vector<bed_class>);
 
 	public:
 
@@ -404,13 +411,12 @@ class hamming_class{
 			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
 			print_debug_hamming(position, outfile);
 			PWM_hamming_creation();
-			Z_test_calculation(Z_TEST_VECTOR, GEP);
 		}
 
 		string return_real_best_oligo();
 		unsigned int return_similar_oligo_size();
 		vector<vector<double>> return_PWM_hamming();
-
+		double return_FREQUENCE_1();
 };
 
 class map_class{
@@ -451,6 +457,7 @@ class map_class{
 		bool check_palindrome(string);
 		void P_VALUE_MATRIX_creation();
 		void HUMMING_MATRIX_creation(vector<bed_class>);
+		void Z_TEST_MATRIX_creation(vector<bed_class>);
 		ofstream outfile_header(unsigned int);
 		ofstream outfile_header_hamming(unsigned int);
 		void TopN_sum_and_freq();
@@ -481,7 +488,8 @@ class map_class{
 			}
 			TopN_sum_and_freq();
 			HUMMING_MATRIX_creation(GEP);
-			Outfile_PWM_hamming();
+			//Outfile_PWM_hamming();
+			Z_TEST_MATRIX_creation(GEP);
 		}
 };
 
