@@ -1325,43 +1325,37 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
 
 	for(unsigned int i=0; i<GEP.size(); i++){
 	
-		string sequence = GEP[i].return_sequence(GEP[i]);	
+		string sequence = GEP[i].return_sequence(GEP[i]);
 		oligo_class SHIFTING_PWM(matrix_log, sequence);
 		
-		all_global_scores.emplace_back(SHIFTING_PWM.return_oligo_scores());
+		oligo_scores_orizzontal = SHIFTING_PWM.return_oligo_scores();
+		all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal.begin(), oligo_scores_orizzontal.end());
 	
 		if(DS == 1){
 
-			oligo_class SHIFTING_PWM(inverse_matrix_log, sequence);
+			oligo_class SHIFTING_PWM_2(inverse_matrix_log, sequence);
 			
-			all_global_scores.emplace_back(SHIFTING_PWM.return_oligo_scores());
+			oligo_scores_orizzontal = SHIFTING_PWM_2.return_oligo_scores();
+			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal.begin(), oligo_scores_orizzontal.end());
 		}
+		
 	}	
+	
+	cout << "La size del vettore scores è: " << all_global_scores.size() << endl;
+
 }
 
 void z_test_class::global_mean_calculation(){
-	
-	vector<double> scores_vector;
-	vector<double> total_score_vector;
 
-	for(unsigned int oligo_cl = 0; oligo_cl < oligos_vector_PWM.size(); oligo_cl++){
-		
-		scores_vector = oligos_vector_PWM[oligo_cl].return_oligo_scores();
+		double line_sum = accumulate(all_global_scores.begin(), all_global_scores.end(), 0.0);
 
-		for(unsigned int score = 0; score < scores_vector.size(); score++){
 
-			total_score_vector.emplace_back(scores_vector[score]);
-		}
-	}
-
-	
-	double tot_sum = accumulate(total_score_vector.begin(), total_score_vector.end(), 0.0);
-	double tot_sq_sum = inner_product(total_score_vector.begin(), total_score_vector.end(), total_score_vector.begin(), 0.0);
-	global_mean = tot_sum/total_score_vector.size();
-	global_dev_std = sqrt(tot_sq_sum/total_score_vector.size() - global_mean * global_mean);
+//	double tot_sq_sum = inner_product(all_global_scores.begin(), all_global_scores.end(), all_global_scores.begin(), 0.0);
+	global_mean = line_sum/all_global_scores.size();
+//	global_dev_std = sqrt(tot_sq_sum/all_global_scores.size() - global_mean * global_mean);
 	
 	cout << "\nLA GLOBAL MEAN: " << global_mean << endl;
-	cout << "LA GLOBAL STD_DEV E': " << global_dev_std << endl;
+//	cout << "LA GLOBAL STD_DEV E': " << global_dev_std << endl;
 }
 
 /////DEBUG/////////////////////////////////////////////////////////

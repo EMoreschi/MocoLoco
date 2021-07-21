@@ -192,7 +192,8 @@ class oligo_class{
 		oligo_class(vector<vector<double>> matrix, string sequence){
 			
 			global_sequence = sequence;
-
+			find_minmax(matrix);
+			shifting(matrix, sequence, 0);
 		}
 
 		void shifting(vector<vector<double>>, string, unsigned int);
@@ -348,6 +349,7 @@ class z_test_class{
 		double local_dev_std;
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
+		vector<double> oligo_scores_orizzontal;
 		vector<double> all_global_scores;
 
 		void print_debug_oligo_vec(vector<vector<double>>);	
