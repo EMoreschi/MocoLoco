@@ -339,40 +339,6 @@ class p_value_class{
 		vector<double> return_p_value_vec();
 };
 
-class z_test_class{
-
-	private:
-
-		double global_mean;
-		double global_dev_std;
-		double local_mean;
-		double local_dev_std;
-		vector<vector<double>> matrix_log;
-		vector<vector<double>> inverse_matrix_log;
-		vector<double> oligo_scores_orizzontal;
-		vector<double> all_global_scores;
-
-		void print_debug_oligo_vec(vector<vector<double>>);	
-		void oligos_vector_creation_PWM(vector<bed_class>);
-		void global_mean_calculation();
-
-
-	public:
-
-		z_test_class(vector<vector<double>> PWM_hamming, vector<bed_class> GEP){
-			
-			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
-			matrix_log = PWM_hamming_mat.return_log_matrix();
-			if(DS==1){
-			inverse_matrix_log = PWM_hamming_mat.return_inverse_log_matrix();
-			}
-			oligos_vector_creation_PWM(GEP);
-			global_mean_calculation();
-			print_debug_oligo_vec(PWM_hamming);
-		}
-
-};
-
 class hamming_class{
 	
 	private:
@@ -402,7 +368,7 @@ class hamming_class{
 
 	public:
 
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<z_test_class>& Z_TEST_VECTOR, vector<bed_class> GEP){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP){
 
 			vertical_multimap = v_multimap;
 			find_best_oligos();
@@ -420,6 +386,49 @@ class hamming_class{
 		vector<vector<double>> return_PWM_hamming();
 		double return_FREQUENCE_1();
 };
+
+class z_test_class{
+
+	private:
+
+		double global_mean;
+		double global_dev_std;
+		double local_mean;
+		double local_dev_std;
+		unsigned int local_pos;
+		vector<vector<double>> matrix_log;
+		vector<vector<double>> inverse_matrix_log;
+		vector<double> oligo_scores_orizzontal;
+		vector<double> all_global_scores;
+		vector<double> all_local_scores;
+
+		void print_debug_oligo_vec(vector<vector<double>>);	
+		void oligos_vector_creation_PWM(vector<bed_class>);
+		void global_mean_calculation();
+
+
+	public:
+
+		z_test_class(vector<vector<double>> PWM_hamming, vector<bed_class> GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> HAMMING_MATRIX){
+			local_pos = local_p;	
+			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
+			matrix_log = PWM_hamming_mat.return_log_matrix();
+			if(DS==1){
+			inverse_matrix_log = PWM_hamming_mat.return_inverse_log_matrix();
+			}
+			oligos_vector_creation_PWM(GEP);
+			global_mean_calculation();
+			//print_debug_oligo_vec(PWM_hamming);
+		}
+		
+		unsigned int return_local_pos();
+		double return_global_mean();
+		double return_local_mean();
+		double return_global_std_dev();
+		double return_local_std_dev();
+
+};
+
 
 class map_class{
 
@@ -444,8 +453,8 @@ class map_class{
 		unsigned int sequences_number_T;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
-		vector<hamming_class> HUMMING_VECTOR;
-		vector<vector<hamming_class>> HUMMING_MATRIX;
+		vector<hamming_class> HAMMING_VECTOR;
+		vector<vector<hamming_class>> HAMMING_MATRIX;
 		vector<z_test_class> Z_TEST_VECTOR;
 		vector<vector<z_test_class>> Z_TEST_MATRIX;
 		
@@ -458,7 +467,7 @@ class map_class{
 		void print_debug_orizzontal();
 		bool check_palindrome(string);
 		void P_VALUE_MATRIX_creation();
-		void HUMMING_MATRIX_creation(vector<bed_class>);
+		void HAMMING_MATRIX_creation(vector<bed_class>);
 		void Z_TEST_MATRIX_creation(vector<bed_class>);
 		ofstream outfile_header(unsigned int);
 		ofstream outfile_header_hamming(unsigned int);
@@ -468,7 +477,7 @@ class map_class{
 		double check_p_value(double);
 		void check_kmer_dist();
 		void Outfile_PWM_hamming();
-		void print_debug_PWM_hamming(ofstream&, unsigned int);
+		void print_debug_PWM_hamming(ofstream&, unsigned int, unsigned int);
 
 	public:
 
@@ -489,9 +498,9 @@ class map_class{
 			p_value_parameters_debug_occ();
 			}
 			TopN_sum_and_freq();
-			HUMMING_MATRIX_creation(GEP);
-			//Outfile_PWM_hamming();
+			HAMMING_MATRIX_creation(GEP);
 			Z_TEST_MATRIX_creation(GEP);
+			Outfile_PWM_hamming();
 		}
 };
 
