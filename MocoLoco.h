@@ -398,13 +398,16 @@ class z_test_class{
 		unsigned int local_pos;
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
-		vector<double> oligo_scores_orizzontal;
+		vector<double> oligo_scores_orizzontal_FWD;
+		vector<double> oligo_scores_orizzontal_REV;
+		vector<double> oligo_scores_orizzontal_BEST;
 		vector<double> all_global_scores;
 		vector<double> all_local_scores;
 
 		void print_debug_oligo_vec(vector<vector<double>>);	
 		void oligos_vector_creation_PWM(vector<bed_class>);
 		void global_mean_calculation();
+		void check_best_strand_oligo();
 
 
 	public:

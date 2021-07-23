@@ -1328,21 +1328,42 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
 	
 		string sequence = GEP[i].return_sequence(GEP[i]);
 		oligo_class SHIFTING_PWM(matrix_log, sequence);
-		oligo_scores_orizzontal = SHIFTING_PWM.return_oligo_scores();
-		all_local_scores.emplace_back(oligo_scores_orizzontal[local_pos]);	
-		all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal.begin(), oligo_scores_orizzontal.end());
+		oligo_scores_orizzontal_FWD = SHIFTING_PWM.return_oligo_scores();
 	
 		if(DS == 1){
 
 			oligo_class SHIFTING_PWM_2(inverse_matrix_log, sequence);
-			
-			oligo_scores_orizzontal = SHIFTING_PWM_2.return_oligo_scores();
-			all_local_scores.emplace_back(oligo_scores_orizzontal[local_pos]);	
-			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal.begin(), oligo_scores_orizzontal.end());
+			oligo_scores_orizzontal_REV = SHIFTING_PWM_2.return_oligo_scores();
+			check_best_strand_oligo();			
+			all_local_scores.emplace_back(oligo_scores_orizzontal_BEST[local_pos]);	
+			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_BEST.begin(), oligo_scores_orizzontal_BEST.end());
 		}
-		
+
+		else{
+			
+			all_local_scores.emplace_back(oligo_scores_orizzontal_FWD[local_pos]);	
+			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_FWD.begin(), oligo_scores_orizzontal_FWD.end());
+		}
+	
+		oligo_scores_orizzontal_BEST.clear();	
 	}	
 	
+}
+
+void z_test_class::check_best_strand_oligo(){
+
+	for(unsigned int oligo = 0; oligo < oligo_scores_orizzontal_FWD.size(); oligo ++){
+
+		if(oligo_scores_orizzontal_FWD[oligo] >= oligo_scores_orizzontal_REV[oligo]){
+
+			oligo_scores_orizzontal_BEST.emplace_back(oligo_scores_orizzontal_FWD[oligo]);
+		}
+
+		else{
+
+			oligo_scores_orizzontal_BEST.emplace_back(oligo_scores_orizzontal_REV[oligo]);
+		}
+	}
 }
 
 void z_test_class::global_mean_calculation(){
