@@ -390,6 +390,9 @@ class hamming_class{
 class z_test_class{
 
 	private:
+                //zscores and PWM pvalues
+		double z_score;
+                double Zpvalue; 
 
 		double global_mean;
 		double global_dev_std;
@@ -408,6 +411,7 @@ class z_test_class{
 		void oligos_vector_creation_PWM(vector<bed_class>);
 		void global_mean_calculation();
 		void check_best_strand_oligo();
+		void z_score_calculation();
 
 
 	public:
@@ -421,6 +425,7 @@ class z_test_class{
 			}
 			oligos_vector_creation_PWM(GEP);
 			global_mean_calculation();
+			z_score_calculation();
 			//print_debug_oligo_vec(PWM_hamming);
 		}
 		
@@ -429,6 +434,8 @@ class z_test_class{
 		double return_local_mean();
 		double return_global_std_dev();
 		double return_local_std_dev();
+		double return_Zpvalue();
+		double return_z_score();
 
 };
 

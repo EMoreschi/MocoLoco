@@ -1378,6 +1378,16 @@ void z_test_class::global_mean_calculation(){
 	local_dev_std = sqrt(tot_sq_sum_local/all_local_scores.size() - local_mean * local_mean);
 	
 }
+void z_test_class::z_score_calculation(){
+
+
+	z_score = ((global_mean - local_mean)/ (local_dev_std / sqrt(all_local_scores.size()))); 
+
+	const double Z  = z_score;
+	Zpvalue = gsl_cdf_ugaussian_Q(Z);
+
+
+}
 
 /////DEBUG/////////////////////////////////////////////////////////
 
@@ -1519,6 +1529,14 @@ double z_test_class::return_local_std_dev(){
 double z_test_class::return_global_std_dev(){
 
 	return global_dev_std;
+}
+double z_test_class::return_Zpvalue(){
+
+	return Zpvalue;
+}
+double z_test_class::return_z_score(){
+
+	return z_score;
 }
 
 //Function to matrix debugging --> it prints the scores extracted from JASPAR file, the normalized scores, the logarithmic scores and the logarithmic score of transposed matrix
@@ -1872,6 +1890,8 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 		double local_mean = Z_TEST_MATRIX[j][position].return_local_mean();
 		double local_dev_std = Z_TEST_MATRIX[j][position].return_local_std_dev();
 		double global_dev_std = Z_TEST_MATRIX[j][position].return_global_std_dev();
+		double Zpvalue  = Z_TEST_MATRIX[j][position].return_Zpvalue();
+		double z_score  = Z_TEST_MATRIX[j][position].return_z_score();
 
 		best_oligo = HAMMING_MATRIX[j][local_pos].return_real_best_oligo();	
 		neighbour_numb = HAMMING_MATRIX[j][local_pos].return_similar_oligo_size();
@@ -1895,6 +1915,8 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 		outfile << "The global standard deviation is: " << global_dev_std << endl;
 		outfile << "The local mean is: " << local_mean << endl;
 		outfile << "The local standard deviation is: " << local_dev_std << endl << endl;
+		outfile << "The zscore calculated is: " << z_score<< endl << endl;
+		outfile << "The pvalue calculated from the Z score is: " << Zpvalue<< endl << endl;
 		outfile << "-------------------------------------------------------------------" << endl;	
 	}
 }
