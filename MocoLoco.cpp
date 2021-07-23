@@ -1,384 +1,501 @@
-#include "MocoLoco.h"
+#include "MocoLoco.h" 
 
 int main(int argc, char *argv[]){
 
 
-	if(argc == 1){             //If arguments number is 1 means that no input file has been inserted - display help
+	//If arguments number is 1 means that no input file has been inserted - display help
+	if(argc == 1){
+
 		display_help();
 	}
-
-	command_line_parser(argc, argv);					//Parser function called to handle aguments
-	GEP_path();							//Calling to GEP pathway
+	command_line_parser(argc, argv);
+	GEP_path();
 
 	return 0;
 }
 
+//Function to choose the pathway to follow. 2 input options:
+//1) Bed-Twobit-Jaspar input
+//2) Multifasta input
 void  GEP_path(){
 
+	//if the input is Bed-Twobit-Jaspar	
 	if(MFASTA_FILE.size() == 0){	
 
-		coordinator_class C;
+		coordinator_class C; 
+		
+		//Create a .fasta file to check if the coordinates and the sequences extracted are correct
 		C.print_debug_GEP(C.GEP);
+		
+		//Creating map class: input are GEP vector created from bed-twobit analysis, kmers, hamming distance
 		map_class MAP(C.GEP,kmers,dist);
 	}
 
+	//else if the input is a Multifasta file
 	else{
 
-		multifasta_class MULTI(MFASTA_FILE);
-		map_class MAP(MULTI.GEP,kmers,dist);
+		multifasta_class MULTIFA(MFASTA_FILE);
+		
+		//Creating a Map class: input are GEP vector created from multifasta file analysis, kmers, hamming distance
+		map_class MAP(MULTIFA.GEP,kmers,dist);
 	}		
 }
 
 void map_class::check_kmer_dist(){
-	
+
 	if(kmers_vector.size() != distance_vector.size()){
-		
+
 		cerr << "\nERROR: Please insert an equal number of k-mers and distance parameters!" << endl;
 		display_help();
 		exit(1);
 	}
+}
+
+void bed_class::read_line(string line){ 
+
+	//Split the line word by word and extract chromosome coordinates (chr, start, end)
+	istringstream mystream(line);
+	mystream >> chr_coord >> start_coord >> end_coord;		
 
 }
 
-void bed_class::read_line(string line){				//Read line function: it takes in input each line from BED file 
+void bed_class::centering_function ( unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead){
 
-istringstream mystream(line);					//Split the line word by word and extract chromosome coordinates (chr, start, end)
-mystream >> chr_coord >> start_coord >> end_coord;		
+	unsigned int center = (start + end)/2;						
 
-}
-
-void bed_class::centering_function ( unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead){	//Centering function: in takes start and end coordinate and re-sets them -
-//following an input half_length value (overhead added to the end)
-unsigned int center = (start + end)/2;						
-start_coord = center - half_length;			//No overhead for start
-end_coord = center + half_length +overhead;		//Overhead for end
-}
-
-void bed_class::flag_control( unsigned int start,  unsigned int end){ 	//Flag control function: start coordinates must be < then end coordinates
-
-if(start > end){		//if start coordinates are > or == then end coordinates, flag is setted to 0
-	flag = 0;
-}
-else{ flag = 1;}
-}
-
-void coordinator_class::GEP_creation(string Bed_file, string Twobit_file, vector<bed_class> &GEP){		//Function to read BED and 2Bit files and create GEP object vector
-
-cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
-
-ifstream in(Bed_file); 						//Opening file in lecture mode
-TwoBit * tb;				//Creating a TwoBit* variable called tb
-tb = twobit_open(Twobit_file.c_str());					//Opening 2Bit file with twobit_open function and saved in tb 
-string line; 							//defining line string
-
-unsigned int n_line = 1;							//line counter initialization
-
-while(getline(in,line)){  					//reading input file line by line with getline function
-
-	if(line.empty())   					//if line is empty or commented --> continue
-		continue;
-	if(line[0]=='#')
-		continue;
-
-	bed_class new_class(half_length,line,tb, n_line);  //Called the object constructor passing the Bed line, half_length P, twobit file tb, and the line counter n_line
-	GEP.emplace_back(new_class);				//Put the new object in the GEP vector with emplace function
-
-	n_line = n_line + 1;					//pass to next line 
+	//No overhead for start coordinates but overhead added to end coordinates
+	start_coord = center - half_length;
+	end_coord = center + half_length +overhead;
 
 }
+
+//Flag control function: start coordinates must be < then end coordinates
+void bed_class::flag_control( unsigned int start,  unsigned int end){
+
+	//if start coordinates are >  end coordinates flag is setted to 0 --> WARNING printed to warn users
+	if(start > end){
+
+		flag = 0;
+	}
+
+	else{ 
+		flag = 1;
+	}
 }
 
+//Function to read BED and 2Bit files and create GEP (vector of bed class)
+void coordinator_class::GEP_creation(vector<bed_class> &GEP){
+
+	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
+
+	ifstream in(BED_FILE); 					
+	TwoBit * tb;
+
+	//Opening 2Bit file with twobit_open function from andrelmartens code and saved in tb variable 
+	tb = twobit_open(TWOBIT_FILE.c_str()); 
+
+	string line;
+
+	//Line counter initialization
+	unsigned int n_line = 1;
+
+	//For each line in BED file create a bed class called bed_line in which chr, start and end coordinate are ridden, centered and saved
+	//Then the Fasta sequence is extracted from Twobit genome following the coordinated and saved into a string variable
+	while(getline(in,line)){
+
+
+		//if line is empty or commented --> continue
+		if(line.empty() || line[0] == '#'){
+
+			continue;
+		}
+
+		bed_class bed_line(line,tb, n_line);
+
+		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector og bed class)
+		GEP.emplace_back(bed_line);	
+
+		n_line = n_line + 1;		 
+
+	}
+}
+
+//Function to create oligos_vector (a oligo class vector)
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
 
-cout << "- [5] Analyzing sequences using Jaspar matrix\n";
+	cout << "- [5] Analyzing sequences using Jaspar matrix\n";
 
-for(unsigned int i=0; i<GEP.size(); i++){
-	string sequence = GEP[i].return_sequence(GEP[i]);
-	string chr_coord = GEP[i].return_chr_coord_GEP();
-	unsigned int start_coord = GEP[i].return_start_coord_GEP();
+	//For every sequences into GEP vector
+	for(unsigned int i=0; i<GEP.size(); i++){
 
+		string sequence = GEP[i].return_sequence(GEP[i]);
+		string chr_coord = GEP[i].return_chr_coord_GEP();
+		unsigned int start_coord = GEP[i].return_start_coord_GEP();
 
-	oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
-	oligos_vector.emplace_back(SHIFTING);
+		//Calling the oligo_class constructor to analyze the shifting of the sequence on log_matrix (FWD strand analysis)
+		oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
 
+		//The oligo class just created is saved into oligos_vector (oligo_class vector)
+		oligos_vector.emplace_back(SHIFTING);
+
+		//If the analysis is on DS calling the oligo_class constructor to analyze the shifting of sequence on inverse_log_matrix (REVERSE strande analysis)
+		if(DS == 1){
+
+			oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
+			oligos_vector.emplace_back(SHIFTING);
+		}
+	}	
+
+	cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
+}
+
+//Function useful, if the analysis is performed on DS, to choose from the best FWD strand oligo and the best REV strand oligo the best one to keep as "Best oligo" --> The oligos vector is divided in half and only the best strand for each sequence is kept
+void coordinator_class::best_strand(){
+	
+	//Only if the analysis is on Double Strand
 	if(DS == 1){
 
-		oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
-		oligos_vector.emplace_back(SHIFTING);
-	}
-}	
+		vector<oligo_class> comparison;
+		
+		for(unsigned int i=0; i<oligos_vector.size(); i+=2){
+			
+			//The comparison is made by oligo_class in i position against the oligo class in i+1 position (The fwd and rev strand of the same sequence, which are consecutive into the oligos_vector)
+			double best_score_norm_positive = oligos_vector[i].return_best_score_normalized();
+			double best_score_norm_negative = oligos_vector[i+1].return_best_score_normalized();
 
-cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
-}
+			if(best_score_norm_positive >= best_score_norm_negative){
 
-void coordinator_class::best_strand(vector<oligo_class> oligos_vec){
+				comparison.emplace_back(oligos_vector[i]);
+			}
 
-if(DS == 1){
-	vector<oligo_class> comparison;
-	for(unsigned int i=0; i<oligos_vec.size(); i+=2){
-
-		double best_score_norm_positive = oligos_vec[i].return_best_score_normalized();
-		double best_score_norm_negative = oligos_vec[i+1].return_best_score_normalized(); 
-		if(best_score_norm_positive >= best_score_norm_negative){
-
-			comparison.emplace_back(oligos_vec[i]);
+			else{
+				comparison.emplace_back(oligos_vector[i+1]);
+			}
 		}
-		else{
-			comparison.emplace_back(oligos_vec[i+1]);
-		}
+
+		//The new oligos_vector is replaced by comparison vector, which contains only the best strand
+		oligos_vector = comparison;
 	}
-	oligos_vector = comparison;
-}
 }
 
+//Function to calculate the score of a general oligo against a JASPAR matrix
 void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsigned int s_iterator){
 
-double sum_scores = 0;
+	double sum_scores = 0;
+	
+	//For each oligo in the current sequence a score is calculated
+	if(s_iterator < sequence.size() - matrix[0].size() ) {
 
-if(s_iterator < sequence.size() - matrix[0].size() ) {
+		for(unsigned int i=0; i< matrix[0].size(); i++){
 
-	for(unsigned int i=0; i< matrix[0].size(); i++){
+			switch(sequence[i+s_iterator]){
 
-		switch(sequence[i+s_iterator]){
+				case 'A':
 
-			case 'A':
+					sum_scores = sum_scores + matrix[0][i];
+					break;
 
-				sum_scores = sum_scores + matrix[0][i];
-				break;
+				case 'C':
 
-			case 'C':
+					sum_scores = sum_scores + matrix[1][i];
+					break;
 
-				sum_scores = sum_scores + matrix[1][i];
-				break;
+				case 'G':
 
-			case 'G':
+					sum_scores = sum_scores + matrix[2][i];
+					break;
 
-				sum_scores = sum_scores + matrix[2][i];
-				break;
+				case 'T':
 
-			case 'T':
+					sum_scores = sum_scores + matrix[3][i];
+					break;
 
-				sum_scores = sum_scores + matrix[3][i];
-				break;
+				default:
 
-			default:
-
-				sum_scores = sum_scores + o_matrix_mins[i];
-				break;
-
+					sum_scores = sum_scores + o_matrix_mins[i];
+					break;
+			}
 		}
+		
+		//The total score of an oligo is saved into an oligo_scores vector
+		oligo_scores.emplace_back(sum_scores);
+
+		//Then the function is recalled recursively shifting on the next oligo thanks to the iterator progression
+		shifting(matrix, sequence, s_iterator+1);
 	}
-
-	oligo_scores.emplace_back(sum_scores);
-	shifting(matrix, sequence, s_iterator+1);
-
 }
 
-}
+//Function to read JASPAR PWM file, extract values and create a matrix class
+vector<vector<double>> coordinator_class::read_JASPAR(){
 
-void matrix_class::read_JASPAR(string JASPAR_FILE){			//Function to read JASPAR PWM file, extract values and create a matrix class
+	cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
 
-cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
+	ifstream file(JASPAR_FILE);
+	string line;		
 
-ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
-string line;							
-while(getline(file,line)){					//For each line of the file do:
+	//For each line of the JASPAR file	
+	while(getline(file,line)){
 
-	if(line[0]=='>'){					//If line start with ">"
-		istringstream mystream(line);			
-		mystream >> matrix_name >> tf_name;			//Extract the first two words and put into matrix_name string variable and tf_name string variable
-	}
+		//If the line start with '>' character save the words into matrix_name string and into tf_name string
+		if(line[0]=='>'){
 
-	else{							//Else, if line does not start with ">"
-		line.erase(0,line.find('[') +1);		//Take line charachters after "["...
-		line.erase(line.find(']'));			//...and line charachters before "]"
-		vector<double> baseQ;				//Initializing baseQ vector of double
-		istringstream mystream(line);			//Splitting the line in words
-		for (double num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
-			baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
+			istringstream mystream(line);			
+			mystream >> matrix_name >> tf_name;
 		}
-		matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
+
+		//If the line does not start with '>' delete the '[',']' and 'A,T,C,G' characters, extract the scores and save them into a scores matrix
+		else{
+			
+			//Deleting from line the first character (A,T,C,G), the '[' and the ']' characters
+			line.erase(0,line.find('[') +1);
+			line.erase(line.find(']'));
+
+			vector<double> scores_line;	
+			istringstream mystream(line);
+			
+			//For each words (number) in line put the current number in num variables
+			for (double num; mystream >> num;){
+
+				scores_line.emplace_back(num);
+			}
+
+			matrix.emplace_back(scores_line);
+		}
 
 	}
 
-}
-file.close();						//Closing file
+	file.close();
+
+	//Cout of step 3/4 here because the normalization and reverse function will be re-utilized during the workflow
+	cout << "- [3] Jaspar Matrix normalization\n";
+	cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
+
+	return matrix;
 }
 
+//Function which saves into a vector called col_sum all the score column sums --> This is made to perform the next Normalization step faster
 vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
 
-vector<double> col_sum;						//Vector of columns sum
-double sum = 0;							//Sum initialized as 0
+	vector<double> col_sum;						
+	double sum = 0;							
 
-for (unsigned int i = 0; i < matrix[0].size(); i++) {			//From 0 to number of columns of line 0
-	for (unsigned int j = 0; j < 4; j++){				//From 0 to 4 (line number)
+	for (unsigned int i = 0; i < matrix[0].size(); i++) {		
+		for (unsigned int j = 0; j < 4; j++){			
 
-		sum = sum + matrix[j][i];			//Calculate the sum of columns
+			sum = sum + matrix[j][i];			
+		}
+
+		col_sum.emplace_back(sum);				
+		sum = 0;						
 	}
 
-	col_sum.emplace_back(sum);				//Put the column sum in vector col_sum
-	sum = 0;						//Restore the sum to 0 for the next column
-}
-return col_sum;
+	return col_sum;
 }
 
-void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix, double p){  
+//Function useful to normalize matrix scores and adding a pseudocount to them
+void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix){  
 
-cout << "- [3] Jaspar Matrix normalization\n";
+	double normalized_score;
 
-double norm;							//Norm variable initialized
-vector<double> col_sum = find_col_sum(matrix);
+	//Calculate and save the scores column sum into a vector to perform a faster normalization step	
+	vector<double> col_sum = find_col_sum(matrix);
 
-for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+	for (unsigned int i = 0; i < matrix.size(); i++) {		
 
-	vector<double> baseQ;				//baseQ vector to store the lines initialized
-	for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
+		vector<double> normalized_matrix_line;
+		for (unsigned int j = 0; j < matrix[i].size(); j++){
 
-		norm = matrix[i][j]/col_sum[j];		//Put matrix value (divided for the corresponding column sum) into double variable norm
-		baseQ.emplace_back(norm + p);		//Put norm value (with p added) in baseQ vector
+			normalized_score = matrix[i][j]/col_sum[j];
+			normalized_matrix_line.emplace_back(normalized_score + pseudoc);
+		}
+
+		norm_matrix.emplace_back(normalized_matrix_line);
 	}
-
-	norm_matrix.emplace_back(baseQ);	//Put baseQ vector (which carries line values) in norm_matrix
-}
 }
 
+//Function to perform a second normalization on matrix scores (without a pseudocount addition)
 void matrix_class::matrix_normalization(vector<vector<double>> matrix){
 
-//	cout << "Second Matrix normalization...\n";
+	//Calculate and save again the scores column sum into a vector to perform a faster normalization step
+	vector<double> col_sum = find_col_sum(matrix);
 
-vector<double> col_sum = find_col_sum(matrix);
+	for (unsigned int i = 0; i < matrix.size(); i++) {
 
-for (unsigned int i = 0; i < matrix.size(); i++) {		//From 0 to number of matrix lines
+		for (unsigned int j = 0; j < matrix[i].size(); j++){
 
-	vector<double> baseQ;				//baseQ vector to store the lines initialized
-	for (unsigned int j = 0; j < matrix[i].size(); j++){	//From 0 to number of matrix columns
-
-		norm_matrix[i][j] = matrix[i][j]/col_sum[j];	//Substitution of first normalized values with new normalized ones
+			//Substitution of first normalized values with new normalized ones
+			norm_matrix[i][j] = matrix[i][j]/col_sum[j];
+		}
 	}
 }
-}
 
+//Function to calculate, from the normalized matrix, the logarithmic values of the scores and creates a new matrix called matrix_log
 void matrix_class::matrix_logarithmic(vector<vector<double>> matrix){
 
-for(unsigned int i=0; i < matrix.size(); i++){
-	vector<double> baseQ;
-	double value_log;
+	for(unsigned int i=0; i < matrix.size(); i++){
+		
+		vector<double> log_matrix_line;
+		double log_scores;
 
-	for(unsigned int j=0; j < norm_matrix[i].size(); j++){
+		for(unsigned int j=0; j < norm_matrix[i].size(); j++){
 
-		value_log = log(norm_matrix[i][j]);
-		baseQ.emplace_back(value_log);
+			log_scores = log(norm_matrix[i][j]);
+			log_matrix_line.emplace_back(log_scores);
+		}
+
+		matrix_log.emplace_back(log_matrix_line);
 	}
-	matrix_log.emplace_back(baseQ);
 }
 
-cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
-}
-
-
+//Function which return the Transposed matrix from a matrix in input
 vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> matrix){
 
-vector<vector<double>> inv_matrix = matrix;
-reverse(inv_matrix.begin(), inv_matrix.end());
-for (int i = 0; i < 4; i++) {		//From 0 to number of matrix lines
-	vector<double> baseQ;
-	reverse(inv_matrix[i].begin(), inv_matrix[i].end());
-}
-return inv_matrix;
+	vector<vector<double>> rev_matrix = matrix;
+	reverse(rev_matrix.begin(), rev_matrix.end());
+
+	for (int i = 0; i < 4; i++) {
+
+		reverse(rev_matrix[i].begin(), rev_matrix[i].end());
+	}
+
+	return rev_matrix;
 
 }
 
+//Finding the best and the worst score that an oligo can reach based on current JASPAR matrix
 void oligo_class::find_minmax(vector<vector<double>> matrix){
 
-for(unsigned int i=0; i < matrix[0].size(); i++){
-	vector<double> colum;		   	
-	for(unsigned int j=0; j < matrix.size(); j++){
-		colum.emplace_back(matrix[j][i]);
+	//Extract the mins and the maxes from each columns, saved into vectors and their total sum will be the best and the worst score that an oligo can reach
+	for(unsigned int i=0; i < matrix[0].size(); i++){
+
+		vector<double> colum;		   	
+		for(unsigned int j=0; j < matrix.size(); j++){
+
+			colum.emplace_back(matrix[j][i]);
+		}
+
+		o_matrix_mins.emplace_back(*min_element(colum.begin(),colum.end()));
+		o_matrix_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
 	}
-	o_matrix_mins.emplace_back(*min_element(colum.begin(),colum.end()));
-	o_matrix_maxes.emplace_back(*max_element(colum.begin(),colum.end()));
-}
-min_possible_score = accumulate(o_matrix_mins.begin(), o_matrix_mins.end(), 0.0);
-max_possible_score = accumulate(o_matrix_maxes.begin(), o_matrix_maxes.end(), 0.0);
+
+	min_possible_score = accumulate(o_matrix_mins.begin(), o_matrix_mins.end(), 0.0);
+	max_possible_score = accumulate(o_matrix_maxes.begin(), o_matrix_maxes.end(), 0.0);
 
 }	
 
-unsigned int oligo_class::find_best_score(vector<double> oligo_scores){
+//Function to find the best oligo score. From every sequence from GEP the best oligo is calculated and both oligo and position in the window are saved
+unsigned int oligo_class::find_best_score(){
 
-best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
+	//Extracting the best score from oligo_scores with function max_element
+	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
 
-vector<int> positions;
-vector<int> dist_center;
-unsigned int matches = 0;
-int min_distance;
-vector<int>::iterator itr;
+	vector<int> positions;
+	vector<int> dist_center;
+	unsigned int matches = 0;
+	int min_distance;
+	vector<int>::iterator itr;
 
-for(unsigned int i=0; i < oligo_scores.size(); i++){
+	//Check if there are more than one oligo with the best score --> if any count their numbers and save their position in sequence into a position vector
+	for(unsigned int i=0; i < oligo_scores.size(); i++){
 
-	if(oligo_scores[i] == best_score){
+		if(oligo_scores[i] == best_score){
 
-		matches = matches + 1;
-		positions.emplace_back(i);
-	}
-}
-if(matches > 1){ 
-
-	for (int& p: positions){
-		int distance;
-		distance = abs( p - half_length); 
-		dist_center.emplace_back(distance);
+			matches = matches + 1;
+			positions.emplace_back(i);
+		}
 	}
 
-	min_distance = *min_element(dist_center.begin(), dist_center.end());
-	itr = find(dist_center.begin(),dist_center.end(), min_distance);
-	unsigned int index = distance(dist_center.begin(), itr);
-	return positions[index];
+	//If more than one oligo carries the best score calculate distances and select the nearest to the center
+	if(matches > 1){ 
+
+		for (int& p: positions){
+
+			int distance;
+
+			//The distance from the center need to be calculated as an absolute value (no negative values)
+			distance = abs( p - half_length); 
+			dist_center.emplace_back(distance);
+		}
+
+		//Once distances have been calculated select as best the one who is the nearest to the sequence center --> select the min element from distance vector
+		min_distance = *min_element(dist_center.begin(), dist_center.end());
+
+		//Find min_distance on dist_centre vector and save its index
+		itr = find(dist_center.begin(),dist_center.end(), min_distance);
+		unsigned int index = distance(dist_center.begin(), itr);
+
+		//Index of min_distance on distance vector == the corrisponding position in the positions vector
+		return positions[index];
+
+	}
+
+	//If just one best oligo score has been found return its position (it is the first and the only element in positions vector)
+	return positions[0];
 
 }
-return positions[0];
-}
 
+//Best score normalization with normalization formula (The parameter to normalize have already been calculated and saved into the class)
 void oligo_class::best_score_normalization(){
+	
+	double score_normalized;
+	vector<double> oligo_scores_normalized;
 
-	best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
+	for(unsigned int score=0; score < oligo_scores.size(); score++){
 
+	score_normalized = 1 + ((oligo_scores[score] - max_possible_score)/(max_possible_score - min_possible_score));
+	oligo_scores_normalized.emplace_back(score_normalized);
+	}
+	
+	oligo_scores = oligo_scores_normalized;
 }
 
-void oligo_class::find_best_sequence(string sequence, unsigned int local_position, unsigned int length){
+//The oligo which has generated the best score is extracted from fasta sequence and saved into best_oligo_seq variable
+void oligo_class::find_best_sequence(string sequence, unsigned int length){
 
 	best_oligo_seq = sequence.substr(local_position,length);
 }
 
-void oligo_class::find_coordinate(unsigned int local_position, unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
+//Best oligo coordinates are saved
+void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
 
 	chr_coord_oligo = chr_coord_GEP;
 	start_coord_oligo = start_coord_GEP + local_position;
 	end_coord_oligo = start_coord_oligo + length;
 
 }
-
+	
+//Function to re-set the genomic coordinates and the sequences window --> centered on the best oligo found for each sequence
 void coordinator_class::centering_oligo(){
 
 	TwoBit * tb;
 	tb = twobit_open(TWOBIT_FILE.c_str());
 	int center_oligo ;
-
+	
+	//To center on the best oligo, centering_function and extract_seq functions from bed_class need to be recalled with updated input parameters
 	for(unsigned int i=0; i<oligos_vector.size(); i++){
+
+		//The center of the window is exactly on the center of the best oligo (which length depends to the JASPAR matrix size)
 		center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
 		GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
 		GEP[i].extract_seq(tb,0);
 	}
 }
 
-void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){			//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates -
-	//extracted from Bed line
-	if(flag == 1){								//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-		string chrom = chr_coord;		//Put in chrom the string of chr_coord
-		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1); 	//Extract the sequence from the object with the twobit_sequence function
+//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates extracted from Bed line
+void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
+
+	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+	if(flag == 1){	
+		
+		string chrom = chr_coord;
+
+		//Extract the sequence from the object with the twobit_sequence function
+		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1);
 	}
+
+	//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
 	else {		
 		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
-		//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
 	}
 }
 
@@ -648,17 +765,21 @@ void multifasta_class::length_control(vector<string> sequences){
 	}
 }
 
-void multifasta_class::extract_sequences(string MFasta_file){
+//Function to extract fasta sequences from a Multifasta file and save them into a vector of string
+void multifasta_class::extract_sequences(){
 
 	cout << "\n- [1] Extracting sequences from MultiFasta file \n";
 
-	ifstream file(MFasta_file);
+	ifstream file(MFASTA_FILE);
 	string line;
 	string current_sequence;
+
+	//First line is flagged to 1 to ignore it
 	bool first_line = 1;
-
+	 
 	while(getline(file,line)){
-
+		
+		//If the current line is
 		if(line[0] == '>' && !first_line){
 
 			sequences.emplace_back(current_sequence);
@@ -673,7 +794,8 @@ void multifasta_class::extract_sequences(string MFasta_file){
 				current_sequence = current_sequence + line; 
 			}
 		}
-
+		
+		//After the first cicle the first line flag is set to 0
 		first_line = 0;	
 	}
 	sequences.emplace_back(current_sequence);
@@ -978,7 +1100,7 @@ void p_value_class::print_debug_occurrences_SS(map<pair<string,string>,pair<unsi
 	}
 }
 
-void map_class::HUMMING_MATRIX_creation(){
+void map_class::HAMMING_MATRIX_creation(vector<bed_class> GEP){
 	
 	for(unsigned int j=0; j<P_VALUE_MATRIX.size(); j++){
 
@@ -988,12 +1110,14 @@ void map_class::HUMMING_MATRIX_creation(){
 
 			multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
 
-			hamming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile);
-			HUMMING_VECTOR.emplace_back(H);
+			hamming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, GEP);
+			HAMMING_VECTOR.emplace_back(H);
 		}
 
-		HUMMING_MATRIX.emplace_back(HUMMING_VECTOR);
-		HUMMING_VECTOR.clear();
+		HAMMING_MATRIX.emplace_back(HAMMING_VECTOR);
+	//	Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
+		HAMMING_VECTOR.clear();
+	//	Z_TEST_VECTOR.clear();
 		outfile.close();
 	}
 }
@@ -1046,7 +1170,8 @@ string hamming_class::select_real_best_oligo(unsigned int distance){
 			index = i;
 		}
 
-		similar_oligos.clear();
+		similar_oligos.clear(); 
+		similar_oligos_occurrences.clear();  
 
 	}
 	
@@ -1102,7 +1227,7 @@ bool hamming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned in
 double hamming_class::frquence_1_calculation(unsigned int freq){
 
 	tot_similar_occurrences = real_best_oligo_occurrences;
-
+	
 	for(unsigned int i=0; i<similar_oligos_occurrences.size(); i++){
 
 		tot_similar_occurrences = tot_similar_occurrences + similar_oligos_occurrences[i];
@@ -1114,11 +1239,10 @@ double hamming_class::frquence_1_calculation(unsigned int freq){
 	return FREQ_1;
 }
 
-double hamming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
+double hamming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, unsigned int position){
 	
 
 	unsigned int total_orizzontal_occurrences = finding_orizzontal_occurrences(orizzontal_map_plus, orizzontal_map_minus);
-
 	double FREQ_2 = tot_similar_occurrences/total_orizzontal_occurrences;
 
 	return FREQ_2;
@@ -1144,11 +1268,11 @@ unsigned int hamming_class::finding_orizzontal_occurrences(unordered_map<string,
 
 void hamming_class::PWM_hamming_creation(){
 
-	unsigned int counter_A = 0;
-	unsigned int counter_C = 0;
-	unsigned int counter_G = 0;
-	unsigned int counter_T = 0;
-	vector<unsigned int> vec_A, vec_C, vec_G, vec_T;
+	double counter_A = 0;
+	double counter_C = 0;
+	double counter_G = 0;
+	double counter_T = 0;
+	vector<double> vec_A, vec_C, vec_G, vec_T;
 	
 	for(unsigned int character = 0; character < similar_oligos[0].size(); character++){
 
@@ -1183,6 +1307,93 @@ void hamming_class::PWM_hamming_creation(){
 	PWM_hamming.emplace_back(vec_C);
 	PWM_hamming.emplace_back(vec_G);
 	PWM_hamming.emplace_back(vec_T);
+}
+
+void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
+
+	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
+		for (unsigned int j=0; j<HAMMING_MATRIX[i].size(); j++){
+
+			vector<vector<double>> PWM_matrix = HAMMING_MATRIX[i][j].return_PWM_hamming();
+			double Frequence_1 = HAMMING_MATRIX[i][j].return_FREQUENCE_1();
+
+			if(Frequence_1 >= freq_treshold){
+
+				z_test_class Z(PWM_matrix, GEP,j+1,kmers_vector,HAMMING_MATRIX);
+				Z_TEST_VECTOR.emplace_back(Z);
+			}
+		}
+
+		Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
+		Z_TEST_VECTOR.clear();
+	}
+}
+
+void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
+
+	for(unsigned int i=0; i<GEP.size(); i++){
+	
+		string sequence = GEP[i].return_sequence(GEP[i]);
+		oligo_class SHIFTING_PWM(matrix_log, sequence);
+		oligo_scores_orizzontal_FWD = SHIFTING_PWM.return_oligo_scores();
+	
+		if(DS == 1){
+
+			oligo_class SHIFTING_PWM_2(inverse_matrix_log, sequence);
+			oligo_scores_orizzontal_REV = SHIFTING_PWM_2.return_oligo_scores();
+			check_best_strand_oligo();			
+			all_local_scores.emplace_back(oligo_scores_orizzontal_BEST[local_pos]);	
+			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_BEST.begin(), oligo_scores_orizzontal_BEST.end());
+		}
+
+		else{
+			
+			all_local_scores.emplace_back(oligo_scores_orizzontal_FWD[local_pos]);	
+			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_FWD.begin(), oligo_scores_orizzontal_FWD.end());
+		}
+	
+		oligo_scores_orizzontal_BEST.clear();	
+	}	
+	
+}
+
+void z_test_class::check_best_strand_oligo(){
+
+	for(unsigned int oligo = 0; oligo < oligo_scores_orizzontal_FWD.size(); oligo ++){
+
+		if(oligo_scores_orizzontal_FWD[oligo] >= oligo_scores_orizzontal_REV[oligo]){
+
+			oligo_scores_orizzontal_BEST.emplace_back(oligo_scores_orizzontal_FWD[oligo]);
+		}
+
+		else{
+
+			oligo_scores_orizzontal_BEST.emplace_back(oligo_scores_orizzontal_REV[oligo]);
+		}
+	}
+}
+
+void z_test_class::global_mean_calculation(){
+
+	double local_sum = accumulate(all_local_scores.begin(), all_local_scores.end(),0.0);	
+	double global_sum = accumulate(all_global_scores.begin(), all_global_scores.end(), 0.0);
+	double tot_sq_sum_global = inner_product(all_global_scores.begin(), all_global_scores.end(), all_global_scores.begin(), 0.0);
+	double tot_sq_sum_local = inner_product(all_local_scores.begin(), all_local_scores.end(), all_local_scores.begin(), 0.0);
+	global_mean = global_sum/all_global_scores.size();
+	local_mean = local_sum/all_local_scores.size();
+	global_dev_std = sqrt(tot_sq_sum_global/all_global_scores.size() - global_mean * global_mean);
+	local_dev_std = sqrt(tot_sq_sum_local/all_local_scores.size() - local_mean * local_mean);
+	
+}
+void z_test_class::z_score_calculation(){
+
+
+	z_score = ((global_mean - local_mean)/ (local_dev_std / sqrt(all_local_scores.size()))); 
+
+	const double Z  = z_score;
+	Zpvalue = gsl_cdf_ugaussian_P(Z);
+
+
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -1287,21 +1498,65 @@ unsigned int hamming_class::return_similar_oligo_size(){
 	return similar_oligos.size();
 }
 
-vector<vector<unsigned int>> hamming_class::return_PWM_hamming(){
+vector<vector<double>> hamming_class::return_PWM_hamming(){
 
 	return PWM_hamming;
 }
 
-void matrix_class::debug_matrix(matrix_class M){		//Debugging of matrices: calling print matrix function
+vector<double> oligo_class::return_oligo_scores(){
+
+	return oligo_scores;
+}
+
+double hamming_class::return_FREQUENCE_1(){
+
+	return FREQUENCE_1;
+}
+
+unsigned int z_test_class::return_local_pos(){
+
+	return local_pos;
+}
+
+double z_test_class::return_local_mean(){
+
+	return local_mean;
+}
+
+double z_test_class::return_global_mean(){
+
+	return global_mean;
+}
+
+double z_test_class::return_local_std_dev(){
+
+	return local_dev_std;
+}
+
+double z_test_class::return_global_std_dev(){
+
+	return global_dev_std;
+}
+double z_test_class::return_Zpvalue(){
+
+	return Zpvalue;
+}
+double z_test_class::return_z_score(){
+
+	return z_score;
+}
+
+//Function to matrix debugging --> it prints the scores extracted from JASPAR file, the normalized scores, the logarithmic scores and the logarithmic score of transposed matrix
+void matrix_class::debug_matrix(matrix_class M){
 
 	M.print_debug_matrix(matrix, " ");
 	M.print_debug_matrix(norm_matrix, " NORMALIZED");
-	M.print_debug_matrix(inverse_norm_matrix, " INVERSE NORMALIZED MATRIX");
 	M.print_debug_matrix(matrix_log, " LOGARITHMIC MATRIX");
 	M.print_debug_matrix(inverse_matrix_log, " INVERSE LOGARITHMIC MATRIX");
 }
 
-void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){		//Print matrix function
+//Function to matrix debugging --> it prints the scores extracted from JASPAR file, the matrix name and the tf name
+void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type){
 
 	cout << "\n" << matrix_name << " " << tf_name << type << ":" << endl;
 
@@ -1310,42 +1565,51 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 
 			cout << matrix[i][j] << " ";
 		}
+
 		cout << endl;
 	}
-
 }
 
+//Debug function: Print sequences and coordinates from GEP vector into a .fasta file to check if the sequences extraction is correct
+void coordinator_class::print_debug_GEP(vector<bed_class> GEP){
 
-void coordinator_class::print_debug_GEP(vector<bed_class> GEP){			//Debug function: Print the GEP vector to control the working flow
-	
+	//Twobit_JASPAR_Bed used to create GEP vector saved into alias file to name the outputs	
 	alias_file = (TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
+
+	//Output file .bed carrying the centered coordinates
 	ofstream outfile;	
 	JASPAR_FILE = JASPAR_FILE.erase(JASPAR_FILE.find_last_of("."), JASPAR_FILE.size());
 	outfile.open(alias_file);
-	
+
 	for(unsigned int i=0; i<GEP.size(); i++){
+
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
 		unsigned int end_coord = GEP[i].return_end_coord();
-		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;	//Printing chr, start and end coordinates
+		outfile << chr_coord << "\t" << start_coord << "\t" << end_coord << endl;
 	}
+
 	outfile.close();
-	
+
+	//Output file .fasta carrying the centered coordinates and the sequences extracted
 	BED_FILE = BED_FILE.erase(BED_FILE.find_last_of("."), BED_FILE.size());
 	outfile.open(alias_file+".fasta");
+
 	for(unsigned int i=0; i<GEP.size(); i++){
+
 		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord();
 		unsigned int end_coord = GEP[i].return_end_coord();
-		string sequence = GEP[i].return_sequence(GEP[i]);					//Printing sequence
-		outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	//Printing chr, start and end coordinates
+		string sequence = GEP[i].return_sequence(GEP[i]);				
+
+		outfile << ">" << chr_coord << ":" << start_coord << "-" << end_coord << endl;	
 		outfile << sequence << endl;
 	}
-	outfile.close();
 
+	outfile.close();
 }
 
-void oligo_class::oligos_vector_debug(oligo_class oligos_vector){	//Debug function to print the best oligo features
+void oligo_class::oligos_vector_debug(){	//Debug function to print the best oligo features
 
 	cout << endl;
 	cout << "Sequence: " << global_sequence << endl;
@@ -1604,8 +1868,7 @@ void map_class::Outfile_PWM_hamming(){
 		if(DS == 1){
 
 			outfile.open(to_string(kmers_vector[j])+"-mers_PWM_hamming_matrices_"+alias_file+"DS.txt");
-
-			print_debug_PWM_hamming(outfile, j);
+			print_debug_PWM_hamming(outfile, j, kmers_vector[j]);
 			outfile.close();
 		}
 
@@ -1613,27 +1876,35 @@ void map_class::Outfile_PWM_hamming(){
 
 			outfile.open(to_string(kmers_vector[j])+"-mers_PWM_hamming_matrices_"+alias_file+"SS.txt");
 
-			print_debug_PWM_hamming(outfile, j);
+			print_debug_PWM_hamming(outfile, j, kmers_vector[j]);
 			outfile.close();
 		}
 	}
 }
 
-void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j){
-
-	outfile << "#PWM Matrices calculated from the best oligo for each position and his hamming distanced oligos" << endl << endl;
+void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsigned int k){
+	
+	outfile << "#PWM Matrices calculated from the best oligo for each position and his hamming distanced oligos - k = " << k << endl << endl;
 	string best_oligo;
 	unsigned int neighbour_numb;
-	vector<vector<unsigned int>> PWM_hamming;
+	vector<vector<double>> PWM_hamming;
 	string ACGT = "ACGT";
 
-	for(unsigned int position = 1; position <= HUMMING_MATRIX[j].size(); position++){
+	for(unsigned int position = 0; position < Z_TEST_MATRIX[j].size(); position++){
 
-		best_oligo = HUMMING_MATRIX[j][position-1].return_real_best_oligo();	
-		neighbour_numb = HUMMING_MATRIX[j][position-1].return_similar_oligo_size();
-		PWM_hamming = HUMMING_MATRIX[j][position-1].return_PWM_hamming();
+		unsigned int local_pos = Z_TEST_MATRIX[j][position].return_local_pos();
+		double global_mean = Z_TEST_MATRIX[j][position].return_global_mean();
+		double local_mean = Z_TEST_MATRIX[j][position].return_local_mean();
+		double local_dev_std = Z_TEST_MATRIX[j][position].return_local_std_dev();
+		double global_dev_std = Z_TEST_MATRIX[j][position].return_global_std_dev();
+		double Zpvalue  = Z_TEST_MATRIX[j][position].return_Zpvalue();
+		double z_score  = Z_TEST_MATRIX[j][position].return_z_score();
 
-		outfile << "#Position " << position << ": \n#PWM calculated from oligo " << best_oligo << " and his " << neighbour_numb << " hamming distanced neighbours. " << endl << endl;
+		best_oligo = HAMMING_MATRIX[j][local_pos].return_real_best_oligo();	
+		neighbour_numb = HAMMING_MATRIX[j][local_pos].return_similar_oligo_size();
+		PWM_hamming = HAMMING_MATRIX[j][local_pos].return_PWM_hamming();
+		
+		outfile << "#Position " << local_pos << ": \n#PWM calculated from oligo " << best_oligo << " and his " << neighbour_numb << " hamming distanced neighbours. " << endl << endl;
 
 		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
 			
@@ -1645,11 +1916,49 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j){
 			}
 			outfile << "]" << endl;
 		}
+		
 		outfile << endl;
+		outfile << "The global mean is: " << global_mean << endl;
+		outfile << "The global standard deviation is: " << global_dev_std << endl;
+		outfile << "The local mean is: " << local_mean << endl;
+		outfile << "The local standard deviation is: " << local_dev_std << endl << endl;
+		outfile << "The zscore calculated is: " << z_score<< endl << endl;
+		outfile << "The pvalue calculated from the Z score is: " << Zpvalue<< endl << endl;
 		outfile << "-------------------------------------------------------------------" << endl;	
 	}
 }
 
+//void z_test_class::print_debug_oligo_vec(vector<vector<double>> PWM_hamming){
+//
+//	cout << endl << endl;
+//	
+//	for(int i=0; i<PWM_hamming.size(); i++){
+//		for(int j=0; j<PWM_hamming[0].size(); j++){
+//
+//			cout << PWM_hamming[i][j] << " ";
+//		}
+//		cout << endl;
+//	}
+//	cout << endl;
+//
+//	for(int i=0; i<matrix_log.size(); i++){
+//		for(int j=0; j<matrix_log[0].size(); j++){
+//
+//			cout << matrix_log[i][j] << " ";
+//		}
+//		cout << endl;
+//	}
+//	cout << endl;
+//	
+//	for(int i=0; i<inverse_matrix_log.size(); i++){
+//		for(int j=0; j<inverse_matrix_log[0].size(); j++){
+//
+//			cout << inverse_matrix_log[i][j] << " ";
+//		}
+//		cout << endl;
+//	}
+//	cout << "-------------------------------------------------------" << endl;
+//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1657,7 +1966,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j){
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:m:d:o:t:n:s";
+	const char* const short_opts = "hp:k:b:j:m:d:o:f:t:n:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -1665,6 +1974,7 @@ void command_line_parser(int argc, char** argv){
 		{"param",      required_argument, nullptr,  'p' },
 		{"ntop",      required_argument, nullptr,  'n' },
 		{"kmer",   required_argument, nullptr,  'k' },
+		{"freq",   required_argument, nullptr,  'f' },
 		{"distance",   required_argument, nullptr,  'd' },
 		{"bed",    required_argument, nullptr,  'b' },
 		{"ordering",    required_argument, nullptr,  'o' },
@@ -1708,6 +2018,13 @@ void command_line_parser(int argc, char** argv){
 			case 'k' : kmers.clear();
 				   kmers = string(optarg);
 				   break;
+			case 'f' : freq_treshold = stod(optarg);
+				   if(freq_treshold <= 0 || freq_treshold >= 1){
+					   cerr << "ERROR: please insert a frequency treshold between 0 and 1.\n\n" << endl;
+					   display_help();
+					   exit(1);
+				   }
+				   break; 
 			case 'd' : dist.clear();
 				   dist = string(optarg);
 				   break;
@@ -1769,6 +2086,7 @@ void display_help(){
 	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
 	cerr << "\n -o || --ordering 'p' to order the top N oligos by p-value and not by occurrences. (DEFAULT: ordering by occurrences)" << endl;
 	cerr << "\n --distance || -d <n1,n2,...,nN> to select the hamming distances. (DEFAULT: 1,2,3)" << endl;
+	cerr << "\n --freq || -f <n1> to set the frequence treshold to calculate the z_score. (DEFAULT: 0.02)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);

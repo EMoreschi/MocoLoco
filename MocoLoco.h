@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <numeric>
 #include <cmath>
 #include <iterator>
 #include <list>
@@ -22,9 +23,9 @@
 
 using namespace std;
 
-string BED_FILE; 		//initializing const char variarible for Bed_file input reading
-int half_length = 150; 		//default half_length 150
-string TWOBIT_FILE;	//initializing const char variable for Twobit_file input reading
+string BED_FILE;
+int half_length = 150;
+string TWOBIT_FILE;
 string JASPAR_FILE;
 string alias_file = "multifasta_";
 string MFASTA_FILE;
@@ -35,11 +36,11 @@ bool DS = 1;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;
+double freq_treshold = 0.02;
 
+class bed_class {         
 
-class bed_class { //creation public class of bed_class type        
-
-	private:	//field definition
+	private:
 
 		string chr_coord;
 		unsigned int start_coord;
@@ -50,8 +51,9 @@ class bed_class { //creation public class of bed_class type
 		void read_line(string);
 		void flag_control(unsigned int, unsigned int);
 
-	public:				//field definition
-		
+	public:	
+
+		//Bed class constructor if input is a Multifasta file
 		bed_class(string seq){
 
 			chr_coord = "MULTIFASTA";
@@ -59,15 +61,23 @@ class bed_class { //creation public class of bed_class type
 			end_coord = 0;
 			sequence = seq;
 		}
+		
+		//Bed class constructor if input are Bed-Twobit-Jaspar files
+		bed_class(string line, TwoBit* tb,unsigned int n_line){
 
-		bed_class(unsigned int p, string line, TwoBit* tb,unsigned int n_line){
+			//Take line from bed file and extract chr_coord, start_coord and end_coord
+			read_line(line);
 
-			read_line(line);					//reading bed line
-			flag_control(start_coord,end_coord);			//controlling coordinates
-			centering_function(start_coord, end_coord, p, overhead);		//centering the coordinates
-			extract_seq(tb, n_line);				//extracting the sequence
+			//check if start coordinates are not greather then end coordinates
+			flag_control(start_coord,end_coord);
 
+			//Set the new start and end coordinates following p (half_length) input and add overhead to end coordinates
+			centering_function(start_coord, end_coord, half_length, overhead);
+
+			//Extract from twobit genome the sequence following chr, start and end coordinates
+			extract_seq(tb, n_line);
 		}
+
 		string return_sequence(bed_class);
 		string return_chr_coord_GEP();
 		unsigned int return_start_coord_GEP();
@@ -81,7 +91,7 @@ class bed_class { //creation public class of bed_class type
 
 class matrix_class {
 
-	private: //field definition
+	private: 
 
 		string matrix_name;
 		string tf_name;
@@ -93,26 +103,32 @@ class matrix_class {
 		vector<double> col_sum;		
 
 
-		void matrix_normalization_pseudoc(vector<vector<double>>, double);
+		void matrix_normalization_pseudoc(vector<vector<double>>);
 		void matrix_normalization(vector<vector<double>>);
 		void matrix_logarithmic(vector<vector<double>>);
-		void read_JASPAR(string);
 		vector<vector<double>> reverse_matrix(vector<vector<double>>);
 		vector<double> find_col_sum(vector<vector<double>>);
 		void print_debug_matrix(vector<vector<double>>, string);
 
-
-
 	public:
-		matrix_class(string JASPAR_FILE){
 
-			read_JASPAR(JASPAR_FILE);
-			matrix_normalization_pseudoc(matrix, pseudoc);			//Calling matrix normalization function
+		matrix_class(vector<vector<double>> mat, string name, string tf){
+
+			matrix = mat;	
+			matrix_name = name;	
+			tf_name = tf;
+
+			//Function to normalize the matrix scores and add a pseudocount
+			matrix_normalization_pseudoc(matrix);
+
+			//Function to normalize again the matrix after pseudocount addition
 			matrix_normalization(norm_matrix);
-			matrix_logarithmic(norm_matrix);
-			inverse_norm_matrix = reverse_matrix(norm_matrix);
-			inverse_matrix_log = reverse_matrix(matrix_log);
 
+			//Function to calculate logarithmic matrix from normalized matrix
+			matrix_logarithmic(norm_matrix);
+
+			//Function to reverse the logarithmic normalized matrix to read the oligo in reverse strand
+			inverse_matrix_log = reverse_matrix(matrix_log);
 		}
 
 		void debug_matrix(matrix_class);
@@ -143,9 +159,9 @@ class oligo_class{
 		char strand;
 
 		void find_minmax(vector<vector<double>>);
-		unsigned int find_best_score(vector<double>);
-		void find_coordinate(unsigned int, unsigned int, string, unsigned int);
-		void find_best_sequence(string, unsigned int, unsigned int);
+		unsigned int find_best_score();
+		void find_coordinate(unsigned int, string, unsigned int);
+		void find_best_sequence(string, unsigned int);
 		void best_score_normalization();
 
 	public:
@@ -153,47 +169,93 @@ class oligo_class{
 
 			global_sequence = sequence;
 			strand = strand_sign;
-			find_minmax(matrix);		
+
+			//Function to annotate in min_possible_score and max_possible_score the worst and the best score that an oligo can reach based on the current jaspar matrix
+			find_minmax(matrix);
+			
+			//for each oligo in the current sequence a total score of similarity is calculated against the JASPAR matrix
 			shifting(matrix, sequence, 0);
-			local_position = find_best_score(oligo_scores);
+			
+			//Function to normalize the scores with the normalization formula
 			best_score_normalization();
-			find_best_sequence(sequence, local_position, matrix[0].size());
-			find_coordinate(local_position, matrix[0].size(), chr_coord_GEP, start_coord_GEP);
+
+			//Find the best score position and save it into local_position variable (If find more than one select as best the nearest to the center
+			local_position = find_best_score();
+
+			//Function to extract and save the best oligo sequence
+			find_best_sequence(sequence, matrix[0].size());
+
+			//The coordinates of the best oligo are saved --> It will be useful to center the window on the best oligo
+			find_coordinate(matrix[0].size(), chr_coord_GEP, start_coord_GEP);
+		}
+		
+		oligo_class(vector<vector<double>> matrix, string sequence){
+			
+			global_sequence = sequence;
+			find_minmax(matrix);
+			shifting(matrix, sequence, 0);
+			best_score_normalization();
 		}
 
 		void shifting(vector<vector<double>>, string, unsigned int);
-		void oligos_vector_debug(oligo_class);
+		void oligos_vector_debug();
 		unsigned int return_start_coord_oligo();
 		double return_best_score_normalized();
+		vector<double> return_oligo_scores();
 };
 
 class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and Oligos_vector
 
 	private:
 
+		vector<vector<double>> matrix;
+		string matrix_name;
+		string tf_name;
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
+		vector<oligo_class> oligos_vector;
+
 		void centering_oligo();
-		void best_strand(vector<oligo_class>);
+		void best_strand();
+		void GEP_creation(vector<bed_class>&);
+		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
+		vector<vector<double>> read_JASPAR();
 
 
 	public:
-		vector<oligo_class> oligos_vector;
-		vector<bed_class> GEP; 
-		void GEP_creation(string, string, vector<bed_class>&);
-		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
-		void print_debug_GEP(vector <bed_class>);
 
 		coordinator_class(){
-			GEP_creation(BED_FILE, TWOBIT_FILE, GEP);
-			matrix_class M(JASPAR_FILE);
+
+			//GEP (vector of bed class) creation. An empty GEP vector is passed by reference to be filled and saved in this class
+			GEP_creation(GEP);
+
+			//reading Jaspar file and returning scores as a matrix of double, saved in a variable called matrix
+			matrix = read_JASPAR();
+
+			//Creating matrix class: input matrix scores, name and tf matrix name
+			matrix_class M(matrix, matrix_name, tf_name);
+
+			//matrix_log and inverse_matrix_log calculated are returned from Matrix class to be saved here --> These are the two matrices on which the analysis will be performed
 			matrix_log = M.return_log_matrix();
 			inverse_matrix_log = M.return_inverse_log_matrix();
-			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
-			best_strand(oligos_vector);
-			centering_oligo();
-		}
 
+			//The sequences are shifting on the matrix and, for each position, an oligo score is calculated, based on log and inverse_log matrices
+			//An oligo_class is created for each sequence shifting to analyze all oligo scores.
+			//All the information are saved on oligos_vector, which is an oligo_class vector passed by reference to this function and filled sequence by sequence.
+			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
+
+			//If the analysis is performed on Double Strand the function best_strand is useful to select if an oligo has the best score on FWD or REV strand, discarding the other
+			best_strand();
+
+			//The best oligo selected for each sequence becames the new center of the window, re-setting the GEP coordinates
+			centering_oligo();
+
+
+		}
+		
+		vector<bed_class> GEP;
+		
+		void print_debug_GEP(vector <bed_class>);
 };
 
 class multifasta_class{
@@ -203,7 +265,7 @@ class multifasta_class{
 		vector<string> sequences;
 
 		void length_control(vector<string>);
-		void extract_sequences(string);
+		void extract_sequences();
 		void GEP_creation_MF(vector<string>);
 
 	public:
@@ -211,8 +273,9 @@ class multifasta_class{
 		vector<bed_class> GEP;
 
 		multifasta_class(string MFASTA_FILE){
-
-			extract_sequences(MFASTA_FILE);
+			
+			//Firstly the fasta sequences from multifasta file are extracted and saved into a vector of strings
+			extract_sequences();
 			length_control(sequences);
 			GEP_creation_MF(sequences);
 		}
@@ -293,7 +356,7 @@ class hamming_class{
 		double tot_similar_occurrences;
 		double FREQUENCE_1;
 		double FREQUENCE_2;
-		vector<vector<unsigned int>> PWM_hamming;
+		vector<vector<double>> PWM_hamming;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
@@ -302,13 +365,13 @@ class hamming_class{
 		bool is_similar_oligo(string, string, unsigned int);
 		void print_debug_hamming(unsigned int, ofstream&);
 		double frquence_1_calculation(unsigned int);
-		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
+		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>, unsigned int);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 		void PWM_hamming_creation();
 
 	public:
 
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP){
 
 			vertical_multimap = v_multimap;
 			find_best_oligos();
@@ -316,16 +379,69 @@ class hamming_class{
 			similar_oligos.emplace_back(real_best_oligo);
 			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
 			FREQUENCE_1 = frquence_1_calculation(freq);
-			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus); 
+			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
 			print_debug_hamming(position, outfile);
 			PWM_hamming_creation();
 		}
 
 		string return_real_best_oligo();
 		unsigned int return_similar_oligo_size();
-		vector<vector<unsigned int>> return_PWM_hamming();
+		vector<vector<double>> return_PWM_hamming();
+		double return_FREQUENCE_1();
+};
+
+class z_test_class{
+
+	private:
+                //zscores and PWM pvalues
+		double z_score;
+                double Zpvalue; 
+
+		double global_mean;
+		double global_dev_std;
+		double local_mean;
+		double local_dev_std;
+		unsigned int local_pos;
+		vector<vector<double>> matrix_log;
+		vector<vector<double>> inverse_matrix_log;
+		vector<double> oligo_scores_orizzontal_FWD;
+		vector<double> oligo_scores_orizzontal_REV;
+		vector<double> oligo_scores_orizzontal_BEST;
+		vector<double> all_global_scores;
+		vector<double> all_local_scores;
+
+		void print_debug_oligo_vec(vector<vector<double>>);	
+		void oligos_vector_creation_PWM(vector<bed_class>);
+		void global_mean_calculation();
+		void check_best_strand_oligo();
+		void z_score_calculation();
+
+
+	public:
+
+		z_test_class(vector<vector<double>> PWM_hamming, vector<bed_class> GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> HAMMING_MATRIX){
+			local_pos = local_p;	
+			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
+			matrix_log = PWM_hamming_mat.return_log_matrix();
+			if(DS==1){
+			inverse_matrix_log = PWM_hamming_mat.return_inverse_log_matrix();
+			}
+			oligos_vector_creation_PWM(GEP);
+			global_mean_calculation();
+			z_score_calculation();
+			//print_debug_oligo_vec(PWM_hamming);
+		}
+		
+		unsigned int return_local_pos();
+		double return_global_mean();
+		double return_local_mean();
+		double return_global_std_dev();
+		double return_local_std_dev();
+		double return_Zpvalue();
+		double return_z_score();
 
 };
+
 
 class map_class{
 
@@ -350,9 +466,11 @@ class map_class{
 		unsigned int sequences_number_T;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
-		vector<hamming_class> HUMMING_VECTOR;
-		vector<vector<hamming_class>> HUMMING_MATRIX;
-
+		vector<hamming_class> HAMMING_VECTOR;
+		vector<vector<hamming_class>> HAMMING_MATRIX;
+		vector<z_test_class> Z_TEST_VECTOR;
+		vector<vector<z_test_class>> Z_TEST_MATRIX;
+		
 		vector<unsigned int> generic_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
@@ -362,7 +480,8 @@ class map_class{
 		void print_debug_orizzontal();
 		bool check_palindrome(string);
 		void P_VALUE_MATRIX_creation();
-		void HUMMING_MATRIX_creation();
+		void HAMMING_MATRIX_creation(vector<bed_class>);
+		void Z_TEST_MATRIX_creation(vector<bed_class>);
 		ofstream outfile_header(unsigned int);
 		ofstream outfile_header_hamming(unsigned int);
 		void TopN_sum_and_freq();
@@ -371,7 +490,7 @@ class map_class{
 		double check_p_value(double);
 		void check_kmer_dist();
 		void Outfile_PWM_hamming();
-		void print_debug_PWM_hamming(ofstream&, unsigned int);
+		void print_debug_PWM_hamming(ofstream&, unsigned int, unsigned int);
 
 	public:
 
@@ -392,7 +511,8 @@ class map_class{
 			p_value_parameters_debug_occ();
 			}
 			TopN_sum_and_freq();
-			HUMMING_MATRIX_creation();
+			HAMMING_MATRIX_creation(GEP);
+			Z_TEST_MATRIX_creation(GEP);
 			Outfile_PWM_hamming();
 		}
 };
