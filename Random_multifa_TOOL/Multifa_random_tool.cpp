@@ -668,6 +668,7 @@ void display_help(){
 	cerr << "\n --position || -p <n1,n2,...,nN> to insert the position in Multifasta sequences where you want to implant the oligos." << endl;
 	cerr << "\n --wobble || -w <n1,n2,...,nN> to set the wobble parameter for every implanting position. The implanting position, for every oligo, will be randomly choosen between p-w and p+w interval. (DEFAULT: 0)" << endl;
 	cerr << "\n --cycles || -c <number> to choose how many random multifasta files (and implanted also) this tool will produce. (DEFAULT: 1)" << endl;
+	cerr << "\n --freq || -f <number> to choose the percentage of fwd/rev strand to select for the implants. (DEFAULT: 50)" << endl;
 	cerr << endl;
 	exit(EXIT_SUCCESS);
 }

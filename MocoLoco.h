@@ -36,7 +36,7 @@ bool DS = 1;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;
-
+double freq_treshold = 0.02;
 
 class bed_class {         
 
@@ -175,12 +175,12 @@ class oligo_class{
 			
 			//for each oligo in the current sequence a total score of similarity is calculated against the JASPAR matrix
 			shifting(matrix, sequence, 0);
+			
+			//Function to normalize the scores with the normalization formula
+			best_score_normalization();
 
 			//Find the best score position and save it into local_position variable (If find more than one select as best the nearest to the center
 			local_position = find_best_score();
-
-			//Function to normalize the best score with the normalization formula
-			best_score_normalization();
 
 			//Function to extract and save the best oligo sequence
 			find_best_sequence(sequence, matrix[0].size());
@@ -194,6 +194,7 @@ class oligo_class{
 			global_sequence = sequence;
 			find_minmax(matrix);
 			shifting(matrix, sequence, 0);
+			best_score_normalization();
 		}
 
 		void shifting(vector<vector<double>>, string, unsigned int);
@@ -248,6 +249,8 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 			//The best oligo selected for each sequence becames the new center of the window, re-setting the GEP coordinates
 			centering_oligo();
+
+
 		}
 		
 		vector<bed_class> GEP;

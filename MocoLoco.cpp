@@ -8,7 +8,6 @@ int main(int argc, char *argv[]){
 
 		display_help();
 	}
-
 	command_line_parser(argc, argv);
 	GEP_path();
 
@@ -437,9 +436,17 @@ unsigned int oligo_class::find_best_score(){
 
 //Best score normalization with normalization formula (The parameter to normalize have already been calculated and saved into the class)
 void oligo_class::best_score_normalization(){
+	
+	double score_normalized;
+	vector<double> oligo_scores_normalized;
 
-	best_score_normalized = 1 + ((best_score - max_possible_score)/(max_possible_score - min_possible_score));
+	for(unsigned int score=0; score < oligo_scores.size(); score++){
 
+	score_normalized = 1 + ((oligo_scores[score] - max_possible_score)/(max_possible_score - min_possible_score));
+	oligo_scores_normalized.emplace_back(score_normalized);
+	}
+	
+	oligo_scores = oligo_scores_normalized;
 }
 
 //The oligo which has generated the best score is extracted from fasta sequence and saved into best_oligo_seq variable
@@ -1310,7 +1317,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 			vector<vector<double>> PWM_matrix = HAMMING_MATRIX[i][j].return_PWM_hamming();
 			double Frequence_1 = HAMMING_MATRIX[i][j].return_FREQUENCE_1();
 
-			if(Frequence_1 >= 0.2){
+			if(Frequence_1 >= freq_treshold){
 
 				z_test_class Z(PWM_matrix, GEP,j+1,kmers_vector,HAMMING_MATRIX);
 				Z_TEST_VECTOR.emplace_back(Z);
@@ -1384,7 +1391,7 @@ void z_test_class::z_score_calculation(){
 	z_score = ((global_mean - local_mean)/ (local_dev_std / sqrt(all_local_scores.size()))); 
 
 	const double Z  = z_score;
-	Zpvalue = gsl_cdf_ugaussian_Q(Z);
+	Zpvalue = gsl_cdf_ugaussian_P(Z);
 
 
 }
@@ -1959,7 +1966,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:m:d:o:t:n:s";
+	const char* const short_opts = "hp:k:b:j:m:d:o:f:t:n:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -1967,6 +1974,7 @@ void command_line_parser(int argc, char** argv){
 		{"param",      required_argument, nullptr,  'p' },
 		{"ntop",      required_argument, nullptr,  'n' },
 		{"kmer",   required_argument, nullptr,  'k' },
+		{"freq",   required_argument, nullptr,  'f' },
 		{"distance",   required_argument, nullptr,  'd' },
 		{"bed",    required_argument, nullptr,  'b' },
 		{"ordering",    required_argument, nullptr,  'o' },
@@ -2010,6 +2018,13 @@ void command_line_parser(int argc, char** argv){
 			case 'k' : kmers.clear();
 				   kmers = string(optarg);
 				   break;
+			case 'f' : freq_treshold = stod(optarg);
+				   if(freq_treshold <= 0 || freq_treshold >= 1){
+					   cerr << "ERROR: please insert a frequency treshold between 0 and 1.\n\n" << endl;
+					   display_help();
+					   exit(1);
+				   }
+				   break; 
 			case 'd' : dist.clear();
 				   dist = string(optarg);
 				   break;
@@ -2071,6 +2086,7 @@ void display_help(){
 	cerr << "\n -s || --ss as input to make the analysis along the single strand. (DEFAULT: double strand)" << endl;
 	cerr << "\n -o || --ordering 'p' to order the top N oligos by p-value and not by occurrences. (DEFAULT: ordering by occurrences)" << endl;
 	cerr << "\n --distance || -d <n1,n2,...,nN> to select the hamming distances. (DEFAULT: 1,2,3)" << endl;
+	cerr << "\n --freq || -f <n1> to set the frequence treshold to calculate the z_score. (DEFAULT: 0.02)" << endl;
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
