@@ -749,6 +749,7 @@ bool p_value_class::check_palindrome2(string bases){
 
 }
 
+
 void multifasta_class::length_control(vector<string> sequences){
 
 	cout << "- [2] Multifasta Sequences length check\n";
@@ -756,7 +757,8 @@ void multifasta_class::length_control(vector<string> sequences){
 	unsigned int size = sequences[0].size();
 
 	for(unsigned int i=0; i<sequences.size(); i++){
-
+		
+		//If only one sequence in the vector are longer an error is generated
 		if(sequences[i].size() != size){
 
 			cerr << "Sequences are not of the same length!" << endl;
@@ -774,14 +776,19 @@ void multifasta_class::extract_sequences(){
 	string line;
 	string current_sequence;
 
-	//First line is flagged to 1 to ignore it
+	//First line is flagged to 1 to ignore it (because in MF format sometimes there is an header first line)
 	bool first_line = 1;
-	 
+	
+	//The while cycle follows a complex reasoning: 
+	//if in line there is the first line --> all ignored --> then first line flag set to 0
+	//if in line there is the FASTA sequence --> line is saved in current_sequence variable --> then pass to next line
+	//if in line there is the header (but not the first line) --> current_sequence previously filled by FASTA is saved in sequences vector (a vector of strings) --> then current_sequence is clean
 	while(getline(file,line)){
 		
-		//If the current line is
+		
 		if(line[0] == '>' && !first_line){
-
+			
+			
 			sequences.emplace_back(current_sequence);
 			current_sequence.clear();
 
@@ -790,6 +797,8 @@ void multifasta_class::extract_sequences(){
 		else if (!first_line){
 
 			if(line[0] != ' ' && line.size() != 0){	
+
+				//Before to save the sequence in current_sequence variable the FASTA characters are capitalized
 				transform(line.begin(), line.end(), line.begin(), ::toupper);	
 				current_sequence = current_sequence + line; 
 			}
@@ -806,9 +815,12 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences){
 	cout << "- [3] Sorting Multifasta sequences\n";
 
 	for(unsigned int i=0; i<sequences.size(); i++){
+		
+		//A bed class is created for each sequence
+		bed_class BED_MULTIFASTA(sequences[i]);
 
-		bed_class new_class(sequences[i]);
-		GEP.emplace_back(new_class);
+		//The classes are stored into a GEP vector
+		GEP.emplace_back(BED_MULTIFASTA);
 	}
 
 }
