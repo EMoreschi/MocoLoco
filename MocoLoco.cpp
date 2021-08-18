@@ -587,7 +587,7 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 				string bases = sequence.substr(i,kmers_vector[k]);
 				
 				//Calling of function to count oligo occurrnces and to create and fill the maps
-				vertical_kmer_count(bases, vertical_plus,vertical_minus, tot_freq);
+				vertical_kmer_count(bases, vertical_plus, tot_freq);
 			}
 			
 			if(DS==1){
@@ -598,11 +598,9 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 
 			//The maps just created is saved into a vector of maps (one for each position)
 			maps_vector_positions_plus.emplace_back(vertical_plus);
-			maps_vector_positions_minus.emplace_back(vertical_minus);
 
 			//Then the maps are cleaved to make a new analysis on a new position
 			vertical_plus.clear();
-			vertical_minus.clear();
 
 			//the counting of all the possible oligos is saved into a vector too
 			tot_freq_vec.emplace_back(tot_freq);
@@ -610,14 +608,12 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 		
 		//The vector of maps created is stored into a vector to create a matrix in which on the dimension 1 we have the k-mers used and on dimension 2 the positions on sequences
 		vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
-		vector_kmers_maps_minus.emplace_back(maps_vector_positions_minus);
 
 		//Also the all possible oligos to calculate frequences are stored in a matrix (k-mers x position)
 		tot_freq_matrix.emplace_back(tot_freq_vec);
 		
 		//The maps vector are cleaved to make a new analysis with new k
 		maps_vector_positions_plus.clear();
-		maps_vector_positions_minus.clear();
 	}
 }
 
@@ -655,7 +651,7 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int
 	reverse_bases.clear();
 }
 
-void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<unsigned int, unsigned int>>&plus, map<pair<string,string>,pair<unsigned int, unsigned int>> &minus, unsigned int& tot_freq){
+void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<unsigned int, unsigned int>>&plus, unsigned int& tot_freq){
 
 	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus;
 	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus_rev;
@@ -696,21 +692,16 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 	it_plus = plus.find(make_pair(bases, reverse_bases));
 	it_plus_rev = plus.find(make_pair(reverse_bases, bases));
 
-	//Try to find the two pairs just created into minus map
-	it_minus = minus.find(pair_bases);
-	it_minus_rev = minus.find(pair_bases_reverse);
-
 	//If the pair oligo + RC is already present in the plus map --> increase occurrences by 1
 	if(it_plus!=plus.end()){
 
 		it_plus->second.first++;
-		it_minus->second.first++;
 	}	
 	
 	//If the pair RC + oligo is already present in the plus map --> increase occurrences by 1
 	if (it_plus==plus.end() && it_plus_rev != plus.end()) {
+	
 		it_plus_rev->second.second++;
-		it_minus_rev->second.second++;
 
 	}
 	
@@ -718,7 +709,6 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 	else{
 		
 		plus.insert({{bases,reverse_bases},{1,0}});
-		minus.insert({{bases,reverse_bases},{1,0}});
 	}
 
 	//Clear bases and reverse bases to avoid interference in the next oligo analysis 
