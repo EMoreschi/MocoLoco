@@ -1354,13 +1354,13 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
 			oligo_class SHIFTING_PWM_2(inverse_matrix_log, sequence);
 			oligo_scores_orizzontal_REV = SHIFTING_PWM_2.return_oligo_scores();
 			check_best_strand_oligo();			
-			all_local_scores.emplace_back(oligo_scores_orizzontal_BEST[local_pos]);	
+			all_local_scores.emplace_back(oligo_scores_orizzontal_BEST[local_pos-1]);	
 			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_BEST.begin(), oligo_scores_orizzontal_BEST.end());
 		}
 
 		else{
 			
-			all_local_scores.emplace_back(oligo_scores_orizzontal_FWD[local_pos]);	
+			all_local_scores.emplace_back(oligo_scores_orizzontal_FWD[local_pos-1]);	
 			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_FWD.begin(), oligo_scores_orizzontal_FWD.end());
 		}
 	
