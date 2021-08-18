@@ -1,22 +1,27 @@
-# **INSTRUCTION** and **REPORT** MocoLoco.cpp and MocoLoco.h files project
+# **MOCOLOCO** tool instruction and report <br>
+## A tool to analyze a TF chip-seq data and to find nearby TFBS to discover or validate co-activity between different TFs in transcription activation process
 <br>  
 
 ## **MOCOLOCO INPUT/OUTPUT**
 <br>
 
-### The program has **two different ways to be executed**.
+### The program has **supports multiple inputs**.
 <ul><br>
 1. BED, TwoBit and Jaspar files in input.<br>
+<ul><li> A BED file format is a text file used to store genomic regions as coordinates (and eventually also associated annotations).
+<li> A TwoBit is a binary file format used for storing big biological data (Genomes,chromosomes, etc..). It is useful because of his reading speed, which is an order of magnitude faster than a FASTA file format.
+<li> A JASPAR matrix is a file format coming from JASPAR database, in which TF binding profiles are stored as position frequency matrices (PWMs).
+<br><br></ul>
 2. Multifasta file in input.
-</ul>
-<br>  
+<ul><li> A Multifasta file format contains multiple FASTA sequences, which must be of the same length.
+</ul><br>  
 
 ### To **compile** the program the command needed in both cases is:
 
-      g++ -o test -Wall Mocoloco.cpp -lgsl -lgslcblas
+      g++ -o test -Wall Mocoloco.cpp -lgsl (-lgslcblas command is need to be added in certain systems)
 <br>  
 
-### To **execute** it 2 different ways have been implemented:
+### The tool can be **executed** in different ways:
 <br><ul>
 1.**BED,TwoBit,Jaspar input**:
        
@@ -27,24 +32,24 @@
        ./test -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -ss(optional)
 </ul><br>  
 
-### The **output** is composed by **3 different files .txt** for each k inserted as input. The analysis can be done in Double Strand or in Single Strand.
+### For each k inserted as input the **output** is composed by different files in .txt format. The program can be run in Double Strand, to analyze both the DNA helices, or in Single Strand, to perform the analysis only on the forward strand.
 	
    <br>
    
-   ### A. The first one is the k-mers count in all the sequences extractred from bed coordinates inserted, ordered from the most relevant to the less.
-
-   <br> 
+   ### A. Output file which contains the total k-mers occurrences in all the sequences, ordered from the most numerous to the less.<br> 
    <ul> 		
-   <li> If the analysis is in DS the output file contains oligo sequence + its occurrences in forward (FWD) strand and Reverse Complement (RC) sequence + its occurrences in reverse strand (the two occurrences must be equal). <br> The name of the file is <i> k-mers_occurrences_twobit_jaspar_bed_DS.txt.</i>
+   <li> If the analysis is in DS, the output file contains oligo occurrences in forward strand and Reverse Complement occurrences in reverse strand (the two occurrences must be equal).
 
-   <li> If the analysis is in SS the output file contains oligo sequence + its occurrences.
-      <br>The name of the file is <i>k-mers_occurrences_twobit_jaspar_bed_SS.txt.</i>
-   </ul>
+   <li> If the analysis is in SS the output file contains just oligo occurrences.
+   </ul><br>
 
-   ### <br> B. The second one is a file with the k-mers count for each position of sequences. The file contains information, for each position, of the top -n kmers ranked by occurrences. 
+   ### <br> B. Output file which contains the rank of the best -n oligo for each position. 
    <br>
+
+         #Position       Rank    Oligo   Num_Occ_FWD     Num_Occ_REV     Sum_Occ_Oligo   Oligo_RC        Num_Occ_RC_FWD  Num_Occ_RC_REV  Sum_Occ_RC      PAL     Tot_Occ FREQ    P_VALUE
+
    <ul>
-   <li> For DS analysis these information are:
+   <li> For DS analysis the tool reports:
    <ul>    
    <li> The position.
    <li> The rank.
@@ -56,11 +61,10 @@
    <li> The sum of their occurrences.
    <li> TRUE if the oligo is palindrome, FALSE if not.
    <li> The frequency of occurrences at that position.
-   
-   The filename is <i>k-mers_positional_occurrences_twobit_jaspar_bed_DS.txt</i>
    </ul>
        
-   <li> B2. For SS analysis these information are:
+   <br>
+   <li> B2. For SS analysis:
    <ul>    
    <li> The position.
    <li> The rank.
@@ -68,43 +72,13 @@
    <li> The occurrences of reverse complement on FWD strand.
    <li> TRUE if the oligo is palindrome, FALSE if not.
    <li> The frequency of oligo occurrences at that position.
-   <br> The filename is <i>k-mers_positional_occurrences_twobit_jaspar_bed_SS.txt</i>
    </ul>
    </ul>
 
-  ### <br> C. The third one is a file with the sum of the occurrences of the first top -n oligos for each position and the frequences of these sums for each position.
-  <ul>
-  <br> The output structure for DS and SS analysis is the same but obviously the data has come from different processes.
-  <br>The name of the file is <i>k-mers_Topn_sum_and_frequence_DS.txt (For DS)</i>.
-  <br> The name of the file is <i>k-mers_Topn_sum_and_frequence_SS.txt (For SS)</i>.
-  </ul>
+  ### <br> C. Output which contains the sum and frequences of the top -n oligos for each position.
 <br>
 
-### There are also **two supplementary output file**, one in .bed format and the other in .fasta format. <br>These output are created only if the program is executed with **bed/twobit/jaspar input**. They are:
-<br>
-
-### D. A .bed file with the genomic coordinates of the sequences analized by MocoLoco.cpp tool. The file contains, for each sequence, information about:
-<br>
-<ul>
-   <li> The Chromosome
-   <li> The Starting Coordinate
-   <li> The Ending Coordinate
-	The filename is <i>twobit_jaspar_bed.bed.</i>
-</ul>
-<br>
-
-### E. A .fasta file which contains the sequences analyzed by MocoLoco tool in fasta format.
-   <br>
-   <ul>
-   For every sequence it contains:
-
-   <li> Header (fasta format) with genomic coordinates.
-   <li> The ATCG fasta sequence extracted from TwoBit file, centered following the coordinates bed in input and as long as indicated by the parameter p (length = p x 2).
-	The filename is <i>twobit_jaspar_bed.fasta.</i>
-</ul>
-<br>
-
-### Finally, there is **another supplementary output** file called <i>k-mers_p_value_control_parameters.txt</i> (one for each k inserted as input), which contains **all the parameter values used to calculate Oligos P-values**. <br>This file contains information about:
+### D. Output which contains, for each oligo, his p-value (and all the parameters used to calculate it):
 <br>
 <ul>	
 <li> Position in sequence.
@@ -117,50 +91,76 @@
 <li> P_value.
 </ul> <br>
 
+### There are also **two supplementary output file**, one in .bed format and the other in .fasta format. <br>These output are created only if the program is executed with **bed/twobit/jaspar input**. They are:
+<br>
+
+### D. A .bed file with the genomic coordinates of the sequences analized by MocoLoco.cpp tool. The file contains, for each sequence, information about:
+<br>
+<ul>
+   <li> The Chromosome
+   <li> The Starting Coordinate
+   <li> The Ending Coordinate
+</ul>
+<br>
+
+### E. A .fasta file which contains the sequences analyzed by MocoLoco tool in fasta format.
+   <br>
+   <ul>
+   For every sequence it contains:
+
+   <li> Header (fasta format) with genomic coordinates.
+   <li> The fasta sequence extracted from TwoBit file. The sequences are centered where the PWM JASPAR matrix fits better (probably on the TFBS) and a window (of -p x 2 length) is generated.
+</ul>
+<br>
+
+### All the output file names contains a brief description of their content. Furthermore they are generated using the bed name, the twobit genome name, the JASPAR matrix name, (eventually the multifasta name), the k-mer value and finally DS/SS annotation. If multiple analysis are performed at the same time this method guarantees to always be able to trace the origin of the data.
+<br>
+
 ## **MOCOLOCO WORKFLOW**
 <br>
-Firstly the file MocoLoco.h is included with all the libraries, structures, global variables and functions in it.
-The function <i><u>Main</i></u> read the arguments in input and, thanks to the function <i><u>command_line_parser</i></u>, it is able to assign input parameters to the right global variables. <br>
-The <i><u>command_line_parser</i></u> function is also able to control the validity and the existance of parameters and it is trained to report errors in case of incorrect arguments, followed by the printing of <i><u>display_help</i></u> to assist users.<br>
-Once global variables are assigned correctly, the tool is ready to process the informations.
-The first function is <i><u>GEP_path</i></u>, which is able to distinguish if input is in bed/twobit/jaspar or multifasta format and, cosequently, choose the right path.<br>
+Firstly all libraries, global variables, classes and function declarations, which are written in MocoLoco.h file, are included.
+Then the <i><u>command_line_parser</i></u> function handles the input parameter assigning them to the rignt variables. This function is also able to control the validity and the existance of parameters and it is trained to report errors in case of incorrect arguments.<br>
+Once global variables are assigned correctly, the tool is ready to process the informations.<br>
+The function <i><u>GEP_path</i></u> analyze the input and choose the right workflow.<br>
 <br>
 
 ### **BED/TWOBIT/JASPAR Pathway**:
 
 If MocoLoco recognizes a bed/twobit/jaspar input, it immediately creates a <i><u>coordinator class C</i></u>, which handles and connects the arguments.<br><br>
 ### **COORDINATOR CLASS** <br>
-**This class is the connecting hub between the bed, twobit and jaspar files**. It allows the **creation of bed classes** by extracting genomic sequences from the twobit file, the **creation and managing of a jaspar matrix class** and finally to **connect them to each other thanks to the creation of an additional oligo class**.<br>
+**This class is the connecting hub between the bed, twobit and jaspar files**. It allows the **creation of bed classes** by extracting genomic sequences from the twobit file. Then it guides the **creation and managing of a jaspar matrix class**. Finally the Coordinator class **connects them to each other thanks to the creation of an additional oligo class**.<br>
 The first coordinator class function is <i><u>GEP creation</i></u>:
 <br>This function has the task of **opening the input bed file**,** reading its contents** and finally, for each genomic coordinate readed in the bed file, **creating a bed class**. Each bed class created is then inserted into a **vector of bed classes called GEP** (GEnomic Position).<br><br>
 <ul>
 
 ### **BED CLASS** <br>
-in object of <i><u>bed class</i></u> is created for each genomic coordinate in the bed file.<br> 
-The class constructor provides that the object can be built in two different ways: one for a bed/twobit/jaspar input and one for a multifasta input. Now the first case is analyzed, so **the constructor used is the one with the passage of 4 parameters** (**p** = half window legth, **line** = current bed line **tb** = Twobit file, **n_line** = current bed line number).<br>
-Once the constructor is called and the parameters are passed, the bed class is able to handle the data calling 4 functions:
+For each genomic coordinate in the bed file an object of <i><u>bed class</i></u> is created.<br> 
+Two different class constructors has been implemented to handle different inputs. <br>
+In this case (Bed/twobit/jaspar input) **the constructor used is the one with the passage of 4 parameters** (**p** = half window legth, **line** = current bed line **tb** = Twobit file, **n_line** = current bed line number).<br>
+Once the constructor is called and the parameters are passed, subsequently the data are managed through 4 bed class functions:
 
 
 1. <i><u>read_line</u></i>:<br>
-This function has the task of taking the input line (from bed file) and **splits word by word**, **extracting and saving information about chromosome**, **starting coordinate and end coordinate**.<br>
+Takes the input line (from bed file) and **splits word by word**, **extracting and saving information about chromosome**, **starting coordinate and end coordinate**.<br>
 
 2. <i><u>flag_control</i></u>: <br>
-**This is a controlling function**. Its job is to **check if end coordinate is greater than start coordinate** as it should be. If this is confirmed the flag is set to 1, otherwise the flag is set to 0.<br>
+**Checks if end coordinate is greater than start coordinate** as it should be. If this is confirmed the flag is set to 1, otherwise the flag is set to 0.<br>
 
 3. <i><u>centering_function</i></u>:<br>
-It has the task of **centering the genomic coordinates** in the middle of start/end window. The function reassigns the start and end coordinates following the half length parameter inserted as input by user and adds an overhead (default 25) to end coordinate.
-The genomic window is centered on the basis of bed file informations and its length corresponds to that desired by user.<br>
+**Centers the genomic coordinates** in the middle of start/end coordinated provided by Bed file. 
+Subsequently, if for example -p is 150, a window of 300 bases is created and an overhead of 25(default value) is added to end coordinates.
+<br>
 
 4. <i><u>extract_seq</i></u>:<br>
-This function takes the Twobit file passed as input by user and, **analyzing class variables**, **extracts from the 2bit genome the sequence corresponding to the class coordinates**; then the sequence is saved in a string.
+Takes the Twobit file passed as input by user and, **analyzing class variables**, **extracts from the 2bit genome the sequence corresponding to the class coordinates**, saving it in a string.
 If the flag has been set to 0 the function can not extract any sequence and it returns a warning message.
 <br><br>
 </ul>
 </ul>
 
-When <i><u>GEP_creation</i></u> function ends a **GEP vector** has been created. This vector carries informations about the genomic coordinates but more importantly it **carries the sequences extracted from the genome**, following those coordinates.
+When <i><u>GEP_creation</i></u> function ends, a **GEP vector** has been created. This vector carries informations about the genomic coordinates but, more importantly, it **carries the sequences extracted from the genome**.
 <br>
-The next Coordinator class contructor step is the calling of <i><u>matrix_class</i></u> contstructor, which takes as input the Jaspar matrix provided by user.<br><br>
+The next step of Coordinator class is to call <i><u>matrix_class</i></u> contstructor, which takes as input the Jaspar matrix provided by user.<br><br>
 <ul>
 
 ### **MATRIX CLASS**<br>

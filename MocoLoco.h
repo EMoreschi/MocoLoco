@@ -276,7 +276,11 @@ class multifasta_class{
 			
 			//Firstly the fasta sequences from multifasta file are extracted and saved into a vector of strings
 			extract_sequences();
+
+			//Then the length control is performed --> All the MF sequences must be of the same langth
 			length_control(sequences);
+
+			//For every sequence in vector "sequences" a bed class is created to store the FASTA seqinto a GEP vector
 			GEP_creation_MF(sequences);
 		}
 
