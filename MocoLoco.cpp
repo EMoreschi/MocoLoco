@@ -41,10 +41,12 @@ void  GEP_path(){
 	}		
 }
 
+//Checking function to control if, for any k-mers inserted as input, there is a distance parameter
 void map_class::check_kmer_dist(){
 
 	if(kmers_vector.size() != distance_vector.size()){
-
+	
+		//If the number is not equal --> ERROR printed and help visualized
 		cerr << "\nERROR: Please insert an equal number of k-mers and distance parameters!" << endl;
 		display_help();
 		exit(1);
@@ -499,120 +501,174 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
 	}
 }
 
+//Function able to convert a string (containing numbers separated by ",") into a vector of unsigned int
 vector<unsigned int> map_class::generic_vector_creation(string numbers){
 
 	int index;
 	vector<unsigned int> vec;
 
+	//When index is == -1 means that it is pointin to the end character of the string
 	while(index != -1){
+
+		//Find the first "," character into the string
 		index = numbers.find(",");
+
+		//Put everything before "," into a vector
 		vec.emplace_back(stoi(numbers.substr(0,index)));
+
+		//Erase from the string the number already inserted and the ","
 		numbers.erase(0,index+1);
 	}
 
 	return vec;
 }
 
+//Function to create a map of oligos + their occurrences along all the sequences
 void map_class::table_creation_orizzontal(vector<bed_class> GEP){ 
+
 
 	if (MFASTA_FILE.size() ==0) 
 		cout << "- [7] Counting all k-mers occurrences for sequence and positions  \n";
 	else
 		cout << "- [4] Counting all k-mers occurrences for sequence and positions  \n";
-
+	
+	//A map is created for each k-mer inserted as input
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
-
+		
+		//For every sequence contained into GEP vector
 		for(unsigned int j=0; j<GEP.size(); j++){
-
+			
+			//Extract the FASTA sequence from each bed class in GEP
 			string sequence = GEP[j].return_sequence(GEP[j]);
-
+			
+			//Extracted and analyzed all words of length k that are found by scrolling through the sequence
 			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
-
+				
+				//The current k-length oligo is saved into bases string
 				string bases = sequence.substr(i,kmers_vector[k]);
+
+				//Function to fill orizzontal plus/minus maps --> current oligo "bases" is passed as parameter to be inserted into the maps
 				or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
 			}
 		}
+
+		//Once map is created it is saved into a vector of map --> then an analysis with new k value (if any) is performed
 		orizzontal_plus_debug.emplace_back(orizzontal_plus);
 		orizzontal_minus_debug.emplace_back(orizzontal_minus);
+
+		//Once maps are saved they need to be cleaned to avoid any interference between two different k-mers analysis
 		orizzontal_plus.clear();
 		orizzontal_minus.clear();
 	}
 }
 
+//Function to create maps to count oligos occurrences for each sequence position (in this function also frequences are calculated)
 void map_class::table_creation_vertical(vector<bed_class> GEP){
-
+	
+	//Return the fisrt sequence to know the sequences length
 	string seq_length = GEP[0].return_sequence(GEP[0]);
 
+	//A vector of map is created for each k-mer inserted as input
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 
+		//vector to store the total number of possible oligo per position, useful to calculate frequences
 		vector<unsigned int> tot_freq_vec;
 
+
+		//Extracted and analyzed the oligo in position "i"
 		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
 			unsigned int tot_freq = 0;
-
+			
+			//Make the analysis of all the sequences' oligo in position "i" (vertical analisys)
 			for(unsigned int j=0; j<GEP.size(); j++){
-
+				
 				string sequence = GEP[j].return_sequence(GEP[j]);
 				string bases = sequence.substr(i,kmers_vector[k]);
+				
+				//Calling of function to count oligo occurrnces and to create and fill the maps
 				vertical_kmer_count(bases, vertical_plus,vertical_minus, tot_freq);
 			}
-
+			
 			if(DS==1){
+
+				//Into vertical plus map we have (oligo + RC) pair but also (RC + oligo) pair --> here we select the best one to keep (it will be the one who has the most occurrences in FWD strand)
 				select_best(vertical_plus);
 			}
+
+			//The maps just created is saved into a vector of maps (one for each position)
 			maps_vector_positions_plus.emplace_back(vertical_plus);
 			maps_vector_positions_minus.emplace_back(vertical_minus);
+
+			//Then the maps are cleaved to make a new analysis on a new position
 			vertical_plus.clear();
 			vertical_minus.clear();
+
+			//the counting of all the possible oligos is saved into a vector too
 			tot_freq_vec.emplace_back(tot_freq);
 		}
-
+		
+		//The vector of maps created is stored into a vector to create a matrix in which on the dimension 1 we have the k-mers used and on dimension 2 the positions on sequences
 		vector_kmers_maps_plus.emplace_back(maps_vector_positions_plus);
 		vector_kmers_maps_minus.emplace_back(maps_vector_positions_minus);
+
+		//Also the all possible oligos to calculate frequences are stored in a matrix (k-mers x position)
 		tot_freq_matrix.emplace_back(tot_freq_vec);
+		
+		//The maps vector are cleaved to make a new analysis with new k
 		maps_vector_positions_plus.clear();
 		maps_vector_positions_minus.clear();
 	}
 }
 
+//Function to fill orizzontal plus/minus maps --> current oligo "bases" is passed as parameter to be inserted into the maps
 void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int> &plus, unordered_map<string,unsigned int> &minus){
 
 	unordered_map<string,unsigned int>::iterator it_plus;
 	unordered_map<string,unsigned int>::iterator it_minus;
+	
+	//Finding the oligo "bases" into the orizzontal plus map (FWD strand)
 	it_plus = plus.find(bases);
+
+	//Check if the current oligo "bases" is palindrome --> this function has also the aim to generate "reverse bases", the reverse complement of the current oligo
 	check_palindrome(bases);
+
+	//Finding the oligo "bases" into the orizzontal minus map (REV strand)
 	it_minus = minus.find(reverse_bases);
 
+	//If the current oligo "bases" is already present into the map --> increase the occurrences by 1
 	if(it_plus!=plus.end()){
 
 		it_plus->second++;
 		it_minus->second++;
 	}
-
+	
+	//If the oligo is not present yet --> insert it into the map with an occurrences value of 1
 	else{
 
 		plus.insert({bases,1});
 		minus.insert({reverse_bases,1});
 	}
 
-
+	//Clear the string bases and reverse bases to avoid interference from different oligos
 	bases.clear();
 	reverse_bases.clear();
 }
 
 void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<unsigned int, unsigned int>>&plus, map<pair<string,string>,pair<unsigned int, unsigned int>> &minus, unsigned int& tot_freq){
 
-
-
 	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus;
 	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus_rev;
 	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus;
 	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus_rev;
 
+	//Check if the current oligo is palindrome
 	bool pal = check_palindrome(bases);
 
+	//Check if the analisys is in double strand
 	if(DS == 1){	
+
+		//If the current oligo is not palindrome and the analysis is on DS --> total number of possible oligo per position (to calculate frequences) ++2, else if it is palindrome ++1
 		if(!pal){
 			tot_freq = tot_freq+2;
 		}
@@ -620,66 +676,86 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 			tot_freq++;
 		}
 	}
+
+	//If analysis is on SS --> possible oligos per position ++1 (it will be equal to the number of sequences)
 	else{
 		tot_freq++;
 	}
-
+	
+	//Creation of a pair of strings containing current oligo (first) and his reverse complement (second)
 	pair<string,string> pair_bases;
 	pair_bases.first= bases;
 	pair_bases.second= reverse_bases;
-
+	
+	//Creation of a pair of strings containing reverse complement (first) and current oligo (second)
 	pair<string,string> pair_bases_reverse;
 	pair_bases_reverse.first= reverse_bases;
 	pair_bases_reverse.second= bases;
-
+	
+	//Try to find the two pairs just created into plus map
 	it_plus = plus.find(make_pair(bases, reverse_bases));
 	it_plus_rev = plus.find(make_pair(reverse_bases, bases));
 
+	//Try to find the two pairs just created into minus map
 	it_minus = minus.find(pair_bases);
 	it_minus_rev = minus.find(pair_bases_reverse);
 
+	//If the pair oligo + RC is already present in the plus map --> increase occurrences by 1
 	if(it_plus!=plus.end()){
 
 		it_plus->second.first++;
 		it_minus->second.first++;
 	}	
+	
+	//If the pair RC + oligo is already present in the plus map --> increase occurrences by 1
 	if (it_plus==plus.end() && it_plus_rev != plus.end()) {
 		it_plus_rev->second.second++;
 		it_minus_rev->second.second++;
 
 	}
-
+	
+	//Else insert the pair as new into plus and minus map
 	else{
-
+		
 		plus.insert({{bases,reverse_bases},{1,0}});
 		minus.insert({{bases,reverse_bases},{1,0}});
 	}
 
-
+	//Clear bases and reverse bases to avoid interference in the next oligo analysis 
 	bases.clear();
 	reverse_bases.clear();
 }
 
+//Function to select the best pair (Oligo + RC or RC + Oligo) into vertical plus map
 void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>& vertical_plus){
 
+	//Initialization of an empty map called copy
 	map<pair<string,string>,pair<unsigned int,unsigned int>> copy;
-
+	
+	//For every element into the map a comparison is performed
 	for(map<pair<string,string>,pair<unsigned int,unsigned int>>::iterator it = vertical_plus.begin(); it!=vertical_plus.end(); it++){
 
+		//If Oligo occurrences are less then RC occurrences in FWD strand
 		if(it->second.first < it->second.second){
 
 			string oligo1 = it->first.second;	
 			string oligo2 = it->first.first;
 			unsigned int occ1 = it->second.second;
 			unsigned int occ2 = it->second.first;
-
+			
+			//Insert the pair RC + Oligo in the map "copy"
 			copy.insert({{oligo1,oligo2},{occ1,occ2}});		
 		}
+
+		//Else if Oligo occurrences are higher then RC occurrences is FWD strand
 		else{
 
+			//Insert the pair Oligo + RC in the map "copy"
 			copy.insert({{it->first.first, it->first.second},{it->second.first,it->second.second}});		
 		}
 	}
+
+	//Clearing the map vertical plus to be substituted by "copy", which contains only the best pairs
 	vertical_plus.clear();
 	vertical_plus = copy;
 }
@@ -690,8 +766,10 @@ void p_value_class::N2_calculation(unordered_map<string,unsigned int> orizzontal
 	total_oligo_N2 = accumulate(begin(orizzontal_map), end(orizzontal_map), 0, [] (unsigned int val, const unordered_map<string,int>::value_type& p) {return val + p.second;});
 }
 
+//Function to check, given an oligo as input, if this oligo is palindrome or not
 bool map_class::check_palindrome(string bases){
 
+	//For any character of the string insert into another string (called reverse bases) the complementary character
 	for(unsigned int i=0; i<bases.size(); i++){
 
 		char base;
@@ -710,8 +788,11 @@ bool map_class::check_palindrome(string bases){
 				   break;
 		}
 	}
-
+	
+	//Then reverse the string 
 	reverse(reverse_bases.begin(), reverse_bases.end());
+	
+	//If they are equal --> it means that the oligo "bases" is palindrome
 	if (reverse_bases == bases){
 		return true;
 	}
