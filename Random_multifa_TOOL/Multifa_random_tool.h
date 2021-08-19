@@ -74,6 +74,7 @@ char from_n_to_base(unsigned int);
 void wobble_vector_creation(string);
 void check_oligo_number();
 void check_position_vector();
+void check_frequence();
 void check_wobble();
 void check_overlapping(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 void check_input();

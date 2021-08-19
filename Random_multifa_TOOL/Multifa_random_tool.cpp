@@ -13,7 +13,7 @@ vector<unsigned int>n_oligo_vector;
 vector<unsigned int> position_vector;
 vector<unsigned int> wobble_vector;
 unsigned int cycles = 1;
-string freq_strand_plus = "50,50,50";
+string freq_strand_plus;
 vector<unsigned int> freq_strand_plus_vector;
 vector<bool> plus_minus;
 vector<vector<bool>> plus_minus_matrix;
@@ -42,7 +42,13 @@ void read_input(){
 	check_position_vector();
 	wobble_vector_creation(wobble);
 	check_wobble();
-	generic_vector_creation(freq_strand_plus, freq_strand_plus_vector);
+	
+	if(freq_strand_plus.size() != 0){
+		
+		generic_vector_creation(freq_strand_plus, freq_strand_plus_vector);
+	}
+
+	check_frequence();
 }
 
 void find_oligo_number(){
@@ -396,6 +402,40 @@ void check_oligo_number(){
 			cerr << "WARNING: There is one or more 0% oligo generation frequence" << endl;
 		}
 	}
+}
+
+void check_frequence(){
+
+	unsigned int freq_number = freq_strand_plus_vector.size();
+
+	if(freq_number == 0 && JASPAR_FILE_vector.size() > 0){
+
+		cerr << "WARNING: No frequence inserted, the tool will set all the frequences on 50%" << endl;
+
+		for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
+
+			freq_strand_plus_vector.emplace_back(50);
+		}
+	}
+
+	else if(freq_number > 0 && freq_number < JASPAR_FILE_vector.size()){
+		
+		cerr << "WARNING: Frequence number inserted is less than matrix inserted, the tool will set on 50% the frequences not specified" << endl;
+	
+		while(freq_strand_plus_vector.size() != JASPAR_FILE_vector.size()){
+
+			freq_strand_plus_vector.emplace_back(50);
+			}
+	}
+
+	else if(freq_number > JASPAR_FILE_vector.size()){
+
+		cerr << "WARNING: Frequence number inserted is more than matrix inserted, Please check your input parameters " << endl;
+	
+		freq_strand_plus_vector.erase(freq_strand_plus_vector.begin() + JASPAR_FILE_vector.size(), freq_strand_plus_vector.end());
+
+	}
+
 }
 
 void check_wobble(){

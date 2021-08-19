@@ -452,15 +452,12 @@ class map_class{
 	private:
 		
 		vector<vector<map<pair<string,string>,pair<unsigned int, unsigned int>>>> vector_kmers_maps_plus;
-		vector<vector<map<pair<string,string>,pair<unsigned int, unsigned int>>>> vector_kmers_maps_minus;
 		vector<unordered_map<string,unsigned int>> orizzontal_plus_debug;
 		vector<unordered_map<string,unsigned int>> orizzontal_minus_debug;
 		vector<map<pair<string,string>,pair<unsigned int, unsigned int>>> maps_vector_positions_plus;
-		vector<map<pair<string,string>,pair<unsigned int, unsigned int>>> maps_vector_positions_minus;
 		unordered_map<string, unsigned int> orizzontal_plus;
 		unordered_map<string, unsigned int> orizzontal_minus;
 		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_plus;
-		map<pair<string,string>,pair<unsigned int, unsigned int>>  vertical_minus;
 		string reverse_bases;
 		vector<vector<unsigned int>> tot_freq_matrix;
 		vector<unsigned int> tot_sum_vector;
@@ -479,7 +476,7 @@ class map_class{
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
 		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
-		void vertical_kmer_count(string,map<pair<string,string>,pair<unsigned int, unsigned int>>&,map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int &);
+		void vertical_kmer_count(string,map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int &);
 		void select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>&);
 		void print_debug_orizzontal();
 		bool check_palindrome(string);
@@ -499,24 +496,54 @@ class map_class{
 	public:
 
 		map_class(vector<bed_class> GEP, string kmers, string dist){
-
+			
+			//Reading k-mers in input and saving them into a vector
 			kmers_vector = generic_vector_creation(kmers);
+
+			//Reading distance parameters in input and saving them into a vector
 			distance_vector = generic_vector_creation(dist);
+
+			//Control if k-mers and distance parameters inserted are equal
 			check_kmer_dist();			
+
+			//Counting all k-mers occurrences along all the sequences (orizzontal count) --> Maps composed by strings (oligos) and unsigned integers (oligo occurrences)
 			table_creation_orizzontal(GEP);
+
+			//Counting k-mers occurrences for each position (vertical count) --> Maps (one per position) are composed by pair of strings(oligo + reverse complement) and unsigned integers (oligo occ. + reverse oligo occ.)
 			table_creation_vertical(GEP);
+
+			//Saving the number of sequences (T) to calculate the p-value
 			sequences_number_T = GEP.size();
+
+			//Function to create an output file of orizzontal map. Oligos are ranked by their occurrences
 			print_debug_orizzontal();
+
+			//Function to call and handle the p_value_class constructor
 			P_VALUE_MATRIX_creation();
+
+			//Choosing if the oligos coming from vertical count (positional count) need to be ranked by occurrences or by p-values
 			if(ordering == "p"){
-			p_value_parameters_debug_p_val();
+
+				//Function to create an output file of vertical maps. Oligos are ranked by their p-value and only the first -n oligos are represented (Default n = 10)
+				p_value_parameters_debug_p_val();
 			}
+
 			else{
-			p_value_parameters_debug_occ();
+
+				//Function to create an output file of vertical maps. Oligos are ranked by their occurrences and only the first -n oligos are represented (Default n = 10)
+				p_value_parameters_debug_occ();
 			}
+			
+			//Calculating the sum of the top -n oligos occurrences and their frequences along the position
 			TopN_sum_and_freq();
+
+			//Function to call and handle the hamming_class constructor
 			HAMMING_MATRIX_creation(GEP);
+
+			//Function to call and handle the z_test_class constructor
 			Z_TEST_MATRIX_creation(GEP);
+			
+			//Output PWM matrix generated from hamming analysis --> ancora da modificare
 			Outfile_PWM_hamming();
 		}
 };
