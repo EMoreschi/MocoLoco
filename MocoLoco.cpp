@@ -1206,15 +1206,27 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> GEP){
 }
 
 void hamming_class::find_best_oligos(){
-	
+
 	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin();
 	real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
 
-	while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences){
-
+	cout << "SIZE: " << vertical_multimap.size() << endl;
+	if(vertical_multimap.size() == 1){
+		
 		best_oligos.emplace_back(it_rev->second.first);
-		it_rev++;
+		cout << "BEST OLIGO: " << it_rev->second.first << endl;
 	}
+
+	else{
+		while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences){
+
+			best_oligos.emplace_back(it_rev->second.first);
+			cout << "BEST OLIGO: " << it_rev->second.first << endl;
+			it_rev++;
+
+		}
+	}
+	cout << "---------------------------------------" << endl;
 }
 
 void hamming_class::checking_best_oligo(unsigned int distance){
