@@ -1210,23 +1210,20 @@ void hamming_class::find_best_oligos(){
 	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin();
 	real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
 
-	cout << "SIZE: " << vertical_multimap.size() << endl;
+	//If all the sequences have the same oligo (100%) in a specific position --> vertical_multimap.size() == 1 --> This control is made to avoid an infinite while cycling
 	if(vertical_multimap.size() == 1){
 		
 		best_oligos.emplace_back(it_rev->second.first);
-		cout << "BEST OLIGO: " << it_rev->second.first << endl;
 	}
 
 	else{
 		while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences){
 
 			best_oligos.emplace_back(it_rev->second.first);
-			cout << "BEST OLIGO: " << it_rev->second.first << endl;
 			it_rev++;
 
 		}
 	}
-	cout << "---------------------------------------" << endl;
 }
 
 void hamming_class::checking_best_oligo(unsigned int distance){
