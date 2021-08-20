@@ -1209,20 +1209,19 @@ void hamming_class::find_best_oligos(){
 
 	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin();
 	real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
-
+	unsigned int verical_size = vertical_multimap.size();
+	bool flag = 1;
+	unsigned int counter = 1;
+	
 	//If all the sequences have the same oligo (100%) in a specific position --> vertical_multimap.size() == 1 --> This control is made to avoid an infinite while cycling
-	if(vertical_multimap.size() == 1){
+	while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences && flag == 1){
 		
-		best_oligos.emplace_back(it_rev->second.first);
-	}
-
-	else{
-		while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences){
-
-			best_oligos.emplace_back(it_rev->second.first);
-			it_rev++;
-
+		if(counter == verical_size){
+			flag = 0;
 		}
+		best_oligos.emplace_back(it_rev->second.first);
+		it_rev++;
+		counter++;
 	}
 }
 
