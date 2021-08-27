@@ -698,8 +698,8 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 		it_plus->second.first++;
 	}	
 	
-	//If the pair RC + oligo is already present in the plus map --> increase occurrences by 1
-	if (it_plus==plus.end() && it_plus_rev != plus.end()) {
+	//Else If the pair RC + oligo is already present in the plus map --> increase occurrences by 1
+	else if (it_plus==plus.end() && it_plus_rev != plus.end()) {
 	
 		it_plus_rev->second.second++;
 
