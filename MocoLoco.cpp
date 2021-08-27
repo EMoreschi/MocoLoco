@@ -131,7 +131,7 @@ void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vecto
 	for(unsigned int i=0; i<GEP.size(); i++){
 
 		string sequence = GEP[i].return_sequence(GEP[i]);
-		string chr_coord = GEP[i].return_chr_coord_GEP();
+		string chr_coord = GEP[i].return_chr_coord();
 		unsigned int start_coord = GEP[i].return_start_coord_GEP();
 
 		//Calling the oligo_class constructor to analyze the shifting of the sequence on log_matrix (FWD strand analysis)
@@ -1502,7 +1502,7 @@ double oligo_class::return_best_score_normalized(){
 	return best_score_normalized;
 }
 
-string bed_class::return_chr_coord_GEP(){
+string bed_class::return_chr_coord(){
 
 	return chr_coord;
 }
@@ -1525,11 +1525,6 @@ vector<vector<double>> matrix_class::return_log_matrix(){
 string bed_class::return_sequence(bed_class){
 
 	return sequence;
-}
-
-string bed_class::return_chr_coord(){
-
-	return chr_coord;
 }
 
 unsigned int bed_class::return_start_coord(){

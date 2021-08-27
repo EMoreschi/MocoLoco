@@ -79,13 +79,12 @@ class bed_class {
 		}
 
 		string return_sequence(bed_class);
-		string return_chr_coord_GEP();
 		unsigned int return_start_coord_GEP();
 		void centering_function(unsigned int, unsigned int, unsigned int, const unsigned int);
 		void extract_seq(TwoBit*, unsigned int);
-		string return_chr_coord();
 		unsigned int return_start_coord();
 		unsigned int return_end_coord();
+		string return_chr_coord();
 
 };
 
