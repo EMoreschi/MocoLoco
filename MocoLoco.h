@@ -221,7 +221,6 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
 		vector<vector<double>> read_JASPAR();
 
-
 	public:
 
 		coordinator_class(){

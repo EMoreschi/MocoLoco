@@ -156,15 +156,15 @@ void coordinator_class::best_strand(){
 	
 	//Only if the analysis is on Double Strand
 	if(DS == 1){
-
-		vector<oligo_class> comparison;
 		
+		vector<oligo_class> comparison;
+
 		for(unsigned int i=0; i<oligos_vector.size(); i+=2){
 			
 			//The comparison is made by oligo_class in i position against the oligo class in i+1 position (The fwd and rev strand of the same sequence, which are consecutive into the oligos_vector)
 			double best_score_norm_positive = oligos_vector[i].return_best_score_normalized();
 			double best_score_norm_negative = oligos_vector[i+1].return_best_score_normalized();
-
+			
 			if(best_score_norm_positive >= best_score_norm_negative){
 
 				comparison.emplace_back(oligos_vector[i]);
@@ -176,6 +176,7 @@ void coordinator_class::best_strand(){
 		}
 
 		//The new oligos_vector is replaced by comparison vector, which contains only the best strand
+		oligos_vector.clear();
 		oligos_vector = comparison;
 	}
 }
@@ -390,6 +391,7 @@ unsigned int oligo_class::find_best_score(){
 
 	//Extracting the best score from oligo_scores with function max_element
 	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
+	best_score_normalized = best_score;
 
 	vector<int> positions;
 	vector<int> dist_center;
@@ -428,6 +430,7 @@ unsigned int oligo_class::find_best_score(){
 
 		//Index of min_distance on distance vector == the corrisponding position in the positions vector
 		return positions[index];
+	
 
 	}
 
@@ -463,7 +466,7 @@ void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, un
 	chr_coord_oligo = chr_coord_GEP;
 	start_coord_oligo = start_coord_GEP + local_position;
 	end_coord_oligo = start_coord_oligo + length;
-
+	
 }
 	
 //Function to re-set the genomic coordinates and the sequences window --> centered on the best oligo found for each sequence
