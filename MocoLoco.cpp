@@ -187,7 +187,7 @@ void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsig
 	double sum_scores = 0;
 	
 	//For each oligo in the current sequence a score is calculated
-	if(s_iterator < sequence.size() - matrix[0].size() ) {
+	if(s_iterator <= sequence.size() - matrix[0].size() ) {
 
 		for(unsigned int i=0; i< matrix[0].size(); i++){
 
@@ -1405,6 +1405,7 @@ void hamming_class::PWM_hamming_creation(){
 
 void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 
+
 	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
 		for (unsigned int j=0; j<HAMMING_MATRIX[i].size(); j++){
 
@@ -1424,7 +1425,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 }
 
 void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
-
+	
 	for(unsigned int i=0; i<GEP.size(); i++){
 	
 		string sequence = GEP[i].return_sequence(GEP[i]);
@@ -1435,8 +1436,8 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
 
 			oligo_class SHIFTING_PWM_2(inverse_matrix_log, sequence);
 			oligo_scores_orizzontal_REV = SHIFTING_PWM_2.return_oligo_scores();
-			check_best_strand_oligo();			
-			all_local_scores.emplace_back(oligo_scores_orizzontal_BEST[local_pos-1]);	
+			check_best_strand_oligo();	
+			all_local_scores.emplace_back(oligo_scores_orizzontal_BEST[local_pos-1]);
 			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_BEST.begin(), oligo_scores_orizzontal_BEST.end());
 		}
 
@@ -1472,6 +1473,7 @@ void z_test_class::global_mean_calculation(){
 	double local_sum = accumulate(all_local_scores.begin(), all_local_scores.end(),0.0);	
 	double global_sum = accumulate(all_global_scores.begin(), all_global_scores.end(), 0.0);
 	double tot_sq_sum_global = inner_product(all_global_scores.begin(), all_global_scores.end(), all_global_scores.begin(), 0.0);
+
 	double tot_sq_sum_local = inner_product(all_local_scores.begin(), all_local_scores.end(), all_local_scores.begin(), 0.0);
 	global_mean = global_sum/all_global_scores.size();
 	local_mean = local_sum/all_local_scores.size();
