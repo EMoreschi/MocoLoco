@@ -422,6 +422,7 @@ class z_test_class{
 	public:
 
 		z_test_class(vector<vector<double>> PWM_hamming, vector<bed_class> GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> HAMMING_MATRIX){
+			
 			local_pos = local_p;	
 			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
 			matrix_log = PWM_hamming_mat.return_log_matrix();

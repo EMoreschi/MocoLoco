@@ -1968,6 +1968,7 @@ void map_class::Outfile_PWM_hamming(){
 			print_debug_PWM_hamming(outfile, j, kmers_vector[j]);
 			outfile.close();
 		}
+
 	}
 }
 
@@ -1978,9 +1979,9 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 	unsigned int neighbour_numb;
 	vector<vector<double>> PWM_hamming;
 	string ACGT = "ACGT";
-
+	
 	for(unsigned int position = 0; position < Z_TEST_MATRIX[j].size(); position++){
-
+	
 		unsigned int local_pos = Z_TEST_MATRIX[j][position].return_local_pos();
 		double global_mean = Z_TEST_MATRIX[j][position].return_global_mean();
 		double local_mean = Z_TEST_MATRIX[j][position].return_local_mean();
@@ -1988,12 +1989,12 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 		double global_dev_std = Z_TEST_MATRIX[j][position].return_global_std_dev();
 		double Zpvalue  = Z_TEST_MATRIX[j][position].return_Zpvalue();
 		double z_score  = Z_TEST_MATRIX[j][position].return_z_score();
-
-		best_oligo = HAMMING_MATRIX[j][local_pos].return_real_best_oligo();	
-		neighbour_numb = HAMMING_MATRIX[j][local_pos].return_similar_oligo_size();
-		PWM_hamming = HAMMING_MATRIX[j][local_pos].return_PWM_hamming();
+	
+		best_oligo = HAMMING_MATRIX[j][local_pos-1].return_real_best_oligo();	
+		neighbour_numb = HAMMING_MATRIX[j][local_pos-1].return_similar_oligo_size();
+		PWM_hamming = HAMMING_MATRIX[j][local_pos-1].return_PWM_hamming();
 		
-		outfile << "#Position " << local_pos << ": \n#PWM calculated from oligo " << best_oligo << " and his " << neighbour_numb << " hamming distanced neighbours. " << endl << endl;
+		outfile << "#Position " << local_pos << ": \n#PWM calculated from oligo " << best_oligo << " and his " << neighbour_numb-1 << " hamming distanced neighbours. " << endl << endl;
 
 		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
 			
@@ -2108,7 +2109,12 @@ void command_line_parser(int argc, char** argv){
 				   kmers = string(optarg);
 				   break;
 			case 'f' : freq_treshold = stod(optarg);
-				   if(freq_treshold <= 0 || freq_treshold >= 1){
+				   if(freq_treshold == 0){
+
+					   cout << "WARNING: frequency threshold 0 inserted" << endl;
+				   }
+
+				   if(freq_treshold < 0 || freq_treshold >= 1){
 					   cerr << "ERROR: please insert a frequency treshold between 0 and 1.\n\n" << endl;
 					   display_help();
 					   exit(1);
