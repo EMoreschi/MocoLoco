@@ -520,16 +520,14 @@ class map_class{
 			//Function to call and handle the p_value_class constructor
 			P_VALUE_MATRIX_creation();
 
-			//Choosing if the oligos coming from vertical count (positional count) need to be ranked by occurrences or by p-values
+			//Functions to print the parameters to calculate p_values. For each oligo ranked all its parameters are visualized. Since the ranking can be made following two different orders (p-value or occurrences), the ranked oligos are different and also their parameters. The if/else condition is made to extract correctly the parameters
 			if(ordering == "p"){
 
-				//Function to create an output file of vertical maps. Oligos are ranked by their p-value and only the first -n oligos are represented (Default n = 10)
 				p_value_parameters_debug_p_val();
 			}
 
 			else{
 
-				//Function to create an output file of vertical maps. Oligos are ranked by their occurrences and only the first -n oligos are represented (Default n = 10)
 				p_value_parameters_debug_occ();
 			}
 			

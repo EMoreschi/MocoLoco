@@ -899,20 +899,35 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences){
 
 }
 
+//Function to create a matrix of p_value class (1 dimension = different k-mers, 2 dimension = positions)
 void map_class::P_VALUE_MATRIX_creation(){
 
+	//For each k-mers inserted as input
 	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
-
+		
+		//Outfile_header function to handle Output file
 		ofstream outfile = outfile_header(j);
-
+		
+		//For each position in sequence
 		for(unsigned int i=0; i<vector_kmers_maps_plus[j].size(); i++){
-
+			
+			//Create a p_value_class object P passing the vertical and orizzontal maps, the number of sequences T, i to fix the current position and the outfile to print into the Output file
 			p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j], sequences_number_T, i, outfile, tot_freq_matrix[j][i]);
-			P_VALUE_VECTOR.emplace_back(P); //creating a vector for every position
+
+			//A vector of p_value classes is created 
+			P_VALUE_VECTOR.emplace_back(P); 
+			
+			//The sum of the first N oligos occurrences are saved into tot_sum_vector
 			tot_sum_vector.emplace_back(P.return_sum_top_N());
 		}
-		P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR); //creating a vector for every k
+
+		//The vector of p_value_classes is stored into a bigger P_VALUE_MATRIX
+		P_VALUE_MATRIX.emplace_back(P_VALUE_VECTOR);
+
+		//Vector is cleaned up to avoid interference on the next cycle
 		P_VALUE_VECTOR.clear();
+
+		//Sums vector of the first N oligo occurrences saved into a matrix and then is cleaned up
 		tot_sum_matrix.emplace_back(tot_sum_vector);
 		tot_sum_vector.clear();
 		outfile.close();
@@ -1186,24 +1201,33 @@ void p_value_class::print_debug_occurrences_SS(map<pair<string,string>,pair<unsi
 	}
 }
 
+//Function to create a matrix of hamming class (1 dimension = different k-mers, 2 dimension = positions)
 void map_class::HAMMING_MATRIX_creation(vector<bed_class> GEP){
-	
-	for(unsigned int j=0; j<P_VALUE_MATRIX.size(); j++){
 
+	//For every kmer in input	
+	for(unsigned int j=0; j<P_VALUE_MATRIX.size(); j++){
+		
+		//Outfile_header function to handle Output file
 		ofstream outfile = outfile_header_hamming(j);
 		
+		//For each position in sequence
 		for(unsigned int i=0; i<P_VALUE_MATRIX[j].size(); i++){
-
+			
+			//The multimap corresponding to the current kmer and position is returned from the P-val matrix
 			multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
 
+			//Create a hamming_class H passing the vertical multimap, the distance inserted as input, the current position i, the number of different oligos (contained in tot_freq_matrix), the orizzontal matrix, the outfile to print the Output file and finally the GEP (which contains the sequences)
 			hamming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, GEP);
+
+			//A vector of hamming classes is created 
 			HAMMING_VECTOR.emplace_back(H);
 		}
 
+		//The vector of hamming_classes is stored into a bigger P_VALUE_MATRIX
 		HAMMING_MATRIX.emplace_back(HAMMING_VECTOR);
-	//	Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
+		
+		//Vector is cleaned up to avoid interference on the next cycle
 		HAMMING_VECTOR.clear();
-	//	Z_TEST_VECTOR.clear();
 		outfile.close();
 	}
 }
@@ -1856,27 +1880,36 @@ void map_class::TopN_sum_and_freq(){
 	}
 }
 
+//Function to print the parameters used to calculate p-values. For each oligo ranked all its parameters are visualized
 void map_class::p_value_parameters_debug_p_val(){
 
 	ofstream outfile;
-
+	
+	//For each k-mer in input create an output file
 	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
 		
+		//Different names to differentiate if the analysis has been made on Double strand or Single strand
 		if(DS == 1){
 		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_p_val_"+BED_FILE+"DS.txt");
 		}
 		else{
 		outfile.open(to_string(kmers_vector[j])+"-mers_p_value_parameters_control_p_val_"+BED_FILE+"SS.txt");
 		}
-
+		
+		//Defining the file header 
 		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked" << endl;
 		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10" << endl;
 
+		//For each position
 		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
-
+			
+			//Extract from the corresponding position the KNT multimap (in p_value ordering the first N oligos ranked are those with the lower p_value and those which are in the first N position of KNT_multimap)
 			multimap<double,pair<string,vector<unsigned int>>> KNT_multimap = P_VALUE_MATRIX[j][i].return_p_value_KNT();
+
+			//Setting the rank to 0
 			unsigned int rank = 0;
 
+			//Printing into the file the parameters used to calculate each oligo p-value in the top N ranking
 			for(multimap<double,pair<string,vector<unsigned int>>>::iterator it = KNT_multimap.begin(); it != KNT_multimap.end() && rank<top_N; it++, rank++){
 
 				outfile << i+1 << "\t";
