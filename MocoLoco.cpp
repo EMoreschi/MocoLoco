@@ -1211,20 +1211,41 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> GEP){
 void hamming_class::find_best_oligos(){
 
 	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin();
-	real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
-	unsigned int verical_size = vertical_multimap.size();
+
+	if(DS==1){
+		real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
+	}
+	else{
+		real_best_oligo_occurrences = it_rev->first.first;
+	}
+
 	bool flag = 1;
 	unsigned int counter = 1;
-	
+
 	//If all the sequences have the same oligo (100%) in a specific position --> vertical_multimap.size() == 1 --> This control is made to avoid an infinite while cycling
-	while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences && flag == 1){
-		
-		if(counter == verical_size){
-			flag = 0;
+	if(DS==1){
+		while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences && flag == 1){
+
+			if(counter == vertical_multimap.size()){
+				flag = 0;
+			}
+
+			best_oligos.emplace_back(it_rev->second.first);
+			it_rev++;
+			counter++;
 		}
-		best_oligos.emplace_back(it_rev->second.first);
-		it_rev++;
-		counter++;
+	}
+	else{
+		while(it_rev->first.first == real_best_oligo_occurrences && flag == 1){
+
+			if(counter == vertical_multimap.size()){
+				flag = 0;
+			}
+
+			best_oligos.emplace_back(it_rev->second.first);
+			it_rev++;
+			counter++;
+		}
 	}
 }
 
@@ -1286,7 +1307,7 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 
 				similar_oligos.emplace_back(it_rev->second.first);
 				similar_oligos_occurrences.emplace_back(it_rev->first.first);
-			}
+				}
 
 			if(DS==1){
 
@@ -1320,7 +1341,7 @@ bool hamming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned in
 
 double hamming_class::frquence_1_calculation(unsigned int freq){
 
-	tot_similar_occurrences = real_best_oligo_occurrences;
+	tot_similar_occurrences = 0;
 	
 	for(unsigned int i=0; i<similar_oligos_occurrences.size(); i++){
 
@@ -1946,7 +1967,7 @@ ofstream map_class::outfile_header_hamming(unsigned int j){
 
 void hamming_class::print_debug_hamming(unsigned int position, ofstream& outfile){
 
-	outfile << position+1 << "\t" << real_best_oligo << "\t" << real_best_oligo_occurrences << "\t" << similar_oligos.size() << "\t" << tot_similar_occurrences << "\t" << FREQUENCE_1 << "\t" << FREQUENCE_2 << endl;
+	outfile << position+1 << "\t" << real_best_oligo << "\t" << real_best_oligo_occurrences << "\t" << similar_oligos.size()-1 << "\t" << tot_similar_occurrences << "\t" << FREQUENCE_1 << "\t" << FREQUENCE_2 << endl;
 
 }
 
