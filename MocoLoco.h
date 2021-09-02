@@ -325,13 +325,27 @@ class p_value_class{
 	public:
 
 		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t, unsigned int position, ofstream &outfile, unsigned int freq){
-		
+					
 			T = t;
+			
+			//From the vertical positional map (composed by two pair) a vertical multimap is generated to sorting oligos by their occurrences	
 			vertical_multimap = multimap_creation(pair_map);
+
+			//N2 parameter found doing the sum of the occurrences of all the oligos along the sequences (sum of the occurrences in the horizontal map) -> The real N2 value is calculated subsequently subtracting N1 value
 			N2_calculation(orizzontal_map);
+
+			//Function to calculate, for each oligo, its K/N1/N2 parameters. This function allows to store these values into vectors, useful to print them subsequentl
 			filling_KNT_vectors(orizzontal_map);
+
+			//Once K,N1,N2,T are calculated for each oligo they can be used to define an oligo-specific p_value using a function from gsl library called "gsl_cdf_hypergeometric_Q"
 			calculating_p_value();
+
+			//Sorting oligos in position by lowest p_value
 			sorting_p_value();
+
+			//Check the input parameters to select the rigth output printing
+			//1. Output file with oligos ordered by occurrences
+			//2. Output file with oligos ordered by lowest p_value
 			checking_ordering(pair_map, position, outfile, freq);		
 		}
 

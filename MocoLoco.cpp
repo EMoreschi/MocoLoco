@@ -753,6 +753,7 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 	vertical_plus = copy;
 }
 
+//Finding N2 parameters thanks to the accumulate function, which allows to sum all the values present in a map -> accumulate function uses a lambda function (https://en.cppreference.com/w/cpp/algorithm/accumulate) 
 void p_value_class::N2_calculation(unordered_map<string,unsigned int> orizzontal_map){
 
 	total_oligo_N2 = 0;
@@ -793,6 +794,7 @@ bool map_class::check_palindrome(string bases){
 
 }
 
+//Function to check, given an oligo as input, if this oligo is palindrome or not (it has the same function of check_palindrome but used in another class)
 bool p_value_class::check_palindrome2(string bases){
 
 	reverse_bases.clear();
@@ -935,7 +937,7 @@ void map_class::P_VALUE_MATRIX_creation(){
 	}
 }
 
-
+//Transforming a map of pair into a multimap, ordered by oligo occurrences
 multimap<pair<unsigned int, unsigned int>,pair<string,string>> p_value_class::multimap_creation(map<pair<string,string>, pair<unsigned int,unsigned int>> pair_map){
 
 	for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = pair_map.begin(); it != pair_map.end(); it++){ 	
@@ -946,14 +948,17 @@ multimap<pair<unsigned int, unsigned int>,pair<string,string>> p_value_class::mu
 	return vertical_multimap;
 }
 
+//Function to calculate and store into vectors K,N1,N2 parameters used to find oligos' p-values
 void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizzontal_map){
 
 	unsigned int K;
 	unsigned int N1;
 	unsigned int N2;
 
+	//For each oligo present in positional vertical multimap (in the current position)
 	for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend(); it_rev++){
 
+		//Check if the oligo is palindrome -> K value is differentially calculated
 		bool pal = check_palindrome2(it_rev->second.first);
 
 		if(pal == 0 && DS == 1){
@@ -964,9 +969,12 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 
 			K = it_rev->first.first;
 		}
+
+		//searching the current oligo in orizzontal map to find N1 value (oligo occurrences along all the sequences positions)
 		it_N1_plus = orizzontal_map.find(it_rev->second.first);
 		it_N1_minus = orizzontal_map.find(it_rev->second.second);
-
+		
+		//If the oligo RC is present in the orizzontal map (and analysis is in DS) the N1 parameter is calculated as the sum of the oligo + oligo RC occurrences in orizzontal map. Else, only the oligo occurrences can be used for the N1 definition.
 		if(it_N1_minus != orizzontal_map.end() && DS == 1){
 
 			N1 = it_N1_plus->second + it_N1_minus->second;
@@ -974,9 +982,11 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 		else{
 			N1 = it_N1_plus->second;
 		}
-
+		
+		//Using the total_oligo_N2 (calculated before in N2_calculation function) defining the N2 value as definition (Total number of k-mers - N1)
 		N2 = total_oligo_N2 - N1;
-
+		
+		//Storing values into vectors
 		K_vec.emplace_back(K);
 		N1_vec.emplace_back(N1);
 		N2_vec.emplace_back(N2);
@@ -984,16 +994,20 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> orizz
 	}
 }
 
+//Using gsl library hypergeometric_Q function and the parameters found before (K,N1,N2,T) calculate each oligo p_value and store it into a vector
 void p_value_class::calculating_p_value(){
 
 	for(unsigned int i=0; i<K_vec.size(); i++){
 
 		double p_value =  gsl_cdf_hypergeometric_Q(K_vec[i],N1_vec[i],N2_vec[i],T);
+
+		//Checking if p_value is too low and therefore is automatically rounded to 0
 		p_value = check_p_value(p_value);
 		p_value_vec.emplace_back(p_value);	
 	}
 }
 
+//If the p value is rounded to 0 assigne it a standar low value of 1.000001e-300 to avoid possible future errors
 double p_value_class::check_p_value(double p){
 
 	if(p == 0){
@@ -1004,12 +1018,18 @@ double p_value_class::check_p_value(double p){
 	return p;
 }
 
+//Function to sort all the oligos in each position following the lowest p_value scores
 void p_value_class::sorting_p_value(){
 
 	vector<unsigned int> KNT;
 	unsigned int i=0;
-	for(multimap<pair<unsigned int, unsigned int>, pair<string, string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend(); it_rev++){
 
+	//Creating 2 multimaps:
+	//1. p_value_sort = a multimap containing p_value and the pair oligo + oligo's RC to order oligos by lowest p_value 
+	//2. p_value_KNT = a multimap composed by p_value at first position to guarantee the order and oligo + K,N1,N2,T vector at second position
+	for(multimap<pair<unsigned int, unsigned int>, pair<string, string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend(); it_rev++, i++){
+		
+		//Fill the KNT vector with the right K,N1,N2,T values
 		KNT.emplace_back(K_vec[i]);	
 		KNT.emplace_back(N1_vec[i]);	
 		KNT.emplace_back(N2_vec[i]);	
@@ -1017,17 +1037,21 @@ void p_value_class::sorting_p_value(){
 
 		p_value_sort.insert({p_value_vec[i],{it_rev->second.first, it_rev->second.second}});
 		p_value_KNT.insert({p_value_vec[i],{it_rev->second.first, KNT}}); 
-		i = i+1;
+		
+		//Clear the KNT vector to mantain its size (need to be formed by 4 elements(K,N1,N2,T))
 		KNT.clear();
 	}
 }
 
+//Check and select if oligos are going to be printed in output file ordered by occurrences or p_values
 void p_value_class::checking_ordering(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream &outfile, unsigned int freq){
-
+	
+	//If p_value ordering has been selected
 	if(ordering == "p"){
-
+		
+		//Select for Double strand analysis or Single strand analysis
 		if(DS==1){
-
+			
 			print_debug_p_value_DS(pair_map, position, outfile, freq);	
 		}	
 
@@ -1050,13 +1074,15 @@ void p_value_class::checking_ordering(map<pair<string,string>,pair<unsigned int,
 	}
 }
 
+//If the analysis is on Double Strand and oligos need to be ordered by p_value this is the function which writes on the output file
 void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
 
 	unsigned int c=0;
 	sum_top_N = 0;
 
 	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
-
+	
+	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
 	for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
 
 		double FREQ, Sum_Occ_Oligo;
@@ -1095,6 +1121,7 @@ void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned
 	}
 }
 
+//If the analysis is on Single Strand and oligos need to be ordered by p_value this is the function which writes on the output file
 void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
 
 	unsigned int c = 0;
@@ -1102,6 +1129,7 @@ void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned
 
 	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
 
+	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
 	for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
 
 		double FREQ, Num_Occ_FWD;
@@ -1128,11 +1156,13 @@ void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned
 	}
 }
 
+//If the analysis is on Double Strand and oligos need to be ordered by occurrences this is the function which writes on the output file
 void p_value_class::print_debug_occurrences_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq, vector<double> p_value_vec){
 
 	unsigned int c=0;
 	sum_top_N = 0;
 
+	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
 	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
 
 		double FREQ, Sum_Occ_Oligo;
@@ -1170,12 +1200,13 @@ void p_value_class::print_debug_occurrences_DS(map<pair<string,string>,pair<unsi
 	}
 }
 
+//If the analysis is on Single Strand and oligos need to be ordered by occurrences this is the function which writes on the output file
 void p_value_class::print_debug_occurrences_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq, vector<double> p_value_vec){
 
 	unsigned int c = 0;
 	sum_top_N = 0;
 
-
+	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
 	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
 
 		double FREQ, Num_Occ_FWD;
@@ -1448,32 +1479,46 @@ void hamming_class::PWM_hamming_creation(){
 	PWM_hamming.emplace_back(vec_T);
 }
 
-void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 
+//Function to create a matrix of z_test class
+void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
+	
 	bool local_max = 1;
 
+	//For every kmer in input	
 	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
+	
+		//For each position in sequence
 		for (unsigned int j=0; j<HAMMING_MATRIX[i].size(); j++){
-
+			
+			//Return the PWM matrix calculated from the corresponding hamming class
 			vector<vector<double>> PWM_matrix = HAMMING_MATRIX[i][j].return_PWM_hamming();
+
+			//Extract the frequence_1 from the corresponding hamming class
 			double Frequence_1 = HAMMING_MATRIX[i][j].return_FREQUENCE_1();
-
+			
+			//If the local_maxima filtering is enabled
 			if(local_maxima_grouping == 1){
-
+				
+				
 				double Frequence_1_prev = 0;
 				double Frequence_1_post = 0;
-
+				
+				//if the position is not the first -> return the pos-1 freq_1 -> else the pos-1 freq_1 value remain 0
 				if(j != 0){
 					Frequence_1_prev = HAMMING_MATRIX[i][j-1].return_FREQUENCE_1();
 				}
 
+				//if the position is not the last -> return the pos+1 freq_1 -> else the pos+1 freq_1 value remain 0
 				if(j != HAMMING_MATRIX[i].size()){
 					Frequence_1_post = HAMMING_MATRIX[i][j+1].return_FREQUENCE_1();
 				}
-
+				
+				//Analyze if the current pos is a local max
 				local_max = find_local_max(Frequence_1,Frequence_1_prev,Frequence_1_post);
 			}
-
+			
+			//If it is a local max and its freq_1 value overcome the threshold build a z_test_class Z and then save it into a vector and finally into a matrix (as done with hamming and p_value classes)
 			if(Frequence_1 >= freq_treshold && local_max == 1){
 
 				z_test_class Z(PWM_matrix, GEP,j+1,kmers_vector,HAMMING_MATRIX);
@@ -1486,6 +1531,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 	}
 }
 
+//Return 1 only if the frequence in position is higher than frequences in pos-1 and in pos+1
 bool map_class::find_local_max(double center, double prev, double post){
 
 	if(center > prev && center >= post){
@@ -2033,6 +2079,7 @@ void hamming_class::print_debug_hamming(unsigned int position, ofstream& outfile
 	outfile << position+1 << "\t" << real_best_oligo << "\t" << real_best_oligo_occurrences << "\t" << similar_oligos.size()-1 << "\t" << tot_similar_occurrences << "\t" << FREQUENCE_1 << "\t" << FREQUENCE_2 << endl;
 
 }
+
 
 void map_class::Outfile_PWM_hamming(){
 
