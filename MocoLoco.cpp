@@ -1456,8 +1456,20 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 
 			vector<vector<double>> PWM_matrix = HAMMING_MATRIX[i][j].return_PWM_hamming();
 			double Frequence_1 = HAMMING_MATRIX[i][j].return_FREQUENCE_1();
+			double Frequence_1_prev = 0;
+			double Frequence_1_post = 0;
+			
+			if(j != 0){
+			Frequence_1_prev = HAMMING_MATRIX[i][j-1].return_FREQUENCE_1();
+			}
+			
+			if(j != HAMMING_MATRIX[i].size()){
+			Frequence_1_post = HAMMING_MATRIX[i][j+1].return_FREQUENCE_1();
+			}
 
-			if(Frequence_1 >= freq_treshold){
+			bool local_max = find_local_max(Frequence_1,Frequence_1_prev,Frequence_1_post);
+
+			if(Frequence_1 >= freq_treshold && local_max == 1){
 
 				z_test_class Z(PWM_matrix, GEP,j+1,kmers_vector,HAMMING_MATRIX);
 				Z_TEST_VECTOR.emplace_back(Z);
@@ -1467,6 +1479,19 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 		Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
 		Z_TEST_VECTOR.clear();
 	}
+}
+
+bool map_class::find_local_max(double center, double prev, double post){
+
+	if(center > prev && center >= post){
+
+		return 1;
+	}
+	
+	else{
+		return 0;
+	}
+
 }
 
 void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){

@@ -491,6 +491,7 @@ class map_class{
 		void check_kmer_dist();
 		void Outfile_PWM_hamming();
 		void print_debug_PWM_hamming(ofstream&, unsigned int, unsigned int);
+		bool find_local_max(double,double,double);
 
 	public:
 
