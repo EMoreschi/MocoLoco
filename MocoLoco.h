@@ -387,12 +387,23 @@ class hamming_class{
 	public:
 
 		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP){
-
+			
+			//Saving the vertical multimap passed to constructor locally
 			vertical_multimap = v_multimap;
+
+			//Find the best oligo (by occurrences) scrolling the vertical multimap
 			find_best_oligos();
+
+			//Checking if best oligo is one or more. If more, do the selection to find the real_best_oligo, else proceed to find hamming neighbours
 			checking_best_oligo(distance);
+			
+			//Add the real_best_oligo to his similar_oligos vector
 			similar_oligos.emplace_back(real_best_oligo);
+
+			//Add real_best_oligo_occurrences to his similar oligos occurrences
 			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
+
+			//Calculating the frequence 1 (total of similar occurrences / total of possible oligos in the position) and saving it to FREQUENCE_1 variable 
 			FREQUENCE_1 = frquence_1_calculation(freq);
 			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
 			print_debug_hamming(position, outfile);

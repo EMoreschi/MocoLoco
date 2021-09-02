@@ -1236,33 +1236,41 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> GEP){
 	}
 }
 
+//Scrolling the vertical positional multimap find the best oligo for occurrences. If more than one is present selecting the oligo which has more hamming neighbours.
 void hamming_class::find_best_oligos(){
-
+	
 	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin();
-
+	
+	//Saving the best oligo occurrences extracting from the last multimap element (higher first value) its occurrences -> working with multimap allows to have always the max occurrences in the last position of the map
 	if(DS==1){
 		real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
 	}
 	else{
 		real_best_oligo_occurrences = it_rev->first.first;
 	}
-
+	
+	//Flag and counter to control if the function does more cycle than multimap size (to avoid infinite loop as happened)
 	bool flag = 1;
 	unsigned int counter = 1;
 
-	//If all the sequences have the same oligo (100%) in a specific position --> vertical_multimap.size() == 1 --> This control is made to avoid an infinite while cycling
+	//If all the sequences have the same oligo (100%) in a specific position --> vertical_multimap.size() == 1 --> This control is made to avoid an infinite while cycle
+	//This control is specific for DS analysis
 	if(DS==1){
 		while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences && flag == 1){
 
 			if(counter == vertical_multimap.size()){
 				flag = 0;
 			}
-
+			
+			//If another oligo has the same occurrences as the best -> save it into a vector of best_oligos
 			best_oligos.emplace_back(it_rev->second.first);
 			it_rev++;
 			counter++;
 		}
 	}
+
+	//If all the sequences have the same oligo (100%) in a specific position --> vertical_multimap.size() == 1 --> This control is made to avoid an infinite while cycle
+	//This control is specific for SS analysis
 	else{
 		while(it_rev->first.first == real_best_oligo_occurrences && flag == 1){
 
@@ -1270,6 +1278,7 @@ void hamming_class::find_best_oligos(){
 				flag = 0;
 			}
 
+			//If another oligo has the same occurrences as the best -> save it into a vector of best_oligos
 			best_oligos.emplace_back(it_rev->second.first);
 			it_rev++;
 			counter++;
@@ -1277,70 +1286,95 @@ void hamming_class::find_best_oligos(){
 	}
 }
 
+//Checking if there is one or more best oligos
 void hamming_class::checking_best_oligo(unsigned int distance){
 	
+	//If there is only one best oligo for occurrences
 	if(best_oligos.size() == 1){
 		
+		//Set that the real best oligo is it
 		real_best_oligo = best_oligos[0];
+
+		//Proceed to find his hamming distance neighbours
 		find_distanced_oligos(real_best_oligo,distance);	
 	}
-
+	
+	//else means that there are more than one best oligo for occurrences
 	else{
-
+		
+		//Set the real best oligo after a selection function
 		real_best_oligo = select_real_best_oligo(distance);
+
+		//Proceed to find his hamming distance neighbours
 		find_distanced_oligos(real_best_oligo,distance);	
 	}
 
 }
 
+//Function for find the real_best_oligo (selecting the one who has more neighbours than the others) if more than one best oligo has been found
 string hamming_class::select_real_best_oligo(unsigned int distance){
 	
 	unsigned int max_similarity;
 	unsigned int index;
-
+	
+	//For each best oligo found
 	for(unsigned int i=0; i<best_oligos.size(); i++){
-
+		
+		//Find all of its hamming neighbours
 		find_distanced_oligos(best_oligos[i], distance);
 		
+		//If the analysis is on the first best oligo -> the max similarity (that is the max number of neighbour) corresponds to its similar_oligos number
 		if(i==0){
+
 			max_similarity = similar_oligos.size();
 			index = 0;
 		}	
-
+		
+		//If an oligo has a number of neighbour (similar_oligo.size()) which exceeds the best partial so far (max_similarity) -> its neighbour number becames the best and the index of oligo (into the best_oligos vector) is saved.
 		if(similar_oligos.size() > max_similarity){
 
 			max_similarity = similar_oligos.size();
 			index = i;
 		}
-
+		
+		//Similar oligos vector need to be cleaned up for the next cycle
 		similar_oligos.clear(); 
+	
+		//And also similar_oligos_occurrences vector needs to be cleaned up to avoid subsequently interferences (because the function find_distanced_oligos calculates also the neighbours occurrences and saves them into similar_oligo_occurrences vector)
 		similar_oligos_occurrences.clear();  
 
 	}
 	
+	//Return the real best oligo
 	return best_oligos[index];
 }
 
+//Function to find oligo's hamming neighbours
 void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 
 	bool is_similar;
-
+	
+	//Scrolling all the positional vertical multimap
 	for(multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend(); it_rev++){
-
+		
+		//If the oligo in analysis is not the real_best_oligo (to avoid the comparison to himself)
 		if(it_rev->second.first != best){
-
+			
+			//Call the function is_similar_oligo to compare the real_best_oligo to the current oligo. The function returns 1 if it is, otherwise 0
 			is_similar = is_similar_oligo(best, it_rev->second.first, distance);
 
+			//If real_best_oligo and the current oligo are similar they can be considered neighbours and the current oligo (from FWD strand) and its occurrences can be saved into vectors
 			if(is_similar == 1){
 
 				similar_oligos.emplace_back(it_rev->second.first);
 				similar_oligos_occurrences.emplace_back(it_rev->first.first);
 				}
-
+			
+			//If analysis is in DS -> call the function is_similar_oligo to compare the real_best_oligo to the current oligo's Reverse Complement (RC). The function returns 1 if it is, otherwise 0
 			if(DS==1){
 
 				is_similar = is_similar_oligo(best, it_rev->second.second, distance);
-
+				//If they are similar add the oligo's RC and its occurrences to neighbours vectors 
 				if(is_similar == 1){
 
 					similar_oligos.emplace_back(it_rev->second.second);
@@ -1352,25 +1386,32 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 	}
 }
 
+//Function to compare two oligos and find out how many charachters are apart (distanced)
 bool hamming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned int distance){
 	
+	//Counter to count the character differences 
 	unsigned int counter = 0;
-
+	
+	//For each character of the oligos (which have the same dimention)
 	for(unsigned int i = 0; i<oligo_1.size() && counter <= distance; i++){
-
+		
+		//If the letter is different -> increase the counter
 		if(oligo_1[i] != oligo_2[i]){
 			
 			counter++;	
 		}
 	}
 	
+	//Return 1 if counter is lower or equal to distance, otherwise 0
 	return(counter<=distance);
 }
 
+//Function to calculate the frequence_1 (total of similar occurrences / total of possible oligos in the position)
 double hamming_class::frquence_1_calculation(unsigned int freq){
 
 	tot_similar_occurrences = 0;
 	
+	//Sum of the total occurrences (real best oligo + his neighbours)	
 	for(unsigned int i=0; i<similar_oligos_occurrences.size(); i++){
 
 		tot_similar_occurrences = tot_similar_occurrences + similar_oligos_occurrences[i];
