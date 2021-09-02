@@ -2142,7 +2142,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:m:d:o:f:g:t:n:s";
+	const char* const short_opts = "hp:k:b:j:m:d:o:f:at:n:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -2150,7 +2150,7 @@ void command_line_parser(int argc, char** argv){
 		{"param",      required_argument, nullptr,  'p' },
 		{"ntop",      required_argument, nullptr,  'n' },
 		{"kmer",   required_argument, nullptr,  'k' },
-		{"group",   required_argument, nullptr,  'g' },
+		{"all",   no_argument, nullptr,  'a' },
 		{"freq",   required_argument, nullptr,  'f' },
 		{"distance",   required_argument, nullptr,  'd' },
 		{"bed",    required_argument, nullptr,  'b' },
@@ -2195,9 +2195,8 @@ void command_line_parser(int argc, char** argv){
 			case 'k' : kmers.clear();
 				   kmers = string(optarg);
 				   break;
-			case 'g' : local_maxima_grouping = stoi(optarg);
+			case 'a' : local_maxima_grouping = 0;
 				   break;
-
 			case 'f' : freq_treshold = stod(optarg);
 				   if(freq_treshold == 0){
 
@@ -2272,6 +2271,7 @@ void display_help(){
 	cerr << "\n -o || --ordering 'p' to order the top N oligos by p-value and not by occurrences. (DEFAULT: ordering by occurrences)" << endl;
 	cerr << "\n --distance || -d <n1,n2,...,nN> to select the hamming distances. (DEFAULT: 1,2,3)" << endl;
 	cerr << "\n --freq || -f <n1> to set the frequence treshold to calculate the z_score. (DEFAULT: 0.02)" << endl;
+	cerr << "\n --all || -a to disable the local maxima filtering" << endl; 
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
