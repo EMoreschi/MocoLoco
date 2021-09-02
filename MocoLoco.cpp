@@ -1450,24 +1450,29 @@ void hamming_class::PWM_hamming_creation(){
 
 void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 
+	bool local_max = 1;
 
 	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
 		for (unsigned int j=0; j<HAMMING_MATRIX[i].size(); j++){
 
 			vector<vector<double>> PWM_matrix = HAMMING_MATRIX[i][j].return_PWM_hamming();
 			double Frequence_1 = HAMMING_MATRIX[i][j].return_FREQUENCE_1();
-			double Frequence_1_prev = 0;
-			double Frequence_1_post = 0;
-			
-			if(j != 0){
-			Frequence_1_prev = HAMMING_MATRIX[i][j-1].return_FREQUENCE_1();
-			}
-			
-			if(j != HAMMING_MATRIX[i].size()){
-			Frequence_1_post = HAMMING_MATRIX[i][j+1].return_FREQUENCE_1();
-			}
 
-			bool local_max = find_local_max(Frequence_1,Frequence_1_prev,Frequence_1_post);
+			if(local_maxima_grouping == 1){
+
+				double Frequence_1_prev = 0;
+				double Frequence_1_post = 0;
+
+				if(j != 0){
+					Frequence_1_prev = HAMMING_MATRIX[i][j-1].return_FREQUENCE_1();
+				}
+
+				if(j != HAMMING_MATRIX[i].size()){
+					Frequence_1_post = HAMMING_MATRIX[i][j+1].return_FREQUENCE_1();
+				}
+
+				local_max = find_local_max(Frequence_1,Frequence_1_prev,Frequence_1_post);
+			}
 
 			if(Frequence_1 >= freq_treshold && local_max == 1){
 
@@ -2137,7 +2142,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:m:d:o:f:t:n:s";
+	const char* const short_opts = "hp:k:b:j:m:d:o:f:g:t:n:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -2145,6 +2150,7 @@ void command_line_parser(int argc, char** argv){
 		{"param",      required_argument, nullptr,  'p' },
 		{"ntop",      required_argument, nullptr,  'n' },
 		{"kmer",   required_argument, nullptr,  'k' },
+		{"group",   required_argument, nullptr,  'g' },
 		{"freq",   required_argument, nullptr,  'f' },
 		{"distance",   required_argument, nullptr,  'd' },
 		{"bed",    required_argument, nullptr,  'b' },
@@ -2189,6 +2195,9 @@ void command_line_parser(int argc, char** argv){
 			case 'k' : kmers.clear();
 				   kmers = string(optarg);
 				   break;
+			case 'g' : local_maxima_grouping = stoi(optarg);
+				   break;
+
 			case 'f' : freq_treshold = stod(optarg);
 				   if(freq_treshold == 0){
 

@@ -37,6 +37,7 @@ string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;
 double freq_treshold = 0.02;
+bool local_maxima_grouping = 1;
 
 class bed_class {         
 
