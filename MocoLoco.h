@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -312,7 +311,6 @@ class p_value_class{
 		multimap<pair<unsigned int,unsigned int>, pair<string,string>>  multimap_creation(map<pair<string,string>,pair<unsigned int,unsigned int>>);
 		void filling_KNT_vectors(unordered_map<string,unsigned int>);
 		void N2_calculation(unordered_map<string,unsigned int>);
-		bool check_palindrome2(string);
 		void calculating_p_value();
 		double check_p_value(double);
 		void sorting_p_value();
@@ -493,7 +491,6 @@ class map_class{
 		void vertical_kmer_count(string,map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int &);
 		void select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>&);
 		void print_debug_orizzontal();
-		bool check_palindrome(string);
 		void P_VALUE_MATRIX_creation();
 		void HAMMING_MATRIX_creation(vector<bed_class>);
 		void Z_TEST_MATRIX_creation(vector<bed_class>);
@@ -567,3 +564,4 @@ void command_line_parser(int, char **);
 void display_help();
 bool is_file_exist(string fileName, string buf);
 void check_input_file();
+bool check_palindrome(string, string&);
