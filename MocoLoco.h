@@ -161,7 +161,7 @@ class oligo_class{
 		unsigned int find_best_score();
 		void find_coordinate(unsigned int, string, unsigned int);
 		void find_best_sequence(string, unsigned int);
-		void best_score_normalization();
+		void scores_normalization();
 
 	public:
 		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, unsigned int start_coord_GEP, char strand_sign){
@@ -176,7 +176,7 @@ class oligo_class{
 			shifting(matrix, sequence, 0);
 			
 			//Function to normalize the scores with the normalization formula
-			best_score_normalization();
+			scores_normalization();
 
 			//Find the best score position and save it into local_position variable (If find more than one select as best the nearest to the center
 			local_position = find_best_score();
@@ -193,7 +193,7 @@ class oligo_class{
 			global_sequence = sequence;
 			find_minmax(matrix);
 			shifting(matrix, sequence, 0);
-			best_score_normalization();
+			scores_normalization();
 		}
 
 		void shifting(vector<vector<double>>, string, unsigned int);
@@ -405,8 +405,14 @@ class hamming_class{
 
 			//Calculating the frequence 1 (total of similar occurrences / total of possible oligos in the position) and saving it to FREQUENCE_1 variable 
 			FREQUENCE_1 = frquence_1_calculation(freq);
+
+			//Function to calculate the frequence_2 (total of similar occurrences / total number of best+hamming occurrences in sequences)
 			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
+			
+			//Print positional hamming features in hamming output file
 			print_debug_hamming(position, outfile);
+			
+			//Building a PWM matrix from best oligo sequence and his hamming neigbours sequences and occurrences
 			PWM_hamming_creation();
 		}
 
@@ -438,7 +444,7 @@ class z_test_class{
 
 		void print_debug_oligo_vec(vector<vector<double>>);	
 		void oligos_vector_creation_PWM(vector<bed_class>);
-		void global_mean_calculation();
+		void z_score_parameters_calculation();
 		void check_best_strand_oligo();
 		void z_score_calculation();
 
@@ -446,16 +452,30 @@ class z_test_class{
 	public:
 
 		z_test_class(vector<vector<double>> PWM_hamming, vector<bed_class> GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> HAMMING_MATRIX){
-			
+				
 			local_pos = local_p;	
+			
+			//Calling matrix class constructor passing PWM_hamming matrix
 			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
+
+			//Return from matrix class the log_PWM_hamming matrix
 			matrix_log = PWM_hamming_mat.return_log_matrix();
+			
 			if(DS==1){
-			inverse_matrix_log = PWM_hamming_mat.return_inverse_log_matrix();
+			
+				//if analysis is in DS return from matrix class the inverse_log_PWM_hamming matrix to shift the reverse strand
+				inverse_matrix_log = PWM_hamming_mat.return_inverse_log_matrix();
 			}
+			
+			//Function to shift PWM_matrix on sequences using oligo class functions
 			oligos_vector_creation_PWM(GEP);
-			global_mean_calculation();
+
+			//From local and global scores calculated finding all the parameters useful to z-score calculation
+			z_score_parameters_calculation();
+
+			//Calculating z-score and p-value from it
 			z_score_calculation();
+
 			//print_debug_oligo_vec(PWM_hamming);
 		}
 		

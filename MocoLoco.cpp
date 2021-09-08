@@ -440,7 +440,7 @@ unsigned int oligo_class::find_best_score(){
 }
 
 //Best score normalization with normalization formula (The parameter to normalize have already been calculated and saved into the class)
-void oligo_class::best_score_normalization(){
+void oligo_class::scores_normalization(){
 	
 	double score_normalized;
 	vector<double> oligo_scores_normalized;
@@ -589,7 +589,7 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 				string sequence = GEP[j].return_sequence(GEP[j]);
 				string bases = sequence.substr(i,kmers_vector[k]);
 				
-				//Calling of function to count oligo occurrnces and to create and fill the maps
+				//Calling of function to count oligo occurrences and to create and fill the maps
 				vertical_kmer_count(bases, vertical_plus, tot_freq);
 			}
 			
@@ -654,6 +654,7 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int
 	reverse_bases.clear();
 }
 
+//Function to count oligo occurrences and to create and fill the maps. It also count all the total oligo present in position (taking into account to the palindrome oligos) --> this count will be useful to calculate the frequency
 void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<unsigned int, unsigned int>>&plus, unsigned int& tot_freq){
 
 	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_plus;
@@ -795,6 +796,7 @@ bool check_palindrome(string bases,string& reverse_bases){
 
 }
 
+//Controlling that all the MF sequences have the same langth
 void multifasta_class::length_control(vector<string> sequences){
 
 	cout << "- [2] Multifasta Sequences length check\n";
@@ -1423,6 +1425,7 @@ double hamming_class::frquence_1_calculation(unsigned int freq){
 	return FREQ_1;
 }
 
+//Function to calculate the frequence_2 (total of similar occurrences / total number of best+hamming occurrences in sequences)
 double hamming_class::frquence_2_calculation(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, unsigned int position){
 	
 
@@ -1432,11 +1435,14 @@ double hamming_class::frquence_2_calculation(unordered_map<string,unsigned int> 
 	return FREQ_2;
 }
 
+//Function to find total number of best+hamming occurrences in sequences --> useful to calculate Freq_2
 unsigned int hamming_class::finding_orizzontal_occurrences(unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus){
 
-	unordered_map<string,unsigned int>::iterator it = orizzontal_map_plus.find(real_best_oligo);
-	unsigned int total_orizz_occ = it->second;
+	//Search the best oligo in orizzontal map plus 
+	unordered_map<string,unsigned int>::iterator it;
+	unsigned int total_orizz_occ = 0;
 	
+	//search orizzontal occurrences for all the hamming neighbours	
 	for(unsigned int i=0; i<similar_oligos.size(); i++){
 		
 		it = orizzontal_map_plus.find(similar_oligos[i]);
@@ -1450,26 +1456,30 @@ unsigned int hamming_class::finding_orizzontal_occurrences(unordered_map<string,
 	return total_orizz_occ;
 }
 
+//Starting from the best oligo and his hamming neighbours the function builds a PWM_matrices following their sequences and occurrences
 void hamming_class::PWM_hamming_creation(){
-
+	
+	//Vector for each bases initialized to count, position by position, the occurrences of that base
 	double counter_A = 0;
 	double counter_C = 0;
 	double counter_G = 0;
 	double counter_T = 0;
 	vector<double> vec_A, vec_C, vec_G, vec_T;
 	
+	//For each bases (position) of oligo
 	for(unsigned int character = 0; character < similar_oligos[0].size(); character++){
 
 		counter_A = 0;
 		counter_C = 0;
 		counter_G = 0;
 		counter_T = 0;
-
+		
+		//For each oligo in similar oligos vector
 		for(unsigned int oligo = 0; oligo < similar_oligos.size(); oligo++){
 
 			switch(similar_oligos[oligo][character]){
 
-
+				//Increment base counters of the oligo occurrences
 				case 'A' : counter_A = counter_A + similar_oligos_occurrences[oligo]; 
 					   break;
 				case 'C' : counter_C = counter_C + similar_oligos_occurrences[oligo]; 
@@ -1480,13 +1490,15 @@ void hamming_class::PWM_hamming_creation(){
 					   break;
 			}
 		}
-
+		
+		//Fill base vectors
 		vec_A.emplace_back(counter_A);
 		vec_C.emplace_back(counter_C);
 		vec_G.emplace_back(counter_G);
 		vec_T.emplace_back(counter_T);
 	}
 	
+	//Build the PWM matrix
 	PWM_hamming.emplace_back(vec_A);
 	PWM_hamming.emplace_back(vec_C);
 	PWM_hamming.emplace_back(vec_G);
@@ -1559,43 +1571,65 @@ bool map_class::find_local_max(double center, double prev, double post){
 
 }
 
+//Shifting the PWM_matrix on the sequences and calculate local scores (from positon where the matrix has been generated), and the global scores from each sequences positions
 void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
 	
+	//For every sequence
 	for(unsigned int i=0; i<GEP.size(); i++){
-	
+		
 		string sequence = GEP[i].return_sequence(GEP[i]);
+		
+		//Calling oligo class to accede to all functions useful to shift a matrix on sequences --> Shifting on FWD strand
 		oligo_class SHIFTING_PWM(matrix_log, sequence);
+
+		//Return oligo scores calculated from previous shifting
 		oligo_scores_orizzontal_FWD = SHIFTING_PWM.return_oligo_scores();
 	
+		//If analysis is in Double strand
 		if(DS == 1){
-
+			
+			//Make the shifting also on reverse strand, putting as input the inverse_log_matrix --> Shifting on REV strand
 			oligo_class SHIFTING_PWM_2(inverse_matrix_log, sequence);
+
+			//Retrun oligo scores from previous shifting
 			oligo_scores_orizzontal_REV = SHIFTING_PWM_2.return_oligo_scores();
+
+			//Select the best scores between FWD and REV strand (for each position)
 			check_best_strand_oligo();	
-			all_local_scores.emplace_back(oligo_scores_orizzontal_BEST[local_pos-1]);
+
+			//Fill the local scores vector with scores found in position where the matrix has been generated
+			all_local_scores.emplace_back(oligo_scores_orizzontal_BEST[local_pos-1]);			
+			//Fill the global scores vector with all scores generated from shifting and selected from check_best_strand_oligo function
 			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_BEST.begin(), oligo_scores_orizzontal_BEST.end());
 		}
 
+		//If analysis is in Single strand
 		else{
 			
+			//Local best scores are all from FWD strand
 			all_local_scores.emplace_back(oligo_scores_orizzontal_FWD[local_pos-1]);	
 			all_global_scores.insert(all_global_scores.end(), oligo_scores_orizzontal_FWD.begin(), oligo_scores_orizzontal_FWD.end());
 		}
-	
+		
+		//Clearing of orizzontal best score for the next sequence cycle
 		oligo_scores_orizzontal_BEST.clear();	
 	}	
 	
 }
 
+//Function to select the best scores between FWD and REV strand (for each sequence position)
 void z_test_class::check_best_strand_oligo(){
 
+	//For all oligo scores 
 	for(unsigned int oligo = 0; oligo < oligo_scores_orizzontal_FWD.size(); oligo ++){
-
+		
+		//If FWD is better than REV
 		if(oligo_scores_orizzontal_FWD[oligo] >= oligo_scores_orizzontal_REV[oligo]){
-
+			
 			oligo_scores_orizzontal_BEST.emplace_back(oligo_scores_orizzontal_FWD[oligo]);
 		}
-
+		
+		//If REV is better than FWD
 		else{
 
 			oligo_scores_orizzontal_BEST.emplace_back(oligo_scores_orizzontal_REV[oligo]);
@@ -1603,7 +1637,8 @@ void z_test_class::check_best_strand_oligo(){
 	}
 }
 
-void z_test_class::global_mean_calculation(){
+//Function to calculate all the parameters useul to z-score calculation
+void z_test_class::z_score_parameters_calculation(){
 
 	double local_sum = accumulate(all_local_scores.begin(), all_local_scores.end(),0.0);	
 	double global_sum = accumulate(all_global_scores.begin(), all_global_scores.end(), 0.0);
@@ -1616,6 +1651,8 @@ void z_test_class::global_mean_calculation(){
 	local_dev_std = sqrt(tot_sq_sum_local/all_local_scores.size() - local_mean * local_mean);
 	
 }
+
+//Z-score calculation function
 void z_test_class::z_score_calculation(){
 
 
@@ -1848,6 +1885,7 @@ void oligo_class::oligos_vector_debug(){	//Debug function to print the best olig
 	cout << endl;
 }
 
+//Function to create an output file of orizzontal map. Oligos are ranked by their occurrences
 void map_class::print_debug_orizzontal(){
 
 	for(unsigned int i=0; i<orizzontal_plus_debug.size(); i++){
@@ -1894,6 +1932,7 @@ void map_class::print_debug_orizzontal(){
 	}
 }
 
+//Function to write the correct header in output positional file, following analysis parameters
 ofstream map_class::outfile_header(unsigned int j){
 
 
@@ -1933,7 +1972,7 @@ ofstream map_class::outfile_header(unsigned int j){
 	return outfile;	
 }
 
-
+//Function to print Top N sum and their frequences agains total oligo number in position in Output file
 void map_class::TopN_sum_and_freq(){
 
 	ofstream outfile;
@@ -2021,7 +2060,7 @@ void map_class::p_value_parameters_debug_p_val(){
 void map_class::p_value_parameters_debug_occ(){
 
 	ofstream outfile;
-
+	
 	for(unsigned int j = 0; j<P_VALUE_MATRIX.size(); j++){
 		
 		if(DS == 1){
@@ -2062,6 +2101,7 @@ void map_class::p_value_parameters_debug_occ(){
 	}
 }
 
+//Function to open and print the header of hamming output file, following the analysis parameters
 ofstream map_class::outfile_header_hamming(unsigned int j){
 
 
@@ -2087,18 +2127,18 @@ ofstream map_class::outfile_header_hamming(unsigned int j){
 }
 
 
-
+//Print debug hamming features for each position in hamming output file passed as reference
 void hamming_class::print_debug_hamming(unsigned int position, ofstream& outfile){
 
 	outfile << position+1 << "\t" << real_best_oligo << "\t" << real_best_oligo_occurrences << "\t" << similar_oligos.size()-1 << "\t" << tot_similar_occurrences << "\t" << FREQUENCE_1 << "\t" << FREQUENCE_2 << endl;
 
 }
 
-
+//Print debug for PWM_hamming outfile -> Selection of output filename
 void map_class::Outfile_PWM_hamming(){
 
 	ofstream outfile;
-
+	
 	for(unsigned int j=0; j<kmers_vector.size(); j++){
 
 		if(DS == 1){
@@ -2119,6 +2159,7 @@ void map_class::Outfile_PWM_hamming(){
 	}
 }
 
+//PWM_matrices, parameters to calculate z-score, z-score and p-value printing
 void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsigned int k){
 	
 	outfile << "#PWM Matrices calculated from the best oligo for each position and his hamming distanced oligos - k = " << k << endl << endl;
@@ -2317,6 +2358,7 @@ void check_input_file(){
 	        display_help();
 		exit(1);
 	}
+	
 }
 
 void display_help(){
