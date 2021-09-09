@@ -37,6 +37,7 @@ string dist = "1,2,3";
 unsigned int top_N = 10;
 double freq_treshold = 0.02;
 bool local_maxima_grouping = 1;
+bool refining_matrix = 0;
 
 class bed_class {         
 
@@ -399,7 +400,10 @@ class hamming_class{
 			//Checking if best oligo is one or more. If more, do the selection to find the real_best_oligo, else proceed to find hamming neighbours
 			checking_best_oligo(distance);
 			
+			//Save the oligo size --> to avoid infinite cycle for its continous updating in the next function	
 			number_first_hamming = similar_oligos.size();	
+
+			//Finding hamming of all similar oligos
 			find_secondary_hamming(distance, number_first_hamming);	
 			
 			//Adding the real best oligo to similar oligos vector (created starting from itself)

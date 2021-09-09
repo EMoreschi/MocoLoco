@@ -1351,28 +1351,17 @@ string hamming_class::select_real_best_oligo(unsigned int distance){
 	return best_oligos[index];
 }
 
+//Function to perform a secondary hamming --> find of distanced d hamming from the similar oligos found
 void hamming_class::find_secondary_hamming(unsigned int distance, unsigned int number_first_hamming){
 	
-	for(unsigned int neighbour=0; neighbour < number_first_hamming; neighbour++){
-		
-		find_distanced_oligos(similar_oligos[neighbour],distance);
-	}
+	if(refining_matrix == 1){	
 
-	cout << "Gli oligo simili di " << real_best_oligo << " sono:" << endl;
-	for(unsigned int i=0; i < similar_oligos.size(); i++){
-		
-		cout << similar_oligos[i] << " ";
-	}
-	cout << endl;
+		//For each similar oligo
+		for(unsigned int neighbour=0; neighbour < number_first_hamming; neighbour++){
 
-	cout << "Le occorrenze dei simili di " << real_best_oligo << ", che ha " << real_best_oligo_occurrences << " occorrenze sono:" << endl;
-	for(unsigned int i=0; i < similar_oligos.size(); i++){
-		
-		cout << similar_oligos[i] << "-->" << similar_oligos_occurrences[i] << " | ";
+			find_distanced_oligos(similar_oligos[neighbour],distance);
+		}
 	}
-	cout << endl;
-	cout << "------------------------------------------" << endl;
-	
 }
 
 //Function to find oligo's hamming neighbours
@@ -1383,7 +1372,7 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 	//Scrolling all the positional vertical multimap
 	for(multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend(); it_rev++){
 		
-		//If the oligo in analysis is not the real_best_oligo (to avoid the comparison to himself)
+		//If the oligo in analysis is not the real_best_oligo (to avoid the comparison to himself and to avoid to be added to similar oligos vector in case of secondary hamming)
 		if(it_rev->second.first != best && it_rev->second.first != real_best_oligo){
 				
 			//Call the function is_similar_oligo to compare the real_best_oligo to the current oligo. The function returns 1 if it is, otherwise 0
@@ -2269,7 +2258,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hp:k:b:j:m:d:o:f:at:n:s";
+	const char* const short_opts = "hp:k:b:j:m:d:o:f:art:n:s";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -2278,6 +2267,7 @@ void command_line_parser(int argc, char** argv){
 		{"ntop",      required_argument, nullptr,  'n' },
 		{"kmer",   required_argument, nullptr,  'k' },
 		{"all",   no_argument, nullptr,  'a' },
+		{"refine",   no_argument, nullptr,  'r' },
 		{"freq",   required_argument, nullptr,  'f' },
 		{"distance",   required_argument, nullptr,  'd' },
 		{"bed",    required_argument, nullptr,  'b' },
@@ -2323,6 +2313,8 @@ void command_line_parser(int argc, char** argv){
 				   kmers = string(optarg);
 				   break;
 			case 'a' : local_maxima_grouping = 0;
+				   break;
+			case 'r' : refining_matrix = 1;
 				   break;
 			case 'f' : freq_treshold = stod(optarg);
 				   if(freq_treshold == 0){
@@ -2400,6 +2392,7 @@ void display_help(){
 	cerr << "\n --distance || -d <n1,n2,...,nN> to select the hamming distances. (DEFAULT: 1,2,3)" << endl;
 	cerr << "\n --freq || -f <n1> to set the frequence treshold to calculate the z_score. (DEFAULT: 0.02)" << endl;
 	cerr << "\n --all || -a to disable the local maxima filtering" << endl; 
+	cerr << "\n --refine || -r to refine PWM matrices with secondary hamming" << endl; 
 	cerr << endl;
 
 	exit(EXIT_SUCCESS);
