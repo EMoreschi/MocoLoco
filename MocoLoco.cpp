@@ -1351,6 +1351,30 @@ string hamming_class::select_real_best_oligo(unsigned int distance){
 	return best_oligos[index];
 }
 
+void hamming_class::find_secondary_hamming(unsigned int distance, unsigned int number_first_hamming){
+	
+	for(unsigned int neighbour=0; neighbour < number_first_hamming; neighbour++){
+		
+		find_distanced_oligos(similar_oligos[neighbour],distance);
+	}
+
+	cout << "Gli oligo simili di " << real_best_oligo << " sono:" << endl;
+	for(unsigned int i=0; i < similar_oligos.size(); i++){
+		
+		cout << similar_oligos[i] << " ";
+	}
+	cout << endl;
+
+	cout << "Le occorrenze dei simili di " << real_best_oligo << ", che ha " << real_best_oligo_occurrences << " occorrenze sono:" << endl;
+	for(unsigned int i=0; i < similar_oligos.size(); i++){
+		
+		cout << similar_oligos[i] << "-->" << similar_oligos_occurrences[i] << " | ";
+	}
+	cout << endl;
+	cout << "------------------------------------------" << endl;
+	
+}
+
 //Function to find oligo's hamming neighbours
 void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 
@@ -1360,8 +1384,8 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 	for(multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend(); it_rev++){
 		
 		//If the oligo in analysis is not the real_best_oligo (to avoid the comparison to himself)
-		if(it_rev->second.first != best){
-			
+		if(it_rev->second.first != best && it_rev->second.first != real_best_oligo){
+				
 			//Call the function is_similar_oligo to compare the real_best_oligo to the current oligo. The function returns 1 if it is, otherwise 0
 			is_similar = is_similar_oligo(best, it_rev->second.first, distance);
 
@@ -1386,6 +1410,7 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 		}	
 
 	}
+
 }
 
 //Function to compare two oligos and find out how many charachters are apart (distanced)

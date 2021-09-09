@@ -367,6 +367,7 @@ class hamming_class{
 		string real_best_oligo;
 		unsigned int real_best_oligo_occurrences;
 		vector<string> similar_oligos;
+		unsigned int number_first_hamming;
 		vector<unsigned int> similar_oligos_occurrences;
 		double tot_similar_occurrences;
 		double FREQUENCE_1;
@@ -375,6 +376,7 @@ class hamming_class{
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
+		void find_secondary_hamming(unsigned int, unsigned int);
 		void find_distanced_oligos(string, unsigned int);
 		string select_real_best_oligo(unsigned int);
 		bool is_similar_oligo(string, string, unsigned int);
@@ -397,10 +399,13 @@ class hamming_class{
 			//Checking if best oligo is one or more. If more, do the selection to find the real_best_oligo, else proceed to find hamming neighbours
 			checking_best_oligo(distance);
 			
-			//Add the real_best_oligo to his similar_oligos vector
+			number_first_hamming = similar_oligos.size();	
+			find_secondary_hamming(distance, number_first_hamming);	
+			
+			//Adding the real best oligo to similar oligos vector (created starting from itself)
 			similar_oligos.emplace_back(real_best_oligo);
 
-			//Add real_best_oligo_occurrences to his similar oligos occurrences
+			//Adding real best oligo occurrences to similar occurrences vector
 			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
 
 			//Calculating the frequence 1 (total of similar occurrences / total of possible oligos in the position) and saving it to FREQUENCE_1 variable 
