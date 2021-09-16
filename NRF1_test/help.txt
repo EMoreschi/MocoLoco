@@ -1,0 +1,13 @@
+To run the test.sh file run the command:
+
+bash test.sh <JASPAR_MATRIX> <Hit.txt> <n> <l> <p> <k> <d>
+
+Where:
+
+$1 = Jaspar matrix implanted
+$2 = Hitted position output filename
+$3 = Number of random multifasta sequences created
+$4 = Length of random sequences created
+$5 = Position of implants
+$6 = K-mers analyzed
+$7 = Hamming distance

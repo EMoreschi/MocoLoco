@@ -1,23 +1,28 @@
 #!/bin/bash
+
 touch $2;
 RMC=$(realpath RMC)
 MOCO=$(realpath MOCO)
 path_out=$(realpath $2)
-mkdir .tmp_test;
+
+mkdir $1_Out;
 echo "TESTING MOCOLOCOC">$path_out;
 frequenze=(100 80 60 40 30 20 10 9 8 7 6 5 4) 
+
 for i in ${frequenze[@]}
 do 
-  cd .tmp_test;
+  cd $1_Out;
   mkdir $i;
   cd $i;
-	$RMC -l 300 -n 2000 -j ../../$1 -p 80 -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $3 -d $4 &
+	$RMC -n $3 -l $4 -j ../../$1 -p $5 -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $6 -d $7 &
   cd ../..;
 done
+
 wait
+
  for x in ${frequenze[@]}
 do
- cd .tmp_test/$x;
+ cd $1_Out/$x;
         echo "# Freq:" $x >> $path_out;        
 	a=$(awk  '/#Position/ {sub(/:/ ,"" ); sub(/#Position/,""); {ORS=" "}; print }' *mers_PWM_hamming_matrices_multifasta_DS.txt );
         echo "Hit : "$a >> $path_out;
@@ -29,6 +34,4 @@ do
         done  
        echo "Pval-log10: "${array[@]} >> $path_out; 
 cd ../..;
-        
-
 done
