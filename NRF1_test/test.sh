@@ -1,20 +1,56 @@
 #!/bin/bash
+#	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
+usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Hit.txt> -n <n> -l <l> -p <p> -k <k> -d <d> " 1>&2; exit 1; }
 
-touch $2;
+while getopts ":j:f:n:l:p:k:d:" o; do
+    case "${o}" in
+        j)
+            J=${OPTARG}
+            ;;
+        f)
+            F=${OPTARG}
+            ;;
+        n)
+            N=${OPTARG}
+            ;;
+        l)
+            L=${OPTARG}
+            ;;
+        p)
+            P=${OPTARG}
+            ;;
+        k)
+            K=${OPTARG}
+            ;;
+        d)
+            D=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${J}" ] || [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${L}" ] || [ -z "${P}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${F}" ]; then
+    usage
+fi
+
+touch $F;
 RMC=$(realpath RMC)
 MOCO=$(realpath MOCO)
-path_out=$(realpath $2)
+path_out=$(realpath $F)
 
-mkdir $1_Out;
+mkdir ${J}_Out;
 echo "TESTING MOCOLOCOC">$path_out;
 frequenze=(100 80 60 40 30 20 10 9 8 7 6 5 4) 
 
 for i in ${frequenze[@]}
 do 
-  cd $1_Out;
+  cd ${J}_Out;
   mkdir $i;
   cd $i;
-	$RMC -n $3 -l $4 -j ../../$1 -p $5 -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $6 -d $7 &
+	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
   cd ../..;
 done
 
@@ -22,7 +58,7 @@ wait
 
  for x in ${frequenze[@]}
 do
- cd $1_Out/$x;
+ cd ${J}_Out/$x;
         echo "# Freq:" $x >> $path_out;        
 	a=$(awk  '/#Position/ {sub(/:/ ,"" ); sub(/#Position/,""); {ORS=" "}; print }' *mers_PWM_hamming_matrices_multifasta_DS.txt );
         echo "Hit : "$a >> $path_out;
