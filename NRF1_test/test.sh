@@ -2,7 +2,7 @@
 #	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
 usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Hit.txt> -n <n> -l <l> -p <p> -k <k> -d <d> " 1>&2; exit 1; }
 
-while getopts ":j:f:n:l:p:k:d:" o; do
+while getopts ":j:f:n:l:p:k:d:r" o; do
     case "${o}" in
         j)
             J=${OPTARG}
@@ -25,6 +25,9 @@ while getopts ":j:f:n:l:p:k:d:" o; do
         d)
             D=${OPTARG}
             ;;
+        r) 
+           Refine="-r"
+           ;;
         *)
             usage
             ;;
@@ -50,7 +53,7 @@ do
   cd ${J}_Out;
   mkdir $i;
   cd $i;
-	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
+	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  $Refine -k $K -d $D &
   cd ../..;
 done
 
