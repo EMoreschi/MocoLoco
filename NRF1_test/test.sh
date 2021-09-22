@@ -51,7 +51,8 @@ MOCO=$(realpath MOCO)
 path_out=$(realpath $F)
 
 mkdir ${J}_Out;
-echo "TESTING MOCOLOCOC">$path_out;
+echo "#TESTING MOCOLOCO">$path_out;
+echo -e "FREQ \t HIT \t PVAL">>$path_out; 
 frequenze=(100 50 40 30 20 15 10 9 8 7 6 5) 
 
 for i in ${frequenze[@]}
@@ -68,15 +69,13 @@ wait
  for x in ${frequenze[@]}
 do
  cd ${J}_Out/$x;
-        echo "# Freq:" $x >> $path_out;        
 	a=$(awk  '/#Position/ {sub(/:/ ,"" ); sub(/#Position/,""); {ORS=" "}; print }' *mers_PWM_hamming_matrices_multifasta_DS.txt );
-        echo "Hit : "$a >> $path_out;
         array=();
        for j in $a 
         do
         k=$(awk -v j="$j" '{if ($1 == j) print $9;}' *mers_p_value_parameters_control_occ_DS.txt | head -n 1)
        array+=($k)
+        echo -e $x "\t" $j "\t" $k >> $path_out; 
         done  
-       echo "Pval-log10: "${array[@]} >> $path_out; 
 cd ../..;
 done
