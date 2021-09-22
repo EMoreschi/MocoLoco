@@ -2,7 +2,7 @@
 #	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
 usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Hit.txt> -n <n> -l <l> -p <p> -k <k> -d <d> " 1>&2; exit 1; }
 
-while getopts ":j:f:n:l:p:k:d:r" o; do
+while getopts ":j:f:n:l:p:k:t:d:ra" o; do
     case "${o}" in
         j)
             J=${OPTARG}
@@ -12,6 +12,9 @@ while getopts ":j:f:n:l:p:k:d:r" o; do
             ;;
         n)
             N=${OPTARG}
+            ;;
+        t)
+            T=${OPTARG}
             ;;
         l)
             L=${OPTARG}
@@ -28,6 +31,9 @@ while getopts ":j:f:n:l:p:k:d:r" o; do
         r) 
            Refine="-r"
            ;;
+        a) 
+           all="-a"
+           ;;
         *)
             usage
             ;;
@@ -35,7 +41,7 @@ while getopts ":j:f:n:l:p:k:d:r" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${J}" ] || [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${L}" ] || [ -z "${P}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${F}" ]; then
+if [ -z "${J}" ] || [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || [ -z "${L}" ] || [ -z "${P}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${F}" ]; then
     usage
 fi
 
@@ -46,14 +52,14 @@ path_out=$(realpath $F)
 
 mkdir ${J}_Out;
 echo "TESTING MOCOLOCOC">$path_out;
-frequenze=(100 80 60 40 30 20 10 9 8 7 6 5 4) 
+frequenze=(100 50 40 30 20 15 10 9 8 7 6 5) 
 
 for i in ${frequenze[@]}
 do 
   cd ${J}_Out;
   mkdir $i;
   cd $i;
-	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  $Refine -k $K -d $D &
+	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  $Refine -k $K -d $D -f $T $all &
   cd ../..;
 done
 
