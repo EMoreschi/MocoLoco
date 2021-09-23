@@ -313,7 +313,6 @@ class p_value_class{
 		void filling_KNT_vectors(unordered_map<string,unsigned int>);
 		void N2_calculation(unordered_map<string,unsigned int>);
 		void calculating_p_value();
-		double check_p_value(double);
 		void sorting_p_value();
 		void checking_ordering(map<pair<string,string>,pair<unsigned int,unsigned int>>, unsigned int, ofstream&, unsigned int);
 		void print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int);
@@ -539,10 +538,11 @@ class map_class{
 		void TopN_sum_and_freq();
 		void p_value_parameters_debug_p_val();
 		void p_value_parameters_debug_occ();
-		double check_p_value(double);
 		void check_kmer_dist();
-		void Outfile_PWM_hamming();
+		void Outfile_PWM_matrices();
+		void Outfile_Z_score_values();
 		void print_debug_PWM_hamming(ofstream&, unsigned int, unsigned int);
+		void print_debug_Z_scores(ofstream&, unsigned int, unsigned int);
 		bool find_local_max(double,double,double);
 
 	public:
@@ -594,7 +594,8 @@ class map_class{
 			Z_TEST_MATRIX_creation(GEP);
 			
 			//Output PWM matrix generated from hamming analysis --> ancora da modificare
-			Outfile_PWM_hamming();
+			Outfile_PWM_matrices();
+			Outfile_Z_score_values();
 		}
 };
 
@@ -605,3 +606,4 @@ void display_help();
 bool is_file_exist(string fileName, string buf);
 void check_input_file();
 bool check_palindrome(string, string&);
+double check_p_value(double);
