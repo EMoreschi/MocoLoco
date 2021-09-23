@@ -922,9 +922,9 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
 	bool local_max = 1;
 	
 	if (MFASTA_FILE.size() ==0) 
-		cout << "- [12] Calculating Z-test from PWM matrces shifing and filling Z-test matrix  \n";
+		cout << "- [12] Calculating Z-test from PWM matrices shifing and filling Z-test matrix  \n";
 	else
-		cout << "- [9] Calculating Z-test from PWM matrces shifing and filling Z-test matrix  \n";
+		cout << "- [9] Calculating Z-test from PWM matrices shifing and filling Z-test matrix  \n";
 
 	//For every kmer in input	
 	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
@@ -1061,17 +1061,6 @@ void p_value_class::calculating_p_value(){
 		p_value = check_p_value(p_value);
 		p_value_vec.emplace_back(p_value);	
 	}
-}
-
-//If the p value is rounded to 0 assigne it a standar low value of 1.000001e-300 to avoid possible future errors
-double p_value_class::check_p_value(double p){
-
-	if(p == 0){
-
-		p = 1.000001e-300;
-	}
-
-	return p;
 }
 
 //Function to sort all the oligos in each position following the lowest p_value scores
@@ -1501,6 +1490,8 @@ void z_test_class::z_score_calculation(){
 	const double Z  = z_score;
 	Zpvalue = gsl_cdf_ugaussian_P(Z);
 
+	Zpvalue = check_p_value(Zpvalue);
+
 
 }
 
@@ -1537,6 +1528,17 @@ bool check_palindrome(string bases,string& reverse_bases){
 	}
 	else {return false;}
 
+}
+
+//If the p value is rounded to 0 assigne it a standar low value of 1.000001e-300 to avoid possible future errors
+double check_p_value(double p){
+
+	if(p == 0){
+
+		p = 1.000001e-300;
+	}
+
+	return p;
 }
 
 /////DEBUG/////////////////////////////////////////////////////////
@@ -2172,7 +2174,7 @@ void hamming_class::print_debug_hamming(unsigned int position, ofstream& outfile
 }
 
 //Print debug for PWM_hamming outfile -> Selection of output filename
-void map_class::Outfile_PWM_hamming(){
+void map_class::Outfile_PWM_matrices(){
 
 	ofstream outfile;
 	
@@ -2243,6 +2245,54 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 	}
 }
 
+//Print debug for PWM_hamming outfile -> Selection of output filename
+void map_class::Outfile_Z_score_values(){
+
+	ofstream outfile;
+	
+	for(unsigned int j=0; j<kmers_vector.size(); j++){
+
+		if(DS == 1){
+
+			outfile.open(to_string(kmers_vector[j])+"-mers_Z_scores_"+alias_file+"DS.txt");
+			print_debug_Z_scores(outfile, j, kmers_vector[j]);
+			outfile.close();
+		}
+
+		else{
+
+			outfile.open(to_string(kmers_vector[j])+"-mers_Z_scores_"+alias_file+"SS.txt");
+
+			print_debug_Z_scores(outfile, j, kmers_vector[j]);
+			outfile.close();
+		}
+
+	}
+}
+
+//PWM_matrices, parameters to calculate z-score, z-score and p-value printing
+void map_class::print_debug_Z_scores(ofstream& outfile, unsigned int j, unsigned int k){
+	
+	outfile << "#Z_score parameters and p-value for hit positions - k = " << k << endl << endl;
+	string best_oligo;
+	
+	outfile << "Position" << "\t" << "best_oligo" << "\t" << "Local_mean" << "\t" << "Global_mean" << "\t" << "Local_std_dev" << "\t" << "Global_std_dev" << "\t" << "Z_score" << "\t" << "P-value" << endl;
+	
+	for(unsigned int position = 0; position < Z_TEST_MATRIX[j].size(); position++){
+	
+		unsigned int local_pos = Z_TEST_MATRIX[j][position].return_local_pos();
+		double global_mean = Z_TEST_MATRIX[j][position].return_global_mean();
+		double local_mean = Z_TEST_MATRIX[j][position].return_local_mean();
+		double local_dev_std = Z_TEST_MATRIX[j][position].return_local_std_dev();
+		double global_dev_std = Z_TEST_MATRIX[j][position].return_global_std_dev();
+		double Zpvalue  = Z_TEST_MATRIX[j][position].return_Zpvalue();
+		double z_score  = Z_TEST_MATRIX[j][position].return_z_score();
+	
+		best_oligo = HAMMING_MATRIX[j][local_pos-1].return_real_best_oligo();	
+
+		outfile << local_pos << "\t" << best_oligo << "\t" << local_mean << "\t" << global_mean << "\t" << local_dev_std << "\t" << global_dev_std << "\t" << z_score << "\t" << Zpvalue << endl;
+	}
+}
 //void z_test_class::print_debug_oligo_vec(vector<vector<double>> PWM_hamming){
 //
 //	cout << endl << endl;
