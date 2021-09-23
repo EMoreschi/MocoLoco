@@ -41,33 +41,11 @@ void  GEP_path(){
 	}		
 }
 
-//Checking function to control if, for any k-mers inserted as input, there is a distance parameter
-void map_class::check_kmer_dist(){
-
-	if(kmers_vector.size() != distance_vector.size()){
-	
-		//If the number is not equal --> ERROR printed and help visualized
-		cerr << "\nERROR: Please insert an equal number of k-mers and distance parameters!" << endl;
-		display_help();
-		exit(1);
-	}
-}
-
 void bed_class::read_line(string line){ 
 
 	//Split the line word by word and extract chromosome coordinates (chr, start, end)
 	istringstream mystream(line);
 	mystream >> chr_coord >> start_coord >> end_coord;		
-
-}
-
-void bed_class::centering_function ( unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead){
-
-	unsigned int center = (start + end)/2;						
-
-	//No overhead for start coordinates but overhead added to end coordinates
-	start_coord = center - half_length;
-	end_coord = center + half_length +overhead;
 
 }
 
@@ -85,214 +63,32 @@ void bed_class::flag_control( unsigned int start,  unsigned int end){
 	}
 }
 
-//Function to read BED and 2Bit files and create GEP (vector of bed class)
-void coordinator_class::GEP_creation(vector<bed_class> &GEP){
+void bed_class::centering_function ( unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead){
 
-	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
+	unsigned int center = (start + end)/2;						
 
-	ifstream in(BED_FILE); 					
-	TwoBit * tb;
+	//No overhead for start coordinates but overhead added to end coordinates
+	start_coord = center - half_length;
+	end_coord = center + half_length +overhead;
 
-	//Opening 2Bit file with twobit_open function from andrelmartens code and saved in tb variable 
-	tb = twobit_open(TWOBIT_FILE.c_str()); 
-
-	string line;
-
-	//Line counter initialization
-	unsigned int n_line = 1;
-
-	//For each line in BED file create a bed class called bed_line in which chr, start and end coordinate are ridden, centered and saved
-	//Then the Fasta sequence is extracted from Twobit genome following the coordinated and saved into a string variable
-	while(getline(in,line)){
-
-
-		//if line is empty or commented --> continue
-		if(line.empty() || line[0] == '#'){
-
-			continue;
-		}
-
-		bed_class bed_line(line,tb, n_line);
-
-		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector og bed class)
-		GEP.emplace_back(bed_line);	
-
-		n_line = n_line + 1;		 
-
-	}
 }
 
-//Function to create oligos_vector (a oligo class vector)
-void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
+//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates extracted from Bed line
+void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
 
-	cout << "- [5] Analyzing sequences using Jaspar matrix\n";
-
-	//For every sequences into GEP vector
-	for(unsigned int i=0; i<GEP.size(); i++){
-
-		string sequence = GEP[i].return_sequence(GEP[i]);
-		string chr_coord = GEP[i].return_chr_coord();
-		unsigned int start_coord = GEP[i].return_start_coord_GEP();
-
-		//Calling the oligo_class constructor to analyze the shifting of the sequence on log_matrix (FWD strand analysis)
-		oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
-
-		//The oligo class just created is saved into oligos_vector (oligo_class vector)
-		oligos_vector.emplace_back(SHIFTING);
-
-		//If the analysis is on DS calling the oligo_class constructor to analyze the shifting of sequence on inverse_log_matrix (REVERSE strande analysis)
-		if(DS == 1){
-
-			oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
-			oligos_vector.emplace_back(SHIFTING);
-		}
-	}	
-
-	cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
-}
-
-//Function useful, if the analysis is performed on DS, to choose from the best FWD strand oligo and the best REV strand oligo the best one to keep as "Best oligo" --> The oligos vector is divided in half and only the best strand for each sequence is kept
-void coordinator_class::best_strand(){
-	
-	//Only if the analysis is on Double Strand
-	if(DS == 1){
+	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
+	if(flag == 1){	
 		
-		vector<oligo_class> comparison;
+		string chrom = chr_coord;
 
-		for(unsigned int i=0; i<oligos_vector.size(); i+=2){
-			
-			//The comparison is made by oligo_class in i position against the oligo class in i+1 position (The fwd and rev strand of the same sequence, which are consecutive into the oligos_vector)
-			double best_score_norm_positive = oligos_vector[i].return_best_score_normalized();
-			double best_score_norm_negative = oligos_vector[i+1].return_best_score_normalized();
-			
-			if(best_score_norm_positive >= best_score_norm_negative){
-
-				comparison.emplace_back(oligos_vector[i]);
-			}
-
-			else{
-				comparison.emplace_back(oligos_vector[i+1]);
-			}
-		}
-
-		//The new oligos_vector is replaced by comparison vector, which contains only the best strand
-		oligos_vector.clear();
-		oligos_vector = comparison;
-	}
-}
-
-//Function to calculate the score of a general oligo against a JASPAR matrix
-void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsigned int s_iterator){
-
-	double sum_scores = 0;
-	
-	//For each oligo in the current sequence a score is calculated
-	if(s_iterator <= sequence.size() - matrix[0].size() ) {
-
-		for(unsigned int i=0; i< matrix[0].size(); i++){
-
-			switch(sequence[i+s_iterator]){
-
-				case 'A':
-
-					sum_scores = sum_scores + matrix[0][i];
-					break;
-
-				case 'C':
-
-					sum_scores = sum_scores + matrix[1][i];
-					break;
-
-				case 'G':
-
-					sum_scores = sum_scores + matrix[2][i];
-					break;
-
-				case 'T':
-
-					sum_scores = sum_scores + matrix[3][i];
-					break;
-
-				default:
-
-					sum_scores = sum_scores + o_matrix_mins[i];
-					break;
-			}
-		}
-		
-		//The total score of an oligo is saved into an oligo_scores vector
-		oligo_scores.emplace_back(sum_scores);
-
-		//Then the function is recalled recursively shifting on the next oligo thanks to the iterator progression
-		shifting(matrix, sequence, s_iterator+1);
-	}
-}
-
-//Function to read JASPAR PWM file, extract values and create a matrix class
-vector<vector<double>> coordinator_class::read_JASPAR(){
-
-	cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
-
-	ifstream file(JASPAR_FILE);
-	string line;		
-
-	//For each line of the JASPAR file	
-	while(getline(file,line)){
-
-		//If the line start with '>' character save the words into matrix_name string and into tf_name string
-		if(line[0]=='>'){
-
-			istringstream mystream(line);			
-			mystream >> matrix_name >> tf_name;
-		}
-
-		//If the line does not start with '>' delete the '[',']' and 'A,T,C,G' characters, extract the scores and save them into a scores matrix
-		else{
-			
-			//Deleting from line the first character (A,T,C,G), the '[' and the ']' characters
-			line.erase(0,line.find('[') +1);
-			line.erase(line.find(']'));
-
-			vector<double> scores_line;	
-			istringstream mystream(line);
-			
-			//For each words (number) in line put the current number in num variables
-			for (double num; mystream >> num;){
-
-				scores_line.emplace_back(num);
-			}
-
-			matrix.emplace_back(scores_line);
-		}
-
+		//Extract the sequence from the object with the twobit_sequence function
+		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1);
 	}
 
-	file.close();
-
-	//Cout of step 3/4 here because the normalization and reverse function will be re-utilized during the workflow
-	cout << "- [3] Jaspar Matrix normalization\n";
-	cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
-
-	return matrix;
-}
-
-//Function which saves into a vector called col_sum all the score column sums --> This is made to perform the next Normalization step faster
-vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
-
-	vector<double> col_sum;						
-	double sum = 0;							
-
-	for (unsigned int i = 0; i < matrix[0].size(); i++) {		
-		for (unsigned int j = 0; j < 4; j++){			
-
-			sum = sum + matrix[j][i];			
-		}
-
-		col_sum.emplace_back(sum);				
-		sum = 0;						
+	//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
+	else {		
+		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
 	}
-
-	return col_sum;
 }
 
 //Function useful to normalize matrix scores and adding a pseudocount to them
@@ -314,6 +110,25 @@ void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> matrix){
 
 		norm_matrix.emplace_back(normalized_matrix_line);
 	}
+}
+
+//Function which saves into a vector called col_sum all the score column sums --> This is made to perform the next Normalization step faster
+vector<double> matrix_class::find_col_sum(vector<vector<double>> matrix){
+
+	vector<double> col_sum;						
+	double sum = 0;							
+
+	for (unsigned int i = 0; i < matrix[0].size(); i++) {		
+		for (unsigned int j = 0; j < 4; j++){			
+
+			sum = sum + matrix[j][i];			
+		}
+
+		col_sum.emplace_back(sum);				
+		sum = 0;						
+	}
+
+	return col_sum;
 }
 
 //Function to perform a second normalization on matrix scores (without a pseudocount addition)
@@ -386,6 +201,68 @@ void oligo_class::find_minmax(vector<vector<double>> matrix){
 
 }	
 
+//Function to calculate the score of a general oligo against a JASPAR matrix
+void oligo_class::shifting(vector<vector<double>> matrix, string sequence, unsigned int s_iterator){
+
+	double sum_scores = 0;
+	
+	//For each oligo in the current sequence a score is calculated
+	if(s_iterator <= sequence.size() - matrix[0].size() ) {
+
+		for(unsigned int i=0; i< matrix[0].size(); i++){
+
+			switch(sequence[i+s_iterator]){
+
+				case 'A':
+
+					sum_scores = sum_scores + matrix[0][i];
+					break;
+
+				case 'C':
+
+					sum_scores = sum_scores + matrix[1][i];
+					break;
+
+				case 'G':
+
+					sum_scores = sum_scores + matrix[2][i];
+					break;
+
+				case 'T':
+
+					sum_scores = sum_scores + matrix[3][i];
+					break;
+
+				default:
+
+					sum_scores = sum_scores + o_matrix_mins[i];
+					break;
+			}
+		}
+		
+		//The total score of an oligo is saved into an oligo_scores vector
+		oligo_scores.emplace_back(sum_scores);
+
+		//Then the function is recalled recursively shifting on the next oligo thanks to the iterator progression
+		shifting(matrix, sequence, s_iterator+1);
+	}
+}
+
+//Best score normalization with normalization formula (The parameter to normalize have already been calculated and saved into the class)
+void oligo_class::scores_normalization(){
+	
+	double score_normalized;
+	vector<double> oligo_scores_normalized;
+
+	for(unsigned int score=0; score < oligo_scores.size(); score++){
+
+	score_normalized = 1 + ((oligo_scores[score] - max_possible_score)/(max_possible_score - min_possible_score));
+	oligo_scores_normalized.emplace_back(score_normalized);
+	}
+	
+	oligo_scores = oligo_scores_normalized;
+}
+
 //Function to find the best oligo score. From every sequence from GEP the best oligo is calculated and both oligo and position in the window are saved
 unsigned int oligo_class::find_best_score(){
 
@@ -439,21 +316,6 @@ unsigned int oligo_class::find_best_score(){
 
 }
 
-//Best score normalization with normalization formula (The parameter to normalize have already been calculated and saved into the class)
-void oligo_class::scores_normalization(){
-	
-	double score_normalized;
-	vector<double> oligo_scores_normalized;
-
-	for(unsigned int score=0; score < oligo_scores.size(); score++){
-
-	score_normalized = 1 + ((oligo_scores[score] - max_possible_score)/(max_possible_score - min_possible_score));
-	oligo_scores_normalized.emplace_back(score_normalized);
-	}
-	
-	oligo_scores = oligo_scores_normalized;
-}
-
 //The oligo which has generated the best score is extracted from fasta sequence and saved into best_oligo_seq variable
 void oligo_class::find_best_sequence(string sequence, unsigned int length){
 
@@ -469,6 +331,149 @@ void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, un
 	
 }
 	
+//Function to read BED and 2Bit files and create GEP (vector of bed class)
+void coordinator_class::GEP_creation(vector<bed_class> &GEP){
+
+	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
+
+	ifstream in(BED_FILE); 					
+	TwoBit * tb;
+
+	//Opening 2Bit file with twobit_open function from andrelmartens code and saved in tb variable 
+	tb = twobit_open(TWOBIT_FILE.c_str()); 
+
+	string line;
+
+	//Line counter initialization
+	unsigned int n_line = 1;
+
+	//For each line in BED file create a bed class called bed_line in which chr, start and end coordinate are ridden, centered and saved
+	//Then the Fasta sequence is extracted from Twobit genome following the coordinated and saved into a string variable
+	while(getline(in,line)){
+
+
+		//if line is empty or commented --> continue
+		if(line.empty() || line[0] == '#'){
+
+			continue;
+		}
+
+		bed_class bed_line(line,tb, n_line);
+
+		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector og bed class)
+		GEP.emplace_back(bed_line);	
+
+		n_line = n_line + 1;		 
+
+	}
+}
+
+//Function to read JASPAR PWM file, extract values and create a matrix class
+vector<vector<double>> coordinator_class::read_JASPAR(){
+
+	cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
+
+	ifstream file(JASPAR_FILE);
+	string line;		
+
+	//For each line of the JASPAR file	
+	while(getline(file,line)){
+
+		//If the line start with '>' character save the words into matrix_name string and into tf_name string
+		if(line[0]=='>'){
+
+			istringstream mystream(line);			
+			mystream >> matrix_name >> tf_name;
+		}
+
+		//If the line does not start with '>' delete the '[',']' and 'A,T,C,G' characters, extract the scores and save them into a scores matrix
+		else{
+			
+			//Deleting from line the first character (A,T,C,G), the '[' and the ']' characters
+			line.erase(0,line.find('[') +1);
+			line.erase(line.find(']'));
+
+			vector<double> scores_line;	
+			istringstream mystream(line);
+			
+			//For each words (number) in line put the current number in num variables
+			for (double num; mystream >> num;){
+
+				scores_line.emplace_back(num);
+			}
+
+			matrix.emplace_back(scores_line);
+		}
+	}
+
+	file.close();
+
+	//Cout of step 3/4 here because the normalization and reverse function will be re-utilized during the workflow
+	cout << "- [3] Jaspar Matrix normalization\n";
+	cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
+
+	return matrix;
+}
+
+//Function to create oligos_vector (a oligo class vector)
+void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> matrix_log, vector<vector<double>> matrix_log_inverse, vector<bed_class> GEP){
+
+	cout << "- [5] Analyzing sequences using Jaspar matrix\n";
+
+	//For every sequences into GEP vector
+	for(unsigned int i=0; i<GEP.size(); i++){
+
+		string sequence = GEP[i].return_sequence(GEP[i]);
+		string chr_coord = GEP[i].return_chr_coord();
+		unsigned int start_coord = GEP[i].return_start_coord_GEP();
+
+		//Calling the oligo_class constructor to analyze the shifting of the sequence on log_matrix (FWD strand analysis)
+		oligo_class SHIFTING(matrix_log, sequence, chr_coord, start_coord, '+');
+
+		//The oligo class just created is saved into oligos_vector (oligo_class vector)
+		oligos_vector.emplace_back(SHIFTING);
+
+		//If the analysis is on DS calling the oligo_class constructor to analyze the shifting of sequence on inverse_log_matrix (REVERSE strande analysis)
+		if(DS == 1){
+
+			oligo_class SHIFTING(matrix_log_inverse, sequence, chr_coord, start_coord, '-');
+			oligos_vector.emplace_back(SHIFTING);
+		}
+	}	
+
+	cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
+}
+
+//Function useful, if the analysis is performed on DS, to choose from the best FWD strand oligo and the best REV strand oligo the best one to keep as "Best oligo" --> The oligos vector is divided in half and only the best strand for each sequence is kept
+void coordinator_class::best_strand(){
+	
+	//Only if the analysis is on Double Strand
+	if(DS == 1){
+		
+		vector<oligo_class> comparison;
+
+		for(unsigned int i=0; i<oligos_vector.size(); i+=2){
+			
+			//The comparison is made by oligo_class in i position against the oligo class in i+1 position (The fwd and rev strand of the same sequence, which are consecutive into the oligos_vector)
+			double best_score_norm_positive = oligos_vector[i].return_best_score_normalized();
+			double best_score_norm_negative = oligos_vector[i+1].return_best_score_normalized();
+			
+			if(best_score_norm_positive >= best_score_norm_negative){
+
+				comparison.emplace_back(oligos_vector[i]);
+			}
+
+			else{
+				comparison.emplace_back(oligos_vector[i+1]);
+			}
+		}
+
+		//The new oligos_vector is replaced by comparison vector, which contains only the best strand
+		oligos_vector.clear();
+		oligos_vector = comparison;
+	}
+}
+
 //Function to re-set the genomic coordinates and the sequences window --> centered on the best oligo found for each sequence
 void coordinator_class::centering_oligo(){
 
@@ -483,24 +488,6 @@ void coordinator_class::centering_oligo(){
 		center_oligo = oligos_vector[i].return_start_coord_oligo() + matrix_log[0].size()/2;
 		GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
 		GEP[i].extract_seq(tb,0);
-	}
-}
-
-//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates extracted from Bed line
-void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
-
-	//CONTROL: if flag is 1 means that the current line has starting coordinate > end coordinate, so it is correct
-	if(flag == 1){	
-		
-		string chrom = chr_coord;
-
-		//Extract the sequence from the object with the twobit_sequence function
-		sequence = twobit_sequence(tb,chrom.c_str(),start_coord,end_coord-1);
-	}
-
-	//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
-	else {		
-		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
 	}
 }
 
@@ -526,14 +513,102 @@ vector<unsigned int> map_class::generic_vector_creation(string numbers){
 	return vec;
 }
 
+//Function to extract fasta sequences from a Multifasta file and save them into a vector of string
+void multifasta_class::extract_sequences(){
+
+	cout << "\n- [1] Extracting sequences from MultiFasta file \n";
+
+	ifstream file(MFASTA_FILE);
+	string line;
+	string current_sequence;
+
+	//First line is flagged to 1 to ignore it (because in MF format sometimes there is an header first line)
+	bool first_line = 1;
+	
+	//The while cycle follows a complex reasoning: 
+	//if in line there is the first line --> all ignored --> then first line flag set to 0
+	//if in line there is the FASTA sequence --> line is saved in current_sequence variable --> then pass to next line
+	//if in line there is the header (but not the first line) --> current_sequence previously filled by FASTA is saved in sequences vector (a vector of strings) --> then current_sequence is clean
+	while(getline(file,line)){
+		
+		
+		if(line[0] == '>' && !first_line){
+			
+			
+			sequences.emplace_back(current_sequence);
+			current_sequence.clear();
+
+		}
+
+		else if (!first_line){
+
+			if(line[0] != ' ' && line.size() != 0){	
+
+				//Before to save the sequence in current_sequence variable the FASTA characters are capitalized
+				transform(line.begin(), line.end(), line.begin(), ::toupper);	
+				current_sequence = current_sequence + line; 
+			}
+		}
+		
+		//After the first cicle the first line flag is set to 0
+		first_line = 0;	
+	}
+	sequences.emplace_back(current_sequence);
+}
+
+//Controlling that all the MF sequences have the same langth
+void multifasta_class::length_control(vector<string> sequences){
+
+	cout << "- [2] Multifasta Sequences length check\n";
+
+	unsigned int size = sequences[0].size();
+
+	for(unsigned int i=0; i<sequences.size(); i++){
+		
+		//If only one sequence in the vector are longer an error is generated
+		if(sequences[i].size() != size){
+
+			cerr << "Sequences are not of the same length!" << endl;
+			exit(1);
+		}
+	}
+}
+
+void multifasta_class::GEP_creation_MF(vector<string> sequences){
+
+	cout << "- [3] Sorting Multifasta sequences\n";
+
+	for(unsigned int i=0; i<sequences.size(); i++){
+		
+		//A bed class is created for each sequence
+		bed_class BED_MULTIFASTA(sequences[i]);
+
+		//The classes are stored into a GEP vector
+		GEP.emplace_back(BED_MULTIFASTA);
+	}
+
+}
+
+//Checking function to control if, for any k-mers inserted as input, there is a distance parameter
+void map_class::check_kmer_dist(){
+
+	if(kmers_vector.size() != distance_vector.size()){
+	
+		//If the number is not equal --> ERROR printed and help visualized
+		cerr << "\nERROR: Please insert an equal number of k-mers and distance parameters!" << endl;
+		display_help();
+		exit(1);
+	}
+}
+
 //Function to create a map of oligos + their occurrences along all the sequences
 void map_class::table_creation_orizzontal(vector<bed_class> GEP){ 
 
 
 	if (MFASTA_FILE.size() ==0) 
-		cout << "- [7] Counting all k-mers occurrences for sequence and positions  \n";
+		cout << "- [7] Counting all k-mers occurrences for sequences and making orizzontal maps  \n";
 	else
-		cout << "- [4] Counting all k-mers occurrences for sequence and positions  \n";
+		cout << "- [4] Counting all k-mers occurrences for sequences and making orizzontal maps  \n";
 	
 	//A map is created for each k-mer inserted as input
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
@@ -565,9 +640,48 @@ void map_class::table_creation_orizzontal(vector<bed_class> GEP){
 	}
 }
 
+//Function to fill orizzontal plus/minus maps --> current oligo "bases" is passed as parameter to be inserted into the maps
+void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int> &plus, unordered_map<string,unsigned int> &minus){
+
+	unordered_map<string,unsigned int>::iterator it_plus;
+	unordered_map<string,unsigned int>::iterator it_minus;
+	
+	//Finding the oligo "bases" into the orizzontal plus map (FWD strand)
+	it_plus = plus.find(bases);
+
+	//Check if the current oligo "bases" is palindrome --> this function has also the aim to generate "reverse bases", the reverse complement of the current oligo
+	check_palindrome(bases, reverse_bases);
+
+	//Finding the oligo "bases" into the orizzontal minus map (REV strand)
+	it_minus = minus.find(reverse_bases);
+
+	//If the current oligo "bases" is already present into the map --> increase the occurrences by 1
+	if(it_plus!=plus.end()){
+
+		it_plus->second++;
+		it_minus->second++;
+	}
+	
+	//If the oligo is not present yet --> insert it into the map with an occurrences value of 1
+	else{
+
+		plus.insert({bases,1});
+		minus.insert({reverse_bases,1});
+	}
+
+	//Clear the string bases and reverse bases to avoid interference from different oligos
+	bases.clear();
+	reverse_bases.clear();
+}
+
 //Function to create maps to count oligos occurrences for each sequence position (in this function also frequences are calculated)
 void map_class::table_creation_vertical(vector<bed_class> GEP){
 	
+	if (MFASTA_FILE.size() ==0) 
+		cout << "- [8] Counting all k-mers positional occurrences and making vertical maps  \n";
+	else
+		cout << "- [5] Counting all k-mers positional occurrences and making vertical maps  \n";
+
 	//Return the fisrt sequence to know the sequences length
 	string seq_length = GEP[0].return_sequence(GEP[0]);
 
@@ -618,40 +732,6 @@ void map_class::table_creation_vertical(vector<bed_class> GEP){
 		//The maps vector are cleaved to make a new analysis with new k
 		maps_vector_positions_plus.clear();
 	}
-}
-
-//Function to fill orizzontal plus/minus maps --> current oligo "bases" is passed as parameter to be inserted into the maps
-void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int> &plus, unordered_map<string,unsigned int> &minus){
-
-	unordered_map<string,unsigned int>::iterator it_plus;
-	unordered_map<string,unsigned int>::iterator it_minus;
-	
-	//Finding the oligo "bases" into the orizzontal plus map (FWD strand)
-	it_plus = plus.find(bases);
-
-	//Check if the current oligo "bases" is palindrome --> this function has also the aim to generate "reverse bases", the reverse complement of the current oligo
-	check_palindrome(bases, reverse_bases);
-
-	//Finding the oligo "bases" into the orizzontal minus map (REV strand)
-	it_minus = minus.find(reverse_bases);
-
-	//If the current oligo "bases" is already present into the map --> increase the occurrences by 1
-	if(it_plus!=plus.end()){
-
-		it_plus->second++;
-		it_minus->second++;
-	}
-	
-	//If the oligo is not present yet --> insert it into the map with an occurrences value of 1
-	else{
-
-		plus.insert({bases,1});
-		minus.insert({reverse_bases,1});
-	}
-
-	//Clear the string bases and reverse bases to avoid interference from different oligos
-	bases.clear();
-	reverse_bases.clear();
 }
 
 //Function to count oligo occurrences and to create and fill the maps. It also count all the total oligo present in position (taking into account to the palindrome oligos) --> this count will be useful to calculate the frequency
@@ -754,126 +834,13 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 	vertical_plus = copy;
 }
 
-//Finding N2 parameters thanks to the accumulate function, which allows to sum all the values present in a map -> accumulate function uses a lambda function (https://en.cppreference.com/w/cpp/algorithm/accumulate) 
-void p_value_class::N2_calculation(unordered_map<string,unsigned int> orizzontal_map){
-
-	total_oligo_N2 = 0;
-	total_oligo_N2 = accumulate(begin(orizzontal_map), end(orizzontal_map), 0, [] (unsigned int val, const unordered_map<string,int>::value_type& p) {return val + p.second;});
-}
-
-//Function to check, given an oligo as input, if this oligo is palindrome or not
-bool check_palindrome(string bases,string& reverse_bases){
-	
-	reverse_bases.clear();
-	//For any character of the string insert into another string (called reverse bases) the complementary character
-	for(unsigned int i=0; i<bases.size(); i++){
-
-		char base;
-		base = bases[i];
-		switch (base) {
-
-			case 'A' : reverse_bases.append("T"); 
-				   break;
-			case 'T' : reverse_bases.append("A"); 
-				   break;
-			case 'G' : reverse_bases.append("C"); 
-				   break;
-			case 'C' : reverse_bases.append("G"); 
-				   break;
-			case 'N' : reverse_bases.append("N"); 
-				   break;
-		}
-	}
-	
-	//Then reverse the string 
-	reverse(reverse_bases.begin(), reverse_bases.end());
-	
-	//If they are equal --> it means that the oligo "bases" is palindrome
-	if (reverse_bases == bases){
-		return true;
-	}
-	else {return false;}
-
-}
-
-//Controlling that all the MF sequences have the same langth
-void multifasta_class::length_control(vector<string> sequences){
-
-	cout << "- [2] Multifasta Sequences length check\n";
-
-	unsigned int size = sequences[0].size();
-
-	for(unsigned int i=0; i<sequences.size(); i++){
-		
-		//If only one sequence in the vector are longer an error is generated
-		if(sequences[i].size() != size){
-
-			cerr << "Sequences are not of the same length!" << endl;
-			exit(1);
-		}
-	}
-}
-
-//Function to extract fasta sequences from a Multifasta file and save them into a vector of string
-void multifasta_class::extract_sequences(){
-
-	cout << "\n- [1] Extracting sequences from MultiFasta file \n";
-
-	ifstream file(MFASTA_FILE);
-	string line;
-	string current_sequence;
-
-	//First line is flagged to 1 to ignore it (because in MF format sometimes there is an header first line)
-	bool first_line = 1;
-	
-	//The while cycle follows a complex reasoning: 
-	//if in line there is the first line --> all ignored --> then first line flag set to 0
-	//if in line there is the FASTA sequence --> line is saved in current_sequence variable --> then pass to next line
-	//if in line there is the header (but not the first line) --> current_sequence previously filled by FASTA is saved in sequences vector (a vector of strings) --> then current_sequence is clean
-	while(getline(file,line)){
-		
-		
-		if(line[0] == '>' && !first_line){
-			
-			
-			sequences.emplace_back(current_sequence);
-			current_sequence.clear();
-
-		}
-
-		else if (!first_line){
-
-			if(line[0] != ' ' && line.size() != 0){	
-
-				//Before to save the sequence in current_sequence variable the FASTA characters are capitalized
-				transform(line.begin(), line.end(), line.begin(), ::toupper);	
-				current_sequence = current_sequence + line; 
-			}
-		}
-		
-		//After the first cicle the first line flag is set to 0
-		first_line = 0;	
-	}
-	sequences.emplace_back(current_sequence);
-}
-
-void multifasta_class::GEP_creation_MF(vector<string> sequences){
-
-	cout << "- [3] Sorting Multifasta sequences\n";
-
-	for(unsigned int i=0; i<sequences.size(); i++){
-		
-		//A bed class is created for each sequence
-		bed_class BED_MULTIFASTA(sequences[i]);
-
-		//The classes are stored into a GEP vector
-		GEP.emplace_back(BED_MULTIFASTA);
-	}
-
-}
-
 //Function to create a matrix of p_value class (1 dimension = different k-mers, 2 dimension = positions)
 void map_class::P_VALUE_MATRIX_creation(){
+	
+	if (MFASTA_FILE.size() ==0) 
+		cout << "- [9] Calculating oligos p_value and flling P_Value class matrix  \n";
+	else
+		cout << "- [6] Calculating oligos p_value and flling P_Value class matrix  \n";
 
 	//For each k-mers inserted as input
 	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
@@ -908,6 +875,117 @@ void map_class::P_VALUE_MATRIX_creation(){
 	}
 }
 
+//Function to create a matrix of hamming class (1 dimension = different k-mers, 2 dimension = positions)
+void map_class::HAMMING_MATRIX_creation(vector<bed_class> GEP){
+
+	if (MFASTA_FILE.size() ==0) 
+		cout << "- [10] Calculating best oligos hamming neighbours and filling Hamming matrix  \n";
+	else
+		cout << "- [7] Calculating best oligos hamming neighbours and filling Hamming matrix  \n";
+
+	//For every kmer in input	
+	for(unsigned int j=0; j<P_VALUE_MATRIX.size(); j++){
+		
+		//Outfile_header function to handle Output file
+		ofstream outfile = outfile_header_hamming(j);
+		
+		//For each position in sequence
+		for(unsigned int i=0; i<P_VALUE_MATRIX[j].size(); i++){
+			
+			//The multimap corresponding to the current kmer and position is returned from the P-val matrix
+			multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
+
+			//Create a hamming_class H passing the vertical multimap, the distance inserted as input, the current position i, the number of different oligos (contained in tot_freq_matrix), the orizzontal matrix, the outfile to print the Output file and finally the GEP (which contains the sequences)
+			hamming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, GEP);
+
+			//A vector of hamming classes is created 
+			HAMMING_VECTOR.emplace_back(H);
+		}
+
+		//The vector of hamming_classes is stored into a bigger P_VALUE_MATRIX
+		HAMMING_MATRIX.emplace_back(HAMMING_VECTOR);
+		
+		//Vector is cleaned up to avoid interference on the next cycle
+		HAMMING_VECTOR.clear();
+		outfile.close();
+	}
+
+	if (MFASTA_FILE.size() ==0) 
+		cout << "- [11] PWM matrices from hit positions calculated \n";
+	else
+		cout << "- [8] PWM matrices from hit positions calculated \n";
+}
+
+//Function to create a matrix of z_test class
+void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
+	
+	bool local_max = 1;
+	
+	if (MFASTA_FILE.size() ==0) 
+		cout << "- [12] Calculating Z-test from PWM matrces shifing and filling Z-test matrix  \n";
+	else
+		cout << "- [9] Calculating Z-test from PWM matrces shifing and filling Z-test matrix  \n";
+
+	//For every kmer in input	
+	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
+	
+		//For each position in sequence
+		for (unsigned int j=0; j<HAMMING_MATRIX[i].size(); j++){
+			
+			//Return the PWM matrix calculated from the corresponding hamming class
+			vector<vector<double>> PWM_matrix = HAMMING_MATRIX[i][j].return_PWM_hamming();
+
+			//Extract the frequence_1 from the corresponding hamming class
+			double Frequence_1 = HAMMING_MATRIX[i][j].return_FREQUENCE_1();
+			
+			//If the local_maxima filtering is enabled
+			if(local_maxima_grouping == 1){
+				
+				
+				double Frequence_1_prev = 0;
+				double Frequence_1_post = 0;
+				
+				//if the position is not the first -> return the pos-1 freq_1 -> else the pos-1 freq_1 value remain 0
+				if(j != 0){
+					Frequence_1_prev = HAMMING_MATRIX[i][j-1].return_FREQUENCE_1();
+				}
+
+				//if the position is not the last -> return the pos+1 freq_1 -> else the pos+1 freq_1 value remain 0
+				if(j != HAMMING_MATRIX[i].size()){
+					Frequence_1_post = HAMMING_MATRIX[i][j+1].return_FREQUENCE_1();
+				}
+				
+				//Analyze if the current pos is a local max
+				local_max = find_local_max(Frequence_1,Frequence_1_prev,Frequence_1_post);
+			}
+			
+			//If it is a local max and its freq_1 value overcome the threshold build a z_test_class Z and then save it into a vector and finally into a matrix (as done with hamming and p_value classes)
+			if(Frequence_1 >= freq_treshold && local_max == 1){
+
+				z_test_class Z(PWM_matrix, GEP,j+1,kmers_vector,HAMMING_MATRIX);
+				Z_TEST_VECTOR.emplace_back(Z);
+			}
+		}
+
+		Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
+		Z_TEST_VECTOR.clear();
+	}
+}
+
+//Return 1 only if the frequence in position is higher than frequences in pos-1 and in pos+1
+bool map_class::find_local_max(double center, double prev, double post){
+
+	if(center > prev && center >= post){
+
+		return 1;
+	}
+	
+	else{
+		return 0;
+	}
+
+}
+
 //Transforming a map of pair into a multimap, ordered by oligo occurrences
 multimap<pair<unsigned int, unsigned int>,pair<string,string>> p_value_class::multimap_creation(map<pair<string,string>, pair<unsigned int,unsigned int>> pair_map){
 
@@ -917,6 +995,13 @@ multimap<pair<unsigned int, unsigned int>,pair<string,string>> p_value_class::mu
 	}
 
 	return vertical_multimap;
+}
+
+//Finding N2 parameters thanks to the accumulate function, which allows to sum all the values present in a map -> accumulate function uses a lambda function (https://en.cppreference.com/w/cpp/algorithm/accumulate) 
+void p_value_class::N2_calculation(unordered_map<string,unsigned int> orizzontal_map){
+
+	total_oligo_N2 = 0;
+	total_oligo_N2 = accumulate(begin(orizzontal_map), end(orizzontal_map), 0, [] (unsigned int val, const unordered_map<string,int>::value_type& p) {return val + p.second;});
 }
 
 //Function to calculate and store into vectors K,N1,N2 parameters used to find oligos' p-values
@@ -1042,199 +1127,6 @@ void p_value_class::checking_ordering(map<pair<string,string>,pair<unsigned int,
 
 			print_debug_occurrences_SS(pair_map, position, outfile, freq, p_value_vec);	
 		}
-	}
-}
-
-//If the analysis is on Double Strand and oligos need to be ordered by p_value this is the function which writes on the output file
-void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
-
-	unsigned int c=0;
-	sum_top_N = 0;
-
-	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
-	
-	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
-	for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
-
-		double FREQ, Sum_Occ_Oligo;
-		it_multi = pair_map.find(it_pair->second);
-		string Oligo = it_multi->first.first;
-		string Oligo_RC = it_multi->first.second;
-		unsigned int Num_Occ_FWD = it_multi->second.first;
-		unsigned int Num_Occ_REV = it_multi->second.second;
-		bool pal = check_palindrome(Oligo, reverse_bases);
-		unsigned int Rank = c;
-		string PAL;
-		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
-		double P_VAL = it_pair->first;
-
-		if(pal == 1){
-
-			PAL = "TRUE";
-			Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
-			FREQ = Sum_Occ_Oligo/freq;
-		}
-
-		else{
-			PAL = "FALSE";
-			Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
-			Num_Occ_RC_FWD = Num_Occ_REV;
-			Num_Occ_RC_REV = Num_Occ_FWD;
-			Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
-			FREQ = Sum_Occ_Oligo/freq;
-		}
-
-		outfile << position+1 << "\t" << Rank+1 << "\t";
-		outfile << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
-		outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
-		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL << endl;	
-		sum_top_N = sum_top_N + Sum_Occ_Oligo;
-
-	}
-}
-
-//If the analysis is on Single Strand and oligos need to be ordered by p_value this is the function which writes on the output file
-void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
-
-	unsigned int c = 0;
-	sum_top_N = 0;
-
-	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
-
-	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
-	for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
-
-		double FREQ, Num_Occ_FWD;
-		it_multi = pair_map.find(it_pair->second);
-		string Oligo = it_multi->first.first;
-		unsigned int Num_Occ_Oligo = it_multi->second.first;
-		bool pal = check_palindrome(Oligo, reverse_bases);
-		unsigned int Rank = c;
-		string PAL;
-		double P_VAL = it_pair->first;
-		Num_Occ_FWD = Num_Occ_Oligo;
-		FREQ = Num_Occ_FWD/freq;
-
-		if(pal == 0){
-
-			PAL = "FALSE";
-		}
-		else{	PAL = "TRUE";}
-
-		outfile << position+1 << "\t" << Rank+1 << "\t";
-		outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
-		outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;	
-		sum_top_N = sum_top_N + Num_Occ_FWD;
-		
-	}
-}
-
-//If the analysis is on Double Strand and oligos need to be ordered by occurrences this is the function which writes on the output file
-void p_value_class::print_debug_occurrences_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq, vector<double> p_value_vec){
-
-	unsigned int c=0;
-	sum_top_N = 0;
-
-	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
-	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
-
-		double FREQ, Sum_Occ_Oligo;
-		string Oligo = it_rev->second.first;
-		string Oligo_RC = it_rev->second.second;
-		unsigned int Num_Occ_FWD = it_rev->first.first;
-		unsigned int Num_Occ_REV = it_rev->first.second;
-		bool pal = check_palindrome(Oligo, reverse_bases);
-		unsigned int Rank = c;
-		string PAL;
-		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
-		double P_VAL = p_value_vec[c];
-
-		if(pal == 1){
-
-			PAL = "TRUE";
-			Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
-			FREQ = Sum_Occ_Oligo/freq;
-		}
-
-		else{
-			PAL = "FALSE";
-			Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
-			Num_Occ_RC_FWD = Num_Occ_REV;
-			Num_Occ_RC_REV = Num_Occ_FWD;
-			Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
-			FREQ = Sum_Occ_Oligo/freq;
-		}
-
-		outfile << position+1 << "\t" << Rank+1 << "\t";
-		outfile << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
-		outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
-		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL << endl;	
-		sum_top_N = sum_top_N + Sum_Occ_Oligo;
-
-	}
-}
-
-//If the analysis is on Single Strand and oligos need to be ordered by occurrences this is the function which writes on the output file
-void p_value_class::print_debug_occurrences_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq, vector<double> p_value_vec){
-
-	unsigned int c = 0;
-	sum_top_N = 0;
-
-	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
-	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
-
-		double FREQ, Num_Occ_FWD;
-		string Oligo = it_rev->second.first;
-		unsigned int Num_Occ_Oligo = it_rev->first.first;
-		bool pal = check_palindrome(Oligo,reverse_bases);
-		unsigned int Rank = c;
-		string PAL;
-		double P_VAL = p_value_vec[c];
-		Num_Occ_FWD = Num_Occ_Oligo;
-		FREQ = Num_Occ_FWD/freq;
-
-		if(pal == 0){
-
-			PAL = "FALSE";
-		}
-		else{	PAL = "TRUE";}
-
-		outfile << position+1 << "\t" << Rank+1 << "\t";
-		outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
-		outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;	
-		sum_top_N = sum_top_N + Num_Occ_FWD;
-		
-	}
-}
-
-//Function to create a matrix of hamming class (1 dimension = different k-mers, 2 dimension = positions)
-void map_class::HAMMING_MATRIX_creation(vector<bed_class> GEP){
-
-	//For every kmer in input	
-	for(unsigned int j=0; j<P_VALUE_MATRIX.size(); j++){
-		
-		//Outfile_header function to handle Output file
-		ofstream outfile = outfile_header_hamming(j);
-		
-		//For each position in sequence
-		for(unsigned int i=0; i<P_VALUE_MATRIX[j].size(); i++){
-			
-			//The multimap corresponding to the current kmer and position is returned from the P-val matrix
-			multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].return_vertical_multimap();
-
-			//Create a hamming_class H passing the vertical multimap, the distance inserted as input, the current position i, the number of different oligos (contained in tot_freq_matrix), the orizzontal matrix, the outfile to print the Output file and finally the GEP (which contains the sequences)
-			hamming_class H(vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, GEP);
-
-			//A vector of hamming classes is created 
-			HAMMING_VECTOR.emplace_back(H);
-		}
-
-		//The vector of hamming_classes is stored into a bigger P_VALUE_MATRIX
-		HAMMING_MATRIX.emplace_back(HAMMING_VECTOR);
-		
-		//Vector is cleaned up to avoid interference on the next cycle
-		HAMMING_VECTOR.clear();
-		outfile.close();
 	}
 }
 
@@ -1519,72 +1411,6 @@ void hamming_class::PWM_hamming_creation(){
 	PWM_hamming.emplace_back(vec_T);
 }
 
-
-//Function to create a matrix of z_test class
-void map_class::Z_TEST_MATRIX_creation(vector<bed_class> GEP){
-	
-	bool local_max = 1;
-
-	//For every kmer in input	
-	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
-	
-		//For each position in sequence
-		for (unsigned int j=0; j<HAMMING_MATRIX[i].size(); j++){
-			
-			//Return the PWM matrix calculated from the corresponding hamming class
-			vector<vector<double>> PWM_matrix = HAMMING_MATRIX[i][j].return_PWM_hamming();
-
-			//Extract the frequence_1 from the corresponding hamming class
-			double Frequence_1 = HAMMING_MATRIX[i][j].return_FREQUENCE_1();
-			
-			//If the local_maxima filtering is enabled
-			if(local_maxima_grouping == 1){
-				
-				
-				double Frequence_1_prev = 0;
-				double Frequence_1_post = 0;
-				
-				//if the position is not the first -> return the pos-1 freq_1 -> else the pos-1 freq_1 value remain 0
-				if(j != 0){
-					Frequence_1_prev = HAMMING_MATRIX[i][j-1].return_FREQUENCE_1();
-				}
-
-				//if the position is not the last -> return the pos+1 freq_1 -> else the pos+1 freq_1 value remain 0
-				if(j != HAMMING_MATRIX[i].size()){
-					Frequence_1_post = HAMMING_MATRIX[i][j+1].return_FREQUENCE_1();
-				}
-				
-				//Analyze if the current pos is a local max
-				local_max = find_local_max(Frequence_1,Frequence_1_prev,Frequence_1_post);
-			}
-			
-			//If it is a local max and its freq_1 value overcome the threshold build a z_test_class Z and then save it into a vector and finally into a matrix (as done with hamming and p_value classes)
-			if(Frequence_1 >= freq_treshold && local_max == 1){
-
-				z_test_class Z(PWM_matrix, GEP,j+1,kmers_vector,HAMMING_MATRIX);
-				Z_TEST_VECTOR.emplace_back(Z);
-			}
-		}
-
-		Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
-		Z_TEST_VECTOR.clear();
-	}
-}
-
-//Return 1 only if the frequence in position is higher than frequences in pos-1 and in pos+1
-bool map_class::find_local_max(double center, double prev, double post){
-
-	if(center > prev && center >= post){
-
-		return 1;
-	}
-	
-	else{
-		return 0;
-	}
-
-}
-
 //Shifting the PWM_matrix on the sequences and calculate local scores (from positon where the matrix has been generated), and the global scores from each sequences positions
 void z_test_class::oligos_vector_creation_PWM(vector<bed_class> GEP){
 	
@@ -1675,6 +1501,41 @@ void z_test_class::z_score_calculation(){
 	const double Z  = z_score;
 	Zpvalue = gsl_cdf_ugaussian_P(Z);
 
+
+}
+
+//Function to check, given an oligo as input, if this oligo is palindrome or not
+bool check_palindrome(string bases,string& reverse_bases){
+	
+	reverse_bases.clear();
+	//For any character of the string insert into another string (called reverse bases) the complementary character
+	for(unsigned int i=0; i<bases.size(); i++){
+
+		char base;
+		base = bases[i];
+		switch (base) {
+
+			case 'A' : reverse_bases.append("T"); 
+				   break;
+			case 'T' : reverse_bases.append("A"); 
+				   break;
+			case 'G' : reverse_bases.append("C"); 
+				   break;
+			case 'C' : reverse_bases.append("G"); 
+				   break;
+			case 'N' : reverse_bases.append("N"); 
+				   break;
+		}
+	}
+	
+	//Then reverse the string 
+	reverse(reverse_bases.begin(), reverse_bases.end());
+	
+	//If they are equal --> it means that the oligo "bases" is palindrome
+	if (reverse_bases == bases){
+		return true;
+	}
+	else {return false;}
 
 }
 
@@ -1897,6 +1758,168 @@ void oligo_class::oligos_vector_debug(){	//Debug function to print the best olig
 	cout << "The best oligo sequence is " << best_oligo_seq << endl;
 	cout << "Strand  " << strand << endl;
 	cout << endl;
+}
+
+//If the analysis is on Double Strand and oligos need to be ordered by p_value this is the function which writes on the output file
+void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
+
+	unsigned int c=0;
+	sum_top_N = 0;
+
+	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
+	
+	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
+	for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
+
+		double FREQ, Sum_Occ_Oligo;
+		it_multi = pair_map.find(it_pair->second);
+		string Oligo = it_multi->first.first;
+		string Oligo_RC = it_multi->first.second;
+		unsigned int Num_Occ_FWD = it_multi->second.first;
+		unsigned int Num_Occ_REV = it_multi->second.second;
+		bool pal = check_palindrome(Oligo, reverse_bases);
+		unsigned int Rank = c;
+		string PAL;
+		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+		double P_VAL = it_pair->first;
+
+		if(pal == 1){
+
+			PAL = "TRUE";
+			Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
+			FREQ = Sum_Occ_Oligo/freq;
+		}
+
+		else{
+			PAL = "FALSE";
+			Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
+			Num_Occ_RC_FWD = Num_Occ_REV;
+			Num_Occ_RC_REV = Num_Occ_FWD;
+			Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
+			FREQ = Sum_Occ_Oligo/freq;
+		}
+
+		outfile << position+1 << "\t" << Rank+1 << "\t";
+		outfile << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
+		outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
+		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL << endl;	
+		sum_top_N = sum_top_N + Sum_Occ_Oligo;
+
+	}
+}
+
+//If the analysis is on Single Strand and oligos need to be ordered by p_value this is the function which writes on the output file
+void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
+
+	unsigned int c = 0;
+	sum_top_N = 0;
+
+	multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_multi;
+
+	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
+	for(multimap<double,pair<string,string>>::iterator it_pair = p_value_sort.begin(); it_pair!=p_value_sort.end() && c<top_N; it_pair++, c++){
+
+		double FREQ, Num_Occ_FWD;
+		it_multi = pair_map.find(it_pair->second);
+		string Oligo = it_multi->first.first;
+		unsigned int Num_Occ_Oligo = it_multi->second.first;
+		bool pal = check_palindrome(Oligo, reverse_bases);
+		unsigned int Rank = c;
+		string PAL;
+		double P_VAL = it_pair->first;
+		Num_Occ_FWD = Num_Occ_Oligo;
+		FREQ = Num_Occ_FWD/freq;
+
+		if(pal == 0){
+
+			PAL = "FALSE";
+		}
+		else{	PAL = "TRUE";}
+
+		outfile << position+1 << "\t" << Rank+1 << "\t";
+		outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
+		outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;	
+		sum_top_N = sum_top_N + Num_Occ_FWD;
+		
+	}
+}
+
+//If the analysis is on Double Strand and oligos need to be ordered by occurrences this is the function which writes on the output file
+void p_value_class::print_debug_occurrences_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq, vector<double> p_value_vec){
+
+	unsigned int c=0;
+	sum_top_N = 0;
+
+	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
+	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
+
+		double FREQ, Sum_Occ_Oligo;
+		string Oligo = it_rev->second.first;
+		string Oligo_RC = it_rev->second.second;
+		unsigned int Num_Occ_FWD = it_rev->first.first;
+		unsigned int Num_Occ_REV = it_rev->first.second;
+		bool pal = check_palindrome(Oligo, reverse_bases);
+		unsigned int Rank = c;
+		string PAL;
+		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
+		double P_VAL = p_value_vec[c];
+
+		if(pal == 1){
+
+			PAL = "TRUE";
+			Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV = Sum_Occ_RC = Num_Occ_FWD;
+			FREQ = Sum_Occ_Oligo/freq;
+		}
+
+		else{
+			PAL = "FALSE";
+			Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
+			Num_Occ_RC_FWD = Num_Occ_REV;
+			Num_Occ_RC_REV = Num_Occ_FWD;
+			Sum_Occ_RC = Num_Occ_RC_FWD + Num_Occ_RC_REV;
+			FREQ = Sum_Occ_Oligo/freq;
+		}
+
+		outfile << position+1 << "\t" << Rank+1 << "\t";
+		outfile << Oligo << "\t" << Num_Occ_FWD << "\t" << Num_Occ_REV << "\t" << Sum_Occ_Oligo << "\t";
+		outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV << "\t" << Sum_Occ_RC << "\t";
+		outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL << endl;	
+		sum_top_N = sum_top_N + Sum_Occ_Oligo;
+
+	}
+}
+
+//If the analysis is on Single Strand and oligos need to be ordered by occurrences this is the function which writes on the output file
+void p_value_class::print_debug_occurrences_SS(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unsigned int position, ofstream& outfile, unsigned int freq, vector<double> p_value_vec){
+
+	unsigned int c = 0;
+	sum_top_N = 0;
+
+	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
+	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
+
+		double FREQ, Num_Occ_FWD;
+		string Oligo = it_rev->second.first;
+		unsigned int Num_Occ_Oligo = it_rev->first.first;
+		bool pal = check_palindrome(Oligo,reverse_bases);
+		unsigned int Rank = c;
+		string PAL;
+		double P_VAL = p_value_vec[c];
+		Num_Occ_FWD = Num_Occ_Oligo;
+		FREQ = Num_Occ_FWD/freq;
+
+		if(pal == 0){
+
+			PAL = "FALSE";
+		}
+		else{	PAL = "TRUE";}
+
+		outfile << position+1 << "\t" << Rank+1 << "\t";
+		outfile << Oligo << "\t" << Num_Occ_FWD  << "\t";
+		outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;	
+		sum_top_N = sum_top_N + Num_Occ_FWD;
+		
+	}
 }
 
 //Function to create an output file of orizzontal map. Oligos are ranked by their occurrences

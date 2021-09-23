@@ -1,5 +1,6 @@
 test
 *.2bit
+*test*
 a.out
 Test_Output
 Multifasta_random.fasta
@@ -7,9 +8,7 @@ gsl_test.cpp
 Random_multifa_TOOL/copy.cpp
 Random_multifa_TOOL/copy.h
 *.fasta
-Test_MocoLoco.R
+*.R
 provathread.cpp
-vecchio_hamming.txt
-vecchio_PWM.txt
 FOS.txt
 RFX5.txt
