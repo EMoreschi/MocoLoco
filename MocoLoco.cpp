@@ -2276,7 +2276,7 @@ void map_class::print_debug_Z_scores(ofstream& outfile, unsigned int j, unsigned
 	outfile << "#Z_score parameters and p-value for hit positions - k = " << k << endl << endl;
 	string best_oligo;
 	
-	outfile << "Position" << "\t" << "best_oligo" << "\t" << "Local_mean" << "\t" << "Global_mean" << "\t" << "Local_std_dev" << "\t" << "Global_std_dev" << "\t" << "Z_score" << "\t" << "P-value" << endl;
+	outfile << "Position" << "\t" << "best_oligo" << "\t" << "Local_mean" << "\t" << "Global_mean" << "\t" << "Local_std_dev" << "\t" << "Global_std_dev" << "\t" << "Z_score" << "\t" << "P-value" << "\t" << "P-value_Log10" << endl;
 	
 	for(unsigned int position = 0; position < Z_TEST_MATRIX[j].size(); position++){
 	
@@ -2286,13 +2286,15 @@ void map_class::print_debug_Z_scores(ofstream& outfile, unsigned int j, unsigned
 		double local_dev_std = Z_TEST_MATRIX[j][position].return_local_std_dev();
 		double global_dev_std = Z_TEST_MATRIX[j][position].return_global_std_dev();
 		double Zpvalue  = Z_TEST_MATRIX[j][position].return_Zpvalue();
+		double Zpvalue_Log10  = log10(Z_TEST_MATRIX[j][position].return_Zpvalue())*-1;
 		double z_score  = Z_TEST_MATRIX[j][position].return_z_score();
 	
 		best_oligo = HAMMING_MATRIX[j][local_pos-1].return_real_best_oligo();	
 
-		outfile << local_pos << "\t" << best_oligo << "\t" << local_mean << "\t" << global_mean << "\t" << local_dev_std << "\t" << global_dev_std << "\t" << z_score << "\t" << Zpvalue << endl;
+		outfile << local_pos << "\t" << best_oligo << "\t" << local_mean << "\t" << global_mean << "\t" << local_dev_std << "\t" << global_dev_std << "\t" << z_score << "\t" << Zpvalue << "\t" << Zpvalue_Log10 << endl;
 	}
 }
+
 //void z_test_class::print_debug_oligo_vec(vector<vector<double>> PWM_hamming){
 //
 //	cout << endl << endl;
