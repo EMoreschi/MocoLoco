@@ -1,6 +1,5 @@
 test
 *.2bit
-*test*
 a.out
 Test_Output
 Multifasta_random.fasta
@@ -14,4 +13,4 @@ provathread.cpp
 FOS.txt
 RFX5.txt
 *bed_test*
-*jaspar_Out*
+*jaspar*
