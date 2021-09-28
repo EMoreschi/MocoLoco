@@ -51,14 +51,14 @@ MOCO=$(realpath MOCO)
 path_out=$(realpath $F)
 
 Out_dir=${J#../*/};
-mkdir ${Out_dir}_test;
+mkdir ${Out_dir}_test_k${K};
 echo "#TESTING MOCOLOCO">$path_out;
-echo -e "FREQ \t HIT \t PVAL \t PVAL-LOG10">>$path_out; 
+echo -e "FREQ \t HIT \t OLIGO \t PVAL \t PVAL-LOG10">>$path_out; 
 frequenze=(100 50 40 30 20 15 10 9 8 7 6 5) 
 
 for i in ${frequenze[@]}
 do 
-  cd ${Out_dir}_test;
+  cd ${Out_dir}_test_k${K};
   mkdir $i;
   cd $i;
 	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  $Refine -k $K -d $D -f $T $all &
@@ -69,7 +69,7 @@ wait
 
  for x in ${frequenze[@]}
 do
- cd ${Out_dir}_test/$x;
+ cd ${Out_dir}_test_k${K}/$x;
 	a=$(awk  '/#Position/ {sub(/:/ ,"" ); sub(/#Position/,""); {ORS=" "}; print }' *mers_PWM_hamming_matrices_multifasta_DS.txt );
         array=();
        for j in $a 
@@ -78,7 +78,9 @@ do
         array+=($pval)
         logpval=$(awk -v j="$j" '{if ($1 == j) print $9;}' *Z_scores* | head -n 1) 
 	array+=($logpval)
-        echo -e $x "\t" $j "\t" $pval "\t" $logpval >> $path_out; 
+        bestoligo=$(awk -v j="$j" '{if ($1 == j) print $2;}' *Z_scores* | head -n 1) 
+	array+=($bestoligo)
+        echo -e $x "\t" $j "\t" $bestoligo "\t" $pval "\t" $logpval >> $path_out; 
         done  
 cd ../..;
 done
