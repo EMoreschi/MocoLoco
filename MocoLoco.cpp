@@ -1274,6 +1274,13 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 						similar_oligos_occurrences.emplace_back(it_rev->first.first);
 					}
 				}
+				
+				else{
+
+					similar_oligos.emplace_back(it_rev->second.first);
+					similar_oligos_occurrences.emplace_back(it_rev->first.first);
+
+				}
 			}
 			
 			//If analysis is in DS -> call the function is_similar_oligo to compare the real_best_oligo to the current oligo's Reverse Complement (RC). The function returns 1 if it is, otherwise 0
@@ -1295,7 +1302,12 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 						similar_oligos_occurrences.emplace_back(it_rev->first.second);
 						}
 					}
+				else{
+
+					similar_oligos.emplace_back(it_rev->second.second);
+					similar_oligos_occurrences.emplace_back(it_rev->first.second);
 				}
+			}
 			}
 		}	
 
