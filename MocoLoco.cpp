@@ -1261,10 +1261,20 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 
 			//If real_best_oligo and the current oligo are similar they can be considered neighbours and the current oligo (from FWD strand) and its occurrences can be saved into vectors
 			if(is_similar == 1){
-
-				similar_oligos.emplace_back(it_rev->second.first);
-				similar_oligos_occurrences.emplace_back(it_rev->first.first);
+				
+				//If -r option is active check if the neighbour found is already present in similar oligos vector
+				if(refining_matrix == 1){
+					
+					bool is_present = checking_neighbour_presence(it_rev->second.first);
+					
+					//If the oligo is not present --> add it
+					if(is_present == 0){
+						
+						similar_oligos.emplace_back(it_rev->second.first);
+						similar_oligos_occurrences.emplace_back(it_rev->first.first);
+					}
 				}
+			}
 			
 			//If analysis is in DS -> call the function is_similar_oligo to compare the real_best_oligo to the current oligo's Reverse Complement (RC). The function returns 1 if it is, otherwise 0
 			if(DS==1){
@@ -1272,15 +1282,39 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 				is_similar = is_similar_oligo(best, it_rev->second.second, distance);
 				//If they are similar add the oligo's RC and its occurrences to neighbours vectors 
 				if(is_similar == 1){
+					
+					//If -r option is active check if the neighbour found is already present in similar oligos vector
+					if(refining_matrix == 1){
 
-					similar_oligos.emplace_back(it_rev->second.second);
-					similar_oligos_occurrences.emplace_back(it_rev->first.second);
+					bool is_present = checking_neighbour_presence(it_rev->second.second);
+					
+						//If the oligo is not present --> add it
+						if(is_present == 0){
+						
+						similar_oligos.emplace_back(it_rev->second.second);
+						similar_oligos_occurrences.emplace_back(it_rev->first.second);
+						}
+					}
 				}
 			}
 		}	
 
 	}
 
+}
+
+//Function to check if an oligo is already present in similar_oligos vector
+bool hamming_class::checking_neighbour_presence(string oligo){
+	
+	for(unsigned int neigh = 0; neigh < similar_oligos.size(); neigh++){
+		
+		if(oligo == similar_oligos[neigh]){
+
+			return 1;
+		}
+	}
+	
+	return 0;
 }
 
 //Function to compare two oligos and find out how many charachters are apart (distanced)

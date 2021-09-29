@@ -380,6 +380,7 @@ class hamming_class{
 		void find_distanced_oligos(string, unsigned int);
 		string select_real_best_oligo(unsigned int);
 		bool is_similar_oligo(string, string, unsigned int);
+		bool checking_neighbour_presence(string);
 		void print_debug_hamming(unsigned int, ofstream&);
 		double frquence_1_calculation(unsigned int);
 		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>, unsigned int);
@@ -410,7 +411,14 @@ class hamming_class{
 
 			//Adding real best oligo occurrences to similar occurrences vector
 			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
-
+			
+			if(position == 150){
+			for(unsigned int i = 0; i<similar_oligos.size(); i++){
+				cout << similar_oligos[i] << endl;
+			}
+			cout << endl;
+			cout << "-----------------------------------------------------" << endl;
+			}
 			//Calculating the frequence 1 (total of similar occurrences / total of possible oligos in the position) and saving it to FREQUENCE_1 variable 
 			FREQUENCE_1 = frquence_1_calculation(freq);
 
