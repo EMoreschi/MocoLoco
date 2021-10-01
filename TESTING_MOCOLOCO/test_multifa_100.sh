@@ -74,14 +74,16 @@ frequenze=(75 65 55 45 35 25 20 15 10 5);
 #--------RANDOM & RANDOM IMPLANTED FILE CREATION--------------------------------------------------------------
 
 cd ${Out_dir}_test_k${K};
-	
+nc=5
+(
 for freq in ${frequenze[@]}
 do 
 	mkdir $freq;
 	cd $freq;
-		
+            ((i=i%nc)); ((i++==0)) && wait
 		$RMC -n $N -l $L -j ../../${J} -p $P -o $freq -c $C &
   
 	cd ..;
 done
+)
 cd ..;
