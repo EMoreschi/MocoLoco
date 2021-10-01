@@ -71,19 +71,42 @@ echo -e "FREQ \t HIT \t OLIGO \t PVAL \t PVAL-LOG10">>$path_out;
 #Defining frequences for analysis
 frequenze=(75 65 55 45 35 25 20 15 10 5);
 
-#--------RANDOM & RANDOM IMPLANTED FILE CREATION--------------------------------------------------------------
-
 cd ${Out_dir}_test_k${K};
-nc=5
-(
+
 for freq in ${frequenze[@]}
 do 
 	mkdir $freq;
+done
+
+#--------RANDOM & RANDOM IMPLANTED FILE CREATION--------------------------------------------------------------
+	
+for freq in ${frequenze[@]}
+do 
 	cd $freq;
-            ((i=i%nc)); ((i++==0)) && wait
+		
 		$RMC -n $N -l $L -j ../../${J} -p $P -o $freq -c $C &
   
 	cd ..;
 done
+wait
+
+#-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
+
+nc=10
+(
+for freq in ${frequenze[@]}
+do 
+	cd $freq;
+
+	for j in $(seq 1 $C);
+	do
+        	((i=i%nc)); ((i++==0)) && wait
+		echo "random_multifa_implanted${j}"
+		$MOCO -m random_multifa_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
+
+		
+	done
+	cd ..;
+done
 )
-cd ..;
+
