@@ -92,7 +92,7 @@ wait
 
 #-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
 
-nc=10
+multi_thread=10
 (
 for freq in ${frequenze[@]}
 do 
@@ -100,7 +100,7 @@ do
 
 	for j in $(seq 1 $C);
 	do
-        	((i=i%nc)); ((i++==0)) && wait
+        	((i=i%multi_thread)); ((i++==0)) && wait
 		echo "random_multifa_implanted${j}"
 		$MOCO -m random_multifa_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
 
