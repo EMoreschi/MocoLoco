@@ -574,6 +574,13 @@ void multifasta_class::length_control(vector<string> sequences){
 	}
 }
 
+//Creating alias file following the multifasta input filename
+void multifasta_class::alias_output_filename(){
+
+	alias_file = alias_file + MFASTA_FILE.erase(0,MFASTA_FILE.find_last_of("_")+1); 
+	alias_file = MFASTA_FILE.erase(MFASTA_FILE.find_last_of("."), MFASTA_FILE.size()) + "_";
+}
+
 void multifasta_class::GEP_creation_MF(vector<string> sequences){
 
 	cout << "- [3] Sorting Multifasta sequences\n";
@@ -1249,32 +1256,32 @@ void hamming_class::find_secondary_hamming(unsigned int distance, unsigned int n
 void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 
 	bool is_similar;
-	
+
 	//Scrolling all the positional vertical multimap
 	for(multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend(); it_rev++){
-		
+
 		//If the oligo in analysis is not the real_best_oligo (to avoid the comparison to himself and to avoid to be added to similar oligos vector in case of secondary hamming)
 		if(it_rev->second.first != best && it_rev->second.first != real_best_oligo){
-				
+
 			//Call the function is_similar_oligo to compare the real_best_oligo to the current oligo. The function returns 1 if it is, otherwise 0
 			is_similar = is_similar_oligo(best, it_rev->second.first, distance);
 
 			//If real_best_oligo and the current oligo are similar they can be considered neighbours and the current oligo (from FWD strand) and its occurrences can be saved into vectors
 			if(is_similar == 1){
-				
+
 				//If -r option is active check if the neighbour found is already present in similar oligos vector
 				if(refining_matrix == 1){
-					
+
 					bool is_present = checking_neighbour_presence(it_rev->second.first);
-					
+
 					//If the oligo is not present --> add it
 					if(is_present == 0){
-						
+
 						similar_oligos.emplace_back(it_rev->second.first);
 						similar_oligos_occurrences.emplace_back(it_rev->first.first);
 					}
 				}
-				
+
 				else{
 
 					similar_oligos.emplace_back(it_rev->second.first);
@@ -1282,32 +1289,32 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 
 				}
 			}
-			
+
 			//If analysis is in DS -> call the function is_similar_oligo to compare the real_best_oligo to the current oligo's Reverse Complement (RC). The function returns 1 if it is, otherwise 0
 			if(DS==1){
 
 				is_similar = is_similar_oligo(best, it_rev->second.second, distance);
 				//If they are similar add the oligo's RC and its occurrences to neighbours vectors 
 				if(is_similar == 1){
-					
+
 					//If -r option is active check if the neighbour found is already present in similar oligos vector
 					if(refining_matrix == 1){
 
-					bool is_present = checking_neighbour_presence(it_rev->second.second);
-					
+						bool is_present = checking_neighbour_presence(it_rev->second.second);
+
 						//If the oligo is not present --> add it
 						if(is_present == 0){
-						
-						similar_oligos.emplace_back(it_rev->second.second);
-						similar_oligos_occurrences.emplace_back(it_rev->first.second);
+
+							similar_oligos.emplace_back(it_rev->second.second);
+							similar_oligos_occurrences.emplace_back(it_rev->first.second);
 						}
 					}
-				else{
+					else{
 
-					similar_oligos.emplace_back(it_rev->second.second);
-					similar_oligos_occurrences.emplace_back(it_rev->first.second);
+						similar_oligos.emplace_back(it_rev->second.second);
+						similar_oligos_occurrences.emplace_back(it_rev->first.second);
+					}
 				}
-			}
 			}
 		}	
 

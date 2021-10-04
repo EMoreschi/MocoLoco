@@ -266,6 +266,7 @@ class multifasta_class{
 		void length_control(vector<string>);
 		void extract_sequences();
 		void GEP_creation_MF(vector<string>);
+		void alias_output_filename();
 
 	public:
 
@@ -278,6 +279,9 @@ class multifasta_class{
 
 			//Then the length control is performed --> All the MF sequences must be of the same langth
 			length_control(sequences);
+
+			//Function to handle output names
+			alias_output_filename();
 
 			//For every sequence in vector "sequences" a bed class is created to store the FASTA seqinto a GEP vector
 			GEP_creation_MF(sequences);
