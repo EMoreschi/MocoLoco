@@ -103,21 +103,23 @@ do
         	((i=i%multi_thread)); ((i++==0)) && wait
 		echo "random_multifa_implanted${j}"
 		$MOCO -m random_multifa_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
-
+		
 		
 	done
+	wait
 	cd ..;
 done
 )
-
+wait
 #-------EXTRACTING P-VALUES---------------------------------------------------------------------------------
 
 for freq in ${frequenze[@]}
 do
 	cd $freq;
 
-	awk -v fr="$freq" '!/^#/' '{ print $fr\t$1\t$8}' *Z_scores_*;
-	echo -e $freq >> $path_out;	
+	awk '!/^#/ { print  $1 $8 }' *Z_scores_* >> $path_out;	
+	#awk -v fr=$freq  '!/^#/ { print $fr"\t" $1 "\t" $8}' *Z_scores_* >> $path_out;	
+	#echo -e $fr >> $path_out;	
 
 	cd ..;
 done
