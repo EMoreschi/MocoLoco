@@ -66,7 +66,7 @@ mkdir ${Out_dir}_test_k${K};
 
 #Initializing headers in Output file (Outside directory just created before)
 echo "#TESTING MOCOLOCO">$path_out;
-echo -e "FREQ \t HIT \t OLIGO \t PVAL \t PVAL-LOG10">>$path_out; 
+echo -e "#FREQ \t HIT \t PVAL-LOG10">>$path_out; 
 
 #Defining frequences for analysis
 frequenze=(75 65 55 45 35 25 20 15 10 5);
@@ -109,4 +109,16 @@ do
 	cd ..;
 done
 )
+
+#-------EXTRACTING P-VALUES---------------------------------------------------------------------------------
+
+for freq in ${frequenze[@]}
+do
+	cd $freq;
+
+	awk -v fr="$freq" '!/^#/' '{ print $fr\t$1\t$8}' *Z_scores_*;
+	echo -e $freq >> $path_out;	
+
+	cd ..;
+done
 
