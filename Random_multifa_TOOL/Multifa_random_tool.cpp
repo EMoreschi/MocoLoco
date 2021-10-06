@@ -1,5 +1,7 @@
 #include "Multifa_random_tool.h"
 
+/////////////////// GLOBAL VARIABLES ////////////////////////////////////////////////////////////////
+
 unsigned int length = 500;
 unsigned int n_seq = 200;
 string JASPAR_F;
@@ -18,62 +20,418 @@ vector<unsigned int> freq_strand_plus_vector;
 vector<bool> plus_minus;
 vector<vector<bool>> plus_minus_matrix;
 
+/////////////////////// MAIN FUNCTION //////////////////////////////////////////////////////////////////
+
 int main(int argc, char *argv[]){
+	
+	//Parser function to handle input arguments
+	command_line_parser(argc, argv);
 
-	command_line_parser(argc, argv);					//Parser function called to handle aguments
-
+	//If any implanting position is inserted read all the other inputs
 	if(position.size() != 0){  
 
 		read_input();	
 	}
-
+	
+	//For evry cycle -c inserted as input do inplanting_cycle function --> creating a random multifa + implanting (if any implaning position is inserted as input)
 	for(unsigned int i=0; i<cycles; i++){
 
 		implanting_cycle(i);
 	}
 }
 
+//////////////////////// INPUT READING AND CHECKING ////////////////////////////////////////////////////////////
+
+//Function to read the input passed on command line and fill the vector to store the input information
 void read_input(){
 
+	//Calling of generic vector creation function to transform a string into an unsigned int vector (For -o parameters)
 	generic_vector_creation(oligo_perc, n_oligo_vector);	
+
+	//Check if oligo implanting percentage is between 0 and 100
 	find_oligo_number();
-	generic_vector_creation(position, position_vector);	//position vector creation from input positions, passed as a string
-	check_oligo_number();
-	check_position_vector();
-	wobble_vector_creation(wobble);
-	check_wobble();
 	
+	//Calling of generic vector creation function to transform a string into an unsigned int vector (For -p parameters)
+	generic_vector_creation(position, position_vector);
+
+	//Cheking if to any positions (-p) passed as input correspond an oligo implanting percentage (-o) --> Print a Warning
+	check_oligo_number();
+
+	//Checking if there are two or more equal implanting position --> If any print error and exit
+	check_position_vector();
+	
+	//Calling of wobble-specific vector creation function to transform a string into an unsigned int vector (For -w parameters)
+	wobble_vector_creation(wobble);
+
+	//Checking if wobble parameters passed as input are not greater than 10 --> if any, print an error
+	check_wobble();
+
+	//Check if any FWD/REV frequency is inserted --> if any, call the generic_vector_creation function		
 	if(freq_strand_plus.size() != 0){
-		
+			
+		//Calling of generic vector creation function to transform a string into an unsigned int vector (For -f parameters)
 		generic_vector_creation(freq_strand_plus, freq_strand_plus_vector);
 	}
-
+	
 	check_frequence();
 }
 
+//Function to convert a string in a vector of unsigned int
+void generic_vector_creation(string oligo_perc, vector<unsigned int> &n_oligo_vector){
+
+	int index;
+	
+	//While index points to something belonging to the string (if not his value is -1)
+	while(index != -1){
+		
+		//Find the index of the first "," in the string
+		index = oligo_perc.find(",");
+
+		//Save all the string charachter from 0 to index(,)
+		n_oligo_vector.emplace_back(stoi(oligo_perc.substr(0,index)));
+
+		//Delete from the string the value just saved and restart the process with a new cycle
+		oligo_perc.erase(0,index+1);
+	}
+}
+
+//Checking if the implanting percentage overcomes 100% or if it is lower than 0% --> Exit and print error if it happens
 void find_oligo_number(){
 
 	for(unsigned int i=0; i<n_oligo_vector.size(); i++){
 		
-		if(n_oligo_vector[i] > 100){
+		if(n_oligo_vector[i] > 100 || n_oligo_vector[i] < 0){
 
 			cout << "ERROR: The percentage need to be from 0 to 100!" << endl;
 			exit(1);
 		}
+		
+		//Transforming the implanting percentage into the real number of implants that need to be done
 		n_oligo_vector[i] = (n_oligo_vector[i] * n_seq)/100;
 	}
 
 }
 
+//Cheking if to any positions (-p) passed as input correspond an oligo implanting percentage (-o) --> Print a Warning
+void check_oligo_number(){
+
+	for(unsigned int i=0; i<n_oligo_vector.size(); i++){
+		
+		//If there is a oligo percentage equal to 0 --> print a warning
+		if(n_oligo_vector[i] == 0){
+
+			cerr << "WARNING: There is one or more 0% oligo generation frequence" << endl;
+		}
+
+		//If number of oligo implanting percentages and positions in input are different --> print a warning
+		if(n_oligo_vector.size() != position_vector.size()){
+
+			cerr << "WARNING: The number of -o (oligo implanting percentage) and -p (position) parameters are different. Some parameter can be setted as default. Please check your input command." << endl;
+		}
+	}
+}
+
+//Checking if there are two or more equal implanting position --> If any print error and exit
+void check_position_vector(){
+
+	unsigned int counter = 0;
+
+	//Scrolling the position vector with i variable
+	for(unsigned int i=0; i<position_vector.size(); i++){
+		
+		//Scrolling again the same vector with j variable
+		for(unsigned int j=0; j<position_vector.size(); j++){
+			
+			//Increment the counter if there are some equal values
+			if(position_vector[i] == position_vector[j]){
+				
+				counter++;
+			}
+		}
+		
+		//For a correct position vector input the counter must be 1 every cycle --> if not, print an error
+		if(counter != 1){
+			cerr << "\nERROR: You have inserted 2 or more equal implanting positions!\nPlease check your -p input." << endl;
+			exit(1);
+		}
+		
+		//Re-setting the counter for the next cycle
+		counter = 0;
+	}
+}
+
+//Function (specific for wobble string) to create a vector of wobble and then re-set the positions
+void wobble_vector_creation(string wobble){
+
+	//Calling the generic vector creation function to transform the wobble input string into an unsigned int vector
+	generic_vector_creation(wobble,wobble_vector);
+
+	//If the positions inserted are less than wobbles --> print a warning
+	if(position_vector.size() < wobble_vector.size()){
+
+		cout << "WARNING: wobbles parameters inserted as input are more then position parameters!" << endl;
+		cout << "Please check your input data. " << endl;
+	}	
+	
+	//If positions inserted are more than wobbles set the missing wobble values to 0
+	if(position_vector.size() > wobble_vector.size()){
+
+		int difference = position_vector.size() - wobble_vector.size();
+
+		for(int i=0; i<difference; i++){
+
+			wobble_vector.emplace_back(0);
+		}
+	}
+}
+
+//Checking if wobble parameters passed as input are not greater than 10 --> if any, print an error
+void check_wobble(){
+
+	for(unsigned int i=0; i<wobble_vector.size(); i++){
+
+		if(wobble_vector[i] > 10){
+
+			cerr << "ERROR: The maximum value allowed for wobble parameters is 10.\nPlease check the -w parameters inserted!" << endl;
+			exit(1);
+		}
+	}
+}
+
+//Check and compare the frequencies number to the jaspar matrices number
+void check_frequence(){
+
+	unsigned int freq_number = freq_strand_plus_vector.size();
+
+	//If freq number is 0 and there is a Jaspar matrix that is going to be implanted
+	if(freq_number == 0 && JASPAR_FILE_vector.size() > 0){
+
+		cerr << "WARNING: No frequence inserted, the tool will set all the frequences on 50%" << endl;
+		
+		//Set the frequency at 50% in frequency (strand plus) vector
+		for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
+
+			freq_strand_plus_vector.emplace_back(50);
+		}
+	}
+	
+	//Else if number of frequences insterted are more than 0 but less than the matrices that are going to be implanted
+	else if(freq_number > 0 && freq_number < JASPAR_FILE_vector.size()){
+		
+		cerr << "WARNING: Frequence number inserted is less than matrix inserted, the tool will set on 50% the frequences not specified" << endl;
+		
+		//Set on 50% the frequences not specified until the size of freq are equal to jaspar matrices number
+		while(freq_strand_plus_vector.size() != JASPAR_FILE_vector.size()){
+
+			freq_strand_plus_vector.emplace_back(50);
+			}
+	}
+	
+	//Else if there are more frequencies than the matrices in input --> print a warning and delete the excess frequencies
+	else if(freq_number > JASPAR_FILE_vector.size()){
+
+		cerr << "WARNING: Frequence number inserted is more than matrix inserted, Please check your input parameters " << endl;
+	
+		//Erase function to delete the excess frequencies
+		freq_strand_plus_vector.erase(freq_strand_plus_vector.begin() + JASPAR_FILE_vector.size(), freq_strand_plus_vector.end());
+
+	}
+
+}
+
+//////////////////////////////// IMPLANTING CYCLES ////////////////////////////////////////////////////////////////
+
+//Function to handle random multifasta creation and any implants
+void implanting_cycle(unsigned int i){
+
+	//If at least one implanting position is inserted 
+	if(position.size() != 0){
+
+
+		map<vector<unsigned int>, vector<vector<unsigned int>>> jaspar_map;
+		string matrix_name;
+		string tf_name;
+
+		//Debug for a meaningful output -> here you can check if the inputs inserted are correct
+		cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl;
+		cout << "The number of implanting position is: " << position_vector.size() << endl;
+		cout << "The length of multifasta random sequences is: " << length << endl;
+		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
+		cout << "The Jaspar matrices inserted as input are: ";
+		
+		//Printing of jaspar matrices inserted as input
+		for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
+			
+			cout <<JASPAR_FILE_vector[i] << " ";
+		}
+
+		cout << endl;
+
+		cout << "The implanting positions for each Jaspar matrix are: ";
+		
+		//Printing of the implanting positions inserted as input
+		for(unsigned int i=0; i<position_vector.size(); i++){
+			
+			cout <<position_vector[i] << " ";
+		}
+
+		cout << endl;
+
+		cout << "The number of oligos randomly generated for each Jaspar matrix are: ";
+
+		//Printing of oligo implanting percentages inserted as input
+		for(unsigned int i=0; i<n_oligo_vector.size(); i++){
+
+			cout <<n_oligo_vector[i] << " ";
+		}
+
+		cout << endl;
+
+		cout << "The frequences of fwd strand oligo generation for each Jaspar matrix are: ";
+
+		//Printing of FWD strance frequencies inserted as input
+		for(unsigned int i=0; i<freq_strand_plus_vector.size(); i++){
+			
+			cout <<freq_strand_plus_vector[i] << "% ";
+		}
+
+		cout << endl << endl;
+		cout << "-----------------------------------------------------------------------------------" << endl;
+		
+		
+		//Controlling that the number of Jaspar matrices in input are equal to number of -p (implanting position) in input. If the control is positive, the tool associate each matirx to an implanting position --> the map <position,jaspar_name> starts to be filled	
+		check_input();	
+
+		//Function to associate each Jaspar matrix to his parameters correctly
+		filling_jaspar_map(jaspar_map,matrix_name,tf_name);
+
+		//Function to order matrix name and tf name to mantain their association with the matrix
+		ordering_matrix_names();
+
+		//Function to generate a random distribution of FDW and REV matrix implanting
+		freq_strand_plus_matrix(jaspar_map);
+
+		//Generation of a random multifasta class
+		multifasta_class MULTIFA(length,n_seq,i);
+		
+		//if the jaspar input are more then 1
+		if(position_vector.size() > 1){
+			
+			//checking if the implanting positions don't bring to any overlap
+			check_overlapping(jaspar_map);
+		}
+
+		//checking if -p implanting positions don't bring the oligos to exceed from the sequences length 
+		check_exceeding(jaspar_map);
+ 
+		//implanting class constructor calling --> The map matrix + parameters, the random multifa, and the current cycle number are passed to constructor
+		implanting_class IMPLANTED(jaspar_map, MULTIFA.multifasta_map,i);
+		
+		matrix_n.clear();
+		matrix_tf.clear();	
+	}
+	
+	//Else if there are no implanting positions passed as input
+	else{
+		
+		//Printing of warning messages
+		cout << "\nWARNING: No Jaspar matrices and implanting position given as input." << endl;	
+		cout << "Generating a Random Multifasta file of " << n_seq << " sequences of " << length << " bases length...\n" << endl;
+		//Debug for a meaningful output -> here you can check if the inputs inserted are correct
+		cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl;
+		cout << "The number of implanting position is: " << position_vector.size() << endl;
+		cout << "The length of multifasta random sequences is: " << length << endl;
+		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
+		cout << "The number of oligo randomly generated for each Jaspar matrix is: ";
+		cout << endl << endl;
+		cout << "-----------------------------------------------------------------------------------" << endl;
+		
+		//Generating a simple random multifasta file
+		multifasta_class MULTIFA(length,n_seq,i);
+	}
+
+}
+
+//Checking if Jaspar matreces number is equal to positions number inserted as input --> if not print an error and exit
+void check_input(){
+
+	if(JASPAR_FILE_vector.size() != position_vector.size()){
+
+		cerr << "\nERROR: Please insert the rigth number of Jaspar files and implanting position.\nTheir number need to be equal to make a correct implanting!" << endl;
+		exit(1);
+	}
+}
+
+//**************************************************************************************************************************
+//Function to create a map which associate, to each jaspar, a vector containing parameters (position, wobble, implants number, FWD strand frequency)
+void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>& jaspar_map, string matrix_name, string tf_name){
+	
+	//For every Jaspar matrix passed
+	for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
+		
+		//Extract the matrix values with read_JASPAR function and save it in a vector of vector variable
+		vector<vector<unsigned int>> matrix = read_JASPAR(JASPAR_FILE_vector[i],matrix_name,tf_name);
+
+		//saving matrix name and tf name in a vector for future printing
+		matrix_n.emplace_back(matrix_name);	
+		matrix_tf.emplace_back(tf_name);
+
+		//Filling the parameters vector with (1) position, (2) wobble, (3) implants number, (4) FWD freq
+		vector<unsigned int> parameters;
+		parameters.emplace_back(position_vector[i]);
+		parameters.emplace_back(wobble_vector[i]);
+		parameters.emplace_back(n_oligo_vector[i]);
+		parameters.emplace_back(freq_strand_plus_vector[i]);
+		
+		//Insert the matrix and the parameters into a map (Ordered by the first parameters value --> by positions)
+		jaspar_map.insert({parameters,matrix});
+
+		//Clear the vector to avoid interferences in the next cycle
+		parameters.clear();
+
+	}	
+}	
+
+//******************************************************************************************************************
+//Funtion to order the matrix name and tf name (strings) following the jaspar matrix values positioning into the map
+void ordering_matrix_names(){
+		
+		//Making a map of position and name + tf strings --> to order them by positions
+		map<unsigned int,pair<string,string>> names;
+
+		for(unsigned int i=0; i<position_vector.size(); i++){
+
+			pair<string,string> name_tf_pair;
+			name_tf_pair.first = matrix_n[i];
+			name_tf_pair.second = matrix_tf[i];
+			names.insert({position_vector[i],name_tf_pair});
+		}
+		matrix_n.clear();
+		matrix_tf.clear();
+
+		for(map<unsigned int,pair<string,string>>::iterator it = names.begin(); it!=names.end(); it++){
+
+			matrix_n.emplace_back(it->second.first);
+			matrix_tf.emplace_back(it->second.second);
+		}
+}
+
+//***************************************************************************
+//Function to generate a random distribution of FDW and REV matrix implanting
 void freq_strand_plus_matrix(map<vector<unsigned int>, vector<vector<unsigned int>>>& jaspar_map){
-
+	
+	//For each matrix a vector of shuffled boolean (of implants number size) is created
 	for(map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it != jaspar_map.end(); it++){
-
+		
+		//Initializing a random device of mt19937 type
 		mt19937 eng{random_device{}()};
+
+		//Exact number of FWD implanting
 		unsigned int number_plus = (it->first[3]*it->first[2]/100);
-
+		
+		//For each implants to be done
 		for(unsigned int j=1; j<=it->first[2]; j++){
-
+			
 			if(j<=number_plus){
 
 				plus_minus.emplace_back(0);
@@ -82,112 +440,13 @@ void freq_strand_plus_matrix(map<vector<unsigned int>, vector<vector<unsigned in
 				plus_minus.emplace_back(1);
 			}
 		}
+
+		//Random shuffling of the 0/1 plus and minus vector and save it into a matrix of boolean (plus minus matrix)
 		shuffle(plus_minus.begin(), plus_minus.end(),eng);	
 		plus_minus_matrix.emplace_back(plus_minus);
 		plus_minus.clear();	
 	}
 }
-
-void implanting_cycle(unsigned int i){
-
-	if(position.size() != 0){
-
-
-		map<vector<unsigned int>, vector<vector<unsigned int>>> jaspar_map;
-		string matrix_name;
-		string tf_name;
-
-		cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl; //Debug for a meaningful output -> here you can check if you have put the input that you wanted
-		cout << "The number of implanting position is: " << position_vector.size() << endl;
-		cout << "The length of multifasta random sequences is: " << length << endl;
-		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
-		cout << "The Jaspar matrices inserted as input are: ";
-
-		for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
-			cout <<JASPAR_FILE_vector[i] << " ";
-		}
-		cout << endl;
-
-		cout << "The implanting positions for each Jaspar matrix are: ";
-
-		for(unsigned int i=0; i<position_vector.size(); i++){
-			cout <<position_vector[i] << " ";
-		}
-		cout << endl;
-
-		cout << "The number of oligos randomly generated for each Jaspar matrix are: ";
-
-		for(unsigned int i=0; i<n_oligo_vector.size(); i++){
-			cout <<n_oligo_vector[i] << " ";
-		}
-		cout << endl;
-
-		cout << "The frequences of fwd strand oligo generation for each Jaspar matrix are: ";
-
-		for(unsigned int i=0; i<freq_strand_plus_vector.size(); i++){
-			cout <<freq_strand_plus_vector[i] << "% ";
-		}
-
-		cout << endl << endl;
-		cout << "-----------------------------------------------------------------------------------" << endl;
-
-		check_input();		//controlling that the number of Jaspar matrices in input are = to number of -p (implanting position) in input. If the control is positive, the map<position,jaspar_name> start to be filled	
-		filling_jaspar_map(jaspar_map,matrix_name,tf_name);
-		ordering_matrix_names();
-		freq_strand_plus_matrix(jaspar_map);
-		multifasta_class MULTIFA(length,n_seq,i); 	//generating a random multifasta_class
-		
-		if(position_vector.size() > 1){		//if the jaspar input are more then 1
-			
-			check_overlapping(jaspar_map);	//checking if -p implanting position in input are different and if the implanting does not overlap
-		}
-
-		check_exceeding(jaspar_map);		//checking if -p implanting position don't bring the oligos to exceed from the sequences length 
-		implanting_class IMPLANTED(jaspar_map, MULTIFA.multifasta_map,i);	//implanting the oligos in the position -p gave as input on the multifasta sequences from multifasta_class previouly generated
-		matrix_n.clear();
-		matrix_tf.clear();	
-	}
-
-	else{
-
-		cout << "\nWARNING: No Jaspar matrices and implanting position given as input." << endl;	
-		cout << "Generating a Random Multifasta file of " << n_seq << " sequences of " << length << " bases length...\n" << endl;
-		cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl; //Debug for a beautiful and meaningful output -> here you can check if you have put the input that you wanted
-		cout << "The number of implanting position is: " << position_vector.size() << endl;
-		cout << "The length of multifasta random sequences is: " << length << endl;
-		cout << "The number of multifasta random sequences generated is: " << n_seq << endl;
-		cout << "The number of oligo randomly generated for each Jaspar matrix is: ";
-
-		for(unsigned int i=0; i<n_oligo_vector.size(); i++){
-			cout <<n_oligo_vector[i] << " ";
-		}
-		cout << endl << endl;
-		cout << "-----------------------------------------------------------------------------------" << endl;
-		multifasta_class MULTIFA(length,n_seq,i); 	//generating a random multifasta_class
-	}
-
-}
-
-void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>& jaspar_map, string matrix_name, string tf_name){
-	
-
-	for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
-
-		vector<vector<unsigned int>> matrix = read_JASPAR(JASPAR_FILE_vector[i],matrix_name,tf_name);
-		matrix_n.emplace_back(matrix_name);		//saving matrix name and tf name in a vector	
-		matrix_tf.emplace_back(tf_name);		//for future printing
-
-		vector<unsigned int> parameters;
-		parameters.emplace_back(position_vector[i]);
-		parameters.emplace_back(wobble_vector[i]);
-		parameters.emplace_back(n_oligo_vector[i]);
-		parameters.emplace_back(freq_strand_plus_vector[i]);
-		
-		jaspar_map.insert({parameters,matrix});
-		parameters.clear();
-
-	}	
-}	
 
 void multifasta_class::multifasta_map_creation(){
 
@@ -308,27 +567,6 @@ vector<vector<unsigned int>> read_JASPAR(string JASPAR_FILE, string& matrix_name
 	return matrix;
 }
 
-void ordering_matrix_names(){
-
-		map<unsigned int,pair<string,string>> names;
-
-		for(unsigned int i=0; i<position_vector.size(); i++){
-
-			pair<string,string> name_tf_pair;
-			name_tf_pair.first = matrix_n[i];
-			name_tf_pair.second = matrix_tf[i];
-			names.insert({position_vector[i],name_tf_pair});
-		}
-		matrix_n.clear();
-		matrix_tf.clear();
-
-		for(map<unsigned int,pair<string,string>>::iterator it = names.begin(); it!=names.end(); it++){
-
-			matrix_n.emplace_back(it->second.first);
-			matrix_tf.emplace_back(it->second.second);
-		}
-}
-
 void implanting_class::oligo_creation(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it, int n){
 
 		unsigned int strand;
@@ -369,101 +607,11 @@ void implanting_class::oligo_creation(map<vector<unsigned int>,vector<vector<uns
 	}
 }
 
-void check_position_vector(){
-
-	unsigned int counter = 0;
-
-	for(unsigned int i=0; i<position_vector.size(); i++){
-		for(unsigned int j=0; j<position_vector.size(); j++){
-
-			if(position_vector[i] == position_vector[j]){
-				
-				counter++;
-			}
-		}
-		if(counter != 1){
-			cerr << "\nERROR: You have inserted 2 or more equal implanting positions!\nPlease check your -p input." << endl;
-			exit(1);
-		}
-		counter = 0;
-	}
-}
-
-void check_oligo_number(){
-
-	for(unsigned int i=0; i<n_oligo_vector.size(); i++){
-		if(n_oligo_vector[i] > n_seq){
-
-			cerr << "\nERROR: The number of oligo can't be > then n_seq.";
-			exit(1);
-		}
-		if(n_oligo_vector[i] == 0 || n_oligo_vector.size() != position_vector.size()){
-
-			cerr << "WARNING: There is one or more 0% oligo generation frequence" << endl;
-		}
-	}
-}
-
-void check_frequence(){
-
-	unsigned int freq_number = freq_strand_plus_vector.size();
-
-	if(freq_number == 0 && JASPAR_FILE_vector.size() > 0){
-
-		cerr << "WARNING: No frequence inserted, the tool will set all the frequences on 50%" << endl;
-
-		for(unsigned int i=0; i<JASPAR_FILE_vector.size(); i++){
-
-			freq_strand_plus_vector.emplace_back(50);
-		}
-	}
-
-	else if(freq_number > 0 && freq_number < JASPAR_FILE_vector.size()){
-		
-		cerr << "WARNING: Frequence number inserted is less than matrix inserted, the tool will set on 50% the frequences not specified" << endl;
-	
-		while(freq_strand_plus_vector.size() != JASPAR_FILE_vector.size()){
-
-			freq_strand_plus_vector.emplace_back(50);
-			}
-	}
-
-	else if(freq_number > JASPAR_FILE_vector.size()){
-
-		cerr << "WARNING: Frequence number inserted is more than matrix inserted, Please check your input parameters " << endl;
-	
-		freq_strand_plus_vector.erase(freq_strand_plus_vector.begin() + JASPAR_FILE_vector.size(), freq_strand_plus_vector.end());
-
-	}
-
-}
-
-void check_wobble(){
-
-	for(unsigned int i=0; i<wobble_vector.size(); i++){
-
-		if(wobble_vector[i] > 10){
-
-			cerr << "ERROR: The maximum value allowed for wobble parameters is 10.\nPlease check the -w parameters inserted!" << endl;
-			exit(1);
-		}
-	}
-}
-
-void check_input(){
-
-	if(JASPAR_FILE_vector.size() != position_vector.size()){
-
-		cerr << "\nERROR: Please insert the rigth number of Jaspar files and implanting position.\nTheir number need to be equal to make a correct implanting!" << endl;
-		exit(1);
-	}
-}
-
 void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>> jaspar_map){
 
 	for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it != jaspar_map.end(); it++){
 		int is_less_zero = it->first[0] - it->first[1];
-			
+
 		if((it->first[0] + it->first[1] + it->second.size()) > length){
 
 			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nImplanting position > " << length << " try to be generated.\nPlease check your implanting position!" << endl;
@@ -477,6 +625,7 @@ void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>> jasp
 	}
 }
 
+//****************************************************************************************??
 void check_overlapping(map<vector<unsigned int>,vector<vector<unsigned int>>> jaspar_map){
 
 	map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator it_before = jaspar_map.begin();
@@ -556,40 +705,6 @@ void implanting_class::unique_random_generator(){
 		unique_rnd.emplace_back(i);
 	}
 	shuffle(unique_rnd.begin(), unique_rnd.end(), eng);
-}
-
-
-void generic_vector_creation(string oligo_perc, vector<unsigned int> &n_oligo_vector){
-
-	int index;
-	
-	while(index != -1){
-		index = oligo_perc.find(",");
-		n_oligo_vector.emplace_back(stoi(oligo_perc.substr(0,index)));
-		oligo_perc.erase(0,index+1);
-	}
-}
-
-
-void wobble_vector_creation(string wobble){
-
-	generic_vector_creation(wobble,wobble_vector);
-
-	if(position_vector.size() < wobble_vector.size()){
-
-		cout << "WARNING: wobbles parameters inserted as input are more then position parameters!" << endl;
-		cout << "Please check your input data. " << endl;
-	}	
-
-	if(position_vector.size() > wobble_vector.size()){
-
-		int difference = position_vector.size() - wobble_vector.size();
-
-		for(int i=0; i<difference; i++){
-
-			wobble_vector.emplace_back(0);
-		}
-	}
 }
 
 /////////////////////////////////////// DEBUG ////////////////////////////////////

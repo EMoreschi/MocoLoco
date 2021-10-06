@@ -64,7 +64,6 @@ class implanting_class{
 };
 
 void generic_vector_creation(string, vector<unsigned int>&);
-
 void command_line_parser(int, char **);
 void read_input();
 void display_help(); 
