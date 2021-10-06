@@ -117,8 +117,8 @@ for freq in ${frequenze[@]}
 do
 	cd $freq;
 
-	awk '!/^#/ { print  $1 $8 }' *Z_scores_* >> $path_out;	
-	#awk -v fr=$freq  '!/^#/ { print $fr"\t" $1 "\t" $8}' *Z_scores_* >> $path_out;	
+	#awk '!/^#/ { print  $1 $8 }' *Z_scores_* >> $path_out;		
+	awk -v fr=$freq  '!/^#|^$/ { print fr "\t" $1 "\t" $9}' *Z_scores_* >> $path_out;	
 	#echo -e $fr >> $path_out;	
 
 	cd ..;

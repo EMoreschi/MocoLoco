@@ -2329,7 +2329,7 @@ void map_class::print_debug_Z_scores(ofstream& outfile, unsigned int j, unsigned
 	outfile << "#Z_score parameters and p-value for hit positions - k = " << k << endl << endl;
 	string best_oligo;
 	
-	outfile << "Position" << "\t" << "best_oligo" << "\t" << "Local_mean" << "\t" << "Global_mean" << "\t" << "Local_std_dev" << "\t" << "Global_std_dev" << "\t" << "Z_score" << "\t" << "P-value" << "\t" << "P-value_Log10" << endl;
+	outfile << "#Position" << "\t" << "best_oligo" << "\t" << "Local_mean" << "\t" << "Global_mean" << "\t" << "Local_std_dev" << "\t" << "Global_std_dev" << "\t" << "Z_score" << "\t" << "P-value" << "\t" << "P-value_Log10" << endl;
 	
 	for(unsigned int position = 0; position < Z_TEST_MATRIX[j].size(); position++){
 	
