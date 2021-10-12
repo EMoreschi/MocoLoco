@@ -113,14 +113,14 @@ done
 wait
 #-------EXTRACTING P-VALUES---------------------------------------------------------------------------------
 
+#With this construct I obtain just the higher pvalue for each implanted file
 for freq in ${frequenze[@]}
 do
 	cd $freq;
-
-	#awk '!/^#/ { print  $1 $8 }' *Z_scores_* >> $path_out;		
-	awk -v fr=$freq  '!/^#|^$/ { print fr "\t" $1 "\t" $9}' *Z_scores_* >> $path_out;	
-	#echo -e $fr >> $path_out;	
-
+	for con in $(seq 1 $C);
+	do
+		max=`awk -v fr=$freq 'BEGIN{a=   0}{if ($9>0+a) a=$9} END{print fr"\t"$1"\t"$9}' *Z_scores_implanted${con}* >> $path_out`
+	done
 	cd ..;
 done
 
