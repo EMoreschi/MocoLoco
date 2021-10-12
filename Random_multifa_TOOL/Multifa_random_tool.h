@@ -18,24 +18,29 @@
 
 using namespace std;
 
-
+//Multifasta class: Creating a set of random seuences following input parameters
 class multifasta_class{
 
 	private:
 		
 		vector<string> headers;
 		vector<string> sequences;
-
+		
 		void multifasta_map_creation();
 		void multifasta_outfile(map<unsigned int,string>, string);
 
 	public:
-
+		
+		//Constructor of the class --> passed length, number of seq and current cycle number (for the file name)
 		multifasta_class(unsigned int length, unsigned int n_seq, unsigned int i){
 			
+			//Function to create the set of random sequences
 			multifasta_map_creation();			
+
+			//Function to handle the output file --> Printing the sequences on it (or them for more cycles)
 			multifasta_outfile(multifasta_map, "random_multifa_"+to_string(i+1)+".fasta");
 		}
+
 		map<unsigned int,string> multifasta_map;
 		
 };
@@ -56,9 +61,14 @@ class implanting_class{
 	public:
 
 		implanting_class(map<vector<unsigned int>, vector<vector<unsigned int>>> jaspar_map, map<unsigned int,string> multifasta_map, unsigned int i){
-		
+			
+			//Copying the random multifasta sequences into another map (where the iplanting are going to be performed)
 			multifasta_map_implanted = multifasta_map;	
+
+			//Function to implant oligos (generated following input parameters) into the sequences
 			implanting_oligo(jaspar_map);		
+
+			//Printing sequences + implants on an Output file (where i+1 is the number of current cycle)
 			multifasta_outfile_2(multifasta_map_implanted, "random_multifa_implanted"+to_string(i+1)+".fasta");
 		}
 };

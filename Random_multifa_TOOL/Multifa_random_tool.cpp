@@ -324,7 +324,7 @@ void implanting_cycle(unsigned int i){
 		//checking if -p implanting positions don't bring the oligos to exceed from the sequences length 
 		check_exceeding(jaspar_map);
  
-		//implanting class constructor calling --> The map matrix + parameters, the random multifa, and the current cycle number are passed to constructor
+		//implanting class constructor calling --> The map composed by matrix + parameters, the random multifa map, and the current cycle number are passed to constructor
 		implanting_class IMPLANTED(jaspar_map, MULTIFA.multifasta_map,i);
 		
 		matrix_n.clear();
@@ -376,7 +376,7 @@ void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>&
 		matrix_n.emplace_back(matrix_name);	
 		matrix_tf.emplace_back(tf_name);
 
-		//Filling the parameters vector with (1) position, (2) wobble, (3) implants number, (4) FWD freq
+		//Filling the parameters vector with (0) position, (1) wobble, (2) implants number, (3) FWD freq
 		vector<unsigned int> parameters;
 		parameters.emplace_back(position_vector[i]);
 		parameters.emplace_back(wobble_vector[i]);
@@ -448,61 +448,53 @@ void freq_strand_plus_matrix(map<vector<unsigned int>, vector<vector<unsigned in
 	}
 }
 
+//////////////////////////////////////// MULTIFASTA RANDOM GENERATION ///////////////////////////////////////
+
+//Function to create the random multifasta sequences
 void multifasta_class::multifasta_map_creation(){
 
 	string sequence;
-
+	
+	//For each sequence
 	for(unsigned int j=0; j<n_seq; j++){
 		
+		//Clearing the string sequence to avoid interference with the one of the previous cycle
 		sequence.clear();
 		
+		//For each base from 0 to seq_length
 		for(unsigned int i=0; i<length; i++){
 
+			//A random number between 0 and 3 is generated (A=0, C=1, G=2, T=3)
 			unsigned int random_int = random_number(0,3);
+
+			//Conversion from the number randomly generated to an effective base (0123 -> ACGT)
 			char base = from_n_to_base(random_int);
+
+			//Concatenate the base just created to the under construction sequence
 			sequence = sequence + base;
 		}
-	
+		
+		//Insert the the pair number of current seq + sequence (for ex 1-ATCGGGA, 2-CCTCCA...) in a map
 		multifasta_map.insert(pair<unsigned int,string>(j+1, sequence));
 	}
 	
 }
 
+//Function to generate a random number between a start number/end number range (in this case between 0 and 3)
 unsigned int random_number(unsigned int range_begin, unsigned int range_end){
-
+	
+	//Unsing the mt19937_64 random generator (for more search it on internet)
         mt19937_64 generator (clock());	
+
+	//A distribution of values (between 0 and 3) is generated.
         uniform_int_distribution<unsigned int> dis(range_begin, range_end);	
+
+	//From this number distribution a random number is generated and then returned
         unsigned int r_number = dis(generator);;
 	return 	r_number;
 }
 
-string reverse_complement(string oligo){
-
-	string reverse_oligo;
-	for(unsigned int i=0; i<oligo.size(); i++){
-
-		char base;
-		base = oligo[i];
-		switch (base) {
-
-			case 'A' : reverse_oligo.append("T"); 
-				   break;
-			case 'T' : reverse_oligo.append("A"); 
-				   break;
-			case 'G' : reverse_oligo.append("C"); 
-				   break;
-			case 'C' : reverse_oligo.append("G"); 
-				   break;
-			case 'N' : reverse_oligo.append("N"); 
-				   break;
-		}
-	}
-
-	reverse(reverse_oligo.begin(), reverse_oligo.end());
-	return reverse_oligo;
-}
-
-
+//Function to convert a random number from 0 to 3 into a base (If a number < 0 or > 3 is passed an error is generated)
 char from_n_to_base (unsigned int n){
 
 	char base;
@@ -515,17 +507,17 @@ char from_n_to_base (unsigned int n){
 
 				case 1:
 
-					base = 'T';
+					base = 'C';
 					break;
 
 				case 2:
 
-					base = 'C';
+					base = 'G';
 					break;
 
 				case 3:
 
-					base = 'G';
+					base = 'T';
 					break;
 
 				default:
@@ -537,29 +529,40 @@ char from_n_to_base (unsigned int n){
 			return base;
 }
 
-vector<vector<unsigned int>> read_JASPAR(string JASPAR_FILE, string& matrix_name, string& tf_name){			//Function to read JASPAR PWM file, extract values and create a matrix class
+//Function to read JASPAR PWM file, extract values and create a matrix class
+vector<vector<unsigned int>> read_JASPAR(string JASPAR_FILE, string& matrix_name, string& tf_name){		
 
-	ifstream file(JASPAR_FILE);					//opening JASPAR PWM file
+	ifstream file(JASPAR_FILE);
 	string line;
 	vector<vector<unsigned int>> matrix;
 	
-	while(getline(file,line)){					//For each line of the file do:
+	//For each line of the JASPAR file	
+	while(getline(file,line)){
 
-		if(line[0]=='>'){					//If line start with ">"
+		//If the line start with '>' character save the words into matrix_name string and into tf_name string
+		if(line[0]=='>'){
+
 			istringstream mystream(line);			
-			mystream >> matrix_name >> tf_name;			//Extract the first two words and put into matrix_name string variable and tf_name string variable
+			mystream >> matrix_name >> tf_name;
 		}
 
-		else{							//Else, if line does not start with ">"
-			line.erase(0,line.find('[') +1);		//Take line charachters after "["...
-			line.erase(line.find(']'));			//...and line charachters before "]"
-			vector<unsigned int> baseQ;				//Initializing baseQ vector of double
-			istringstream mystream(line);			//Splitting the line in words
-			for (unsigned int num; mystream >> num;){		//Put every word(number of matrix), ricorsively, in double variable num
-				baseQ.emplace_back(num);		//Put every number(num) in baseQ vector
-			}
-			matrix.emplace_back(baseQ);			//Put baseQ vector (corrisponding to matrix line values) in our matrix
+		//If the line does not start with '>' delete the '[',']' and 'A,T,C,G' characters, extract the scores and save them into a scores matrix
+		else{	
 
+			//Deleting from line the first character (A,T,C,G), the '[' and the ']' characters
+			line.erase(0,line.find('[') +1);
+			line.erase(line.find(']'));
+
+			vector<unsigned int> scores_line;
+			istringstream mystream(line);
+
+			//For each words (number) in line put the current number in num variables
+			for (unsigned int num; mystream >> num;){
+
+				scores_line.emplace_back(num);
+			}
+
+			matrix.emplace_back(scores_line);			
 		}
 
 	}
@@ -567,78 +570,27 @@ vector<vector<unsigned int>> read_JASPAR(string JASPAR_FILE, string& matrix_name
 	return matrix;
 }
 
-void implanting_class::oligo_creation(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it, int n){
+/////////////////////////////////// OVERLAP & EXCEED CHECKING ////////////////////////////////////////////////////
 
-		unsigned int strand;
-		string oligo;
-
-		for(unsigned int j=0; j<it->first[2]; j++){
-
-			strand = plus_minus_matrix[n][j];
-			oligo.clear();
-
-			for (unsigned int i = 0; i < it->second[0].size(); i++) {			//From 0 to number of columns of line 0
-
-				unsigned int somma = it->second[0][i] + it->second[1][i] + it->second[2][i]+ it->second[3][i];
-			unsigned int random_score = random_number(1,somma);
-
-			if(random_score <= it->second[0][i]){
-				oligo = oligo + 'A';
-			}
-			else if(random_score > it->second[0][i] && random_score <= (it->second[0][i] + it->second[1][i])){
-				oligo = oligo + 'C';
-			}
-			else if(random_score > (it->second[0][i]+it->second[1][i]) && random_score <= (it->second[0][i] + it->second[1][i] + it->second[2][i])){
-				oligo = oligo + 'G';
-			}
-			else{
-				oligo = oligo + 'T';
-			}
-		}
-
-		if(strand == 0){
-			oligo_vector.emplace_back(oligo);
-		}
-		else{
-			oligo = reverse_complement(oligo); 
-			oligo_vector.emplace_back(oligo);
-		}
-
-	}
-}
-
-void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>> jaspar_map){
-
-	for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it != jaspar_map.end(); it++){
-		int is_less_zero = it->first[0] - it->first[1];
-
-		if((it->first[0] + it->first[1] + it->second.size()) > length){
-
-			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nImplanting position > " << length << " try to be generated.\nPlease check your implanting position!" << endl;
-			exit(1);
-		}
-		if(is_less_zero < 0){
-
-			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nImplanting position < 0 try to be generated.\nPlease check your implanting position!" << endl;
-			exit(1);
-		}
-	}
-}
-
-//****************************************************************************************??
+//Check, if more than 1 implanting pos -p is inserted, if the implanting positions, wobbles and jaspar lengths, can bring to an implant overlapping
 void check_overlapping(map<vector<unsigned int>,vector<vector<unsigned int>>> jaspar_map){
-
+	
+	//Since the jaspars are ordered in the map by their implanting positions, it is possible to compare a jaspar only to the next jaspar to understand if an overlap can happens
+	//Iterator before for the current jaspar in the map | Iterator after for the next jaspar in the map
 	map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator it_before = jaspar_map.begin();
 	map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator it_after = ++jaspar_map.begin();
 
+	//From all the position -p in the position vector (-1 because the last can't be compared to any position) 
 	for(unsigned int i=0; i<(position_vector.size()-1); i++, it_after++, it_before++){
 		
+		//If "after" position is < or = to "before" position + "before" jaspar length --> wrong positions inserted 
 		if(it_after->first[0] <= (it_before->first[0] + it_before->second[0].size())){
+
 			cerr << "\nERROR: The oligos coming from matrix " << matrix_n[i] << " and " << matrix_n[i+1] << " that you are trying to implant overlap ---> wrong positions inserted!"<< endl;
 			exit(1);
-
 			}
 
+		//If "after" position + "after" wobble is < or = to "before" position + "before" wobble + "before" jaspar length --> wrong wobble inserted 
 		else if((it_after->first[0] - it_after->first[1]) <= (it_before->first[0] + it_before->second[0].size() + it_before->first[1])){
 
 			cerr << "\nERROR: The oligos coming from matrix " << matrix_n[i] << " and " << matrix_n[i+1] << " that you are trying to implant overlap ---> wrong wobbles inserted!"<< endl;
@@ -647,67 +599,220 @@ void check_overlapping(map<vector<unsigned int>,vector<vector<unsigned int>>> ja
 	}
 }
 
+//Check if there are some possible out-of-sequence implant --> analyzing the wobble -w, implanting pos -p and jaspar length
+void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>> jaspar_map){
+	
+	//For each jaspar inserted as input
+	for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator jaspar_it = jaspar_map.begin(); jaspar_it != jaspar_map.end(); jaspar_it++){
+
+		//position - wobble --> if it is a negative number it means that the implant can be exceed the seq in negative positions
+		int is_less_zero = jaspar_it->first[0] - jaspar_it->first[1];
+		
+		//Checking if (implant pos -p) + (wobble -w) + (jaspar length) exceeds the sequence length -l parameter --> if it is, print an error and exit
+		if((jaspar_it->first[0] + jaspar_it->first[1] + jaspar_it->second.size()) > length){
+
+			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nImplanting position > " << length << " try to be generated.\nPlease check your implanting position!" << endl;
+			exit(1);
+		}
+
+		//Check if position - wobble number is a negative number --> if it is, error printing and exit
+		if(is_less_zero < 0){
+
+			cerr << "\nERROR: Position in input lead the oligos to exceed the length of the sequences.\nImplanting position < 0 try to be generated.\nPlease check your implanting position!" << endl;
+			exit(1);
+		}
+	}
+}
+
+/////////////////////////////// IMPLANTING /////////////////////////////////////////////////////////////////////////////
+
+//******************************************************************************************************
+//Function to implant the oligo generated from jaspars into the random sequences (in correct position)
 void implanting_class::implanting_oligo(map<vector<unsigned int>, vector<vector<unsigned int>>> jaspar_map){
 
 		int j=0;
-		for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it = jaspar_map.begin(); it!=jaspar_map.end(); it++,j++){
+		
+		//For each jaspar inserted as input
+		for(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator jaspar_it = jaspar_map.begin(); jaspar_it!=jaspar_map.end(); jaspar_it++,j++){
+			
+			//generating a vector of unique random numbers from 1 to n_seq (length n_seq)
+			unique_random_generator();
 
-			unique_random_generator();				//generating a vector of unique random numbers from 1 to n_seq (length n_seq)
-			oligo_creation(it,j);				//creating a vector of random oligos coming from matrix frequences -> the size of oligos vector follows the input n_oligo_vector values for each matrix
+			//creating a vector of random oligos coming from jaspar matrix scores -> the number of oligo generated follows the input n_oligo_vector values for each jaspar matrix
+			oligo_creation(jaspar_it,j);
+			
+			//An empty vector of index (new implanting position -p generated by wobble addition) is initialized
 			vector<unsigned int> index_vec;
 			
-			for(unsigned int w=0; w < it->first[2]; w++){	//Generating a vector of new indexes starting from input position and adding wobble
-
-				unsigned int index = random_number((it->first[0] - it->first[1]), (it->first[0] + it->first[1]));
-				index_vec.emplace_back(index);		//index_vec is vector of new idexes (wobble variation added)	
-			}
-
-			cout << "\nStarting implant position: "<< it->first[0] << endl;
-			cout << "Wobble inserted: " << it->first[1] << endl<<endl;
-			cout << matrix_n[j] << ": " << matrix_tf[j] << endl;
-			print_debug_matrix(it->second);
-			cout << endl;
-
-			map<unsigned int, string>::iterator implant_it;
-
-			for(unsigned int i=0; i<it->first[2]; i++){ 	//from 0 to oligo_vector_size() (for every matrix class)
+			//From 0 to -w wobble value inserted as input
+			for(unsigned int w=0; w < jaspar_it->first[2]; w++){
 				
+				//An index (new implanting position) is generated randomly following -p and -w inputs
+				//For example if p=150 and w=3 the new implating position is a number randomly generated between 147 (150-3) and 153 (150+3)
+				int index = random_number((jaspar_it->first[0] - jaspar_it->first[1]), (jaspar_it->first[0] + jaspar_it->first[1]));				
+
+				//index_vec is vector of new idexes (implanting positions) with wobble variation added
+				index_vec.emplace_back(index);
+			}
+			
+			//Some control printing in cout to check if the implanting is performing correctly
+			cout << "\nStarting implant position: "<< jaspar_it->first[0] << endl;
+			cout << "Wobble inserted: " << jaspar_it->first[1] << endl<<endl;
+			cout << matrix_n[j] << ": " << matrix_tf[j] << endl;
+			print_debug_matrix(jaspar_it->second);
+			cout << endl;
+	
+			//An iterator for the multifasta sequences map is initialized
+			map<unsigned int, string>::iterator multifa_it;
+			
+			//From 0 to -o (number of oligos that must be implanted)
+			for(unsigned int i=0; i<jaspar_it->first[2]; i++){ 	
+				
+				//Here the half length of jaspar matrix is calculated --> to center the oligos in implanting position -p (and not make the implants starting in -p)
 				unsigned int half;
-
-				if(it->second[0].size()%2 == 0){
-					half = it->second[0].size()/2;
+				
+				//If the jaspar length is even
+				if(jaspar_it->second[0].size()%2 == 0){
+					half = jaspar_it->second[0].size()/2;
 				}
+				
+				//If the jaspar length is odd
 				else{
-					half = it->second[0].size()/2 +1;
+					half = jaspar_it->second[0].size()/2 +1;
 				}
+				
+				//Select the correct sequence (in multifa sequences map) for the implant, following the shuffling unique_rnd vector previously generated)
+				multifa_it = multifasta_map_implanted.find(unique_rnd[i]);
 
-				implant_it = multifasta_map_implanted.find(unique_rnd[i]);	//find in multifasta map the unique_rnd[i](random number) sequence
-				implant_it->second.replace((index_vec[i]-half), it->second[0].size(), oligo_vector[i]);		//Implant the oligo generated from jaspar in the right position in the right sequence
+				//Replace in the correct sequence the bases from starting implant pos (implanting index - half_matrix length) to end implant pos (start pos + jaspar length) with the current oligo in oligo vector
+				multifa_it->second.replace((index_vec[i]-half), jaspar_it->second[0].size(), oligo_vector[i]);
 
+				//Debug printing to control if the implants are performed correctly
 				cout << "Implanted string " << oligo_vector[i] << " in sequence number " << unique_rnd[i] << " centered in position " << index_vec[i] << "." << endl;
 			
 			}
 				
 			cout << endl << "---------------------------------------------------------------------------------------" << endl;	
 			
+			//Clearing of index vector, unique random vector and oligo vector for next jaspar implanting
 			index_vec.clear();
 			unique_rnd.clear();
 			oligo_vector.clear();
 		}
 }
 
+//Function to generate a vector of number from 1 to number of seq --> then the function shuffles the vector to generate a 0-n_seq number distribution (for ex: from 1-2-3-4-5-6 --> 3-5-1-4-2-6)
 void implanting_class::unique_random_generator(){
 
+	//using the mt19937 random eng generator fot shuffling
 	mt19937 eng{random_device{}()};
 	
+	//Put the number from 1 to n_seq in an ordered vector
 	for(unsigned int i=1; i<=n_seq; i++){
 
 		unique_rnd.emplace_back(i);
 	}
+
+	//shuffling the vector
 	shuffle(unique_rnd.begin(), unique_rnd.end(), eng);
 }
 
-/////////////////////////////////////// DEBUG ////////////////////////////////////
+//*************************************************************************************************
+//Generating (for each matrix) a vector containing -o oligos coming from jaspar scores frequences
+void implanting_class::oligo_creation(map<vector<unsigned int>,vector<vector<unsigned int>>>::iterator it, int n){
+		
+		unsigned int strand;
+		string oligo;
+		
+		//from 0 to -o parameter (for each oligo that must be generated)
+		for(unsigned int j=0; j<it->first[2]; j++){
+
+			//Deciding the strand where the oligo is going to be implant scrolling the plus_minus_matrix previously generated (followig the -f frequences parameter) --> (for ex a line of the matrix can be: 0010001100 if -f is 70%)
+			//(for ex: if "+" is selected --> implanting of ATTCAA | if "-" selected --> implanting of TTGAAT)
+			strand = plus_minus_matrix[n][j];
+			
+			//Clearing oligo vector (filled in previous cycle) to avoid interferences
+			oligo.clear();
+
+			//For each jaspar matrix column
+			for (unsigned int i = 0; i < it->second[0].size(); i++) {
+
+				//Sum the column scores
+				unsigned int col_sum = it->second[0][i] + it->second[1][i] + it->second[2][i]+ it->second[3][i];
+
+			//A random number from 1 to col sum is generated (using random_number function)
+			unsigned int random_score = random_number(1,col_sum);
+			
+			//If the number is from 1 to A-score --> A is assigned to oligo
+			if(random_score <= it->second[0][i]){
+				oligo = oligo + 'A';
+			}
+			
+			//Else if the number is from A-score to A-score + C-score --> C is assigned to oligo
+			else if(random_score > it->second[0][i] && random_score <= (it->second[0][i] + it->second[1][i])){
+				oligo = oligo + 'C';
+			}
+
+			//Else if the number is from A-score + C-score to A-score + C-score + G-score --> G is assigned to oligo
+			else if(random_score > (it->second[0][i]+it->second[1][i]) && random_score <= (it->second[0][i] + it->second[1][i] + it->second[2][i])){
+				oligo = oligo + 'G';
+			}
+			
+			//Else --> T is assigned to oligo
+			else{
+				oligo = oligo + 'T';
+			}
+		}
+		
+		//If strand is equal to 0 (means that the strand selected is "+") --> put the oligo in oligo vector
+		if(strand == 0){
+			oligo_vector.emplace_back(oligo);
+		}
+
+		//Else means that the strand is 1 (strand selected is "-") --> Generate the reverse complement and put the reverse complement into the oligo vector
+		else{
+			oligo = reverse_complement(oligo); 
+			oligo_vector.emplace_back(oligo);
+		}
+
+	}
+}
+
+//Function to generate, from a string in input, its reverse complement (ATAAC --> GTTAT)
+string reverse_complement(string oligo){
+
+	//Empty string "reverse" is initialized
+	string reverse_oligo;
+
+	//For each base in input string
+	for(unsigned int i=0; i<oligo.size(); i++){
+		
+		char base;
+		base = oligo[i];
+		switch (base) {
+			
+			//Using the append function to insert a char into a string
+			case 'A' : reverse_oligo.append("T"); 
+				   break;
+			case 'T' : reverse_oligo.append("A"); 
+				   break;
+			case 'G' : reverse_oligo.append("C"); 
+				   break;
+			case 'C' : reverse_oligo.append("G"); 
+				   break;
+			case 'N' : reverse_oligo.append("N"); 
+				   break;
+		}
+	}
+	
+	//Function reverse to reverse the string just created (form TATTG --> GTTAT)
+	reverse(reverse_oligo.begin(), reverse_oligo.end());
+
+	//Return the reverse complement
+	return reverse_oligo;
+}
+
+/////////////////////////////////////// DEBUGGING ////////////////////////////////////////////////////////////////////////
 
 
 void implanting_class::print_debug_matrix(vector<vector<unsigned int>> matrix){		//Print matrix function
@@ -721,37 +826,45 @@ void implanting_class::print_debug_matrix(vector<vector<unsigned int>> matrix){	
 	}
 }
 
+//Function to print the random multifasta sequences generated into a file called random_multifasta_(i).fasta
 void multifasta_class::multifasta_outfile(map<unsigned int,string> multifasta_map, string filename){
 
 	ofstream outfile;
 	outfile.open(filename);
-
+	
+	//For each sequence in multifasta map
 	for(map<unsigned int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
 
-		
+		//Printing the header
 		outfile << ">random multifasta sequence number " + to_string(it->first) + " containing "+ to_string(length) +" bases:"<<endl;
+
+		//Printing the sequence
 		outfile << it->second << endl;
 		outfile << endl;
 	}
 	outfile.close();
 }
 
+//Function to print the multifasta sequences with implants in a file called random_multifa_implanted_(i).fasta
 void implanting_class::multifasta_outfile_2(map<unsigned int,string> multifasta_map, string filename){
 
 	ofstream outfile;
 	outfile.open(filename);
 	
+	//For each sequence in multifasta (with implants) map
 	for(map<unsigned int,string>::iterator it = multifasta_map.begin(); it != multifasta_map.end(); it++){
 
-		
+		//Print the header
 		outfile << ">random multifasta sequence number " + to_string(it->first) + " containing "+ to_string(length) +" bases:"<<endl;
+
+		//Print the sequence
 		outfile << it->second << endl;
 		outfile << endl;
 	}
 	outfile.close();
 }
 
-/////////////////////////////////////// PARSER ///////////////////////////////////
+/////////////////////////////////////// PARSER //////////////////////////////////////////////////////////////////
 
 void command_line_parser(int argc, char** argv){
 	
@@ -813,21 +926,6 @@ void command_line_parser(int argc, char** argv){
 	}
 }
 
-void display_help(){
-
-	cerr << "\n --help || -h show this message" << endl;
-	cerr << "\n --jaspar || -j <JASPAR_FILE_1 JASPAR_FILE_2 ... JASPAR_FILE_N> to import the jaspar matrices from which the oligos will be generated." << endl;
-	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)." << endl;
-	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DEFAULT: 200)." << endl;
-	cerr << "\n --oligop || -o <n1,n2,...,nN> to insert the percentage of sequences in which the oligos will be implanted (DEFAULT: 0%) ---- NB: The number of sequences extracted from the percentage will be rounded down." << endl;
-	cerr << "\n --position || -p <n1,n2,...,nN> to insert the position in Multifasta sequences where you want to implant the oligos." << endl;
-	cerr << "\n --wobble || -w <n1,n2,...,nN> to set the wobble parameter for every implanting position. The implanting position, for every oligo, will be randomly choosen between p-w and p+w interval. (DEFAULT: 0)" << endl;
-	cerr << "\n --cycles || -c <number> to choose how many random multifasta files (and implanted also) this tool will produce. (DEFAULT: 1)" << endl;
-	cerr << "\n --freq || -f <number> to choose the percentage of fwd/rev strand to select for the implants. (DEFAULT: 50)" << endl;
-	cerr << endl;
-	exit(EXIT_SUCCESS);
-}
-
 bool is_file_exist(string fileName, string buf){		//Input files existence control
 
 	struct stat check;
@@ -844,5 +942,22 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 		exit(1);
 	}
 	return 0;
+}
+
+////////////////////////////////// DISPLAY HELP /////////////////////////////////////////////////////////////
+
+void display_help(){
+
+	cerr << "\n --help || -h show this message" << endl;
+	cerr << "\n --jaspar || -j <JASPAR_FILE_1 JASPAR_FILE_2 ... JASPAR_FILE_N> to import the jaspar matrices from which the oligos will be generated." << endl;
+	cerr << "\n --length || -l <number> to insert the length of Multifasta sequences (DEFAULT: 500)." << endl;
+	cerr << "\n --nseq || -n <number> to insert the number of Multifasta sequences (DEFAULT: 200)." << endl;
+	cerr << "\n --oligop || -o <n1,n2,...,nN> to insert the percentage of sequences in which the oligos will be implanted (DEFAULT: 0%) ---- NB: The number of sequences extracted from the percentage will be rounded down." << endl;
+	cerr << "\n --position || -p <n1,n2,...,nN> to insert the position in Multifasta sequences where you want to implant the oligos." << endl;
+	cerr << "\n --wobble || -w <n1,n2,...,nN> to set the wobble parameter for every implanting position. The implanting position, for every oligo, will be randomly choosen between p-w and p+w interval. (DEFAULT: 0)" << endl;
+	cerr << "\n --cycles || -c <number> to choose how many random multifasta files (and implanted also) this tool will produce. (DEFAULT: 1)" << endl;
+	cerr << "\n --freq || -f <number> to choose the percentage of fwd/rev strand to select for the implants. (DEFAULT: 50)" << endl;
+	cerr << endl;
+	exit(EXIT_SUCCESS);
 }
 
