@@ -29,6 +29,15 @@ int main(int argc, char *argv[]){
 	//Parser function to handle input arguments
 	command_line_parser(argc, argv);
 	
+	//If any implanting position is inserted read all the other inputs
+	if(position.size() != 0){  
+
+		read_input();	
+
+	} else{
+		cerr << "WARNING! There is no value for implanting position, check your input!" << endl;
+	}
+
 	if(BED_FILE.size() == 0){
 		pathway_multifasta();
 	} else{
@@ -38,12 +47,6 @@ int main(int argc, char *argv[]){
 
 void pathway_multifasta(){
 
-	//If any implanting position is inserted read all the other inputs
-	if(position.size() != 0){  
-
-		read_input();	
-
-	}
 	//For evry cycle -c inserted as input do inplanting_cycle function --> creating a random multifa + implanting (if any implaning position is inserted as input)
 	for(unsigned int i=0; i<cycles; i++){
 
@@ -54,14 +57,6 @@ void pathway_multifasta(){
 void pathway_bed(){
 
 	vector<bed_class> GEP;
-
-	if(position.size() != 0){  
-
-		read_input();	
-
-	} else{
-		cerr << "WARNING! There is no value for implanting position, check your input!" << endl;
-	}
 
 	bed_class_creation(GEP);
 	
