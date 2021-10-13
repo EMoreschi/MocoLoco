@@ -15,12 +15,13 @@
 #include <getopt.h>
 #include <random>
 #include <map>
-
+#include "./../TwoBit/twobit.c"
+#include "./../TwoBit/twobit.h"
 using namespace std;
 
-//int half_length = 150;
-//const unsigned int overhead = 25;
-/*
+int half_length = 150;
+unsigned int overhead = 25;
+
 class bed_class {
 	private:
 		string chr_coord;
@@ -30,23 +31,22 @@ class bed_class {
 		string sequence;
 
 		void read_line(string);
-		void flag_control(unsigned int, unsigned int);
+		void flag_control();
 	public:
 		bed_class (string line, TwoBit* tb, unsigned int n_line){
 			read_line(line);
-			flag_control(start_coord, end_coord);
-            centering_function(unsigned int start,  unsigned int end, unsigned int half_length, const unsigned int overhead);
+			flag_control();
+            		centering_function();
 			extract_seq(tb, n_line);
 		}
-		string return_sequence(bed_class);
-		unsigned int return_start_coord_GEP();
-		void centering_function(unsigned int, unsigned int, unsigned int, const unsigned int);
+		string return_sequence();
+		void centering_function();
 		void extract_seq(TwoBit*, unsigned int);
 		unsigned int return_start_coord();
 		unsigned int return_end_coord();
 		string return_chr_coord();
 };
-
+/*
 class coordinator_class{                     //Coordinator class to connect Matrix to Bed and Oligos_vector
 
     private:
@@ -145,3 +145,5 @@ void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>>);
 void implanting_cycle(unsigned int);
 void find_oligo_number();
 bool is_file_exist(string, string);
+void bed_class_creation(vector<bed_class>&);
+void print_debug_bed(vector<bed_class>);
