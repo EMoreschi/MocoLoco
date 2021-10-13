@@ -52,7 +52,132 @@ void pathway_multifasta(){
 }
 
 void pathway_bed(){
-	cout << BED_FILE << endl; 
+
+	vector<bed_class> GEP;
+
+	if(position.size() != 0){  
+
+		read_input();	
+
+	} else{
+		cerr << "WARNING! There is no value for implanting position, check your input!" << endl;
+	}
+
+	bed_class_creation(GEP);
+	
+	print_debug_bed(GEP);
+
+}
+
+void bed_class_creation(vector<bed_class> &GEP){
+	
+	ifstream in(BED_FILE);
+		
+	TwoBit * tb;
+
+	tb = twobit_open(TWOBIT_FILE.c_str());
+
+	string line;
+
+	unsigned int n_line = 1;
+	
+	while(getline(in,line)){
+
+
+		//if line is empty or commented --> continue
+		if(line.empty() || line[0] == '#'){
+
+			continue;
+		}
+
+		bed_class bed_line(line,tb, n_line);
+
+		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector og bed class)
+		GEP.emplace_back(bed_line);	
+
+		n_line = n_line + 1;		 
+	}
+}
+
+void bed_class::read_line(string line){ 
+
+	//Split the line word by word and extract chromosome coordinates (chr, start, end)
+	istringstream mystream(line);
+	mystream >> chr_coord >> start_coord >> end_coord;		
+
+}
+
+//Flag control function: start coordinates must be < then end coordinates
+void bed_class::flag_control(){
+
+	//if start coordinates are >  end coordinates flag is setted to 0 --> WARNING printed to warn users
+	if(start_coord > end_coord){
+
+		flag = 0;
+	}
+
+	else{ 
+		flag = 1;
+	}
+}
+
+void bed_class::centering_function(){
+
+	unsigned int center = (start_coord + end_coord)/2;						
+	//No overhead for start coordinates but overhead added to end coordinates
+	start_coord = center - half_length;
+	end_coord = center + half_length +overhead;
+
+}
+
+//Extract sequence function: Extract, from Twobit hg38 genome, the DNA sequence with (chr, start, end) coordinates extracted from Bed line
+void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
+
+	//CONTROL: if flag is 1 means that the current line has starting coordinate < end coordinate, so it is correct
+	if(flag == 1){	
+		
+		//Extract the sequence from the object with the twobit_sequence function
+		sequence = twobit_sequence(tb,chr_coord.c_str(),start_coord,end_coord-1);
+	}
+
+	//if flag is not 1 means that the current line has starting coordinate > end coordinate: PRINT WARNING!		
+	else {		
+		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
+	}
+}
+
+void print_debug_bed(vector<bed_class> GEP){
+	ofstream outfile;
+	outfile.open("Prova_bedtomultifasta.txt");
+
+	for(unsigned int element = 0; element < GEP.size(); element++){
+		string chrom = GEP[element].return_chr_coord();
+		unsigned int start = GEP[element].return_start_coord();
+		unsigned int end = GEP[element].return_end_coord();
+		string seq = GEP[element].return_sequence();
+		outfile << ">" << chrom << "-" << start << ":" << end << endl;
+		outfile << seq << endl;
+	}
+	outfile.close();
+}
+
+string bed_class::return_chr_coord(){
+
+	return chr_coord;
+}
+
+unsigned int bed_class::return_start_coord(){
+
+	return start_coord;
+}
+
+unsigned int bed_class::return_end_coord(){
+
+	return end_coord;
+}
+string bed_class::return_sequence(){
+
+	return sequence;
 }
 //////////////////////// INPUT READING AND CHECKING ////////////////////////////////////////////////////////////
 
@@ -91,7 +216,7 @@ void read_input(){
 }
 
 //Function to convert a string in a vector of unsigned int
-void generic_vector_creation(string oligo_perc, vector<unsigned int> &n_oligo_vector){
+void generic_vector_creation(string input_string, vector<unsigned int> &int_vector){
 
 	int index;
 	
@@ -99,13 +224,13 @@ void generic_vector_creation(string oligo_perc, vector<unsigned int> &n_oligo_ve
 	while(index != -1){
 		
 		//Find the index of the first "," in the string
-		index = oligo_perc.find(",");
+		index = input_string.find(",");
 
 		//Save all the string charachter from 0 to index(,)
-		n_oligo_vector.emplace_back(stoi(oligo_perc.substr(0,index)));
+		int_vector.emplace_back(stoi(input_string.substr(0,index)));
 
 		//Delete from the string the value just saved and restart the process with a new cycle
-		oligo_perc.erase(0,index+1);
+		input_string.erase(0,index+1);
 	}
 }
 
