@@ -49,7 +49,7 @@ while getopts ":j:f:n:l:c:p:k:t:d:ra" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${J}" ] || [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || [ -z "${L}" ] || [ -z "${P}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${C}" ] || [ -z "${F}" ]; then
+if [ -z "${J}" ] || [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || [ -z "${L}" ] || [ -z "${P}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${C}" ] || [ -z "${F}" ] ; then
     usage
 fi
 
@@ -58,20 +58,43 @@ fi
 touch $F;
 RMC=$(realpath RMC)
 MOCO=$(realpath MOCO)
-path_out=$(realpath $F)
-
+#Creation of the path for the output file with the best pvalue for each cycle in each frequence
+path_out=$(realpath $F).txt
+#Creation of the path for the output file with all the pvalue obtained by our script
+path_out_tot=$(realpath $F)_tot.txt
 #Defining output directory name (<Jaspar_name>_test_k<k>)
 Out_dir=${J#../*/};
-mkdir ${Out_dir}_test_k${K};
 
-#Initializing headers in Output file (Outside directory just created before)
+if [ -z "${Refine}" ]
+then
+
+	mkdir ${Out_dir}_test_k${K}_c${C};
+
+else	
+
+	mkdir ${Out_dir}_test_k${K}_c${C}_r;
+
+fi 
+
+#Initializing headers in Output file (Outside directory just created before) and in the Output file with best pvalue
 echo "#TESTING MOCOLOCO">$path_out;
-echo -e "#FREQ \t HIT \t PVAL-LOG10">>$path_out; 
+echo -e "#FREQ\tHIT\tPVAL-LOG10">>$path_out; 
+echo "#TESTING MOCOLOCO">$path_out_tot;
+echo -e "#FREQ\tHIT\tPVAL-LOG10">>$path_out_tot; 
 
 #Defining frequences for analysis
 frequenze=(75 65 55 45 35 25 20 15 10 5);
 
-cd ${Out_dir}_test_k${K};
+if [ -z "${Refine}" ]
+then
+
+	cd ${Out_dir}_test_k${K}_c${C};
+
+else	
+
+	cd ${Out_dir}_test_k${K}_c${C}_r;
+
+fi 
 
 for freq in ${frequenze[@]}
 do 
@@ -117,10 +140,12 @@ wait
 for freq in ${frequenze[@]}
 do
 	cd $freq;
-	for con in $(seq 1 $C);
-	do
-		max=`awk -v fr=$freq 'BEGIN{a=   0}{if ($9>0+a) a=$9} END{print fr"\t"$1"\t"$9}' *Z_scores_implanted${con}* >> $path_out`
-	done
+
+	#Extraction of all the pvalue from the Z_scores_implanted files
+	awk -v fre=$freq  '!/^#|^$/ { print fre "\t"$1"\t"$9}' *Z_scores_* >> $path_out_tot;
+	#Extraction of the best pvalue for each cycle in each frequence
+	for f in *Z_scores* ; do awk -v fr=$freq '!/^#|^$/ { print fr"\t"$1"\t"$9}' $f | sort -g -k3| tail -n1 >>$path_out ; done
+	
 	cd ..;
 done
 
