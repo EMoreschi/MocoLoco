@@ -3,11 +3,11 @@
 
 #-------USAGE----------------------------------------------------------------------------------------------
 
-usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -c <Cycle_number> " 1>&2; exit 1; }
+usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -c <Cycle_number> -t <frequency1 threshold> -v <Log10 p-value threshold> " 1>&2; exit 1; }
 
 #--------PARSER----------------------------------------------------------------------------------------------
 
-while getopts ":j:f:n:l:c:p:k:t:d:ra" o; do
+while getopts ":j:f:n:l:c:p:k:t:v:d:ra" o; do
     case "${o}" in
         j)
             J=${OPTARG}
@@ -20,6 +20,9 @@ while getopts ":j:f:n:l:c:p:k:t:d:ra" o; do
             ;;
         t)
             T=${OPTARG}
+            ;;
+        v)
+            V=${OPTARG}
             ;;
         l)
             L=${OPTARG}
@@ -49,21 +52,28 @@ while getopts ":j:f:n:l:c:p:k:t:d:ra" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${J}" ] || [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || [ -z "${L}" ] || [ -z "${P}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${C}" ] || [ -z "${F}" ] ; then
+if [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || -z "${V}" || [ -z "${L}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${C}" ]; then
     usage
 fi
 
 #----------DIRECTORIES PREPARATION-------------------------------------------------------------------------
                                                                                                              
-touch $F;
 RMC=$(realpath RMC)
 MOCO=$(realpath MOCO)
 #Creation of the path for the output file with the best pvalue for each cycle in each frequence
-path_out=$(realpath $F).txt
+path_out=$(realpath $F)
 #Creation of the path for the output file with all the pvalue obtained by our script
-path_out_tot=$(realpath $F)_tot.txt
+path_out_tot=${path_out::-4}_tot.txt
 #Defining output directory name (<Jaspar_name>_test_k<k>)
-Out_dir=${J#../*/};
+
+if [ -z "$J" ]
+then
+	Out_dir="Random_noImplant"
+
+else
+
+	Out_dir=${J#../*/};
+fi
 
 if [ -z "${Refine}" ]
 then
@@ -107,8 +117,16 @@ for freq in ${frequenze[@]}
 do 
 	cd $freq;
 		
-		$RMC -n $N -l $L -j ../../${J} -p $P -o $freq -c $C &
-  
+		if [ -z "$J" ]
+		then		
+		
+			$RMC -n $N -l $L -o $freq -c $C &
+
+		else
+
+			$RMC -n $N -l $L -j ../../${J} -p $P -o $freq -c $C &
+		fi
+  			
 	cd ..;
 done
 wait
@@ -124,10 +142,17 @@ do
 	for j in $(seq 1 $C);
 	do
         	((i=i%multi_thread)); ((i++==0)) && wait
-		echo "random_multifa_implanted${j}"
-		$MOCO -m random_multifa_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
 		
+		if [ -z "$J" ]
+		then		
 		
+			$MOCO -m random_multifa_${j}.fasta  $Refine -k $K -d $D -f $T $all &
+		
+		else
+
+			$MOCO -m random_multifa_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
+                
+		fi
 	done
 	wait
 	cd ..;
@@ -142,9 +167,9 @@ do
 	cd $freq;
 
 	#Extraction of all the pvalue from the Z_scores_implanted files
-	awk -v fre=$freq  '!/^#|^$/ { print fre "\t"$1"\t"$9}' *Z_scores_* >> $path_out_tot;
+	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($9>p_val) print fre "\t"$1"\t"$9 } '  *Z_scores_* >> $path_out_tot;
 	#Extraction of the best pvalue for each cycle in each frequence
-	for f in *Z_scores* ; do awk -v fr=$freq '!/^#|^$/ { print fr"\t"$1"\t"$9}' $f | sort -g -k3| tail -n1 >>$path_out ; done
+	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($9>p_val) print fr"\t"$1"\t"$9 }' $f | sort -g -k3| tail -n1 >>$path_out ; done
 	
 	cd ..;
 done

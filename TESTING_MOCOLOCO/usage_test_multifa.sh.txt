@@ -1,0 +1,29 @@
+To run the test.sh file run one of those commands:
+
+1) If you want to make implants at 10 different frequencies:
+
+> bash test_multifa.sh -j <JASPAR_MATRIX> -f <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -t <freq1_threshold> -v <Log10p_value_threshold>
+
+Where:
+
+$1 = Jaspar matrix implanted
+$2 = Hitted position output filename
+$3 = Number of random multifasta sequences created
+$4 = Length of random sequences created
+$5 = Position of implants
+$6 = K-mers analyzed
+$7 = Hamming distance
+$8 = Frequency1 threshold 
+$9 = Filtering hits on Log10 p-values
+
+2) If you want to make a set of random multifasta files:
+
+> bash test_multifa.sh -f <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -t <freq1_threshold> -v <Log10p_value_threshold>
+
+$1 = Hitted position output filename
+$2 = Number of random multifasta sequences created
+$3 = Length of random sequences created
+$4 = K-mers analyzed
+$5 = Hamming distance
+$6 = Frequency1 threshold 
+$7 = Filtering hits on Log10 p-values
