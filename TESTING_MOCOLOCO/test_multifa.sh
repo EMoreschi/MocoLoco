@@ -1,7 +1,36 @@
 #!/bin/bash
-#$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
 
 #-------USAGE----------------------------------------------------------------------------------------------
+
+# To run the test.sh file run one of those commands:
+
+# 1) If you want to make implants at 10 different frequencies:
+
+# > bash test_multifa.sh -j <JASPAR_MATRIX> -f <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -t <freq1_threshold> -v <Log10p_value_threshold>
+
+# Where:
+
+# -j = Jaspar matrix implanted
+# -f = Hitted position output filename
+# -n = Number of random multifasta sequences created
+# -l = Length of random sequences created
+# -p = Position of implants
+# -k = K-mers analyzed
+# -h = Hamming distance
+# -t= Frequency1 threshold 
+# -v = Filtering hits on Log10 p-values
+
+# 2) If you want to make a set of random multifasta files:
+
+# > bash test_multifa.sh -f <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -t <freq1_threshold> -v <Log10p_value_threshold>
+
+# -f = Hitted position output filename
+# -n = Number of random multifasta sequences created
+# -l = Length of random sequences created
+# -k = K-mers analyzed
+# -h = Hamming distance
+# -t = Frequency1 threshold 
+# -v = Filtering hits on Log10 p-values
 
 usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -c <Cycle_number> -t <frequency1 threshold> -v <Log10 p-value threshold> " 1>&2; exit 1; }
 
