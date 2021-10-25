@@ -74,12 +74,10 @@ class implanting_class{
 
 	private:
 		map<unsigned int,string> multifasta_map_implanted;
-		vector<unsigned int> unique_rnd;
 		vector<string> oligo_vector;
 
 		void multifasta_outfile(map<unsigned int,string>, string);
 		void implanting_oligo(map<vector<unsigned int>, vector<vector<unsigned int>>>);
-		void unique_random_generator();
 		void oligo_creation(map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator, int);
 		void print_debug_matrix(vector<vector<unsigned int>>);
 
@@ -130,3 +128,5 @@ void bed_class_creation(vector<bed_class>&);
 void GEP_parameters(vector<bed_class>);
 void multiBED_map_creation(vector<bed_class>);
 void debug_map(map<unsigned int, string>, map<unsigned int, string>);
+void unique_random_generator();
+void casual_map_filtering(map<unsigned int, string>);
