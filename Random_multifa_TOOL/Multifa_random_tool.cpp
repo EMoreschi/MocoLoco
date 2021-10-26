@@ -1,15 +1,18 @@
-#include "BED_tool.h"
+#include "Multifa_random_tool.h"
 
 /////////////////// GLOBAL VARIABLES ////////////////////////////////////////////////////////////////
 
 vector<bed_class> GEP;
 string var;
 map<unsigned int, string> multiBED_map;
+map<unsigned int, string> BED_map;
 vector<string> header;
+vector<unsigned int> unique_rnd;
 unsigned int half_length = 150;
 unsigned int overhead = 25;
 unsigned int length = 500;
 unsigned int n_seq = 200;
+unsigned int rand_bed = 0;
 string JASPAR_F;
 string TWOBIT_FILE;
 string oligo_perc = "0";
@@ -131,17 +134,31 @@ void find_oligo_number(){
 	}
 	
 	else{
-		for(unsigned int i=0; i<n_oligo_vector.size(); i++){
+		if (rand_bed == 0){
+			for(unsigned int i=0; i<n_oligo_vector.size(); i++){
 		
-			if(n_oligo_vector[i] > 100 || n_oligo_vector[i] < 0){
+				if(n_oligo_vector[i] > 100 || n_oligo_vector[i] < 0){
 
-				cout << "ERROR: The percentage need to be from 0 to 100!" << endl;
-				exit(1);
+					cout << "ERROR: The percentage need to be from 0 to 100!" << endl;
+					exit(1);
+				}
+				//Transforming the implanting percentage into the real number of implants that need to be done
+				cout << header.size();
+				n_oligo_vector[i] = (n_oligo_vector[i] * header.size())/100;
 			}
-			//Transforming the implanting percentage into the real number of implants that need to be done
-			cout << "BED";
-			cout << header.size();
-			n_oligo_vector[i] = (n_oligo_vector[i] * header.size())/100;
+		}
+		else{
+			for(unsigned int i=0; i<n_oligo_vector.size(); i++){
+		
+				if(n_oligo_vector[i] > 100 || n_oligo_vector[i] < 0){
+
+					cout << "ERROR: The percentage need to be from 0 to 100!" << endl;
+					exit(1);
+				}
+				//Transforming the implanting percentage into the real number of implants that need to be done
+				cout << header.size();
+				n_oligo_vector[i] = (n_oligo_vector[i] * rand_bed)/100;
+			}
 		}
 	}
 
@@ -325,7 +342,11 @@ void implanting_cycle(unsigned int i){
 			
 			//debug_map(multifasta_map, multiBED_map);
 
+
 			implanting_class (jaspar_map, multiBED_map,i);
+
+			
+			
 			if(position_vector.size() > 1){	
 				//checking if the implanting positions don't bring to any overlap
 				check_overlapping(jaspar_map);
@@ -462,7 +483,7 @@ void GEP_parameters(vector<bed_class> GEP){
 		stringstream ss;
     	ss << ">" << chrom << "-" << start << ":" << end;
 		string s = ss.str();
-		header.push_back(s);
+		header.emplace_back(s);
 		//s.clear();
 	}
 }
@@ -488,12 +509,37 @@ string bed_class::return_sequence(){
 }
 
 void multiBED_map_creation(vector<bed_class> GEP){
-	//For each sequence
-	for(unsigned int j=0; j<GEP.size(); j++){
-		multiBED_map.insert(pair<unsigned int,string>(j+1, GEP[j].return_sequence()));
-	}
+  
+          map<unsigned int, string> pre_multiBED_map;
+  
+          //For each sequence
+          for(unsigned int j=0; j<GEP.size(); j++){
+  
+                  pre_multiBED_map.insert({j+1, GEP[j].return_sequence()});
+          }
+  
+          casual_map_filtering(pre_multiBED_map);
 }
-
+  
+void casual_map_filtering(map<unsigned int, string> pre_multiBED_map){
+  
+	vector<unsigned int> shuffled_vector;
+	mt19937 eng{random_device{}()};
+  
+    for(unsigned int i=1; i<=header.size(); i++){
+  
+        shuffled_vector.emplace_back(i);
+    }
+  
+    shuffle(shuffled_vector.begin(), shuffled_vector.end(), eng);
+    map<unsigned int, string>::iterator itr = pre_multiBED_map.begin();
+  
+    for(unsigned int i=0; i<rand_bed; i++){
+  
+        itr = pre_multiBED_map.find(shuffled_vector[i]);
+        multiBED_map.insert({itr->first, itr->second});
+    }
+}
 //**************************************************************************************************************************
 //Function to create a map which associate, to each jaspar, a vector containing parameters (position, wobble, implants number, FWD strand frequency)
 void filling_jaspar_map(map<vector<unsigned int>, vector<vector<unsigned int>>>& jaspar_map, string matrix_name, string tf_name){
@@ -739,7 +785,11 @@ void check_exceeding(map<vector<unsigned int>,vector<vector<unsigned int>>> jasp
 
 		//position - wobble --> if it is a negative number it means that the implant can be exceed the seq in negative positions
 		int is_less_zero = jaspar_it->first[0] - jaspar_it->first[1];
-		
+		int matrix_half_length = jaspar_it->second[0].size()/2;
+		cout << "Matrix " <<matrix_half_length << endl;
+
+		//CONTINUA TU controlla quando è pari o dispari dove va ad impiantarsi e in base a quello trovi p minimo
+
 		//Checking if (implant pos -p) + (wobble -w) + (jaspar length) exceeds the sequence length -l parameter --> if it is, print an error and exit
 		if((jaspar_it->first[0] + jaspar_it->first[1] + jaspar_it->second.size()) > length){
 
@@ -793,10 +843,9 @@ void implanting_class::implanting_oligo(map<vector<unsigned int>, vector<vector<
 			cout << matrix_n[j] << ": " << matrix_tf[j] << endl;
 			print_debug_matrix(jaspar_it->second);
 			cout << endl;
-	
+
 			//An iterator for the multifasta sequences map is initialized
 			map<unsigned int, string>::iterator multifa_it;
-			
 			//From 0 to -o (number of oligos that must be implanted)
 			for(unsigned int i=0; i<jaspar_it->first[2]; i++){ 	
 				
@@ -821,10 +870,10 @@ void implanting_class::implanting_oligo(map<vector<unsigned int>, vector<vector<
 
 				//Debug printing to control if the implants are performed correctly
 				if(BED_FILE.size() != 0){
-					cout << "Implanted string " << oligo_vector[i] << " in sequence " << header[unique_rnd[i]] << " centered in position " << index_vec[i] << "." << endl;
+					cout << "Implanted string " << oligo_vector[i] << " in sequence " << unique_rnd[i] << " centered in position " << index_vec[i] << "." << endl;
 				}
 				else{
-					cout << "Implanted string " << oligo_vector[i] << " in sequence number " << unique_rnd[i] << " centered in position " << index_vec[i] << "." << endl;
+					cout << "Implanted string " << oligo_vector[i] << " in sequence number " << header[unique_rnd[i]] << " centered in position " << index_vec[i] << "." << endl;
 				}
 			}
 				
@@ -838,7 +887,7 @@ void implanting_class::implanting_oligo(map<vector<unsigned int>, vector<vector<
 }
 
 //Function to generate a vector of number from 1 to number of seq --> then the function shuffles the vector to generate a 0-n_seq number distribution (for ex: from 1-2-3-4-5-6 --> 3-5-1-4-2-6)
-void implanting_class::unique_random_generator(){
+void unique_random_generator(){
 
 	//using the mt19937 random eng generator fot shuffling
 	mt19937 eng{random_device{}()};
@@ -854,15 +903,14 @@ void implanting_class::unique_random_generator(){
 		shuffle(unique_rnd.begin(), unique_rnd.end(), eng);
 	}
 	else{
-		for(unsigned int i=1; i<=header.size(); i++){
-
-			unique_rnd.emplace_back(i);
+		for(map<unsigned int, string>::iterator itr = multiBED_map.begin(); itr != multiBED_map.end(); itr++){
+			
+			unique_rnd.emplace_back(itr -> first);
 		}
 
 		//shuffling the vector
 		shuffle(unique_rnd.begin(), unique_rnd.end(), eng);
 	}
-	
 }
 
 //*************************************************************************************************
@@ -974,6 +1022,9 @@ void debug_implanting(){
 		cout << "\nThe number of JASPAR matrices is: " << JASPAR_FILE_vector.size() << endl;
 		cout << "The number of implanting position is: " << position_vector.size() << endl;
 		cout << "The length of BED sequences is: " << length << endl;
+		if (rand_bed != 0){
+			cout << "You choose to pick " << rand_bed << " sequences for your BED file." << endl;
+		}
 		cout << "The number of BED sequences is: " << header.size() << endl;
 		cout << "The BED files inserted as input are: ";
 		for(unsigned int i=0; i<BED_FILE_vector.size(); i++){
@@ -1065,7 +1116,7 @@ void implanting_class::multifasta_outfile(map<unsigned int,string> multifasta_ma
 
 void command_line_parser(int argc, char** argv){
 	
-	const char* const short_opts = "hl:n:b:t:c:j:o:p:w:f:";
+	const char* const short_opts = "hl:n:b:t:c:j:o:p:w:f:r:";
 
 	//Specifying the expected options
 	const option long_opts[] ={
@@ -1117,6 +1168,8 @@ void command_line_parser(int argc, char** argv){
 				   break;
 			case 'w' : wobble = string(optarg); 
 				   break;
+			case 'r' : rand_bed = stoi(optarg);
+					break;
 			case 'f' : freq_strand_plus = string(optarg); 
 				   break;
 			case 'j' : JASPAR_F = (string(optarg));
@@ -1166,6 +1219,7 @@ void display_help(){
 	cerr << "\n --oligop || -o <n1,n2,...,nN> to insert the percentage of sequences in which the oligos will be implanted (DEFAULT: 0%) ---- NB: The number of sequences extracted from the percentage will be rounded down." << endl;
 	cerr << "\n --position || -p <n1,n2,...,nN> to insert the position in Multifasta sequences where you want to implant the oligos." << endl;
 	cerr << "\n --wobble || -w <n1,n2,...,nN> to set the wobble parameter for every implanting position. The implanting position, for every oligo, will be randomly choosen between p-w and p+w interval. (DEFAULT: 0)" << endl;
+	cerr << "\n --random || -r <<number> to choose some random sequences from BED file" << endl;
 	cerr << "\n --cycles || -c <number> to choose how many random multifasta files (and implanted also) this tool will produce. (DEFAULT: 1)" << endl;
 	cerr << "\n --freq || -f <number> to choose the percentage of fwd/rev strand to select for the implants. (DEFAULT: 50)" << endl;
 	cerr << endl;
