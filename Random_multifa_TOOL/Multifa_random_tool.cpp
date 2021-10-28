@@ -123,7 +123,7 @@ void find_oligo_number(){
 		
 			if(n_oligo_vector[i] > 100 || n_oligo_vector[i] < 0){
 
-				cout << "ERROR: -o paramter need to be from 0 to 100!" << endl;
+				cout << "ERROR: -o parameter need to be from 0 to 100!" << endl;
 				exit(1);
 			}
 			//Transforming the implanting percentage into the real number of implants that need to be done
@@ -138,7 +138,7 @@ void find_oligo_number(){
 		
 				if(n_oligo_vector[i] > 100 || n_oligo_vector[i] < 0){
 
-					cout << "ERROR: -o paramter need to be from 0 to 100!" << endl;
+					cout << "ERROR: -o parameter need to be from 0 to 100!" << endl;
 					exit(1);
 				}
 				//Transforming the implanting percentage into the real number of implants that need to be done
