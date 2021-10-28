@@ -36,19 +36,19 @@ jobs:
       - name: Run NFY test
         run: ls
 
-      - name: hg19 genome download 
-        run: cat get_hg19.script | bash
-        working-directory: Genomes/hg19
-
-      - name: mm10 genome download 
-        run: cat get_mm10.script | bash
-        working-directory: Genomes/mm10
-
-      - name: Run NFY test
-        run: ./test -b Test_Bed/nfy_k562_hg19.bed -t Genomes/hg19/hg19.2bit -j Jaspar_2020/MA0060.1.jaspar
-
-      - name: Run myc test
-        run: ./test -b Test_Bed/cMyc_hESC_mm10.bed -t Genomes/mm10/mm10.2bit -j Jaspar_2020/MA0147.2.jaspar
+          #      - name: hg19 genome download 
+          #        run: cat get_hg19.script | bash
+          #        working-directory: Genomes/hg19
+          #
+          #      - name: mm10 genome download 
+          #        run: cat get_mm10.script | bash
+          #        working-directory: Genomes/mm10
+          #
+          #      - name: Run NFY test
+          #        run: ./test -b Test_Bed/nfy_k562_hg19.bed -t Genomes/hg19/hg19.2bit -j Jaspar_2020/MA0060.1.jaspar
+          #
+          #      - name: Run myc test
+          #        run: ./test -b Test_Bed/cMyc_hESC_mm10.bed -t Genomes/mm10/mm10.2bit -j Jaspar_2020/MA0147.2.jaspar
       
         # Runs a set of commands using the runners shell
       - name: Compiling multifasta random tool
