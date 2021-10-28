@@ -84,7 +84,6 @@ class implanting_class{
 	public:
 
 		implanting_class(map<vector<unsigned int>, vector<vector<unsigned int>>> jaspar_map, map<unsigned int,string> multifasta_map, unsigned int i){
-			
 			//Copying the random multifasta sequences into another map (where the iplanting are going to be performed)
 			multifasta_map_implanted = multifasta_map;	
 			//Function to implant oligos (generated following input parameters) into the sequences
