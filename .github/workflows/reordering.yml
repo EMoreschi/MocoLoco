@@ -6,9 +6,9 @@ name: CI on brach Dev test NFY myc
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ Dev ]
+    branches: [ reordering ]
   pull_request:
-    branches: [ Dev ]
+    branches: [ reordering ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -35,10 +35,6 @@ jobs:
       
       - name: Run NFY test
         run: ls
-
-        #      - name: hg38 genome download 
-        #        run: cat get_hg38.script | bash
-        #        working-directory: Genomes/hg38
 
       - name: hg19 genome download 
         run: cat get_hg19.script | bash
