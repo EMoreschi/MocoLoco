@@ -29,6 +29,7 @@ string freq_strand_plus;
 vector<unsigned int> freq_strand_plus_vector;
 vector<bool> plus_minus;
 vector<vector<bool>> plus_minus_matrix;
+map<unsigned int, string> pre_multiBED_map;
 
 /////////////////////// MAIN FUNCTION //////////////////////////////////////////////////////////////////
 
@@ -45,7 +46,6 @@ int main(int argc, char *argv[]){
 	
 	//For evry cycle -c inserted as input do inplanting_cycle function --> creating a random multifa + implanting (if any implaning position is inserted as input)
 	for(unsigned int i=0; i<cycles; i++){
-
 		implanting_cycle(i);
 	}
 	
@@ -330,7 +330,8 @@ void implanting_cycle(unsigned int i){
 
 			//checking if -p implanting positions don't bring the oligos to exceed from the sequences length 
 			//check_exceeding(jaspar_map);
- 
+			
+			
 			//implanting class constructor calling --> The map composed by matrix + parameters, the random multifa map, and the current cycle number are passed to constructor
 			implanting_class (jaspar_map, MULTIFA.multifasta_map,i);
 		
@@ -339,11 +340,13 @@ void implanting_cycle(unsigned int i){
  
         }
         else{
-			//multifasta_map.insert(multiBED_map.begin(), multiBED_map.end());
-			
-			//debug_map(multifasta_map, multiBED_map);
 
-
+			if (n_seq == 0){
+				multiBED_map.insert(pre_multiBED_map.begin(), pre_multiBED_map.end());	
+			}
+			else{
+				casual_map_filtering(pre_multiBED_map);
+			}
 			implanting_class (jaspar_map, multiBED_map,i);
 
 			
@@ -352,13 +355,11 @@ void implanting_cycle(unsigned int i){
 				//checking if the implanting positions don't bring to any overlap
 				check_overlapping(jaspar_map);
 			}
-
-			//checking if -p implanting positions don't bring the oligos to exceed from the sequences length 
-			//check_exceeding(jaspar_map);
 					
 			//implanting class constructor calling --> The map composed by matrix + parameters, the random multifa map, and the current cycle number are passed to constructor
 			matrix_n.clear();
 			matrix_tf.clear();
+			multiBED_map.clear();
         }
 	
 	}
@@ -513,20 +514,12 @@ string bed_class::return_sequence(){
 }
 
 void multiBED_map_creation(vector<bed_class> GEP){
-  
-	map<unsigned int, string> pre_multiBED_map;
-  
-    //For each sequence
+	//For each sequence
     for(unsigned int j=0; j<GEP.size(); j++){
   
         pre_multiBED_map.insert({j+1, GEP[j].return_sequence()});
     }
-	if (n_seq == 0){
-		multiBED_map.insert(pre_multiBED_map.begin(), pre_multiBED_map.end());	
-	}
-	else{
-	    casual_map_filtering(pre_multiBED_map);
-	}
+	
 }
   
 void casual_map_filtering(map<unsigned int, string> pre_multiBED_map){
@@ -547,6 +540,7 @@ void casual_map_filtering(map<unsigned int, string> pre_multiBED_map){
         itr = pre_multiBED_map.find(shuffled_vector[i]);
         multiBED_map.insert({itr->first, itr->second});
     }
+	shuffled_vector.clear();
 }
 //**************************************************************************************************************************
 //Function to create a map which associate, to each jaspar, a vector containing parameters (position, wobble, implants number, FWD strand frequency)
@@ -1104,7 +1098,7 @@ void implanting_class::multifasta_outfile(map<unsigned int,string> multifasta_ma
 			outfile << endl;
 		}
 		else{
-			outfile << header[i]<<endl;
+			outfile << header[it -> first] <<endl;
 			//Printing the sequence
 			outfile << it->second << endl;
 			outfile << endl;	
