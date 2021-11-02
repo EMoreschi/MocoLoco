@@ -8,8 +8,8 @@ map<unsigned int, string> multiBED_map;
 map<unsigned int, string> BED_map;
 vector<string> header;
 vector<unsigned int> unique_rnd;
-unsigned int half_length = 150;
-unsigned int overhead = 25;
+unsigned int half_length = 250;
+//unsigned int overhead = 25;
 unsigned int length = 500;
 unsigned int n_seq = 0;
 string JASPAR_F;
@@ -455,10 +455,11 @@ void bed_class::flag_control(){
 
 void bed_class::centering_function(){
 
-	unsigned int center = (start_coord + end_coord)/2;						
+	unsigned int center = (start_coord + end_coord)/2;	
+	half_length = length/2;					
 	//No overhead for start coordinates but overhead added to end coordinates
 	start_coord = center - half_length;
-	end_coord = center + half_length +overhead;
+	end_coord = center + half_length;
 
 }
 
@@ -483,7 +484,7 @@ void GEP_parameters(vector<bed_class> GEP){
 		unsigned int end = GEP[element].return_end_coord();
 		string seq = GEP[element].return_sequence();
 		stringstream ss;
-    	ss << chrom << "-" << start << ":" << end;
+    	ss << ">" << chrom << "-" << start << ":" << end;
 		string s = ss.str();
 		header.emplace_back(s);
 		//s.clear();
