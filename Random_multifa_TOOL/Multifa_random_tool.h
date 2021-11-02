@@ -34,11 +34,13 @@ class bed_class {
 		void flag_control();
 	public:
 		bed_class (string line, TwoBit* tb, unsigned int n_line){
+			
 			read_line(line);
 			flag_control();
-            centering_function();
+			centering_function();
 			extract_seq(tb, n_line);
 		}
+
 		string return_sequence();
 		void centering_function();
 		void extract_seq(TwoBit*, unsigned int);
@@ -55,8 +57,7 @@ class multifasta_class{
 		vector<string> headers;
 		vector<string> sequences;
 		
-		void multifasta_map_creation();
-		
+		void multifasta_map_creation();		
 
 	public:
 		

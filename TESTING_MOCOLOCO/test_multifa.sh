@@ -32,11 +32,11 @@
 # -t = Frequency1 threshold 
 # -v = Filtering hits on Log10 p-values
 
-usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -c <Cycle_number> -t <frequency1 threshold> -v <Log10 p-value threshold> " 1>&2; exit 1; }
+usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -c <Cycle_number> -t <frequency1 threshold> -v <Log10 p-value threshold> -b <Bed_file> -tb <Twobit_file>" 1>&2; exit 1; }
 
 #--------PARSER----------------------------------------------------------------------------------------------
 
-while getopts ":j:f:n:l:c:p:k:t:v:d:ra" o; do
+while getopts ":j:f:n:l:c:p:k:t:b:x:v:d:ra" o; do
     case "${o}" in
         j)
             J=${OPTARG}
@@ -46,6 +46,12 @@ while getopts ":j:f:n:l:c:p:k:t:v:d:ra" o; do
             ;;
         n)
             N=${OPTARG}
+            ;;
+        b)
+            B=${OPTARG}
+            ;;
+        x)
+            X=${OPTARG}
             ;;
         t)
             T=${OPTARG}
@@ -81,8 +87,9 @@ while getopts ":j:f:n:l:c:p:k:t:v:d:ra" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || -z "${V}" || [ -z "${L}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${C}" ]; then
-    usage
+if [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || [ -z "${L}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${C}" ]; then
+	
+	usage
 fi
 
 #----------DIRECTORIES PREPARATION-------------------------------------------------------------------------
@@ -97,7 +104,7 @@ path_out_tot=${path_out::-4}_tot.txt
 
 if [ -z "$J" ]
 then
-	Out_dir="Random_noImplant"
+	Out_dir="BED_noImplant"
 
 else
 
@@ -107,19 +114,19 @@ fi
 if [ -z "${Refine}" ]
 then
 
-	mkdir ${Out_dir}_test_k${K}_c${C};
+	mkdir ${Out_dir}_test_k${K}_c${C}_f${T};
 
 else	
 
-	mkdir ${Out_dir}_test_k${K}_c${C}_r;
+	mkdir ${Out_dir}_test_k${K}_c${C}_f${T}_r;
 
 fi 
 
 #Initializing headers in Output file (Outside directory just created before) and in the Output file with best pvalue
 echo "#TESTING MOCOLOCO">$path_out;
-echo -e "#FREQ\tHIT\tPVAL-LOG10">>$path_out; 
+echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL">>$path_out; 
 echo "#TESTING MOCOLOCO">$path_out_tot;
-echo -e "#FREQ\tHIT\tPVAL-LOG10">>$path_out_tot; 
+echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL">>$path_out_tot; 
 
 #Defining frequences for analysis
 frequenze=(75 65 55 45 35 25 20 15 10 5);
@@ -127,11 +134,11 @@ frequenze=(75 65 55 45 35 25 20 15 10 5);
 if [ -z "${Refine}" ]
 then
 
-	cd ${Out_dir}_test_k${K}_c${C};
+	cd ${Out_dir}_test_k${K}_c${C}_f${T};
 
 else	
 
-	cd ${Out_dir}_test_k${K}_c${C}_r;
+	cd ${Out_dir}_test_k${K}_c${C}_f${T}_r;
 
 fi 
 
@@ -149,11 +156,11 @@ do
 		if [ -z "$J" ]
 		then		
 		
-			$RMC -n $N -l $L -o $freq -c $C &
+			$RMC -n $N -l $L -o $freq -c $C -b ../../${B} -t ../../${X} &
 
 		else
-
-			$RMC -n $N -l $L -j ../../${J} -p $P -o $freq -c $C &
+			
+			$RMC -b ../../${B} -t ../../${X} -n $N -l $L -j ../../${J} -p $P -o $freq -c $C &
 		fi
   			
 	cd ..;
@@ -175,11 +182,11 @@ do
 		if [ -z "$J" ]
 		then		
 		
-			$MOCO -m random_multifa_${j}.fasta  $Refine -k $K -d $D -f $T $all &
+			$MOCO -m BED_${j}.fasta  $Refine -k $K -d $D -f $T $all &
 		
 		else
 
-			$MOCO -m random_multifa_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
+			$MOCO -m BED_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
                 
 		fi
 	done
@@ -196,9 +203,9 @@ do
 	cd $freq;
 
 	#Extraction of all the pvalue from the Z_scores_implanted files
-	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($9>p_val) print fre "\t"$1"\t"$9 } '  *Z_scores_* >> $path_out_tot;
+	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($9>p_val) print fre "\t"$1"\t"$9"\t"$8 } '  *Z_scores_* >> $path_out_tot;
 	#Extraction of the best pvalue for each cycle in each frequence
-	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($9>p_val) print fr"\t"$1"\t"$9 }' $f | sort -g -k3| tail -n1 >>$path_out ; done
+	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($9>p_val) print fr"\t"$1"\t"$9"\t"$8 }' $f | sort -g -k3| tail -n1 >>$path_out ; done
 	
 	cd ..;
 done
