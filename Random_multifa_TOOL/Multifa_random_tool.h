@@ -22,6 +22,7 @@ using namespace std;
 
 string BED_FILE;
 void multifasta_outfile(map<unsigned int,string>, string);
+
 class bed_class {
 	private:
 		string chr_coord;
@@ -129,4 +130,5 @@ void multiBED_map_creation(vector<bed_class>);
 void debug_map(map<unsigned int, string>, map<unsigned int, string>);
 void unique_random_generator();
 void casual_map_filtering(map<unsigned int, string>);
+
 
