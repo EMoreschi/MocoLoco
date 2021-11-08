@@ -43,6 +43,18 @@ int main(int argc, char *argv[]){
 
 		read_input();	
 	}
+	else{
+		if (BED_FILE.size() != 0){
+		
+			bed_class_creation(GEP);
+
+			//Storage of variables useful for fasta file (header and sequences)
+			GEP_parameters(GEP);
+
+			//Now we create a bed map like the multifasta map
+			multiBED_map_creation(GEP);
+		}
+	}
 	
 	//For evry cycle -c inserted as input do inplanting_cycle function --> creating a random multifa + implanting (if any implaning position is inserted as input)
 	for(unsigned int i=0; i<cycles; i++){
@@ -381,10 +393,28 @@ void implanting_cycle(unsigned int i){
 		
 			//Generating a simple random multifasta file
 			multifasta_class MULTIFA(length,n_seq,i);
+
+			multifasta_outfile(MULTIFA.multifasta_map, "random_multifa_"+to_string(i+1)+".fasta");
 		}
 		else{
 			//Printing of warning messages
+			
 			cout << "\nWARNING: No Jaspar matrices and implanting position given as input." << endl;	
+			if (n_seq == 0){
+				cout <<"\n Generating a random BED file of " << header.size() << " sequences of " << length << " bases length\n";
+			}
+			else{
+				cout <<"\n Generating a random BED file of " << n_seq << " sequences of " << length << " bases length\n";
+			}
+			if (n_seq == 0){
+				multiBED_map.insert(pre_multiBED_map.begin(), pre_multiBED_map.end());	
+			}
+			else{
+				casual_map_filtering(pre_multiBED_map);
+			}
+			
+			multifasta_outfile(multiBED_map, "BED_"+to_string(i+1)+".fasta");
+		
 		}
 	}
 
@@ -518,7 +548,7 @@ void multiBED_map_creation(vector<bed_class> GEP){
 	//For each sequence
     for(unsigned int j=0; j<GEP.size(); j++){
   
-        pre_multiBED_map.insert({j+1, GEP[j].return_sequence()});
+        pre_multiBED_map.insert({j, GEP[j].return_sequence()});
     }
 	
 }
@@ -1084,7 +1114,7 @@ void implanting_class::print_debug_matrix(vector<vector<unsigned int>> matrix){	
 }
 
 //Function to print the random multifasta sequences generated into a file called random_multifasta_(i).fasta
-void implanting_class::multifasta_outfile(map<unsigned int,string> multifasta_map, string filename){
+void multifasta_outfile(map<unsigned int,string> multifasta_map, string filename){
 
 	ofstream outfile;
 	outfile.open(filename);

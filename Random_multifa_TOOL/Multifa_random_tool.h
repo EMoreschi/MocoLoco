@@ -21,6 +21,7 @@
 using namespace std;
 
 string BED_FILE;
+void multifasta_outfile(map<unsigned int,string>, string);
 
 class bed_class {
 	private:
@@ -66,8 +67,8 @@ class multifasta_class{
 			//Function to create the set of random sequences
 			multifasta_map_creation();			
 		}
-
 		map<unsigned int,string> multifasta_map;
+		
 		
 };
 
@@ -77,7 +78,6 @@ class implanting_class{
 		map<unsigned int,string> multifasta_map_implanted;
 		vector<string> oligo_vector;
 
-		void multifasta_outfile(map<unsigned int,string>, string);
 		void implanting_oligo(map<vector<unsigned int>, vector<vector<unsigned int>>>);
 		void oligo_creation(map<vector<unsigned int>, vector<vector<unsigned int>>>::iterator, int);
 		void print_debug_matrix(vector<vector<unsigned int>>);
@@ -130,3 +130,5 @@ void multiBED_map_creation(vector<bed_class>);
 void debug_map(map<unsigned int, string>, map<unsigned int, string>);
 void unique_random_generator();
 void casual_map_filtering(map<unsigned int, string>);
+
+
