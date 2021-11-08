@@ -514,7 +514,7 @@ void GEP_parameters(vector<bed_class> GEP){
 		unsigned int end = GEP[element].return_end_coord();
 		string seq = GEP[element].return_sequence();
 		stringstream ss;
-	    	ss << ">" << chrom << "-" << start << ":" << end;
+    	ss << ">" << chrom << "-" << start << ":" << end;
 		string s = ss.str();
 		header.emplace_back(s);
 		//s.clear();
@@ -1231,7 +1231,7 @@ bool is_file_exist(string fileName, string buf){		//Input files existence contro
 		display_help();
 		exit(1);
 	}
-	return false;
+	return 0;
 }
 
 ////////////////////////////////// DISPLAY HELP /////////////////////////////////////////////////////////////
