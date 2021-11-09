@@ -517,7 +517,7 @@ void GEP_parameters(vector<bed_class> GEP){
     	ss << ">" << chrom << "-" << start << ":" << end;
 		string s = ss.str();
 		header.emplace_back(s);
-		//s.clear();
+
 	}
 	if (n_seq > header.size()){
 		cerr << "\nWARNING! The -n parameter is higher than the sequences in BED file, the programm will consider all the sequences\n" << endl;
@@ -546,7 +546,7 @@ string bed_class::return_sequence(){
 
 void multiBED_map_creation(vector<bed_class> GEP){
 	//For each sequence
-    for(unsigned int j=0; j<GEP.size(); j++){
+    for(unsigned int j=0; j<(GEP.size()); j++){
   
         pre_multiBED_map.insert({j, GEP[j].return_sequence()});
     }
@@ -558,7 +558,7 @@ void casual_map_filtering(map<unsigned int, string> pre_multiBED_map){
 	vector<unsigned int> shuffled_vector;
 	mt19937 eng{random_device{}()};
   
-    for(unsigned int i=1; i<=header.size(); i++){
+    for(unsigned int i=0; i<header.size(); i++){
   
         shuffled_vector.emplace_back(i);
     }
@@ -1129,7 +1129,7 @@ void multifasta_outfile(map<unsigned int,string> multifasta_map, string filename
 			outfile << endl;
 		}
 		else{
-			outfile << header[it -> first] <<endl;
+			outfile << header[it->first] << endl;
 			//Printing the sequence
 			outfile << it->second << endl;
 			outfile << endl;	
