@@ -104,7 +104,7 @@ path_out_tot=${path_out::-4}_tot.txt
 
 if [ -z "$J" ]
 then
-	Out_dir="BED_noImplant"
+	Out_dir="MIXED_BED_noImplant"
 
 else
 
@@ -157,7 +157,7 @@ do
 		then		
 		
 			$RMC -n $N -l $L -o $freq -c $C -b ../../${B} -t ../../${X} &
-
+		
 		else
 			
 			$RMC -b ../../${B} -t ../../${X} -n $N -l $L -j ../../${J} -p $P -o $freq -c $C &
@@ -169,7 +169,7 @@ wait
 
 #-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
 
-multi_thread=10
+multi_thread=20
 (
 for freq in ${frequenze[@]}
 do 
@@ -186,7 +186,7 @@ do
 		
 		else
 
-			$MOCO -m BED_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
+			$MOCO -m BED_${j}.fasta  $Refine -k $K -d $D -f $T $all &
                 
 		fi
 	done
