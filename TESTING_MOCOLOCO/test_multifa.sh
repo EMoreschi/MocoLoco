@@ -18,7 +18,7 @@
 # -k = K-mers analyzed
 # -h = Hamming distance
 # -t= Frequency1 threshold 
-# -v = Filtering hits on Log10 p-values
+# -v = Filtering hits on p-values (it takes pval < of v)
 
 # 2) If you want to make a set of random multifasta files:
 
@@ -30,9 +30,9 @@
 # -k = K-mers analyzed
 # -h = Hamming distance
 # -t = Frequency1 threshold 
-# -v = Filtering hits on Log10 p-values
+# -v = Filtering hits on p-values (it takes pval < of v)
 
-usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -c <Cycle_number> -t <frequency1 threshold> -v <Log10 p-value threshold> -b <Bed_file> -tb <Twobit_file>" 1>&2; exit 1; }
+usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -c <Cycle_number> -t <frequency1 threshold> -v <Log10 p-value threshold> -b <Bed_file> -x <Twobit_file>" 1>&2; exit 1; }
 
 #--------PARSER----------------------------------------------------------------------------------------------
 
@@ -92,8 +92,7 @@ if [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || [ -z "${L}" ] || [ -z "${K
 	usage
 fi
 
-#----------DIRECTORIES PREPARATION-------------------------------------------------------------------------
-                                                                                                             
+#----------DIRECTORIES PREPARATION-------------------------------------------------------------------------   
 RMC=$(realpath RMC)
 MOCO=$(realpath MOCO)
 #Creation of the path for the output file with the best pvalue for each cycle in each frequence
@@ -101,6 +100,11 @@ path_out=$(realpath $F)
 #Creation of the path for the output file with all the pvalue obtained by our script
 path_out_tot=${path_out::-4}_tot.txt
 #Defining output directory name (<Jaspar_name>_test_k<k>)
+
+if [ -z "$P" ]
+then
+	P=1
+fi
 
 if [ -z "$J" ]
 then
@@ -124,9 +128,9 @@ fi
 
 #Initializing headers in Output file (Outside directory just created before) and in the Output file with best pvalue
 echo "#TESTING MOCOLOCO">$path_out;
-echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL">>$path_out; 
+echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL\tBONF-PVAL\tLOG10BONF">>$path_out; 
 echo "#TESTING MOCOLOCO">$path_out_tot;
-echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL">>$path_out_tot; 
+echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL\tBONF-PVAL\tLOG10BONF">>$path_out_tot; 
 
 #Defining frequences for analysis
 frequenze=(75 65 55 45 35 25 20 15 10 5);
@@ -203,9 +207,9 @@ do
 	cd $freq;
 
 	#Extraction of all the pvalue from the Z_scores_implanted files
-	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($9>p_val) print fre "\t"$1"\t"$9"\t"$8 } '  *Z_scores_* >> $path_out_tot;
+	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($8<p_val) print fre "\t"$1"\t"$9"\t"$8"\t"$10"\t"$11 } '  *Z_scores_* >> $path_out_tot;
 	#Extraction of the best pvalue for each cycle in each frequence
-	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($9>p_val) print fr"\t"$1"\t"$9"\t"$8 }' $f | sort -g -k3| tail -n1 >>$path_out ; done
+	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($8<p_val) print fr"\t"$1"\t"$9"\t"$8"\t"$10"\t"$11 }' $f | sort -g -k3| tail -n1 >>$path_out ; done
 	
 	cd ..;
 done
