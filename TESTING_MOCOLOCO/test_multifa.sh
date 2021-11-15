@@ -101,9 +101,9 @@ path_out=$(realpath $F)
 path_out_tot=${path_out::-4}_tot.txt
 #Defining output directory name (<Jaspar_name>_test_k<k>)
 
-if [ -z "$P" ]
+if [ -z "$V" ]
 then
-	P=1
+	V=1
 fi
 
 if [ -z "$J" ]
