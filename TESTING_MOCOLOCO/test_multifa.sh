@@ -169,7 +169,7 @@ wait
 
 #-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
 
-multi_thread=20
+multi_thread=10
 (
 for freq in ${frequenze[@]}
 do 
@@ -186,7 +186,7 @@ do
 		
 		else
 
-			$MOCO -m BED_${j}.fasta  $Refine -k $K -d $D -f $T $all &
+			$MOCO -m BED_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
                 
 		fi
 	done
