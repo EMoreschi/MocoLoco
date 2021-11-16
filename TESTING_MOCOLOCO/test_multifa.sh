@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # To run the test_multifa.sh file run one of these 4 commands:
 
@@ -6,7 +6,7 @@
 
 # TO MAKE IMPLANTS AT DIFFERENT FREQUENCIES (75 | 65 | 55 | 45 | 35 | 25 | 20 | 15 | 10 | 5) INTO A SET OF RANDOM MULTIFASTA FILES:
 
-# > ./test_multifa.sh -j <JASPAR_MATRIX> -o <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -s <strand_+_implanting_frequency> -c <cycles_number> -v <Log10p_value_threshold> -r <optional> -a <optional>
+# > ./test_multifa.sh -j <JASPAR_MATRIX> -o <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -s <strand_+_implanting_frequency> -c <cycles_number> -v <p_value_threshold> -r <optional> -a <optional>
 
 # Where:
 
@@ -28,7 +28,7 @@
 
 # TO MAKE A SET OF RANDOM MULTIFASTA FILES (Without any implants)
 
-# > ./test_multifa.sh -o <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -c <cycles_number> -v <Log10p_value_threshold> -r <optional> -a <optional>
+# > ./test_multifa.sh -o <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -c <cycles_number> -v <p_value_threshold> -r <optional> -a <optional>
 
 # -o (OUTPUT FILE) = Hitted position output filenamec
 # -n (N SEQ) = Number of random multifasta sequences created
@@ -45,7 +45,7 @@
 
 # TO MAKE IMPLANTS AT DIFFERENT FREQUENCIES (75 | 65 | 55 | 45 | 35 | 25 | 20 | 15 | 10 | 5) INTO A SET OF SEQUENCES COMING FROM BED COORDINATES:
 
-# > ./test_multifa.sh -b <BED_FILE> -t <TWOBIT_FILE> -j <JASPAR_MATRIX> -o <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -s <strand_+_implanting_frequency> -c <cycles_number> -v <Log10p_value_threshold> -r <optional> -a <optional>
+# > ./test_multifa.sh -b <BED_FILE> -t <TWOBIT_FILE> -j <JASPAR_MATRIX> -o <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -s <strand_+_implanting_frequency> -c <cycles_number> -v <p_value_threshold> -r <optional> -a <optional>
 
 # Where:
 
@@ -69,7 +69,7 @@
 
 # TO MAKE A SET OF MULTIFASTA FILES TAKEN FROM BED COORDINATES (Without any implants)
 
-# > ./test_multifa.sh -b <BED_FILE> -t <TWOBIT_FILE> -o <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -c <cycles_number> -v <Log10p_value_threshold> -r <optional> -a <optional>
+# > ./test_multifa.sh -b <BED_FILE> -t <TWOBIT_FILE> -o <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -c <cycles_number> -v <p_value_threshold> -r <optional> -a <optional>
 
 # -b (BED) = Bed file
 # -t (TWOBIT) = Twobit file
@@ -93,13 +93,13 @@ usage() {
 echo -e "\nWRONG PARAMETERS INSERTION!"
 echo -e "Run one of these 4 commands"
 
-echo -e "\n1) $0 -j <JASPAR_MATRIX> -o <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -s <strand_+_implant_freq> -c <cycles_number> -v <Log10 p-value threshold> -r <optional> -a <optional>" 1>&2;
+echo -e "\n1) $0 -j <JASPAR_MATRIX> -o <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -s <strand_+_implant_freq> -c <cycles_number> -v <p-value threshold> -r <optional> -a <optional>" 1>&2;
 
-echo -e "\n2) $0 -o <Output_file> -n <Sequences_number> -l <Sequences_length> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -c <cycles_number> -v <Log10 p-value threshold> -r <optional> -a <optional>" 1>&2; 
+echo -e "\n2) $0 -o <Output_file> -n <Sequences_number> -l <Sequences_length> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -c <cycles_number> -v <p-value threshold> -r <optional> -a <optional>" 1>&2; 
 
-echo -e "\n3) $0 -b <BED_FILE> -t <TWOBIT_FILE> -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -s <strand_+_implant_freq> -c <cycles_number> -v <Log10 p-value threshold> -r <optional> -a <optional>" 1>&2; 
+echo -e "\n3) $0 -b <BED_FILE> -t <TWOBIT_FILE> -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -s <strand_+_implant_freq> -c <cycles_number> -v <p-value threshold> -r <optional> -a <optional>" 1>&2; 
 
-echo -e "\n4) $0 -b <BED_FILE> -t <TWOBIT_FILE> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -c <cycles_number> -v <Log10 p-value threshold> -r <optional> -a <optional> \n" 1>&2; exit 1; 
+echo -e "\n4) $0 -b <BED_FILE> -t <TWOBIT_FILE> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -c <cycles_number> -v <p-value threshold> -r <optional> -a <optional> \n" 1>&2; exit 1; 
 
 }
 
@@ -207,9 +207,9 @@ fi
 
 #Initializing headers in Output file (Outside directory just created before) and in the Output file with best pvalue
 echo "#TESTING MOCOLOCO">$path_out;
-echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL\tBONF-PVAL\tLOG10BONF">>$path_out; 
+echo -e "FREQ\tHIT\tPVAL\tPVAL-LOG10\tBONF-PVAL\tLOG10BONF">>$path_out; 
 echo "#TESTING MOCOLOCO">$path_out_tot;
-echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL\tBONF-PVAL\tLOG10BONF">>$path_out_tot; 
+echo -e "FREQ\tHIT\tPVAL\tPVAL-LOG10\tBONF-PVAL\tLOG10BONF">>$path_out_tot; 
 
 #Defining frequences for analysis
 frequenze=(75 65 55 45 35 25 20 15 10 5);
@@ -286,9 +286,9 @@ do
 	cd $freq;
 
 	#Extraction of all the pvalue from the Z_scores_implanted files
-	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($8<p_val) print fre "\t"$1"\t"$9"\t"$8"\t"$10"\t"$11 } '  *Z_scores_* >> $path_out_tot;
+	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($8<p_val) print fre "\t"$1"\t"$8"\t"$9"\t"$10"\t"$11 } '  *Z_scores_* >> $path_out_tot;
 	#Extraction of the best pvalue for each cycle in each frequence
-	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($8<p_val) print fr"\t"$1"\t"$9"\t"$8"\t"$10"\t"$11 }' $f | sort -g -k3| tail -n1 >>$path_out ; done
+	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($8<p_val) print fr"\t"$1"\t"$8"\t"$9"\t"$10"\t"$11 }' $f | sort -g -k3| tail -n1 >>$path_out ; done
 	
 	cd ..;
 done
