@@ -1,69 +1,130 @@
-#!/bin/bash
+#/bin/bash
 
-#-------USAGE----------------------------------------------------------------------------------------------
+# To run the test_multifa.sh file run one of these 4 commands:
 
-# To run the test.sh file run one of those commands:
+#########    1    #########################################################################################
 
-# 1) If you want to make implants at 10 different frequencies:
+# TO MAKE IMPLANTS AT DIFFERENT FREQUENCIES (75 | 65 | 55 | 45 | 35 | 25 | 20 | 15 | 10 | 5) INTO A SET OF RANDOM MULTIFASTA FILES:
 
-# > bash test_multifa.sh -j <JASPAR_MATRIX> -f <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -t <freq1_threshold> -v <Log10p_value_threshold>
+# > ./test_multifa.sh -j <JASPAR_MATRIX> -o <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -s <strand_+_implanting_frequency> -c <cycles_number> -v <Log10p_value_threshold> -r <optional> -a <optional>
 
 # Where:
 
-# -j = Jaspar matrix implanted
-# -f = Hitted position output filename
-# -n = Number of random multifasta sequences created
-# -l = Length of random sequences created
-# -p = Position of implants
-# -k = K-mers analyzed
-# -h = Hamming distance
-# -t= Frequency1 threshold 
-# -v = Filtering hits on p-values (it takes pval < of v)
+# -j (JASPAR) = Jaspar matrix implanted
+# -o (OUTPUT FILE) = Hitted position output filename
+# -n (N SEQ) = Number of random multifasta sequences created
+# -l (L SEQ) = Length of random sequences created
+# -p (POSITION) = Position of implants
+# -k (K-MERS) = K-mers analyzed 
+# -d (HAMMING DISTANCE) = Hamming distance
+# -f (FREQ1 THRESHOLD) = Frequency1 threshold
+# -s (STRAND +) = Strand + implanting frequency (DEFAULT 50%)
+# -c (CYCLES) = Number of multifasta created for each implanting frequency
+# -v (P-VALUE FILTER) = Filtering hits on p-values (it takes pval < of v | DEFAULT = 1)
+# -r (REFINE) = To refine each hit's PWM MATRIX created
+# -a (ALL) = No Local maxima selection
 
-# 2) If you want to make a set of random multifasta files:
+#########    2    #########################################################################################
 
-# > bash test_multifa.sh -f <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -t <freq1_threshold> -v <Log10p_value_threshold>
+# TO MAKE A SET OF RANDOM MULTIFASTA FILES (Without any implants)
 
-# -f = Hitted position output filename
-# -n = Number of random multifasta sequences created
-# -l = Length of random sequences created
-# -k = K-mers analyzed
-# -h = Hamming distance
-# -t = Frequency1 threshold 
-# -v = Filtering hits on p-values (it takes pval < of v)
+# > ./test_multifa.sh -o <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -c <cycles_number> -v <Log10p_value_threshold> -r <optional> -a <optional>
 
-usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -c <Cycle_number> -t <frequency1 threshold> -v <Log10 p-value threshold> -b <Bed_file> -x <Twobit_file>" 1>&2; exit 1; }
+# -o (OUTPUT FILE) = Hitted position output filenamec
+# -n (N SEQ) = Number of random multifasta sequences created
+# -l (L SEQ) = Length of random sequences created
+# -k (K-MERS) = K-mers analyzed
+# -d (HAMMING DISTANCE) = Hamming distance
+# -f (FREQ1 THRESHOLD) = Frequency1 threshold
+# -c (CYCLES) = Number of multifasta created for each implanting frequency
+# -v (P-VALUE FILTER) = Filtering hits on p-values (it takes pval < of v | DEFAULT = 1)
+# -r (REFINE) = To refine each hit's PWM MATRIX created
+# -a (ALL) = No Local maxima selection
+
+#########    3    #########################################################################################
+
+# TO MAKE IMPLANTS AT DIFFERENT FREQUENCIES (75 | 65 | 55 | 45 | 35 | 25 | 20 | 15 | 10 | 5) INTO A SET OF SEQUENCES COMING FROM BED COORDINATES:
+
+# > ./test_multifa.sh -b <BED_FILE> -t <TWOBIT_FILE> -j <JASPAR_MATRIX> -o <filename.txt> -n <n_seq> -l <length_seq> -p <implanting_pos> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -s <strand_+_implanting_frequency> -c <cycles_number> -v <Log10p_value_threshold> -r <optional> -a <optional>
+
+# Where:
+
+# -b (BED) = Bed file
+# -t (TWOBIT) = Twobit file
+# -j (JASPAR) = Jaspar matrix implanted
+# -o (OUTPUT FILE) = Hitted position output filename
+# -n (N SEQ) = Number of random multifasta sequences created
+# -l (L SEQ) = Length of random sequences created
+# -p (POSITION) = Position of implants
+# -k (K-MERS) = K-mers analyzed
+# -d (HAMMING DISTANCE) = Hamming distance
+# -f (FREQ1 THRESHOLD) = Frequency1 threshold 
+# -s (STRAND +) = Strand + implanting frequency (DEFAULT 50%)
+# -c (CYCLES) = Number of multifasta created for each implanting frequency
+# -v (P-VALUE FILTER) = Filtering hits on p-values (it takes pval < of v | DEFAULT 1)
+# -r (REFINE) = To refine each hit's PWM MATRIX created
+# -a (ALL) = No Local maxima selection
+
+#########    4    #########################################################################################
+
+# TO MAKE A SET OF MULTIFASTA FILES TAKEN FROM BED COORDINATES (Without any implants)
+
+# > ./test_multifa.sh -b <BED_FILE> -t <TWOBIT_FILE> -o <filename.txt> -n <n_seq> -l <length_seq> -k <k-mers_analysis> -d <hamming_distance> -f <freq1_threshold> -c <cycles_number> -v <Log10p_value_threshold> -r <optional> -a <optional>
+
+# -b (BED) = Bed file
+# -t (TWOBIT) = Twobit file
+# -o (OUTPUT FILE) = Hitted position output filename
+# -n (N SEQ) = Number of random multifasta sequences created
+# -l (L SEQ) = Length of random sequences created
+# -k (K-MERS) = K-mers analyzed
+# -d (HAMMING DISTANCE) = Hamming distance
+# -f (FREQ1 THRESHOLD) = Frequency1 threshold 
+# -c (CYCLES) = Number of multifasta created for each implanting frequency
+# -v (P-VALUE FILTER) = Filtering hits on p-values (it takes pval < of v | DEFAULT 1)
+# -r (REFINE) = To refine each hit's PWM MATRIX created
+# -a (ALL) = No Local maxima selection
+
+############################################################################################################
+
+#--------USAGE----------------------------------------------------------------------------------------------
+
+usage() { 
+
+echo -e "\nWRONG PARAMETERS INSERTION!"
+echo -e "Run one of these 4 commands"
+
+echo -e "\n1) $0 -j <JASPAR_MATRIX> -o <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -s <strand_+_implant_freq> -c <cycles_number> -v <Log10 p-value threshold> -r <optional> -a <optional>" 1>&2;
+
+echo -e "\n2) $0 -o <Output_file> -n <Sequences_number> -l <Sequences_length> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -c <cycles_number> -v <Log10 p-value threshold> -r <optional> -a <optional>" 1>&2; 
+
+echo -e "\n3) $0 -b <BED_FILE> -t <TWOBIT_FILE> -j <JASPAR_MATRIX> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -p <Implanting_position> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -s <strand_+_implant_freq> -c <cycles_number> -v <Log10 p-value threshold> -r <optional> -a <optional>" 1>&2; 
+
+echo -e "\n4) $0 -b <BED_FILE> -t <TWOBIT_FILE> -f <Output_file> -n <Sequences_number> -l <Sequences_length> -k <kmers_analyzed> -d <Hamming_distance> -f <frequency1 threshold> -c <cycles_number> -v <Log10 p-value threshold> -r <optional> -a <optional> \n" 1>&2; exit 1; 
+
+}
 
 #--------PARSER----------------------------------------------------------------------------------------------
 
-while getopts ":j:f:n:l:c:p:k:t:b:x:v:d:ra" o; do
+while getopts ":b:t:j:o:n:l:p:k:d:f:s:c:v:ra" o; do
     case "${o}" in
-        j)
-            J=${OPTARG}
-            ;;
-        f)
-            F=${OPTARG}
-            ;;
-        n)
-            N=${OPTARG}
-            ;;
-        b)
+        
+	b)
             B=${OPTARG}
-            ;;
-        x)
-            X=${OPTARG}
             ;;
         t)
             T=${OPTARG}
             ;;
-        v)
-            V=${OPTARG}
+        j)
+            J=${OPTARG}
+            ;;
+        o)
+            O=${OPTARG}
+            ;;
+        n)
+            N=${OPTARG}
             ;;
         l)
             L=${OPTARG}
-            ;;
-        c)
-            C=${OPTARG}
             ;;
         p)
             P=${OPTARG}
@@ -73,6 +134,18 @@ while getopts ":j:f:n:l:c:p:k:t:b:x:v:d:ra" o; do
             ;;
         d)
             D=${OPTARG}
+            ;;
+        f)
+            F=${OPTARG}
+            ;;
+        s)
+            S=${OPTARG}
+            ;;
+        c)
+            C=${OPTARG}
+            ;;
+        v)
+            V=${OPTARG}
             ;;
         r) 
            Refine="-r"
@@ -87,16 +160,17 @@ while getopts ":j:f:n:l:c:p:k:t:b:x:v:d:ra" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${F}" ] || [ -z "${N}" ] || [ -z "${T}" ] || [ -z "${L}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${C}" ]; then
+if [ -z "${O}" ] || [ -z "${N}" ] || [ -z "${L}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${F}" ] || [ -z "${C}" ]; then
 	
 	usage
 fi
 
-#----------DIRECTORIES PREPARATION-------------------------------------------------------------------------   
+#----------DIRECTORIES PREPARATION & INPUT PARAMETERS CONTROL-------------------------------------------------------------------------   
+
 RMC=$(realpath RMC)
 MOCO=$(realpath MOCO)
 #Creation of the path for the output file with the best pvalue for each cycle in each frequence
-path_out=$(realpath $F)
+path_out=$(realpath $O)
 #Creation of the path for the output file with all the pvalue obtained by our script
 path_out_tot=${path_out::-4}_tot.txt
 #Defining output directory name (<Jaspar_name>_test_k<k>)
@@ -104,6 +178,11 @@ path_out_tot=${path_out::-4}_tot.txt
 if [ -z "$V" ]
 then
 	V=1
+fi
+
+if [ -z "$S" ]
+then
+	S=50
 fi
 
 if [ -z "$J" ]
@@ -118,11 +197,11 @@ fi
 if [ -z "${Refine}" ]
 then
 
-	mkdir ${Out_dir}_test_k${K}_c${C}_f${T};
+	mkdir ${Out_dir}_test_k${K}_c${C}_f${F};
 
 else	
 
-	mkdir ${Out_dir}_test_k${K}_c${C}_f${T}_r;
+	mkdir ${Out_dir}_test_k${K}_c${C}_f${F}_r;
 
 fi 
 
@@ -138,11 +217,11 @@ frequenze=(75 65 55 45 35 25 20 15 10 5);
 if [ -z "${Refine}" ]
 then
 
-	cd ${Out_dir}_test_k${K}_c${C}_f${T};
+	cd ${Out_dir}_test_k${K}_c${C}_f${F};
 
 else	
 
-	cd ${Out_dir}_test_k${K}_c${C}_f${T}_r;
+	cd ${Out_dir}_test_k${K}_c${C}_f${F}_r;
 
 fi 
 
@@ -160,11 +239,11 @@ do
 		if [ -z "$J" ]
 		then		
 		
-			$RMC -n $N -l $L -o $freq -c $C -b ../../${B} -t ../../${X} &
+			$RMC -b ../../${B} -t ../../${T} -n $N -l $L -o $freq -c $C &
 		
 		else
 			
-			$RMC -b ../../${B} -t ../../${X} -n $N -l $L -j ../../${J} -p $P -o $freq -c $C &
+			$RMC -b ../../${B} -t ../../${T} -j ../../${J} -n ${N} -l ${L} -p $P -o $freq -c $C -f $S &
 		fi
   			
 	cd ..;
@@ -186,11 +265,11 @@ do
 		if [ -z "$J" ]
 		then		
 		
-			$MOCO -m BED_${j}.fasta  $Refine -k $K -d $D -f $T $all &
+			$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all &
 		
 		else
 
-			$MOCO -m BED_implanted${j}.fasta  $Refine -k $K -d $D -f $T $all &
+			$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
                 
 		fi
 	done
