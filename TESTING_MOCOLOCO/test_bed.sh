@@ -2,28 +2,32 @@
 #	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
 usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Hit.txt> -n <n> -l <l> -p <p> -k <k> -d <d> " 1>&2; exit 1; }
 
-while getopts ":j:f:b:t:p:k:s:d:ra" o; do
+while getopts ":b:t:j:o:k:d:f:v:ra" o; do
     case "${o}" in
-        j)
-            J=${OPTARG}
-            ;;
-        f)
-            F=${OPTARG}
-            ;;
-        b)
+        
+	b)
             B=${OPTARG}
             ;;
         t)
             T=${OPTARG}
             ;;
-        s)
-            S=${OPTARG}
+        j)
+            J=${OPTARG}
+            ;;
+        o)
+            O=${OPTARG}
             ;;
         k)
             K=${OPTARG}
             ;;
         d)
             D=${OPTARG}
+            ;;
+        f)
+            F=${OPTARG}
+            ;;
+        v)
+            V=${OPTARG}
             ;;
         r) 
            Refine="-r"
@@ -38,48 +42,71 @@ while getopts ":j:f:b:t:p:k:s:d:ra" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${J}" ] || [ -z "${F}" ] || [ -z "${B}" ] || [ -z "${S}" ] || [ -z "${T}" ] || [ -z "${K}" ] || [ -z "${D}" ] || [ -z "${F}" ]; then
+if [ -z "${B}" ] || [ -z "${T}" ] || [ -z "${J}" ] || [ -z "${O}" ] || [ -z "${K}" ] || [ -z "${D}" ];
+then
+
     usage
 fi
 
-touch $F;
-###RMC=$(realpath RMC)
+if [ -z "$V" ]
+then
+	V=1
+fi
+
+if [ -z "$F" ]
+then
+	F=0.02
+fi
+
 MOCO=$(realpath MOCO)
-path_out=$(realpath $F)
+path_out=$(realpath $O)
+path_out_tot=${path_out::-4}_tot.txt
+Out_dir=${B#../*/};
 
-##mkdir ${J}_Out;
-echo "#TESTING MOCOLOCO">$path_out;
-echo -e "HIT \t OLIGO \t PVAL \t PVAL-LOG10">>$path_out; 
-##frequenze=(100 50 40 30 20 15 10 9 8 7 6 5) 
+if [ -z "${Refine}" ]
+then
 
-##for i in ${frequenze[@]}
-##do 
- ## cd ${J}_Out;
- Out_dir=${B#../*/};
-  mkdir ${Out_dir}_test_k${K};
-  cd ${Out_dir}_test_k${K};
-	$MOCO -b ../${B} -t ../${T} -j ../${J} -k $K -d $D $Refine $all &
-	###$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  $Refine -k $K -d $D -f $S $all &
-  cd ..;
-##done
+	mkdir ${Out_dir}_test_k${K}_f${F};
 
+else	
+
+	mkdir ${Out_dir}_test_k${K}_f${F}_r;
+
+fi 
+
+echo "#TESTING MOCOLOCO">$path_out_tot;
+echo -e "HIT\tPVAL\tPVAL-LOG10\tBONF-PVAL\tLOG10BONF">>$path_out_tot; 
+
+if [ -z "${Refine}" ]
+then
+
+	cd ${Out_dir}_test_k${K}_f${F};
+
+else	
+
+	cd ${Out_dir}_test_k${K}_f${F}_r;
+
+fi 
+	
+$MOCO -b ../${B} -t ../${T} -j ../${J} -k $K -d $D -f $F $Refine $all &
+  
 wait
 
- ##for x in ${frequenze[@]}
- ##do
- cd ${Out_dir}_test_k${K};
-	a=$(awk  '/#Position/ {sub(/:/ ,"" ); sub(/#Position/,""); {ORS=" "}; print }' *mers_PWM_hamming_matrices* );
-        array=();
-        for j in $a 
-        do
-        pval=$(awk -v j="$j" '{if ($1 == j) print $9;}' *mers_p_value_parameters_control* | head -n 1) 
-	array+=($pval)
-        logpval=$(awk -v j="$j" '{if ($1 == j) print $9;}' *Z_scores* | head -n 1) 
-	array+=($logpval)
-        bestoligo=$(awk -v j="$j" '{if ($1 == j) print $2;}' *Z_scores* | head -n 1) 
-	array+=($bestoligo)
+	#Extraction of all the pvalue from the Z_scores_implanted files
+	awk -v p_val=$V  '!/^#|^$/ { if($8<p_val) print $1"\t"$8"\t"$9"\t"$10"\t"$11 } '  *Z_scores_* >> $path_out_tot;
+
+cd ..;	
+#	a=$(awk  '/#Position/ {sub(/:/ ,"" ); sub(/#Position/,""); {ORS=" "}; print }' *mers_PWM_hamming_matrices* );
+#        array=();
+#        for j in $a 
+#        do
+#        pval=$(awk -v j="$j" '{if ($1 == j) print $9;}' *mers_p_value_parameters_control* | head -n 1) 
+#	array+=($pval)
+#        logpval=$(awk -v j="$j" '{if ($1 == j) print $9;}' *Z_scores* | head -n 1) 
+#	array+=($logpval)
+#        bestoligo=$(awk -v j="$j" '{if ($1 == j) print $2;}' *Z_scores* | head -n 1) 
+#	array+=($bestoligo)
         
-	echo -e $j "\t" $bestoligo "\t" $pval "\t" $logpval>> $path_out; 
-        done  
+#	echo -e $j "\t" $bestoligo "\t" $pval "\t" $logpval>> $path_out; 
+#        done  
 cd ..;
-##done

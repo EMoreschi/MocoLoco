@@ -1538,7 +1538,7 @@ void z_test_class::z_score_parameters_calculation(){
 void z_test_class::z_score_calculation(){
 
 
-	z_score = ((global_mean - local_mean)/ (local_dev_std / sqrt(all_local_scores.size()))); 
+	z_score = ((global_mean - local_mean)/ (global_dev_std / sqrt(all_local_scores.size()))); 
 
 	const double Z  = z_score;
 	Zpvalue = gsl_cdf_ugaussian_P(Z);

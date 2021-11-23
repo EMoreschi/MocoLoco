@@ -185,13 +185,27 @@ then
 	S=50
 fi
 
-if [ -z "$J" ]
+if [ -z "$B" ]
 then
-	Out_dir="MIXED_BED_noImplant"
+	
+	if [ -z "$J" ]
+	then
+		Out_dir="RANDOM_noImplant"
+	
+	else
 
+		Out_dir="RANDOM_"${J#../*/};
+	fi
 else
 
-	Out_dir=${J#../*/};
+	if [ -z "$J" ]
+	then
+		Out_dir="MIXED_BED_noImplant"
+
+	else
+
+		Out_dir="MIXED_BED_"${J#../*/};
+	fi
 fi
 
 if [ -z "${Refine}" ]
@@ -236,14 +250,30 @@ for freq in ${frequenze[@]}
 do 
 	cd $freq;
 		
-		if [ -z "$J" ]
+		if [ -z "$B" ]
 		then		
+			if [ -z "$J" ]
+			then
+
+			$RMC -n $N -l $L -o $freq -c $C &
 		
-			$RMC -b ../../${B} -t ../../${T} -n $N -l $L -o $freq -c $C &
-		
-		else
+
+			else
 			
-			$RMC -b ../../${B} -t ../../${T} -j ../../${J} -n ${N} -l ${L} -p $P -o $freq -c $C -f $S &
+			$RMC -j ../../${J} -n ${N} -l ${L} -p $P -o $freq -c $C -f $S &
+			
+			fi
+		else
+		
+			if [ -z "$J" ]
+			then		
+		
+				$RMC -b ../../${B} -t ../../${T} -n $N -l $L -o $freq -c $C &
+		
+			else
+			
+				$RMC -b ../../${B} -t ../../${T} -j ../../${J} -n ${N} -l ${L} -p $P -o $freq -c $C -f $S &
+			fi
 		fi
   			
 	cd ..;
@@ -262,15 +292,31 @@ do
 	do
         	((i=i%multi_thread)); ((i++==0)) && wait
 		
-		if [ -z "$J" ]
-		then		
 		
-			$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all &
-		
-		else
+		if [ -z "$B" ]
+		then
 
-			$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
+			if [ -z "$J" ]
+			then		
+		
+				$MOCO -m random_multifa_${j}.fasta -k $K -d $D -f $F $Refine $all &
+			
+			else
+
+				$MOCO -m random_multifa_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
+                	fi
+		else
+		
+			if [ -z "$J" ]
+			then		
+		
+				$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all &
+		
+			else
+
+				$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
                 
+			fi
 		fi
 	done
 	wait
