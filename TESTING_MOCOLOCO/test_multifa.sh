@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # To run the test_multifa.sh file run one of these 4 commands:
 
@@ -185,13 +185,25 @@ then
 	S=50
 fi
 
-if [ -z "$J" ]
+if [ -z "$B" ]
 then
-	Out_dir="MIXED_BED_noImplant"
+	if [ -z "$J" ]
+	then
+		Out_dir="RANDOM_noImplant"
 
+	else
+
+		Out_dir=${J#../*/};
+	fi
 else
+	if [ -z "$J" ]
+	then
+		Out_dir="MIXED_BED_noImplant"
+	
+	else
 
-	Out_dir=${J#../*/};
+		Out_dir="MIXED_BED"${J#../*/};
+	fi
 fi
 
 if [ -z "${Refine}" ]
@@ -213,6 +225,8 @@ echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL\tBONF-PVAL\tLOG10BONF">>$path_out_tot;
 
 #Defining frequences for analysis
 frequenze=(75 65 55 45 35 25 20 15 10 5);
+
+#frequenze=(9 8 7 6);
 
 if [ -z "${Refine}" ]
 then
@@ -236,23 +250,35 @@ for freq in ${frequenze[@]}
 do 
 	cd $freq;
 		
-		if [ -z "$J" ]
+		if [ -z "$B" ]
 		then		
+			if [ -z "$J" ]
+			then
+
+				$RMC -n $N -l $L -o $freq -c $C &
 		
-			$RMC -b ../../${B} -t ../../${T} -n $N -l $L -o $freq -c $C &
-		
-		else
+			else
 			
-			$RMC -b ../../${B} -t ../../${T} -j ../../${J} -n ${N} -l ${L} -p $P -o $freq -c $C -f $S &
-		fi
-  			
+				$RMC -j ../../${J} -n ${N} -l ${L} -p $P -o $freq -c $C -f $S &
+			fi
+		else
+			if [ -z "$J" ]
+			then		
+		
+				$RMC -b ../../${B} -t ../../${T} -n $N -l $L -o $freq -c $C &
+		
+			else
+			
+				$RMC -b ../../${B} -t ../../${T} -j ../../${J} -n ${N} -l ${L} -p $P -o $freq -c $C -f $S &
+			fi
+  		fi
 	cd ..;
 done
 wait
 
 #-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
 
-multi_thread=10
+multi_thread=20
 (
 for freq in ${frequenze[@]}
 do 
@@ -262,15 +288,29 @@ do
 	do
         	((i=i%multi_thread)); ((i++==0)) && wait
 		
-		if [ -z "$J" ]
+		if [ -z "$B" ]
 		then		
+			if [ -z "$J" ]
+			then
+				$MOCO -m random_multifa_${j}.fasta -k $K -d $D -f $F $Refine $all &
 		
-			$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all &
-		
+			else
+
+				$MOCO -m random_multifa_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
+                
+			fi
 		else
 
-			$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
+			if [ -z "$J" ]
+			then		
+		
+				$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all &
+		
+			else
+
+				$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
                 
+			fi
 		fi
 	done
 	wait
@@ -284,6 +324,12 @@ wait
 for freq in ${frequenze[@]}
 do
 	cd $freq;
+	
+
+	if [ -z "$V" ]
+	then
+		V=1
+	fi
 
 	#Extraction of all the pvalue from the Z_scores_implanted files
 	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($8<p_val) print fre "\t"$1"\t"$9"\t"$8"\t"$10"\t"$11 } '  *Z_scores_* >> $path_out_tot;

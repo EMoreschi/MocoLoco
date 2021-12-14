@@ -19,8 +19,21 @@
 #include "./TwoBit/twobit.c"
 #include <getopt.h>
 #include <unordered_map>
-
+#include <memory>
+#include <chrono>
 using namespace std;
+
+#pragma once
+#include <algorithm>
+#include <thread>
+
+#define PROFILING 1
+#if PROFILING
+#define PROFILE_SCOPE(name) InstrumentationTimer timer##__LINE__(name)
+#define PROFILE_FUNCTION() PROFILE_SCOPE(__PRETTY_FUNCTION__)
+#else
+#define PROFILE_SCOPE(name)
+#endif
 
 string BED_FILE;
 int half_length = 150;
@@ -34,10 +47,170 @@ const double pseudoc = 0.01;
 bool DS = 1;
 string kmers = "6,8,10";
 string dist = "1,2,3";
-unsigned int top_N = 10;
-double freq_treshold = 0.02;
+unsigned int top_N = 10;		
+double freq_treshold = 0;
 bool local_maxima_grouping = 1;
 bool refining_matrix = 0;
+unsigned int exp_max = 0;
+
+//
+// Basic instrumentation profiler by Cherno
+
+// Usage: include this header file somewhere in your code (eg. precompiled header), and then use like:
+//
+// Instrumentor::Get().BeginSession("Session Name");        // Begin session 
+// {
+//     InstrumentationTimer timer("Profiled Scope Name");   // Place code like this in scopes you'd like to include in profiling
+//     // Code
+// }
+// Instrumentor::Get().EndSession();                        // End Session
+//
+// You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
+//
+
+struct ProfileResult
+{
+    string Name;
+    long long Start, End;
+    uint32_t ThreadID;
+};
+
+struct InstrumentationSession
+{
+    string Name;
+};
+
+class Instrumentor
+{
+private:
+    InstrumentationSession* m_CurrentSession;
+    ofstream m_OutputStream;
+    int m_ProfileCount;
+public:
+    Instrumentor()
+        : m_CurrentSession(nullptr), m_ProfileCount(0)
+    {
+    }
+
+    void BeginSession(const string& name, const string& filepath = "oligo_class_10k_test.json")
+    {
+        m_OutputStream.open(filepath);
+        WriteHeader();
+        m_CurrentSession = new InstrumentationSession{ name };
+    }
+
+    void EndSession()
+    {
+        WriteFooter();
+        m_OutputStream.close();
+        delete m_CurrentSession;
+        m_CurrentSession = nullptr;
+        m_ProfileCount = 0;
+    }
+
+    void WriteProfile(const ProfileResult& result)
+    {
+        if (m_ProfileCount++ > 0)
+            m_OutputStream << ",";
+
+        string name = result.Name;
+        replace(name.begin(), name.end(), '"', '\'');
+
+        m_OutputStream << "{";
+        m_OutputStream << "\"cat\":\"function\",";
+        m_OutputStream << "\"dur\":" << (result.End - result.Start) << ',';
+        m_OutputStream << "\"name\":\"" << name << "\",";
+        m_OutputStream << "\"ph\":\"X\",";
+        m_OutputStream << "\"pid\":0,";
+        m_OutputStream << "\"tid\":" << result.ThreadID << ",";
+        m_OutputStream << "\"ts\":" << result.Start;
+        m_OutputStream << "}";
+
+        m_OutputStream.flush();
+    }
+
+    void WriteHeader()
+    {
+        m_OutputStream << "{\"otherData\": {},\"traceEvents\":[";
+        m_OutputStream.flush();
+    }
+
+    void WriteFooter()
+    {
+        m_OutputStream << "]}";
+        m_OutputStream.flush();
+    }
+
+    static Instrumentor& Get()
+    {
+        static Instrumentor instance;
+        return instance;
+    }
+};
+
+class InstrumentationTimer
+{
+public:
+    InstrumentationTimer(const char* name)
+        : m_Name(name), m_Stopped(false)
+    {
+        m_StartTimepoint = chrono::high_resolution_clock::now();
+    }
+
+    ~InstrumentationTimer()
+    {
+        if (!m_Stopped)
+            Stop();
+    }
+
+    void Stop()
+    {
+        auto endTimepoint = chrono::high_resolution_clock::now();
+
+        long long start = chrono::time_point_cast<chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
+        long long end = chrono::time_point_cast<chrono::microseconds>(endTimepoint).time_since_epoch().count();
+
+        uint32_t threadID = hash<thread::id>{}(this_thread::get_id());
+        Instrumentor::Get().WriteProfile({ m_Name, start, end, threadID });
+
+        m_Stopped = true;
+    }
+private:
+    const char* m_Name;
+    chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
+    bool m_Stopped;
+};
+
+
+class Timer
+{
+	public:
+		Timer()
+		{
+			m_StartTimepoint = chrono::high_resolution_clock::now();
+		}
+		~Timer()
+		{
+			Stop();
+		}
+
+		void Stop()
+		{
+			auto endTimepoint = chrono::high_resolution_clock::now();
+			
+			auto start = chrono::time_point_cast<chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
+			auto end = chrono::time_point_cast<chrono::microseconds>(endTimepoint).time_since_epoch().count();
+
+			auto duration = end - start;
+			double ms = duration * 0.000001;
+
+			cout << duration << "us (" << ms << "s)\n";
+		}
+
+	private:
+		chrono::time_point< chrono::high_resolution_clock> m_StartTimepoint;
+
+};
 
 class bed_class {         
 
@@ -46,8 +219,9 @@ class bed_class {
 		string chr_coord;
 		unsigned int start_coord;
 		unsigned int end_coord;
-		bool flag;
 		string sequence;
+		bool flag;
+		
 
 		void read_line(string);
 		void flag_control(unsigned int, unsigned int);
@@ -81,7 +255,7 @@ class bed_class {
 
 		string return_sequence(bed_class);
 		unsigned int return_start_coord_GEP();
-		void centering_function(unsigned int, unsigned int, unsigned int, const unsigned int);
+		void centering_function(unsigned int, unsigned int, int, const unsigned int);
 		void extract_seq(TwoBit*, unsigned int);
 		unsigned int return_start_coord();
 		unsigned int return_end_coord();
@@ -92,7 +266,6 @@ class bed_class {
 class matrix_class {
 
 	private: 
-
 		string matrix_name;
 		string tf_name;
 		vector<vector<double>> matrix;
@@ -113,7 +286,7 @@ class matrix_class {
 	public:
 
 		matrix_class(vector<vector<double>> mat, string name, string tf){
-
+			
 			matrix = mat;	
 			matrix_name = name;	
 			tf_name = tf;
@@ -131,12 +304,23 @@ class matrix_class {
 			inverse_matrix_log = reverse_matrix(matrix_log);
 		}
 
+		matrix_class(vector<vector<double>> mat){
+			
+			matrix = mat;	
+			
+			//Function to normalize the matrix scores and add a pseudocount
+			matrix_normalization_pseudoc(matrix);
+
+			//Function to normalize again the matrix after pseudocount addition
+			matrix_normalization(norm_matrix);
+		}
+
 		void debug_matrix(matrix_class);
 		vector<vector<double>> return_log_matrix();
 		vector<vector<double>> return_inverse_log_matrix();
-
+		vector<vector<double>> return_norm_matrix();
+		vector<vector<double>> return_matrix();
 };
-
 
 class oligo_class{
 
@@ -157,7 +341,7 @@ class oligo_class{
 		unsigned int start_coord_oligo;
 		unsigned int end_coord_oligo;
 		char strand;
-
+		
 		void find_minmax(vector<vector<double>>);
 		unsigned int find_best_score();
 		void find_coordinate(unsigned int, string, unsigned int);
@@ -181,7 +365,7 @@ class oligo_class{
 
 			//Find the best score position and save it into local_position variable (If find more than one select as best the nearest to the center
 			local_position = find_best_score();
-
+			
 			//Function to extract and save the best oligo sequence
 			find_best_sequence(sequence, matrix[0].size());
 
@@ -207,7 +391,6 @@ class oligo_class{
 class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and Oligos_vector
 
 	private:
-
 		vector<vector<double>> matrix;
 		string matrix_name;
 		string tf_name;
@@ -241,11 +424,15 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			//The sequences are shifting on the matrix and, for each position, an oligo score is calculated, based on log and inverse_log matrices
 			//An oligo_class is created for each sequence shifting to analyze all oligo scores.
 			//All the information are saved on oligos_vector, which is an oligo_class vector passed by reference to this function and filled sequence by sequence.
-			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);
+			oligos_vector_creation(oligos_vector, matrix_log, inverse_matrix_log, GEP);				
 
 			//If the analysis is performed on Double Strand the function best_strand is useful to select if an oligo has the best score on FWD or REV strand, discarding the other
-			best_strand();
-
+			if(DS == 1){
+				
+				best_strand();
+			
+			}
+			
 			//The best oligo selected for each sequence becames the new center of the window, re-setting the GEP coordinates
 			centering_oligo();
 
@@ -377,6 +564,7 @@ class hamming_class{
 		double FREQUENCE_1;
 		double FREQUENCE_2;
 		vector<vector<double>> PWM_hamming;
+		vector<vector<double>> norm_matrix;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
@@ -390,6 +578,8 @@ class hamming_class{
 		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>, unsigned int);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 		void PWM_hamming_creation();
+		void EM_cycle(vector<vector<double>>, unsigned int, vector<bed_class>);
+		//void likelihood_ratio(vector<vector<double>>);
 
 	public:
 
@@ -407,8 +597,10 @@ class hamming_class{
 			//Save the oligo size --> to avoid infinite cycle for its continous updating in the next function	
 			number_first_hamming = similar_oligos.size();	
 
-			//Finding hamming of all similar oligos
-			find_secondary_hamming(distance, number_first_hamming);	
+			if (refining_matrix == 1){
+				//Finding hamming of all similar oligos
+				find_secondary_hamming(distance, number_first_hamming);	
+			}
 			
 			//Adding the real best oligo to similar oligos vector (created starting from itself)
 			similar_oligos.emplace_back(real_best_oligo);
@@ -427,6 +619,8 @@ class hamming_class{
 			
 			//Building a PWM matrix from best oligo sequence and his hamming neigbours sequences and occurrences
 			PWM_hamming_creation();
+
+			EM_cycle(PWM_hamming, position, GEP);
 		}
 
 		string return_real_best_oligo();
@@ -488,8 +682,9 @@ class z_test_class{
 
 			//Calculating z-score and p-value from it
 			z_score_calculation();
-
+			
 			//print_debug_oligo_vec(PWM_hamming);
+			
 		}
 		
 		unsigned int return_local_pos();
@@ -501,7 +696,6 @@ class z_test_class{
 		double return_z_score();
 
 };
-
 
 class map_class{
 
@@ -527,7 +721,7 @@ class map_class{
 		vector<vector<hamming_class>> HAMMING_MATRIX;
 		vector<z_test_class> Z_TEST_VECTOR;
 		vector<vector<z_test_class>> Z_TEST_MATRIX;
-		
+
 		vector<unsigned int> generic_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>);
 		void table_creation_vertical(vector<bed_class>);
@@ -602,9 +796,27 @@ class map_class{
 			Outfile_PWM_matrices();
 			Outfile_Z_score_values();
 		}
+
+		vector<vector<z_test_class>> return_z_test_matrix();
 };
 
 
+
+
+
+/*
+struct AllocationMetrics
+{
+	uint32_t TotalAllocated = 0;
+	uint32_t TotalFreed = 0;
+
+	uint32_t CurrentUsage(){
+		return (TotalAllocated - TotalFreed);
+	}
+};
+
+static AllocationMetrics s_AllocationMetrics;
+*/
 void GEP_path();
 void command_line_parser(int, char **);
 void display_help();
@@ -612,3 +824,9 @@ bool is_file_exist(string fileName, string buf);
 void check_input_file();
 bool check_palindrome(string, string&);
 double check_p_value(double);
+void RAM_usage();
+
+/*static void PrintMemoryUsage(string);
+void operator delete(void*, size_t);
+void* operator new(size_t);
+*/
