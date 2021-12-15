@@ -1477,70 +1477,153 @@ void hamming_class::PWM_hamming_creation(){
 	PWM_hamming.emplace_back(vec_T);
 }
 
-void hamming_class::EM_cycle(vector<vector<double>> PWM_hamming, unsigned int position, vector<bed_class> GEP){
+vector<vector<double>> hamming_class::EM_cycle(unsigned int exp_max, vector<vector<double>> PWM_hamming, unsigned int position, vector<bed_class> GEP, unsigned int iter){
+	if(iter < exp_max) {
+		vector<vector<double>> matrix;
+		vector<vector<double>> PPM_em;
+		matrix = PWM_hamming;
+		vector<double> PPM_em_vector;
+		map<string, double> like_ratio_map;
+		vector<double> sum_vect;
 
-	vector<vector<double>> matrix;
-	vector<vector<double>> PPM_em;
-	vector<double> PPM_em_vector;
-	matrix = PWM_hamming;
+		double sum = 0;
+		double likelihood_ratio = 0;
 
-	//Empty matrix creation
-	for (int i = 0; i<matrix.size(); i++){
-		for (int j = 0; j<matrix[i].size(); j++){
-			PPM_em_vector.emplace_back(0);
+		cout << "PWM_hamming: " << endl;
+		for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
+			for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
+				matrix[i][j] = PWM_hamming[i][j];
+				cout << matrix[i][j] << "\t";
+			}
+			cout << endl;
 		}
-		PPM_em.emplace_back(PPM_em_vector);
-		PPM_em_vector.clear();
-	}
-	//Filling the matrix
-	for (int i = 0; i<matrix.size(); i++){
-		for (int j = 0; j<matrix[i].size(); j++){
-			PPM_em[i][j] = (matrix[i][j]/50);
+		cout << endl;
+	/*	//Empty matrix creation
+		for (unsigned short int i = 0; i<matrix.size(); i++){
+			for (unsigned short int j = 0; j<matrix[i].size(); j++){
+				PPM_em_vector.emplace_back(0);
+			}
+			PPM_em.emplace_back(PPM_em_vector);
+			PPM_em_vector.clear();
 		}
-	}
+	*/	//Filling the matrix
+		cout << "matrix: "<< endl;
+		for (unsigned short int i = 0; i<matrix.size(); i++){
+			for (unsigned short int j = 0; j<matrix[i].size(); j++){
+				matrix[i][j] = matrix[i][j]/50;
+				cout << matrix[i][j] << "\t";
+			}
+			cout << endl;
+		}
+		cout << endl;
 
-	//Analyzing the sequences by column (starting from base 0 and every time EM_cycle is called the position increase by 1)
-	for (unsigned int i = 0; i<50; i++){		//50 is the number of sequences in baitedregions.bed file
-		double probability = 1;
-		double back_prob = 1;
-		//Extraction from the sequences of oligos
-		string oligo_em = GEP[i].return_sequence(GEP[i]).substr(position,6);
-		//Calculation of probability of oligo and background probability 
+		//Analyzing the sequences by column (starting from base 0 and every time EM_cycle is called the position increase by 1)
+		cout << "OLIGO" << "\t" << "PROB" << "\t" << "BACK_PROB" << "\t" << "LR" << endl;
+		for (unsigned int i = 0; i<50; i++){		//50 is the number of sequences in baitedregions.bed file
+			double probability = 1;
+			double back_prob = 1;
+			//Extraction from the sequences of oligos
+			string oligo_em = GEP[i].return_sequence(GEP[i]).substr(position,6);
+			//Calculation of probability of oligo and background probability 
+			
+			for (unsigned int k = 0; k < 6; k++){
+				
+				switch(oligo_em[k]){
+
+					case 'A':			
+						back_prob = back_prob * 0.2955;
+						probability = probability * matrix[0][k];
+						break;
+
+					case 'C':
+						back_prob = back_prob * 0.2045;
+						probability = probability * matrix[1][k];
+						break;
+
+					case 'G':
+						back_prob = back_prob * 0.2045;
+						probability = probability * matrix[2][k];
+						break;
+
+					case 'T':
+						back_prob = back_prob * 0.2955;
+						probability = probability * matrix[3][k];
+						break;
+
+					default:				//Case if there is N
+						back_prob = back_prob;
+						probability = probability;
+						break;
+				}
+			}
+			likelihood_ratio = probability/back_prob;
+			
+			cout << oligo_em << "\t" << probability << "\t" << back_prob << "\t" << likelihood_ratio << endl;
+			like_ratio_map.insert(pair<string, double>(oligo_em, likelihood_ratio));
+		}
+		for(map<string, double >::const_iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
+			cout << it->first << " " << it-> second << endl;
+		}
+		for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
+			for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
+				matrix[i][j] = 0;
+				cout << matrix[i][j] << "\t";
+			}
+			cout << endl;
+		}
+		cout << endl;
 		for (unsigned int k = 0; k < 6; k++){
-			switch(oligo_em[k]){
+			sum = 0;
+			for(map<string, double >::const_iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
+				switch(it->first[k]){
+					case 'A':			
+						matrix[0][k] = matrix[0][k] + it->second;
+						sum = sum + it->second;
+						break;
 
-				case 'A':			
-					back_prob = back_prob * 0.2955;
-					probability = probability * PPM_em[0][k];
-					break;
+					case 'C':
+						matrix[1][k] = matrix[1][k] + it->second;
+						sum = sum + it->second;
+						break;
 
-				case 'C':
-					back_prob = back_prob * 0.2045;
-					probability = probability * PPM_em[1][k];
-					break;
+					case 'G':
+						matrix[2][k] = matrix[2][k] + it->second;
+						sum = sum + it->second;
+						break;
 
-				case 'G':
-					back_prob = back_prob * 0.2045;
-					probability = probability * PPM_em[2][k];
-					break;
+					case 'T':
+						matrix[3][k] = matrix[3][k] + it->second;
+						sum = sum + it->second;
+						break;
 
-				case 'T':
-					back_prob = back_prob * 0.2955;
-					probability = probability * PPM_em[3][k];
-					break;
+					default:				//Case if there is N
 
-				default:				//Case if there is N
-					back_prob = back_prob;
-					probability = probability;
-					break;
+						break;
+				}
+			}
+			sum_vect.emplace_back(sum);
+		}
+		
+
+		for (unsigned short int i = 0; i<matrix.size(); i++){
+			for (unsigned short int j = 0; j<matrix[i].size(); j++){
+				PWM_hamming[i][j] = (matrix[i][j]/(sum_vect[j]))*50;
 			}
 		}
-		double likelihood_ratio = probability/back_prob;
-
+		cout << "PWM_hamming:" << endl;
+		for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
+			for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
+				cout << PWM_hamming[i][j] << "\t";
+			}
+			cout << endl;
+		}
+		cout << endl;
+		like_ratio_map.clear();
+		matrix.clear();
+		sum_vect.clear();
+		EM_cycle(exp_max,PWM_hamming, position, GEP, iter + 1);
 	}
-	
-	//for (unsigned int i = 0; i < )
-	//likelihood_ratio(PPM_em);
+	return PWM_hamming;
 }
 
 
