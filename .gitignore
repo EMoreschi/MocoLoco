@@ -18,3 +18,5 @@ TESTING_MOCOLOCO/MOCO
 *noImplant_test*
 *noImplant_R_test*
 *JUND*
+*.txt*
+*.bed*

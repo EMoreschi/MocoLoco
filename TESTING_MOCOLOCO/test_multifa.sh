@@ -282,7 +282,7 @@ wait
 
 #-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
 
-multi_thread=10
+multi_thread=20
 (
 for freq in ${frequenze[@]}
 do 
