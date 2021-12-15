@@ -1533,9 +1533,6 @@ void hamming_class::EM_Epart()
 		}
 		double likelihood_ratio = P_oligo/P_bg;
 		like_ratio_map.insert(pair<string, double>(oligo_vertical, likelihood_ratio));
-		for(map<string, double >::const_iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
-			cout << it->first << " " << it-> second << endl;
-		}
 
 	}
 }
@@ -1582,14 +1579,22 @@ void hamming_class::EM_Mpart(){
 		}
 		cout << endl;
 	}
-		
-
+	cout << endl;
 
 }
 void hamming_class::EM_cycle(){
 	for(unsigned int i = 0; i < exp_max; i++){ 
 EM_Epart();
 EM_Mpart();
+matrix_class NORM(PWM_hamming);
+PWM_hamming = NORM.return_norm_matrix();
+	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+	         cout << PWM_hamming[i][j]  << "\t";
+		}
+		cout << endl;
+	}
+	cout << endl;
 like_ratio_map.clear();
 	}
 
