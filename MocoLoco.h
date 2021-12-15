@@ -804,15 +804,6 @@ class map_class{
 			//Output PWM matrix generated from hamming analysis --> ancora da modificare
 			Outfile_PWM_matrices();
 			Outfile_Z_score_values();
-			for(unsigned int i = 0; i <tot_freq_matrix.size(); i++)
-			{ 
-			
-			for(unsigned int j = 0; j <tot_freq_matrix[0].size(); j++)
-			{ 
-				cout<< tot_freq_matrix[i][j]<<endl;
-			}
-			}
-			cout << "----------------" << endl;
 		}
 
 		vector<vector<z_test_class>> return_z_test_matrix();
