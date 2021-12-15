@@ -1590,14 +1590,12 @@ matrix_class NORM(PWM_hamming);
 PWM_hamming = NORM.return_norm_matrix();
 	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-	         cout << PWM_hamming[i][j]  << "\t";
+	         PWM_hamming[i][j] = PWM_hamming[i][j]*50;
 		}
-		cout << endl;
 	}
-	cout << endl;
+	
 like_ratio_map.clear();
 	}
-
 }
 
 
