@@ -565,6 +565,8 @@ class hamming_class{
 		double FREQUENCE_2;
 		vector<vector<double>> PWM_hamming;
 		vector<vector<double>> norm_matrix;
+        unordered_map<string,unsigned int> orizzontal_map_plus_copy;
+		map<string,double> like_ratio_map;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
@@ -580,6 +582,10 @@ class hamming_class{
 		void PWM_hamming_creation();
 		vector<vector<double>> EM_cycle(unsigned int, vector<vector<double>>, unsigned int, vector<bed_class>, unsigned int);
 		//void likelihood_ratio(vector<vector<double>>);
+		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
+		void EM_Epart();
+		void EM_Mpart();
+		void EM_cycle();
 
 	public:
 
@@ -587,6 +593,7 @@ class hamming_class{
 			
 			//Saving the vertical multimap passed to constructor locally
 			vertical_multimap = v_multimap;
+			orizzontal_map_plus_copy = orizzontal_map_plus;
 
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
 			find_best_oligos();
@@ -620,7 +627,8 @@ class hamming_class{
 			//Building a PWM matrix from best oligo sequence and his hamming neigbours sequences and occurrences
 			PWM_hamming_creation();
 			if (exp_max > 0){
-				EM_cycle(exp_max, PWM_hamming, position, GEP, 0);
+			    EM_Ipwm(PWM_hamming, GEP);
+				EM_cycle();
 			}
 		}
 
@@ -796,9 +804,19 @@ class map_class{
 			//Output PWM matrix generated from hamming analysis --> ancora da modificare
 			Outfile_PWM_matrices();
 			Outfile_Z_score_values();
+			for(unsigned int i = 0; i <tot_freq_matrix.size(); i++)
+			{ 
+			
+			for(unsigned int j = 0; j <tot_freq_matrix[0].size(); j++)
+			{ 
+				cout<< tot_freq_matrix[i][j]<<endl;
+			}
+			}
+			cout << "----------------" << endl;
 		}
 
 		vector<vector<z_test_class>> return_z_test_matrix();
+		unordered_map<string, unsigned int> return_horizontal_map_plus();
 };
 
 
