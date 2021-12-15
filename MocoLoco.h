@@ -578,7 +578,7 @@ class hamming_class{
 		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>, unsigned int);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
 		void PWM_hamming_creation();
-		void EM_cycle(vector<vector<double>>, unsigned int, vector<bed_class>);
+		vector<vector<double>> EM_cycle(unsigned int, vector<vector<double>>, unsigned int, vector<bed_class>, unsigned int);
 		//void likelihood_ratio(vector<vector<double>>);
 
 	public:
@@ -619,8 +619,9 @@ class hamming_class{
 			
 			//Building a PWM matrix from best oligo sequence and his hamming neigbours sequences and occurrences
 			PWM_hamming_creation();
-
-			EM_cycle(PWM_hamming, position, GEP);
+			if (exp_max > 0){
+				EM_cycle(exp_max, PWM_hamming, position, GEP, 0);
+			}
 		}
 
 		string return_real_best_oligo();
