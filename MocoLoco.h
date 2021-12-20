@@ -276,16 +276,16 @@ class matrix_class {
 		vector<double> col_sum;		
 
 
-		void matrix_normalization_pseudoc(vector<vector<double>>);
-		void matrix_normalization(vector<vector<double>>);
-		void matrix_logarithmic(vector<vector<double>>);
-		vector<vector<double>> reverse_matrix(vector<vector<double>>);
-		vector<double> find_col_sum(vector<vector<double>>);
+		void matrix_normalization_pseudoc(vector<vector<double>>&);
+		void matrix_normalization(vector<vector<double>>&);
+		void matrix_logarithmic(vector<vector<double>>&);
+		vector<vector<double>> reverse_matrix(vector<vector<double>>&);
+		vector<double> find_col_sum(vector<vector<double>>&);
 		void print_debug_matrix(vector<vector<double>>, string);
 
 	public:
 
-		matrix_class(vector<vector<double>> mat, string name, string tf){
+		matrix_class(vector<vector<double>> &mat, string name, string tf){
 			
 			matrix = mat;	
 			matrix_name = name;	
@@ -342,14 +342,14 @@ class oligo_class{
 		unsigned int end_coord_oligo;
 		char strand;
 		
-		void find_minmax(vector<vector<double>>);
+		void find_minmax(vector<vector<double>>&);
 		unsigned int find_best_score();
 		void find_coordinate(unsigned int, string, unsigned int);
 		void find_best_sequence(string, unsigned int);
 		void scores_normalization();
 
 	public:
-		oligo_class(vector<vector<double>> matrix, string sequence, string chr_coord_GEP, unsigned int start_coord_GEP, char strand_sign){
+		oligo_class(vector<vector<double>> &matrix, string &sequence, string chr_coord_GEP, unsigned int start_coord_GEP, char strand_sign){
 
 			global_sequence = sequence;
 			strand = strand_sign;
@@ -373,7 +373,7 @@ class oligo_class{
 			find_coordinate(matrix[0].size(), chr_coord_GEP, start_coord_GEP);
 		}
 		
-		oligo_class(vector<vector<double>> matrix, string sequence){
+		oligo_class(vector<vector<double>> &matrix, string &sequence){
 			
 			global_sequence = sequence;
 			find_minmax(matrix);
@@ -381,7 +381,7 @@ class oligo_class{
 			scores_normalization();
 		}
 
-		void shifting(vector<vector<double>>, string, unsigned int);
+		void shifting(vector<vector<double>>&, string&, unsigned int);
 		void oligos_vector_debug();
 		unsigned int return_start_coord_oligo();
 		double return_best_score_normalized();
@@ -401,7 +401,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 		void centering_oligo();
 		void best_strand();
 		void GEP_creation(vector<bed_class>&);
-		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>, vector<vector<double>>, vector<bed_class>);
+		void oligos_vector_creation(vector<oligo_class>&, vector<vector<double>>&, vector<vector<double>>&, vector<bed_class>&);
 		vector<vector<double>> read_JASPAR();
 
 	public:
@@ -438,10 +438,10 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 
 		}
-		
+	
 		vector<bed_class> GEP;
 		
-		void print_debug_GEP(vector <bed_class>);
+		void print_debug_GEP(vector <bed_class>&);
 };
 
 class multifasta_class{
@@ -501,19 +501,19 @@ class p_value_class{
 		multimap<double,pair<string,vector<unsigned int>>> p_value_KNT;
 
 		multimap<pair<unsigned int,unsigned int>, pair<string,string>>  multimap_creation(map<pair<string,string>,pair<unsigned int,unsigned int>>);
-		void filling_KNT_vectors(unordered_map<string,unsigned int>);
-		void N2_calculation(unordered_map<string,unsigned int>);
+		void filling_KNT_vectors(unordered_map<string,unsigned int>&);
+		void N2_calculation(unordered_map<string,unsigned int>&);
 		void calculating_p_value();
 		void sorting_p_value();
-		void checking_ordering(map<pair<string,string>,pair<unsigned int,unsigned int>>, unsigned int, ofstream&, unsigned int);
-		void print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int);
-		void print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int);
-		void print_debug_occurrences_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int, vector<double>);
-		void print_debug_occurrences_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>, unsigned int, ofstream&, unsigned int, vector<double>);
+		void checking_ordering(map<pair<string,string>,pair<unsigned int,unsigned int>>&, unsigned int, ofstream&, unsigned int);
+		void print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int, ofstream&, unsigned int);
+		void print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int, ofstream&, unsigned int);
+		void print_debug_occurrences_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int, ofstream&, unsigned int, vector<double>);
+		void print_debug_occurrences_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int, ofstream&, unsigned int, vector<double>);
 
 	public:
 
-		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> pair_map, unordered_map<string,unsigned int> orizzontal_map, unsigned int t, unsigned int position, ofstream &outfile, unsigned int freq){
+		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> &pair_map, unordered_map<string,unsigned int> &orizzontal_map, unsigned int t, unsigned int position, ofstream &outfile, unsigned int freq){
 					
 			T = t;
 			
@@ -577,19 +577,18 @@ class hamming_class{
 		bool checking_neighbour_presence(string);
 		void print_debug_hamming(unsigned int, ofstream&);
 		double frquence_1_calculation(unsigned int);
-		double frquence_2_calculation(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>, unsigned int);
-		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>, unordered_map<string,unsigned int>);
+		double frquence_2_calculation(unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&, unsigned int);
+		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
 		void PWM_hamming_creation();
-		vector<vector<double>> EM_cycle(unsigned int, vector<vector<double>>, unsigned int, vector<bed_class>, unsigned int);
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart();
-		void EM_Mpart();
-		void EM_cycle();
+		void EM_Epart(vector<bed_class>&, unsigned int);
+		void EM_Mpart(unsigned int);
+		void EM_cycle(vector<bed_class>&, unsigned int);
 
 	public:
 
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP){
 			
 			//Saving the vertical multimap passed to constructor locally
 			vertical_multimap = v_multimap;
@@ -628,7 +627,7 @@ class hamming_class{
 			PWM_hamming_creation();
 			if (exp_max > 0){
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle();
+				EM_cycle(GEP, position);
 			}
 		}
 
@@ -658,8 +657,8 @@ class z_test_class{
 		vector<double> all_global_scores;
 		vector<double> all_local_scores;
 
-		void print_debug_oligo_vec(vector<vector<double>>);	
-		void oligos_vector_creation_PWM(vector<bed_class>);
+		void print_debug_oligo_vec(vector<vector<double>>&);	
+		void oligos_vector_creation_PWM(vector<bed_class>&);
 		void z_score_parameters_calculation();
 		void check_best_strand_oligo();
 		void z_score_calculation();
@@ -667,7 +666,7 @@ class z_test_class{
 
 	public:
 
-		z_test_class(vector<vector<double>> PWM_hamming, vector<bed_class> GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> HAMMING_MATRIX){
+		z_test_class(vector<vector<double>> &PWM_hamming, vector<bed_class> &GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> &HAMMING_MATRIX){
 				
 			local_pos = local_p;	
 			
@@ -723,7 +722,6 @@ class map_class{
 		vector<vector<unsigned int>> tot_sum_matrix;
 		vector<unsigned int> kmers_vector;
 		vector<unsigned int> distance_vector;
-		unsigned int sequences_number_T;
 		vector<p_value_class> P_VALUE_VECTOR;
 		vector<vector<p_value_class>> P_VALUE_MATRIX;
 		vector<hamming_class> HAMMING_VECTOR;
@@ -732,15 +730,15 @@ class map_class{
 		vector<vector<z_test_class>> Z_TEST_MATRIX;
 
 		vector<unsigned int> generic_vector_creation(string);
-		void table_creation_orizzontal(vector<bed_class>);
-		void table_creation_vertical(vector<bed_class>);
+		void table_creation_orizzontal(vector<bed_class>&);
+		void table_creation_vertical(vector<bed_class>&);
 		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
 		void vertical_kmer_count(string,map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int &);
 		void select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>&);
 		void print_debug_orizzontal();
 		void P_VALUE_MATRIX_creation();
-		void HAMMING_MATRIX_creation(vector<bed_class>);
-		void Z_TEST_MATRIX_creation(vector<bed_class>);
+		void HAMMING_MATRIX_creation(vector<bed_class>&);
+		void Z_TEST_MATRIX_creation(vector<bed_class>&);
 		ofstream outfile_header(unsigned int);
 		ofstream outfile_header_hamming(unsigned int);
 		void TopN_sum_and_freq();
@@ -752,10 +750,11 @@ class map_class{
 		void print_debug_PWM_hamming(ofstream&, unsigned int, unsigned int);
 		void print_debug_Z_scores(ofstream&, unsigned int, unsigned int);
 		bool find_local_max(double,double,double);
+		unsigned int sequences_number_T;
 
 	public:
 
-		map_class(vector<bed_class> GEP, string kmers, string dist){
+		map_class(vector<bed_class> &GEP, string kmers, string dist){
 			
 			//Reading k-mers in input and saving them into a vector
 			kmers_vector = generic_vector_creation(kmers);
@@ -772,7 +771,6 @@ class map_class{
 			//Counting k-mers occurrences for each position (vertical count) --> Maps (one per position) are composed by pair of strings(oligo + reverse complement) and unsigned integers (oligo occ. + reverse oligo occ.)
 			table_creation_vertical(GEP);
 
-			//Saving the number of sequences (T) to calculate the p-value
 			sequences_number_T = GEP.size();
 
 			//Function to create an output file of orizzontal map. Oligos are ranked by their occurrences
