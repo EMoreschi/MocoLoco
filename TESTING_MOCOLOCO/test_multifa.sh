@@ -105,7 +105,7 @@ echo -e "\n4) $0 -b <BED_FILE> -t <TWOBIT_FILE> -f <Output_file> -n <Sequences_n
 
 #--------PARSER----------------------------------------------------------------------------------------------
 
-while getopts ":b:t:j:o:n:l:p:k:d:f:s:c:v:ra" o; do
+while getopts ":b:t:j:o:n:l:p:k:d:f:s:c:v:e:ra" o; do
     case "${o}" in
         
 	b)
@@ -144,6 +144,9 @@ while getopts ":b:t:j:o:n:l:p:k:d:f:s:c:v:ra" o; do
         c)
             C=${OPTARG}
             ;;
+		e)
+			E=${OPTARG}
+			;;
         v)
             V=${OPTARG}
             ;;
@@ -217,6 +220,16 @@ else
 
 fi 
 
+if [ -z "$E" ]
+then
+
+	mkdir ${Out_dir}_test_k${K}_c${C}_f${F};
+
+else	
+
+	mkdir ${Out_dir}_test_k${K}_c${C}_f${F}_e${E};
+
+fi 
 #Initializing headers in Output file (Outside directory just created before) and in the Output file with best pvalue
 echo "#TESTING MOCOLOCO">$path_out;
 echo -e "FREQ\tHIT\tPVAL-LOG10\tPVAL\tBONF-PVAL\tLOG10BONF">>$path_out; 
@@ -236,6 +249,17 @@ then
 else	
 
 	cd ${Out_dir}_test_k${K}_c${C}_f${F}_r;
+
+fi 
+
+if [ -z "$E" ]
+then
+
+	mkdir ${Out_dir}_test_k${K}_c${C}_f${F};
+
+else	
+
+	mkdir ${Out_dir}_test_k${K}_c${C}_f${F}_e${E};
 
 fi 
 
@@ -304,14 +328,15 @@ do
 			if [ -z "$J" ]
 			then		
 		
-				$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all &
+				$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all -e $E &
 		
 			else
 
-				$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
+				$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all -e $E &
                 
 			fi
 		fi
+		
 	done
 	wait
 	cd ..;
