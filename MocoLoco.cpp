@@ -221,7 +221,7 @@ void oligo_class::find_minmax(vector<vector<double>> &matrix){
 
 //Function to calculate the score of a general oligo against a JASPAR matrix
 void oligo_class::shifting(vector<vector<double>> &matrix, string &sequence, unsigned int s_iterator){
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	double sum_scores = 0;
 
 	//For each oligo in the current sequence a score is calculated
@@ -268,7 +268,7 @@ void oligo_class::shifting(vector<vector<double>> &matrix, string &sequence, uns
 
 //Best score normalization with normalization formula (The parameter to normalize have already been calculated and saved into the class)
 void oligo_class::scores_normalization(){
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	double score_normalized;
 	vector<double> oligo_scores_normalized;
 
@@ -283,7 +283,7 @@ void oligo_class::scores_normalization(){
 
 //Function to find the best oligo score. From every sequence from GEP the best oligo is calculated and both oligo and position in the window are saved
 unsigned int oligo_class::find_best_score(){
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	//Extracting the best score from oligo_scores with function max_element
 	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
 	best_score_normalized = best_score;
@@ -336,14 +336,14 @@ unsigned int oligo_class::find_best_score(){
 
 //The oligo which has generated the best score is extracted from fasta sequence and saved into best_oligo_seq variable
 void oligo_class::find_best_sequence(string sequence, unsigned int length){
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	best_oligo_seq = sequence.substr(local_position,length);
 
 }
 
 //Best oligo coordinates are saved
 void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, unsigned int start_coord_GEP){
-	PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	chr_coord_oligo = chr_coord_GEP;
 	start_coord_oligo = start_coord_GEP + local_position;
 	end_coord_oligo = start_coord_oligo + length;
@@ -1319,31 +1319,31 @@ void hamming_class::find_distanced_oligos(string best, unsigned int distance){
 			}
 
 			//If analysis is in DS -> call the function is_similar_oligo to compare the real_best_oligo to the current oligo's Reverse Complement (RC). The function returns 1 if it is, otherwise 0
-		//	if(DS==1){
+			if(DS==1){
 
-		//		is_similar = is_similar_oligo(best, it_rev->second.second, distance);
-		//		//If they are similar add the oligo's RC and its occurrences to neighbours vectors 
-		//		if(is_similar == 1){
+				is_similar = is_similar_oligo(best, it_rev->second.second, distance);
+				//If they are similar add the oligo's RC and its occurrences to neighbours vectors 
+				if(is_similar == 1){
 
-		//			//If -r option is active check if the neighbour found is already present in similar oligos vector
-		//			if(refining_matrix == 1){
+					//If -r option is active check if the neighbour found is already present in similar oligos vector
+					if(refining_matrix == 1){
 
-		//				bool is_present = checking_neighbour_presence(it_rev->second.second);
+						bool is_present = checking_neighbour_presence(it_rev->second.second);
 
-		//				//If the oligo is not present --> add it
-		//				if(is_present == 0){
+						//If the oligo is not present --> add it
+						if(is_present == 0){
 
-		//					similar_oligos.emplace_back(it_rev->second.second);
-		//					similar_oligos_occurrences.emplace_back(it_rev->first.second);
-		//				}
-		//			}
-		//			else{
+							similar_oligos.emplace_back(it_rev->second.second);
+							similar_oligos_occurrences.emplace_back(it_rev->first.second);
+						}
+					}
+					else{
 
-		//				similar_oligos.emplace_back(it_rev->second.second);
-		//				similar_oligos_occurrences.emplace_back(it_rev->first.second);
-		//			}
-		//		}
-		//	}
+						similar_oligos.emplace_back(it_rev->second.second);
+						similar_oligos_occurrences.emplace_back(it_rev->first.second);
+					}
+				}
+			}
 		}	
 	}
 }
@@ -1479,21 +1479,17 @@ void hamming_class::PWM_hamming_creation(){
 	PWM_hamming.emplace_back(vec_T);
 }
 
-
-
 void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class> &GEP) 
 {
-		cout << "EM_Ipwm:" << "\n";
-		for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
-			for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
-				PWM_hamming[i][j] = PWM_hamming[i][j]/GEP.size();
-				cout << PWM_hamming[i][j] << "\t";
-			}
-			cout << endl;
+	cout << "EM_Ipwm:" << "\n";
+	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
+		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
+			PWM_hamming[i][j] = PWM_hamming[i][j]/GEP.size();
+			cout << PWM_hamming[i][j] << "\t";
 		}
 		cout << endl;
-
-	
+	}
+	cout << endl;
 }
 
 void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position) 
@@ -1513,10 +1509,11 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position)
 	}
 	for(multimap<pair<unsigned int, unsigned int>, pair<string,string>>::iterator it = vertical_multimap.begin(); it != vertical_multimap.end(); it++)
 	{
-		for (unsigned int i = 0; i<GEP.size(); i++){		//50 is the number of sequences in baitedregions.bed file
+		for (unsigned int i = 0; i<GEP.size(); i++){
+
 //			double probability = 1;
 //			double back_prob = 1;
-//			Extraction from the sequences of oligos
+//		Extraction from the sequences of oligos
 //		string oligo_vertical = GEP[i].return_sequence(GEP[i]).substr(position,6);
 
 			string oligo_vertical;
@@ -1525,14 +1522,11 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position)
 			oligo_vertical = it->second.first;
 			int horizontal_occurences;
 			horizontal_occurences = orizzontal_map_plus_copy.find(oligo_vertical)->second;
-			cout << "Horizontal occurences: " << horizontal_occurences << endl;
-			cout << "Sum: " << sum << endl;
-			P_bg = horizontal_occurences/sum; 
-//			if (P_bg == 0){
-//				P_bg = 1;
-//			}
+			//cout << "Horizontal occurences: " << horizontal_occurences << endl;
+			//cout << "Sum: " << sum << endl;
+			P_bg = horizontal_occurences/sum;
 
-			for (unsigned int k = 0; k < 6; k++){
+			for (unsigned int k = 0; k < 8; k++){
 
 				switch(oligo_vertical[k]){
 
@@ -1558,14 +1552,13 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position)
 
 			}
 			double likelihood_ratio = P_oligo/P_bg;
-			cout << "P_oligo\tP_background\tLR" << endl;
-			cout << P_oligo << "\t" << P_bg << "\t" << likelihood_ratio << endl;
+			//cout << "P_oligo\tP_background\tLR" << endl;
+			//cout << P_oligo << "\t" << P_bg << "\t" << likelihood_ratio << endl;
 			like_ratio_map.insert(pair<string, double>(oligo_vertical, likelihood_ratio));
 
 		}
 	}
 }
-
 
 void hamming_class::EM_Mpart(unsigned int position){
 	cout << "---------------------------------" << endl;
@@ -1578,7 +1571,7 @@ void hamming_class::EM_Mpart(unsigned int position){
 		cout << endl;
 	}
     vector<double> sum_vect;	
-	for (unsigned int k = 0; k < 6; k++){
+	for (unsigned int k = 0; k < 8; k++){
 		double sum = 0;
 			for(map<string, double >::const_iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
 				switch(it->first[k]){
@@ -1629,6 +1622,7 @@ void hamming_class::EM_Mpart(unsigned int position){
 		cout << endl;
 	}
 }
+
 void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position){
 	for(unsigned int i = 0; i < exp_max; i++){ 
 		EM_Epart(GEP,position);
@@ -1640,7 +1634,7 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position){
 	}
 	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
 			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-	        	PWM_hamming[i][j] = PWM_hamming[i][j]*GEP.size();
+	        	PWM_hamming[i][j] = round(PWM_hamming[i][j]*GEP.size());
 				cout << PWM_hamming[i][j] << "\t";
 			}
 			cout << endl;
@@ -2109,6 +2103,7 @@ double z_test_class::return_z_score(){
 vector<vector<z_test_class>> map_class::return_z_test_matrix(){
 	return Z_TEST_MATRIX;
 }
+
 
 //Function to matrix debugging --> it prints the scores extracted from JASPAR file, the normalized scores, the logarithmic scores and the logarithmic score of transposed matrix
 void matrix_class::debug_matrix(matrix_class M){
