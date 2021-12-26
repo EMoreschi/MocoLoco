@@ -567,7 +567,7 @@ class hamming_class{
 		vector<vector<double>> norm_matrix;
         unordered_map<string,unsigned int> orizzontal_map_plus_copy;
 		map<string,double> like_ratio_map;
-
+		unsigned int kmer;
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
 		void find_secondary_hamming(unsigned int, unsigned int);
@@ -593,7 +593,7 @@ class hamming_class{
 			//Saving the vertical multimap passed to constructor locally
 			vertical_multimap = v_multimap;
 			orizzontal_map_plus_copy = orizzontal_map_plus;
-
+			
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
 			find_best_oligos();
 
@@ -625,12 +625,14 @@ class hamming_class{
 			
 			//Building a PWM matrix from best oligo sequence and his hamming neigbours sequences and occurrences
 			PWM_hamming_creation();
+
 			if (exp_max > 0){
+
 			    EM_Ipwm(PWM_hamming, GEP);
 				EM_cycle(GEP, position);
 			}
 		}
-
+		
 		string return_real_best_oligo();
 		unsigned int return_similar_oligo_size();
 		vector<vector<double>> return_PWM_hamming();
@@ -803,7 +805,7 @@ class map_class{
 			Outfile_PWM_matrices();
 			Outfile_Z_score_values();
 		}
-
+		
 		vector<vector<z_test_class>> return_z_test_matrix();
 		unordered_map<string, unsigned int> return_horizontal_map_plus();
 };
