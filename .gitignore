@@ -20,3 +20,11 @@ TESTING_MOCOLOCO/MOCO
 *JUND*
 MocoLoco_noref*
 Old_MOCO
+intersect*/
+MIXED*/
+nfy*/
+*.out
+TESTING_MOCOLOCO/*-mers*
+Intersect/
+oligo_class*
+text.txt
