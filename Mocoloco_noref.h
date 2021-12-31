@@ -561,6 +561,7 @@ class hamming_class{
 		unsigned int number_first_hamming;
 		vector<unsigned int> similar_oligos_occurrences;
 		double tot_similar_occurrences;
+		unsigned int kmer;
 		double FREQUENCE_1;
 		double FREQUENCE_2;
 		vector<vector<double>> PWM_hamming;
@@ -583,19 +584,19 @@ class hamming_class{
 
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, unsigned int);
-		void EM_Mpart(unsigned int);
-		void EM_cycle(vector<bed_class>&, unsigned int);
+		void EM_Epart(vector<bed_class>&, unsigned int kmer,unsigned int);
+		void EM_Mpart(unsigned int,unsigned int kmer);
+		void EM_cycle(vector<bed_class>&, unsigned int kmer, unsigned int);
 
 
 	public:
 
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
 			
 			//Saving the vertical multimap passed to constructor locally
 			vertical_multimap = v_multimap;
 			orizzontal_map_plus_copy = orizzontal_map_plus;
-
+			kmer = kmers_vector[0];
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
 			find_best_oligos();
 
@@ -627,9 +628,11 @@ class hamming_class{
 			
 			//Building a PWM matrix from best oligo sequence and his hamming neigbours sequences and occurrences
 			PWM_hamming_creation();
+			
 			if (exp_max > 0){
+
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, position);
+				EM_cycle(GEP, kmer, position);
 			}
 		}
 
