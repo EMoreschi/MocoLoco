@@ -92,7 +92,7 @@ public:
     {
     }
 
-    void BeginSession(const string& name, const string& filepath = "oligo_class_10k_test.json")
+    void BeginSession(const string& name, const string& filepath = "shifting_recursive_1000_test.json")
     {
         m_OutputStream.open(filepath);
         WriteHeader();
@@ -358,7 +358,7 @@ class oligo_class{
 			find_minmax(matrix);
 			
 			//for each oligo in the current sequence a total score of similarity is calculated against the JASPAR matrix
-			shifting(matrix, sequence, 0);
+			shifting(matrix, sequence);
 			
 			//Function to normalize the scores with the normalization formula
 			scores_normalization();
@@ -377,11 +377,13 @@ class oligo_class{
 			
 			global_sequence = sequence;
 			find_minmax(matrix);
-			shifting(matrix, sequence, 0);
+			
+			shifting(matrix, sequence);
+	
 			scores_normalization();
 		}
 
-		void shifting(vector<vector<double>>&, string&, unsigned int);
+		void shifting(vector<vector<double>>&, string&/*, unsigned int*/);
 		void oligos_vector_debug();
 		unsigned int return_start_coord_oligo();
 		double return_best_score_normalized();
@@ -561,13 +563,14 @@ class hamming_class{
 		unsigned int number_first_hamming;
 		vector<unsigned int> similar_oligos_occurrences;
 		double tot_similar_occurrences;
+		unsigned int kmer;
 		double FREQUENCE_1;
 		double FREQUENCE_2;
 		vector<vector<double>> PWM_hamming;
 		vector<vector<double>> norm_matrix;
         unordered_map<string,unsigned int> orizzontal_map_plus_copy;
 		map<string,double> like_ratio_map;
-		unsigned int kmer;
+
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
 		void find_secondary_hamming(unsigned int, unsigned int);
@@ -582,18 +585,18 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, unsigned int);
-		void EM_Mpart(unsigned int);
-		void EM_cycle(vector<bed_class>&, unsigned int);
+		void EM_Epart(vector<bed_class>&, unsigned int kmer,unsigned int);
+		void EM_Mpart(unsigned int,unsigned int kmer);
+		void EM_cycle(vector<bed_class>&, unsigned int kmer, unsigned int);
 
 	public:
 
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
 			
 			//Saving the vertical multimap passed to constructor locally
 			vertical_multimap = v_multimap;
 			orizzontal_map_plus_copy = orizzontal_map_plus;
-			
+			kmer = kmers_vector[0];
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
 			find_best_oligos();
 
@@ -629,7 +632,7 @@ class hamming_class{
 			if (exp_max > 0){
 
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, position);
+				EM_cycle(GEP, kmer, position);
 			}
 		}
 		
@@ -810,23 +813,6 @@ class map_class{
 		unordered_map<string, unsigned int> return_horizontal_map_plus();
 };
 
-
-
-
-
-/*
-struct AllocationMetrics
-{
-	uint32_t TotalAllocated = 0;
-	uint32_t TotalFreed = 0;
-
-	uint32_t CurrentUsage(){
-		return (TotalAllocated - TotalFreed);
-	}
-};
-
-static AllocationMetrics s_AllocationMetrics;
-*/
 void GEP_path();
 void command_line_parser(int, char **);
 void display_help();
@@ -835,8 +821,3 @@ void check_input_file();
 bool check_palindrome(string, string&);
 double check_p_value(double);
 void RAM_usage();
-
-/*static void PrintMemoryUsage(string);
-void operator delete(void*, size_t);
-void* operator new(size_t);
-*/
