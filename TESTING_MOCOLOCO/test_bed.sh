@@ -1,8 +1,8 @@
 #!/bin/bash
 #	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
-usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Hit.txt> -n <n> -l <l> -p <p> -k <k> -d <d> " 1>&2; exit 1; }
+usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Hit.txt> -n <n> -l <l> -p <p> -k <k> -d <d> -e <e> " 1>&2; exit 1; }
 
-while getopts ":b:t:j:o:k:d:f:v:ra" o; do
+while getopts ":b:t:j:o:k:d:f:v:e:ra" o; do
     case "${o}" in
         
 	b)
@@ -29,6 +29,9 @@ while getopts ":b:t:j:o:k:d:f:v:ra" o; do
         v)
             V=${OPTARG}
             ;;
+	e)
+	    E=${OPTARG}
+	    ;;
         r) 
            Refine="-r"
            ;;
@@ -46,6 +49,11 @@ if [ -z "${B}" ] || [ -z "${T}" ] || [ -z "${J}" ] || [ -z "${O}" ] || [ -z "${K
 then
 
     usage
+fi
+
+if [ -z "$E" ]
+then
+	E=0
 fi
 
 if [ -z "$V" ]
@@ -66,7 +74,7 @@ Out_dir=${B#../*/};
 if [ -z "${Refine}" ]
 then
 
-	mkdir ${Out_dir}_test_k${K}_f${F};
+	mkdir ${Out_dir}_test_k${K}_f${F}_em${E};
 
 else	
 
@@ -80,7 +88,7 @@ echo -e "HIT\tPVAL\tPVAL-LOG10\tBONF-PVAL\tLOG10BONF">>$path_out_tot;
 if [ -z "${Refine}" ]
 then
 
-	cd ${Out_dir}_test_k${K}_f${F};
+	cd ${Out_dir}_test_k${K}_f${F}_em${E};
 
 else	
 
@@ -88,7 +96,7 @@ else
 
 fi 
 	
-$MOCO -b ../${B} -t ../${T} -j ../${J} -k $K -d $D -f $F $Refine $all &
+$MOCO -b ../${B} -t ../${T} -j ../${J} -k $K -d $D -f $F -e $E $Refine $all &
   
 wait
 
