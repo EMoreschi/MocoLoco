@@ -54,7 +54,7 @@ jobs:
           #      - name: get sample test 
           #        run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/c4283b8a200a3701aab28acef4343312be2349f1/gistfile1.txt
       - name: test difference between outputs 
-        run: diff gistfile1.txt 6-mers_Z_scores_fasta_DS.txt
+        run: diff gistfile1.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
 
       
         # Runs a set of commands using the runners shell
