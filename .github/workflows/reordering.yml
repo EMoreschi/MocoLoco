@@ -50,39 +50,28 @@ jobs:
           tolerance: same
           output: out.txt
 
-            #      - name: Run NFY test
-            #        run: ls
-            #
-            #          #      - name: hg19 genome download 
-            #          #        run: cat get_hg19.script | bash
-            #          #        working-directory: Genomes/hg19
-            #          #
-            #          #      - name: mm10 genome download 
-            #          #        run: cat get_mm10.script | bash
-            #          #        working-directory: Genomes/mm10
-            #          #
-            #          #      - name: Run NFY test
-            #          #        run: ./test -b Test_Bed/nfy_k562_hg19.bed -t Genomes/hg19/hg19.2bit -j Jaspar_2020/MA0060.1.jaspar
-            #          #
-            #          #      - name: Run myc test
-            #          #        run: ./test -b Test_Bed/cMyc_hESC_mm10.bed -t Genomes/mm10/mm10.2bit -j Jaspar_2020/MA0147.2.jaspar
-            #      
+      - name: hg19 genome download 
+        run: cat get_hg19.script | bash
+        working-directory: Genomes/hg19
+
+      - name: Run NFY test
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
+          
+          #      - name: get sample test 
+          #        run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/c4283b8a200a3701aab28acef4343312be2349f1/gistfile1.txt
+
+      - name: test difference between outputs 
+        uses: LouisBrunner/diff-action@v0.1.0
+        with:
+          old: gistfile1.txt
+          new: 6-mers_Z_scores_fasta_DS.txt
+          mode: addition
+          tolerance: same
+          output: out.txt
+      
         # Runs a set of commands using the runners shell
       - name: Compiling multifasta random tool
         run: g++ -o random_multifa -Wall $GITHUB_WORKSPACE/Random_multifa_TOOL/Multifa_random_tool.cpp
         
-      - name: Run multifasta random tool
-        run: ./test -n 1000 -l 300 -j Jaspar_2020/MA000.0_prova.jaspar Jaspar_2020/MA000.0_prova2.jaspar -p 50,125 -o 50,100 -w 2,5 -f 60,90
-
-      - name: Run a multi-line script
-        run: g++ -o test -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
-
-      - name: Run implanted multifasta test
-        run: ./test -m random_multifa_implanted1.fasta
-      
-      - uses: actions/upload-artifact@v2
-        with:
-          name: testing 
-          path: '*.txt'
       
 
