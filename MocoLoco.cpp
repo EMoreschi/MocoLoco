@@ -28,8 +28,9 @@ void RAM_usage(){
     struct rusage usage;
     int ret;
     ret = getrusage(who, &usage);
-    cout<< ret <<"\n";
-    cout<<endl << usage.ru_maxrss << endl << endl;
+
+    cout <<endl << usage.ru_maxrss/1000 << " Mb" << endl << usage.ru_utime.tv_sec << " s" << endl;
+
 }
 
 //Function to choose the pathway to follow. 2 input options:
@@ -356,6 +357,7 @@ void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, un
 //Function to read BED and 2Bit files and create GEP (vector of bed class)
 void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
+	RAM_usage();
 	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
 
 	ifstream in(BED_FILE); 					
@@ -395,6 +397,7 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 //Function to read JASPAR PWM file, extract values and create a matrix class
 vector<vector<double>> coordinator_class::read_JASPAR(){
 	//PROFILE_FUNCTION();
+	RAM_usage();
 	cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
 
 	ifstream file(JASPAR_FILE);
@@ -431,7 +434,7 @@ vector<vector<double>> coordinator_class::read_JASPAR(){
 	}
     
 	file.close();
-
+	RAM_usage();
 	//Cout of step 3/4 here because the normalization and reverse function will be re-utilized during the workflow
 	cout << "- [3] Jaspar Matrix normalization\n";
 	cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
@@ -442,6 +445,7 @@ vector<vector<double>> coordinator_class::read_JASPAR(){
 //Function to create oligos_vector (a oligo class vector)
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> &matrix_log, vector<vector<double>> &matrix_log_inverse, vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
+	RAM_usage();
 	cout << "- [5] Analyzing sequences using Jaspar matrix\n";
 
 	//For every sequences into GEP vector
@@ -464,7 +468,7 @@ void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vecto
 			oligos_vector.emplace_back(SHIFTING);
 		}
 	}	
-
+	RAM_usage();
 	cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
 }
 
@@ -633,11 +637,14 @@ void map_class::check_kmer_dist(){
 void map_class::table_creation_orizzontal(vector<bed_class> &GEP){ 
 	//PROFILE_FUNCTION();
 
-	if (MFASTA_FILE.size() ==0) 
+	if (MFASTA_FILE.size() ==0){
+		RAM_usage();
 		cout << "- [7] Counting all k-mers occurrences for sequences and making orizzontal maps  \n";
-	else
+	}
+	else{
+		RAM_usage();
 		cout << "- [4] Counting all k-mers occurrences for sequences and making orizzontal maps  \n";
-	
+	}
 	//A map is created for each k-mer inserted as input
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
 		
@@ -707,11 +714,14 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int
 //Function to create maps to count oligos occurrences for each sequence position (in this function also frequences are calculated)
 void map_class::table_creation_vertical(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
-	if (MFASTA_FILE.size() ==0) 
+	if (MFASTA_FILE.size() ==0){
+		RAM_usage();
 		cout << "- [8] Counting all k-mers positional occurrences and making vertical maps  \n";
-	else
+	}
+	else{
+		RAM_usage();
 		cout << "- [5] Counting all k-mers positional occurrences and making vertical maps  \n";
-
+	}
 	//Return the fisrt sequence to know the sequences length
 	string seq_length = GEP[0].return_sequence(GEP[0]);
 
@@ -870,11 +880,14 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 //Function to create a matrix of p_value class (1 dimension = different k-mers, 2 dimension = positions)
 void map_class::P_VALUE_MATRIX_creation(){
 	//PROFILE_FUNCTION();
-	if (MFASTA_FILE.size() ==0) 
+	if (MFASTA_FILE.size() ==0){
+		RAM_usage();
 		cout << "- [9] Calculating oligos p_value and flling P_Value class matrix  \n";
-	else
+	}
+	else{
+		RAM_usage();
 		cout << "- [6] Calculating oligos p_value and flling P_Value class matrix  \n";
-
+	}
 	//For each k-mers inserted as input
 	for(unsigned int j=0; j<vector_kmers_maps_plus.size(); j++){
 		
@@ -913,11 +926,14 @@ void map_class::P_VALUE_MATRIX_creation(){
 //Function to create a matrix of hamming class (1 dimension = different k-mers, 2 dimension = positions)
 void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
-	if (MFASTA_FILE.size() ==0) 
+	if (MFASTA_FILE.size() ==0){
+		RAM_usage();
 		cout << "- [10] Calculating best oligos hamming neighbours and filling Hamming matrix  \n";
-	else
+	}
+	else{
+		RAM_usage();
 		cout << "- [7] Calculating best oligos hamming neighbours and filling Hamming matrix  \n";
-
+	}
 	//For every kmer in input	
 	for(unsigned int j=0; j<P_VALUE_MATRIX.size(); j++){
 		
@@ -948,9 +964,11 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP){
 	}
 
 	if (MFASTA_FILE.size() ==0){
+		RAM_usage();
 		cout << "- [11] PWM matrices from hit positions calculated \n";
 	}
 	else{
+		RAM_usage();
 		cout << "- [8] PWM matrices from hit positions calculated \n";
 	}
 }
@@ -960,11 +978,14 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
 	bool local_max = 1;
 	
-	if (MFASTA_FILE.size() ==0) 
+	if (MFASTA_FILE.size() ==0){
+		RAM_usage();
 		cout << "- [12] Calculating Z-test from PWM matrices shifing and filling Z-test matrix  \n";
-	else
+	}
+	else{
+		RAM_usage();
 		cout << "- [9] Calculating Z-test from PWM matrices shifing and filling Z-test matrix  \n";
-
+	}
 	//For every kmer in input	
 	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
 	
@@ -2344,7 +2365,7 @@ void map_class::p_value_parameters_debug_p_val(){
 		
 		//Defining the file header 
 		outfile << "#Parameters used to calculate p_value for each oligo positionally ranked\n";
-		outfile << "#Position" << "\t" << "Rank" << "\t" << "Oligo" << "\t" << "K" << "\t" << "N1" << "\t" << "N2" << "\t" << "T" << "\t" << "P_VALUE" << "\t" <<"P_VALUE_LOG10\n";
+		outfile << "#Position\tRank\tOligo\tK\tN1\tN2\tT\tP_VALUE\tP_VALUE_LOG10\n";
 
 		//For each position
 		for(unsigned int i = 0; i<P_VALUE_MATRIX[j].size(); i++){
@@ -2425,21 +2446,15 @@ ofstream map_class::outfile_header_hamming(unsigned int j){
 	ofstream outfile;
 
 	if(DS==1){
-		
 		outfile.open(to_string(kmers_vector[j])+"-mers_hamming_"+alias_file+"DS.txt");
-		
-		outfile << "#For each best oligo in positions, a table representing hamming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):\n";
-		outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+hamming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2\n";
-
 	}
 	else{
 		outfile.open(to_string(kmers_vector[j])+"-mers_hamming_"+alias_file+"SS.txt");
-		
-		outfile << "#For each best oligo in positions, a table representing hamming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):\n";
-		outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+hamming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2\n";
-
 	}
-		
+			
+	outfile << "#For each best oligo in positions, a table representing hamming distance oligos and 2 different frequences(FREQUENCE_1 = N.occurrences/N.sequences | FREQUENCE_2 = N.occurrences/Orizzontal_occurrences) (for k = " << kmers_vector[j] << "):\n";
+	outfile << "#Position" << "\t" << "Best_oligo" << "\t" << "Num_Occ_Best_oligo" << "\t" << "Humming_found_oligo_number" << "\t" << "Total_occurrences(best+hamming)" << "\t" << "FREQUENCE_1" << "\t" << "FREQUENCE_2\n";
+
 	return outfile;	
 }
 

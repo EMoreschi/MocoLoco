@@ -52,7 +52,7 @@ double freq_treshold = 0;
 bool local_maxima_grouping = 1;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
-
+/*
 //
 // Basic instrumentation profiler by Cherno
 
@@ -181,7 +181,7 @@ private:
     bool m_Stopped;
 };
 
-
+*/
 class Timer
 {
 	public:
@@ -211,6 +211,7 @@ class Timer
 		chrono::time_point< chrono::high_resolution_clock> m_StartTimepoint;
 
 };
+
 
 class bed_class {         
 
@@ -647,7 +648,7 @@ class z_test_class{
 	private:
                 //zscores and PWM pvalues
 		double z_score;
-                double Zpvalue; 
+        double Zpvalue; 
 
 		double global_mean;
 		double global_dev_std;
