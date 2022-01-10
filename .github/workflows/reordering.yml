@@ -47,7 +47,7 @@ jobs:
         working-directory: Genomes/hg19
 
       - name: Run NFY test
-        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
           
       - name: get sample test 
         run: wget https://gist.githubusercontent.com/AmarettiL/57ff3b08d8983a32de46f7cd3ae898a3/raw/049646533d77e53db32aeb521cb7afb0d3513b1c/gistfile1.txt
