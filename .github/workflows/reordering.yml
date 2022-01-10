@@ -42,13 +42,7 @@ jobs:
 
           
       - name: test difference between outputs 
-        uses: LouisBrunner/diff-action@v0.1.0
-        with:
-          old: gistfile1.txt
-          new: 6-mers_Z_scores_fasta_DS.txt
-          mode: addition
-          tolerance: same
-          output: out.txt
+        run: diff gistfile1.txt 6-mers_Z_scores_fasta_DS.txt
 
       - name: hg19 genome download 
         run: cat get_hg19.script | bash
@@ -59,15 +53,9 @@ jobs:
           
           #      - name: get sample test 
           #        run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/c4283b8a200a3701aab28acef4343312be2349f1/gistfile1.txt
-
       - name: test difference between outputs 
-        uses: LouisBrunner/diff-action@v0.1.0
-        with:
-          old: gistfile1.txt
-          new: 6-mers_Z_scores_fasta_DS.txt
-          mode: addition
-          tolerance: same
-          output: out.txt
+        run: diff gistfile1.txt 6-mers_Z_scores_fasta_DS.txt
+
       
         # Runs a set of commands using the runners shell
       - name: Compiling multifasta random tool
