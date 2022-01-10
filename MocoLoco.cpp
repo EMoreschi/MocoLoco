@@ -1761,10 +1761,6 @@ void z_test_class::z_score_parameters_calculation(){
 void z_test_class::z_score_calculation(){
 	//PROFILE_FUNCTION();
 
-<<<<<<< HEAD
-=======
-
->>>>>>> reordering
 	z_score = ((global_mean - local_mean)/ (global_dev_std / sqrt(all_local_scores.size()))); 
 
 	const double Z  = z_score;
