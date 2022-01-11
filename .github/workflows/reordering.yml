@@ -37,7 +37,7 @@ jobs:
         run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
           
       - name: get sample test 
-        run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/c4283b8a200a3701aab28acef4343312be2349f1/gistfile1.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/ba5d470ea8547abf79437a95bad1a98559fe22c9/Multifasta_test_result.txt
           
       - name: test difference between outputs 
         run: diff gistfile1.txt 6-mers_Z_scores_fasta_DS.txt
@@ -50,7 +50,7 @@ jobs:
         run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
           
       - name: get sample test 
-        run: wget https://gist.githubusercontent.com/AmarettiL/57ff3b08d8983a32de46f7cd3ae898a3/raw/049646533d77e53db32aeb521cb7afb0d3513b1c/gistfile1.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/57ff3b08d8983a32de46f7cd3ae898a3/raw/006582b46c1b871d08ad7f3208e68d5664c4696d/NFY_bed_result.txt
 
       - name: test difference between outputs 
         run: diff gistfile1.txt.1 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
