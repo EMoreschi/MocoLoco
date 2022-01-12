@@ -52,7 +52,7 @@ double freq_treshold = 0;
 bool local_maxima_grouping = 1;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
-/*
+
 //
 // Basic instrumentation profiler by Cherno
 
@@ -67,7 +67,7 @@ unsigned int exp_max = 0;
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
-
+/*
 struct ProfileResult
 {
     string Name;
@@ -92,7 +92,7 @@ public:
     {
     }
 
-    void BeginSession(const string& name, const string& filepath = "shifting_recursive_1000_test.json")
+    void BeginSession(const string& name, const string& filepath = "all_test.json")
     {
         m_OutputStream.open(filepath);
         WriteHeader();
@@ -181,7 +181,7 @@ private:
     bool m_Stopped;
 };
 
-*/
+
 class Timer
 {
 	public:
@@ -211,7 +211,7 @@ class Timer
 		chrono::time_point< chrono::high_resolution_clock> m_StartTimepoint;
 
 };
-
+*/
 
 class bed_class {         
 
@@ -225,7 +225,7 @@ class bed_class {
 		
 
 		void read_line(string);
-		void flag_control(unsigned int, unsigned int);
+		//void flag_control(unsigned int, unsigned int);
 
 	public:	
 
@@ -245,7 +245,7 @@ class bed_class {
 			read_line(line);
 
 			//check if start coordinates are not greather then end coordinates
-			flag_control(start_coord,end_coord);
+			//flag_control(start_coord,end_coord);
 
 			//Set the new start and end coordinates following p (half_length) input and add overhead to end coordinates
 			centering_function(start_coord, end_coord, half_length, overhead);
@@ -288,12 +288,12 @@ class matrix_class {
 
 		matrix_class(vector<vector<double>> &mat, string name, string tf){
 			
-			matrix = mat;	
-			matrix_name = name;	
-			tf_name = tf;
+//			matrix = mat;	
+//			matrix_name = name;	
+//			tf_name = tf;
 
 			//Function to normalize the matrix scores and add a pseudocount
-			matrix_normalization_pseudoc(matrix);
+			matrix_normalization_pseudoc(mat);
 
 			//Function to normalize again the matrix after pseudocount addition
 			matrix_normalization(norm_matrix);
@@ -307,10 +307,10 @@ class matrix_class {
 
 		matrix_class(vector<vector<double>> mat){
 			
-			matrix = mat;	
+//			matrix = mat;	
 			
 			//Function to normalize the matrix scores and add a pseudocount
-			matrix_normalization_pseudoc(matrix);
+			matrix_normalization_pseudoc(mat);
 
 			//Function to normalize again the matrix after pseudocount addition
 			matrix_normalization(norm_matrix);
@@ -352,8 +352,8 @@ class oligo_class{
 	public:
 		oligo_class(vector<vector<double>> &matrix, string &sequence, string chr_coord_GEP, unsigned int start_coord_GEP, char strand_sign){
 
-			global_sequence = sequence;
-			strand = strand_sign;
+//			global_sequence = sequence;
+//			strand = strand_sign;
 
 			//Function to annotate in min_possible_score and max_possible_score the worst and the best score that an oligo can reach based on the current jaspar matrix
 			find_minmax(matrix);
@@ -376,7 +376,7 @@ class oligo_class{
 		
 		oligo_class(vector<vector<double>> &matrix, string &sequence){
 			
-			global_sequence = sequence;
+//			global_sequence = sequence;
 			find_minmax(matrix);
 			
 			shifting(matrix, sequence);
@@ -571,6 +571,7 @@ class hamming_class{
 		vector<vector<double>> norm_matrix;
         unordered_map<string,unsigned int> orizzontal_map_plus_copy;
 		map<string,double> like_ratio_map;
+		pair<double, double> FREQUENCE;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
@@ -580,8 +581,8 @@ class hamming_class{
 		bool is_similar_oligo(string, string, unsigned int);
 		bool checking_neighbour_presence(string);
 		void print_debug_hamming(unsigned int, ofstream&);
-		double frquence_1_calculation(unsigned int);
-		double frquence_2_calculation(unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&, unsigned int);
+		double frequence_1_calculation(unsigned int);
+		double frequence_2_calculation(unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&, unsigned int);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
@@ -592,7 +593,7 @@ class hamming_class{
 
 	public:
 
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int> orizzontal_map_plus, unordered_map<string,unsigned int> orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int>& orizzontal_map_plus, unordered_map<string,unsigned int>& orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
 			
 			//Saving the vertical multimap passed to constructor locally
 			vertical_multimap = v_multimap;
@@ -618,11 +619,12 @@ class hamming_class{
 			//Adding real best oligo occurrences to similar occurrences vector
 			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
 			
+			
 			//Calculating the frequence 1 (total of similar occurrences / total of possible oligos in the position) and saving it to FREQUENCE_1 variable 
-			FREQUENCE_1 = frquence_1_calculation(freq);
+			FREQUENCE_1 = frequence_1_calculation(freq);
 
 			//Function to calculate the frequence_2 (total of similar occurrences / total number of best+hamming occurrences in sequences)
-			FREQUENCE_2 = frquence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
+			FREQUENCE_2 = frequence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
 			
 			//Print positional hamming features in hamming output file
 			print_debug_hamming(position, outfile);
@@ -672,10 +674,10 @@ class z_test_class{
 
 	public:
 
-		z_test_class(vector<vector<double>> &PWM_hamming, vector<bed_class> &GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> &HAMMING_MATRIX){
-				
-			local_pos = local_p;	
+		z_test_class(vector<vector<double>> &PWM_hamming, vector<bed_class> &GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> &HAMMING_MATRIX){	
 			
+			local_pos = local_p;
+
 			//Calling matrix class constructor passing PWM_hamming matrix
 			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
 

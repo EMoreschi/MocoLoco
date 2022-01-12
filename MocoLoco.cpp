@@ -3,7 +3,7 @@
 
 
 int main(int argc, char *argv[]){
-	Timer timer;
+	//Timer timer;
 	//Instrumentor::Get().BeginSession("MocoLoco");
 	{
 
@@ -29,7 +29,7 @@ void RAM_usage(){
     int ret;
     ret = getrusage(who, &usage);
 
-    cout <<endl << usage.ru_maxrss/1000 << " Mb" << endl << usage.ru_utime.tv_sec << " s" << endl;
+    cout <<endl << "Maximum resident set size: " << usage.ru_maxrss/1000 << " Mb" << endl << "User CPU time used: " << usage.ru_utime.tv_sec << " s" << endl << "System CPU time used: " << usage.ru_stime.tv_usec << " micros" << endl;
 
 }
 
@@ -71,9 +71,10 @@ void bed_class::read_line(string line){
 }
 
 //Flag control function: start coordinates must be < then end coordinates
-void bed_class::flag_control( unsigned int start,  unsigned int end){
+
+void bed_class::centering_function ( unsigned int start,  unsigned int end, int half_length, const unsigned int overhead){
 	//PROFILE_FUNCTION();
-	//if start coordinates are >  end coordinates flag is setted to 0 --> WARNING printed to warn users
+	unsigned int center = (start + end)/2;						
 	if(start > end){
 
 		flag = 0;
@@ -82,12 +83,6 @@ void bed_class::flag_control( unsigned int start,  unsigned int end){
 	else{ 
 		flag = 1;
 	}
-}
-
-void bed_class::centering_function ( unsigned int start,  unsigned int end, int half_length, const unsigned int overhead){
-	//PROFILE_FUNCTION();
-	unsigned int center = (start + end)/2;						
-
 	//No overhead for start coordinates but overhead added to end coordinates
 	start_coord = center - half_length;
 	end_coord = center + half_length +overhead;
@@ -988,7 +983,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 	}
 	//For every kmer in input	
 	for(unsigned int i=0; i<HAMMING_MATRIX.size(); i++){
-	
+		
 		//For each position in sequence
 		for (unsigned int j=0; j<HAMMING_MATRIX[i].size(); j++){
 			
@@ -1009,7 +1004,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 				if(j != 0){
 					Frequence_1_prev = HAMMING_MATRIX[i][j-1].return_FREQUENCE_1();
 				}
-
+				
 				//if the position is not the last -> return the pos+1 freq_1 -> else the pos+1 freq_1 value remain 0
 				if(j != HAMMING_MATRIX[i].size()){
 					Frequence_1_post = HAMMING_MATRIX[i][j+1].return_FREQUENCE_1();
@@ -1018,8 +1013,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 				//Analyze if the current pos is a local max
 				local_max = find_local_max(Frequence_1,Frequence_1_prev,Frequence_1_post);
 			}
-			//cout << "Treshold " << freq_treshold << endl;
-			//cout << "Frequence_1 " << Frequence_1 << endl;
+			
 			//If it is a local max and its freq_1 value overcome the threshold build a z_test_class Z and then save it into a vector and finally into a matrix (as done with hamming and p_value classes)
 			if(Frequence_1 >= freq_treshold && local_max == 1){
 
@@ -1027,7 +1021,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 				Z_TEST_VECTOR.emplace_back(Z);
 			}
 		}
-
+		
 		Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
 		Z_TEST_VECTOR.clear();
 	}
@@ -1036,6 +1030,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 //Return 1 only if the frequence in position is higher than frequences in pos-1 and in pos+1
 bool map_class::find_local_max(double center, double prev, double post){
 	//PROFILE_FUNCTION();
+	
 	if(center > prev && center >= post){
 
 		return 1;
@@ -1407,10 +1402,9 @@ bool hamming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned in
 }
 
 //Function to calculate the frequence_1 (total of similar occurrences / total of possible oligos in the position)
-double hamming_class::frquence_1_calculation(unsigned int freq){
+double hamming_class::frequence_1_calculation(unsigned int freq){
 	//PROFILE_FUNCTION();
 	tot_similar_occurrences = 0;
-	
 	//Sum of the total occurrences (real best oligo + his neighbours)	
 	for(unsigned int i=0; i<similar_oligos_occurrences.size(); i++){
 
@@ -1418,19 +1412,17 @@ double hamming_class::frquence_1_calculation(unsigned int freq){
 
 	}
 
-	double FREQ_1 = tot_similar_occurrences/freq;
+	return tot_similar_occurrences/freq;
 
-	return FREQ_1;
 }
 
 //Function to calculate the frequence_2 (total of similar occurrences / total number of best+hamming occurrences in sequences)
-double hamming_class::frquence_2_calculation(unordered_map<string,unsigned int> &orizzontal_map_plus, unordered_map<string,unsigned int> &orizzontal_map_minus, unsigned int position){
+double hamming_class::frequence_2_calculation(unordered_map<string,unsigned int> &orizzontal_map_plus, unordered_map<string,unsigned int> &orizzontal_map_minus, unsigned int position){
 	//PROFILE_FUNCTION();
 
 	unsigned int total_orizzontal_occurrences = finding_orizzontal_occurrences(orizzontal_map_plus, orizzontal_map_minus);
-	double FREQ_2 = tot_similar_occurrences/total_orizzontal_occurrences;
+	return tot_similar_occurrences/total_orizzontal_occurrences;
 
-	return FREQ_2;
 }
 
 //Function to find total number of best+hamming occurrences in sequences --> useful to calculate Freq_2
@@ -1541,19 +1533,13 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned
 	{
 		for (unsigned int i = 0; i<GEP.size(); i++){
 
-//			double probability = 1;
-//			double back_prob = 1;
-//		Extraction from the sequences of oligos
-//		string oligo_vertical = GEP[i].return_sequence(GEP[i]).substr(position,6);
-
 			string oligo_vertical;
 			double P_bg;
 			double P_oligo = 1;
 			oligo_vertical = it->second.first;
 			int horizontal_occurences;
 			horizontal_occurences = orizzontal_map_plus_copy.find(oligo_vertical)->second;
-			//cout << "Horizontal occurences: " << horizontal_occurences << endl;
-			//cout << "Sum: " << sum << endl;
+
 			P_bg = horizontal_occurences/sum;
 
 			for (unsigned int k = 0; k < kmer; k++){
@@ -1582,8 +1568,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned
 
 			}
 			double likelihood_ratio = P_oligo/P_bg;
-			//cout << "P_oligo\tP_background\tLR" << endl;
-			//cout << P_oligo << "\t" << P_bg << "\t" << likelihood_ratio << endl;
+			
 			like_ratio_map.insert(pair<string, double>(oligo_vertical, likelihood_ratio));
 
 		}
