@@ -40,7 +40,7 @@ jobs:
         run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/ba5d470ea8547abf79437a95bad1a98559fe22c9/Multifasta_test_result.txt
           
       - name: test difference between outputs 
-        run: diff gistfile1.txt 6-mers_Z_scores_fasta_DS.txt
+        run: diff Multifasta_test_result.txt 6-mers_Z_scores_fasta_DS.txt
 
       - name: hg19 genome download 
         run: cat get_hg19.script | bash
@@ -53,7 +53,7 @@ jobs:
         run: wget https://gist.githubusercontent.com/AmarettiL/57ff3b08d8983a32de46f7cd3ae898a3/raw/006582b46c1b871d08ad7f3208e68d5664c4696d/NFY_bed_result.txt
 
       - name: test difference between outputs 
-        run: diff gistfile1.txt.1 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
+        run: diff NFY_bed_result.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
 
       
         # Runs a set of commands using the runners shell
