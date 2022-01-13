@@ -26,7 +26,7 @@ using namespace std;
 #pragma once
 #include <algorithm>
 #include <thread>
-
+/*
 #define PROFILING 1
 #if PROFILING
 #define PROFILE_SCOPE(name) InstrumentationTimer timer##__LINE__(name)
@@ -34,7 +34,7 @@ using namespace std;
 #else
 #define PROFILE_SCOPE(name)
 #endif
-
+*/
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -68,7 +68,7 @@ unsigned int exp_max = 0;
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
-
+/*
 struct ProfileResult
 {
     string Name;
@@ -182,7 +182,7 @@ private:
     bool m_Stopped;
 };
 
-
+*/
 class Timer
 {
 	public:
