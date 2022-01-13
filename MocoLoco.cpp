@@ -3,7 +3,7 @@
 
 
 int main(int argc, char *argv[]){
-	//Timer timer;
+	Timer timer;
 	//Instrumentor::Get().BeginSession("MocoLoco");
 	{
 
@@ -69,10 +69,22 @@ void bed_class::read_line(string line){
 	istringstream mystream(line);
 	mystream >> chr_coord >> start_coord >> end_coord;		
 }
-
+/*
 //Flag control function: start coordinates must be < then end coordinates
+void bed_class::flag_control( unsigned int start,  unsigned int end){
+	//PROFILE_FUNCTION();
+	//if start coordinates are >  end coordinates flag is setted to 0 --> WARNING printed to warn users
+	if(start > end){
 
-void bed_class::centering_function ( unsigned int start,  unsigned int end, int half_length, const unsigned int overhead){
+		flag = 0;
+	}
+
+	else{ 
+		flag = 1;
+	}
+}
+*/
+void bed_class::centering_function (unsigned int start,  unsigned int end, int half_length, const unsigned int overhead){
 	//PROFILE_FUNCTION();
 	unsigned int center = (start + end)/2;						
 	if(start > end){
@@ -285,13 +297,12 @@ unsigned int oligo_class::find_best_score(){
 	//PROFILE_FUNCTION();
 	//Extracting the best score from oligo_scores with function max_element
 	best_score = *max_element(oligo_scores.begin(), oligo_scores.end());
-	best_score_normalized = best_score;
 
 	vector<int> positions;
-	vector<int> dist_center;
+	vector<unsigned int> dist_center;
 	unsigned int matches = 0;
-	int min_distance;
-	vector<int>::iterator itr;
+	unsigned int min_distance;
+	vector<unsigned int>::iterator itr;
 	
 	//Check if there are more than one oligo with the best score --> if any count their numbers and save their position in sequence into a position vector
 	for(unsigned int i=0; i < oligo_scores.size(); i++){
@@ -308,7 +319,7 @@ unsigned int oligo_class::find_best_score(){
 
 		for (int& p: positions){
 
-			int distance;
+			unsigned int distance;
 
 			//The distance from the center need to be calculated as an absolute value (no negative values)
 			distance = abs( p - half_length); 
@@ -366,7 +377,7 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 	//Line counter initialization
 	unsigned int n_line = 1;
 
-	//For each line in BED file create a bed class called bed_line in which chr, start and end coordinate are ridden, centered and saved
+	//For each line in BED file create a bed class called bed_line in which chr, start and end coordinates are controlled, centered and saved
 	//Then the Fasta sequence is extracted from Twobit genome following the coordinated and saved into a string variable
 	while(getline(in,line)){
 
@@ -379,7 +390,7 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 
 		bed_class bed_line(line,tb, n_line);
 
-		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector og bed class)
+		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector of bed class)
 		GEP.emplace_back(bed_line);	
 
 		n_line = n_line + 1;		 
@@ -475,8 +486,8 @@ void coordinator_class::best_strand(){
 	for(unsigned int i=0; i<oligos_vector.size(); i+=2){
 			
 		//The comparison is made by oligo_class in i position against the oligo class in i+1 position (The fwd and rev strand of the same sequence, which are consecutive into the oligos_vector)
-		double best_score_norm_positive = oligos_vector[i].return_best_score_normalized();
-		double best_score_norm_negative = oligos_vector[i+1].return_best_score_normalized();
+		double best_score_norm_positive = oligos_vector[i].return_best_score();
+		double best_score_norm_negative = oligos_vector[i+1].return_best_score();
 			
 		if(best_score_norm_positive >= best_score_norm_negative){
 
@@ -581,12 +592,12 @@ void multifasta_class::length_control(vector<string> sequences){
 	//PROFILE_FUNCTION();
 	cout << "- [2] Multifasta Sequences length check\n";
 
-	unsigned int size = sequences[0].size();
+	//unsigned int size = sequences[0].size();
 
 	for(unsigned int i=0; i<sequences.size(); i++){
 		
 		//If only one sequence in the vector are longer an error is generated
-		if(sequences[i].size() != size){
+		if(sequences[i].size() != sequences[0].size()){
 
 			cerr << "Sequences are not of the same length!\n";
 			exit(1);
@@ -1812,9 +1823,9 @@ unsigned int oligo_class::return_start_coord_oligo(){
 	return start_coord_oligo;
 }
 
-double oligo_class::return_best_score_normalized(){
+double oligo_class::return_best_score(){
 	//PROFILE_FUNCTION();
-	return best_score_normalized;
+	return best_score;
 }
 
 string bed_class::return_chr_coord(){
@@ -2030,7 +2041,7 @@ void coordinator_class::print_debug_GEP(vector<bed_class> &GEP){
 
 	outfile.close();
 }
-
+/*
 void oligo_class::oligos_vector_debug(){	//Debug function to print the best oligo features
 	//PROFILE_FUNCTION();
 	cout << endl;
@@ -2043,7 +2054,7 @@ void oligo_class::oligos_vector_debug(){	//Debug function to print the best olig
 	cout << "Strand  " << strand << endl;
 	cout << endl;
 }
-
+*/
 //If the analysis is on Double Strand and oligos need to be ordered by p_value this is the function which writes on the output file
 void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned int,unsigned int>> &pair_map, unsigned int position, ofstream& outfile, unsigned int freq){
 	//PROFILE_FUNCTION();

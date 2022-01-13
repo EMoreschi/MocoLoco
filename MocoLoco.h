@@ -180,7 +180,7 @@ private:
     chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
     bool m_Stopped;
 };
-
+*/
 
 class Timer
 {
@@ -211,7 +211,7 @@ class Timer
 		chrono::time_point< chrono::high_resolution_clock> m_StartTimepoint;
 
 };
-*/
+
 
 class bed_class {         
 
@@ -334,7 +334,7 @@ class oligo_class{
 		double min_possible_score;
 		double max_possible_score;
 		double best_score;
-		double best_score_normalized;
+		//double best_score_normalized;
 		string global_sequence;
 		string best_oligo_seq;
 		unsigned int local_position;
@@ -385,9 +385,9 @@ class oligo_class{
 		}
 
 		void shifting(vector<vector<double>>&, string&/*, unsigned int*/);
-		void oligos_vector_debug();
+		//void oligos_vector_debug();
 		unsigned int return_start_coord_oligo();
-		double return_best_score_normalized();
+		double return_best_score();
 		vector<double> return_oligo_scores();
 };
 
@@ -415,7 +415,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			GEP_creation(GEP);
 
 			//reading Jaspar file and returning scores as a matrix of double, saved in a variable called matrix
-			matrix = read_JASPAR();
+			read_JASPAR();
 
 			//Creating matrix class: input matrix scores, name and tf matrix name
 			matrix_class M(matrix, matrix_name, tf_name);
