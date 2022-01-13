@@ -53,6 +53,7 @@ bool local_maxima_grouping = 1;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
 
+
 //
 // Basic instrumentation profiler by Cherno
 
@@ -67,7 +68,7 @@ unsigned int exp_max = 0;
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
-/*
+
 struct ProfileResult
 {
     string Name;
@@ -92,7 +93,7 @@ public:
     {
     }
 
-    void BeginSession(const string& name, const string& filepath = "all_test.json")
+    void BeginSession(const string& name, const string& filepath = "multifasta.json")
     {
         m_OutputStream.open(filepath);
         WriteHeader();
@@ -180,7 +181,7 @@ private:
     chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
     bool m_Stopped;
 };
-*/
+
 
 class Timer
 {
