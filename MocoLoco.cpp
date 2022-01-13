@@ -658,10 +658,10 @@ void map_class::table_creation_orizzontal(vector<bed_class> &GEP){
 		for(unsigned int j=0; j<GEP.size(); j++){
 			
 			//Extract the FASTA sequence from each bed class in GEP
-			//string sequence = GEP[j].return_sequence(GEP[j]);
+			string sequence = GEP[j].return_sequence(GEP[j]);
 			
 			//Extracted and analyzed all words of length k that are found by scrolling through the sequence
-			for(unsigned int i=0; i < (/*sequence.size()*/ (half_length*2) - kmers_vector[k] + 1); i++){
+			for(unsigned int i=0; i < (sequence.size()- kmers_vector[k] + 1); i++){
 				
 				//The current k-length oligo is saved into bases string
 				//string bases = sequence.substr(i,kmers_vector[k]);
@@ -729,7 +729,7 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 		cout << "- [5] Counting all k-mers positional occurrences and making vertical maps  \n";
 	}
 	//Return the first sequence to know the sequences length
-	//string seq_length = GEP[0].return_sequence(GEP[0]);
+	string seq_length = GEP[0].return_sequence(GEP[0]);
 
 	//A vector of map is created for each k-mer inserted as input
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
@@ -739,7 +739,7 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 
 
 		//Extracted and analyzed the oligo in position "i"
-		for(unsigned int i=0; i < (/*seq_length.size()*/ (half_length*2) - kmers_vector[k] + 1); i++){
+		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
 			unsigned int tot_freq = 0;
 			
