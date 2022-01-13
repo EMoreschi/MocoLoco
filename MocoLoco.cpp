@@ -114,7 +114,8 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
 
 	//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
 	else {		
-		cerr << "WARNING: the line " << n_line <<" is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
+		err = 1;
+		cerr << "WARNING: the line " << n_line << " (" << chr_coord << ":" << start_coord << "-" << end_coord << ")" << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
 	}
 }
 
@@ -396,7 +397,9 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 		n_line = n_line + 1;		 
 
 	}
-
+	if (err == 1){
+		exit(1);
+	}
 	
 }
 

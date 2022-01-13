@@ -52,7 +52,7 @@ double freq_treshold = 0;
 bool local_maxima_grouping = 1;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
-
+bool err = 0;
 
 //
 // Basic instrumentation profiler by Cherno
