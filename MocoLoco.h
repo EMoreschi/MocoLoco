@@ -822,6 +822,6 @@ void command_line_parser(int, char **);
 void display_help();
 bool is_file_exist(string fileName, string buf);
 void check_input_file();
-bool check_palindrome(string/*, string&*/);
+bool check_palindrome(string, string&);
 double check_p_value(double);
 void RAM_usage();
