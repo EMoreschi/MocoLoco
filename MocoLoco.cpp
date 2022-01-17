@@ -29,7 +29,7 @@ void RAM_usage(){
     int ret;
     ret = getrusage(who, &usage);
 
-    cout <<endl << "Maximum resident set size: " << usage.ru_maxrss/1000 << " Mb" << endl << "User CPU time used: " << usage.ru_utime.tv_sec << " s" << endl << "System CPU time used: " << usage.ru_stime.tv_usec << " micros" << endl;
+    cout << endl << "Maximum resident set size: " << usage.ru_maxrss/1000 << " Mb" << endl << "User CPU time used: " << usage.ru_utime.tv_sec << " s" << endl << "System CPU time used: " << usage.ru_stime.tv_usec << " micros" << endl;
 
 }
 
@@ -41,8 +41,9 @@ void  GEP_path(){
 
 	//if the input is Bed-Twobit-Jaspar	
 	if(MFASTA_FILE.size() == 0){	
-		
+		tb = twobit_open(TWOBIT_FILE.c_str()); 
 		coordinator_class C; 
+		twobit_close(tb);
 		//Create a .fasta file to check if the coordinates and the sequences extracted are correct
 		C.print_debug_GEP(C.GEP);
 		
@@ -59,6 +60,7 @@ void  GEP_path(){
 
 		//Creating a Map class: input are GEP vector created from multifasta file analysis, kmers, hamming distance
 		map_class MAP(MULTIFA.GEP,kmers,dist);
+		RAM_usage();
 	}
 
 }
@@ -114,13 +116,13 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
 
 	//if flag is not 1 means that the current line has starting coordinate < end coordinate: PRINT WARNING!		
 	else {		
-		err = 1;
+		err = true;
 		cerr << "WARNING: the line " << n_line << " (" << chr_coord << ":" << start_coord << "-" << end_coord << ")" << " is omitted because starting coordinates > end coordinates, please check your BED file!" << "\n";
 	}
 }
 
 //Function useful to normalize matrix scores and adding a pseudocount to them
-void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> &matrix){  						//CHANGE: Possible use of reference
+void matrix_class::matrix_normalization(vector<vector<double>> &matrix){  						//CHANGE: Possible use of reference
 	//PROFILE_FUNCTION();
 	double normalized_score;
 
@@ -138,6 +140,16 @@ void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> &matrix){
 
 		norm_matrix.emplace_back(normalized_matrix_line);
 	}
+
+	for (unsigned int i = 0; i < norm_matrix.size(); i++) {
+
+		for (unsigned int j = 0; j < norm_matrix[i].size(); j++){
+
+			//Substitution of first normalized values with new normalized ones
+			norm_matrix[i][j] /= 1.04;
+		}
+	}
+	
 }
 
 //Function which saves into a vector called col_sum all the score column sums --> This is made to perform the next Normalization step faster
@@ -157,7 +169,7 @@ vector<double> matrix_class::find_col_sum(vector<vector<double>> &matrix){						
 	}
 	return col_sum;
 }
-
+/*
 //Function to perform a second normalization on matrix scores (without a pseudocount addition)
 void matrix_class::matrix_normalization(vector<vector<double>> &matrix){									//CHANGE: Possible use of reference
 	//PROFILE_FUNCTION();
@@ -173,7 +185,7 @@ void matrix_class::matrix_normalization(vector<vector<double>> &matrix){								
 		}
 	}
 }
-
+*/
 //Function to calculate, from the normalized matrix, the logarithmic values of the scores and creates a new matrix called matrix_log
 void matrix_class::matrix_logarithmic(vector<vector<double>> &matrix){									//CHANGE: Possible use of reference
 	//PROFILE_FUNCTION();
@@ -362,16 +374,15 @@ void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, un
 }
 	
 //Function to read BED and 2Bit files and create GEP (vector of bed class)
-void coordinator_class::GEP_creation(vector<bed_class> &GEP){
+void coordinator_class::GEP_creation(vector<bed_class> &GEP /*, TwoBit* tb*/){
 	//PROFILE_FUNCTION();
-	RAM_usage();
+	//RAM_usage();
 	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
 
 	ifstream in(BED_FILE); 					
-	TwoBit * tb;
 
 	//Opening 2Bit file with twobit_open function from andrelmartens code and saved in tb variable 
-	tb = twobit_open(TWOBIT_FILE.c_str()); 
+	
 
 	string line;
 
@@ -397,7 +408,7 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 		n_line = n_line + 1;		 
 
 	}
-	if (err == 1){
+	if (err == true){
 		exit(1);
 	}
 	
@@ -406,7 +417,7 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 //Function to read JASPAR PWM file, extract values and create a matrix class
 vector<vector<double>> coordinator_class::read_JASPAR(){
 	//PROFILE_FUNCTION();
-	RAM_usage();
+	//RAM_usage();
 	cout << "- [2] Reading JASPAR MATRIX file and extracting values\n";
 
 	ifstream file(JASPAR_FILE);
@@ -443,7 +454,7 @@ vector<vector<double>> coordinator_class::read_JASPAR(){
 	}
     
 	file.close();
-	RAM_usage();
+	//RAM_usage();
 	//Cout of step 3/4 here because the normalization and reverse function will be re-utilized during the workflow
 	cout << "- [3] Jaspar Matrix normalization\n";
 	cout << "- [4] Jaspar Matrix reverse complement determination to analize the reverse strand\n";
@@ -454,7 +465,7 @@ vector<vector<double>> coordinator_class::read_JASPAR(){
 //Function to create oligos_vector (a oligo class vector)
 void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vector, vector<vector<double>> &matrix_log, vector<vector<double>> &matrix_log_inverse, vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
-	RAM_usage();
+	//RAM_usage();
 	cout << "- [5] Analyzing sequences using Jaspar matrix\n";
 
 	//For every sequences into GEP vector
@@ -477,7 +488,7 @@ void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vecto
 			oligos_vector.emplace_back(SHIFTING);
 		}
 	}	
-	RAM_usage();
+	//RAM_usage();
 	cout << "- [6] Selecting the best Jaspar's oligo for each sequence \n";
 }
 
@@ -511,8 +522,7 @@ void coordinator_class::best_strand(){
 //Function to re-set the genomic coordinates and the sequences window --> centered on the best oligo found for each sequence
 void coordinator_class::centering_oligo(){
 	//PROFILE_FUNCTION();
-	TwoBit * tb;
-	tb = twobit_open(TWOBIT_FILE.c_str());
+
 	int center_oligo ;
 	
 	//To center on the best oligo, centering_function and extract_seq functions from bed_class need to be recalled with updated input parameters
@@ -646,12 +656,12 @@ void map_class::check_kmer_dist(){
 void map_class::table_creation_orizzontal(vector<bed_class> &GEP){ 
 	//PROFILE_FUNCTION();
 
-	if (MFASTA_FILE.size() ==0){
-		RAM_usage();
+	if (MFASTA_FILE.size() == 0 ){
+		//RAM_usage();
 		cout << "- [7] Counting all k-mers occurrences for sequences and making orizzontal maps  \n";
 	}
 	else{
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [4] Counting all k-mers occurrences for sequences and making orizzontal maps  \n";
 	}
 	//A map is created for each k-mer inserted as input
@@ -661,10 +671,10 @@ void map_class::table_creation_orizzontal(vector<bed_class> &GEP){
 		for(unsigned int j=0; j<GEP.size(); j++){
 			
 			//Extract the FASTA sequence from each bed class in GEP
-			string sequence = GEP[j].return_sequence(GEP[j]);
+			//string sequence = GEP[j].return_sequence(GEP[j]);
 			
 			//Extracted and analyzed all words of length k that are found by scrolling through the sequence
-			for(unsigned int i=0; i < (sequence.size()- kmers_vector[k] + 1); i++){
+			for(unsigned int i=0; i < ((half_length*2) - kmers_vector[k] + 1); i++){
 				
 				//The current k-length oligo is saved into bases string
 				//string bases = sequence.substr(i,kmers_vector[k]);
@@ -682,6 +692,7 @@ void map_class::table_creation_orizzontal(vector<bed_class> &GEP){
 		orizzontal_plus.clear();
 		orizzontal_minus.clear();
 	}
+	//RAM_usage();
 }
 
 //Function to fill orizzontal plus/minus maps --> current oligo "bases" is passed as parameter to be inserted into the maps
@@ -724,15 +735,15 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int
 void map_class::table_creation_vertical(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
 	if (MFASTA_FILE.size() ==0){
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [8] Counting all k-mers positional occurrences and making vertical maps  \n";
 	}
 	else{
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [5] Counting all k-mers positional occurrences and making vertical maps  \n";
 	}
 	//Return the first sequence to know the sequences length
-	string seq_length = GEP[0].return_sequence(GEP[0]);
+	//string seq_length = GEP[0].return_sequence(GEP[0]);
 
 	//A vector of map is created for each k-mer inserted as input
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
@@ -742,15 +753,15 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 
 
 		//Extracted and analyzed the oligo in position "i"
-		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
+		for(unsigned int i=0; i < ((half_length*2) - kmers_vector[k] + 1); i++){
 
 			unsigned int tot_freq = 0;
 			
 			//Make the analysis of all the sequences' oligo in position "i" (vertical analisys)
 			for(unsigned int j=0; j<GEP.size(); j++){
 				
-				string sequence = GEP[j].return_sequence(GEP[j]);
-				string bases = sequence.substr(i,kmers_vector[k]);
+				//string sequence = GEP[j].return_sequence(GEP[j]);
+				string bases = GEP[j].return_sequence(GEP[j]).substr(i,kmers_vector[k]);
 				
 				//Calling of function to count oligo occurrences and to create and fill the maps
 				vertical_kmer_count(bases, vertical_plus, tot_freq);
@@ -782,6 +793,7 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 		maps_vector_positions_plus.clear();
 		//maps_vector_positions_plus.shrink_to_fit();
 	}
+	//RAM_usage();
 }
 
 //Function to count oligo occurrences and to create and fill the maps. It also count all the total oligo present in position (taking into account to the palindrome oligos) --> this count will be useful to calculate the frequency
@@ -890,11 +902,11 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 void map_class::P_VALUE_MATRIX_creation(){
 	//PROFILE_FUNCTION();
 	if (MFASTA_FILE.size() ==0){
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [9] Calculating oligos p_value and flling P_Value class matrix  \n";
 	}
 	else{
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [6] Calculating oligos p_value and flling P_Value class matrix  \n";
 	}
 	//For each k-mers inserted as input
@@ -936,11 +948,11 @@ void map_class::P_VALUE_MATRIX_creation(){
 void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
 	if (MFASTA_FILE.size() ==0){
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [10] Calculating best oligos hamming neighbours and filling Hamming matrix  \n";
 	}
 	else{
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [7] Calculating best oligos hamming neighbours and filling Hamming matrix  \n";
 	}
 	//For every kmer in input	
@@ -973,11 +985,11 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP){
 	}
 
 	if (MFASTA_FILE.size() ==0){
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [11] PWM matrices from hit positions calculated \n";
 	}
 	else{
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [8] PWM matrices from hit positions calculated \n";
 	}
 }
@@ -988,11 +1000,11 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 	bool local_max = 1;
 	
 	if (MFASTA_FILE.size() ==0){
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [12] Calculating Z-test from PWM matrices shifing and filling Z-test matrix  \n";
 	}
 	else{
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [9] Calculating Z-test from PWM matrices shifing and filling Z-test matrix  \n";
 	}
 	//For every kmer in input	
@@ -1507,6 +1519,7 @@ void hamming_class::PWM_hamming_creation(){
 
 void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class> &GEP) 
 {
+	
 	cout << "Starting PWM: \n";
 	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
@@ -1525,11 +1538,13 @@ void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class
 		cout << endl;
 	}
 	cout << endl;
+
 }
 
 void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned int position) 
 {
 	//PROFILE_FUNCTION();
+	
 	cout << "---------------------------------" << endl;
 	cout << "#POSITION " << position + 1 << " before Epart"<< endl;
 	cout << "---------------------------------" << endl;
@@ -1591,6 +1606,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned
 
 void hamming_class::EM_Mpart(unsigned int position, unsigned int kmer){
 	//PROFILE_FUNCTION();
+	
 	cout << "---------------------------------" << endl;
 	cout << "#POSITION " << position + 1 << " before Mpart"<< endl;
 	cout << "---------------------------------" << endl;
@@ -1672,6 +1688,7 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int kmer, unsigned
 		}
 		cout << endl;
 		cout << "---------------------------------------" << endl;
+		RAM_usage();
 }
 
 //Shifting the PWM_matrix on the sequences and calculate local scores (from positon where the matrix has been generated), and the global scores from each sequences positions
@@ -1769,6 +1786,22 @@ void z_test_class::z_score_calculation(){
 
 
 }
+/*
+bool check_palindrome(string bases){
+	
+	for (unsigned int i = 0; i < bases.length() / 2; i++) {
+ 
+        // If S[i] is not equal to
+        // the S[N-i-1]
+        if (bases[i] != bases[bases.length() - i - 1]) {
+            // Return No
+            return false;
+        }
+    }
+    // Return "Yes"
+    return true;
+}
+*/
 
 //Function to check, given an oligo as input, if this oligo is palindrome or not
 bool check_palindrome(string bases,string& reverse_bases){
@@ -1793,7 +1826,7 @@ bool check_palindrome(string bases,string& reverse_bases){
 				   break;
 		}
 	}
-	
+	//RAM_usage();
 	//Then reverse the string 
 	reverse(reverse_bases.begin(), reverse_bases.end());
 	
@@ -1802,7 +1835,7 @@ bool check_palindrome(string bases,string& reverse_bases){
 		return true;
 	}
 	else {return false;}
-
+	
 }
 
 //If the p value is rounded to 0 assigne it a standar low value of 1.000001e-300 to avoid possible future errors
@@ -1854,11 +1887,6 @@ vector<vector<double>> matrix_class::return_log_matrix(){
 vector<vector<double>> matrix_class::return_norm_matrix(){
 	//PROFILE_FUNCTION();
 	return norm_matrix;
-}
-
-vector<vector<double>> matrix_class::return_matrix(){
-	//PROFILE_FUNCTION();
-	return matrix;
 }
 
 string bed_class::return_sequence(bed_class){
@@ -1981,7 +2009,7 @@ vector<vector<z_test_class>> map_class::return_z_test_matrix(){
 	return Z_TEST_MATRIX;
 }
 
-
+/*
 //Function to matrix debugging --> it prints the scores extracted from JASPAR file, the normalized scores, the logarithmic scores and the logarithmic score of transposed matrix
 void matrix_class::debug_matrix(matrix_class M){
 	//PROFILE_FUNCTION();
@@ -2005,7 +2033,7 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 		cout << endl;
 	}
 }
-
+*/
 //Debug function: Print sequences and coordinates from GEP vector into a .fasta file to check if the sequences extraction is correct
 void coordinator_class::print_debug_GEP(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();

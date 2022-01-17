@@ -26,7 +26,7 @@ using namespace std;
 #pragma once
 #include <algorithm>
 #include <thread>
-/*
+
 #define PROFILING 1
 #if PROFILING
 #define PROFILE_SCOPE(name) InstrumentationTimer timer##__LINE__(name)
@@ -34,7 +34,7 @@ using namespace std;
 #else
 #define PROFILE_SCOPE(name)
 #endif
-*/
+
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -43,7 +43,7 @@ string alias_file = "multifasta_";
 string MFASTA_FILE;
 string ordering;
 const unsigned int overhead = 25;
-const double pseudoc = 0.01;
+const double pseudoc = 0.001;
 bool DS = 1;
 string kmers = "6,8,10";
 string dist = "1,2,3";
@@ -52,7 +52,8 @@ double freq_treshold = 0;
 bool local_maxima_grouping = 1;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
-bool err = 0;
+bool err = false;
+TwoBit * tb;
 
 //
 // Basic instrumentation profiler by Cherno
@@ -276,28 +277,28 @@ class matrix_class {
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
 		vector<double> col_sum;		
+		vector<double> col_sum_norm;
 
-
-		void matrix_normalization_pseudoc(vector<vector<double>>&);
 		void matrix_normalization(vector<vector<double>>&);
+		//void matrix_normalization(vector<vector<double>>&);
 		void matrix_logarithmic(vector<vector<double>>&);
 		vector<vector<double>> reverse_matrix(vector<vector<double>>&);
 		vector<double> find_col_sum(vector<vector<double>>&);
-		void print_debug_matrix(vector<vector<double>>, string);
+		//void print_debug_matrix(vector<vector<double>>, string);
 
 	public:
 
-		matrix_class(vector<vector<double>> &mat, string name, string tf){
+		matrix_class(vector<vector<double>> &mat){
 			
 //			matrix = mat;	
 //			matrix_name = name;	
 //			tf_name = tf;
 
 			//Function to normalize the matrix scores and add a pseudocount
-			matrix_normalization_pseudoc(mat);
+			matrix_normalization(mat);
 
 			//Function to normalize again the matrix after pseudocount addition
-			matrix_normalization(norm_matrix);
+			//matrix_normalization(norm_matrix);
 
 			//Function to calculate logarithmic matrix from normalized matrix
 			matrix_logarithmic(norm_matrix);
@@ -305,7 +306,7 @@ class matrix_class {
 			//Function to reverse the logarithmic normalized matrix to read the oligo in reverse strand
 			inverse_matrix_log = reverse_matrix(matrix_log);
 		}
-
+/*
 		matrix_class(vector<vector<double>> mat){
 			
 //			matrix = mat;	
@@ -314,14 +315,13 @@ class matrix_class {
 			matrix_normalization_pseudoc(mat);
 
 			//Function to normalize again the matrix after pseudocount addition
-			matrix_normalization(norm_matrix);
+			//matrix_normalization(norm_matrix);
 		}
-
-		void debug_matrix(matrix_class);
+*/
+		//void debug_matrix(matrix_class);
 		vector<vector<double>> return_log_matrix();
 		vector<vector<double>> return_inverse_log_matrix();
 		vector<vector<double>> return_norm_matrix();
-		vector<vector<double>> return_matrix();
 };
 
 class oligo_class{
@@ -411,7 +411,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 	public:
 
 		coordinator_class(){
-
+			
 			//GEP (vector of bed class) creation. An empty GEP vector is passed by reference to be filled and saved in this class
 			GEP_creation(GEP);
 
@@ -419,7 +419,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			read_JASPAR();
 
 			//Creating matrix class: input matrix scores, name and tf matrix name
-			matrix_class M(matrix, matrix_name, tf_name);
+			matrix_class M(matrix);
 
 			//matrix_log and inverse_matrix_log calculated are returned from Matrix class to be saved here --> These are the two matrices on which the analysis will be performed
 			matrix_log = M.return_log_matrix();
@@ -440,7 +440,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			//The best oligo selected for each sequence becames the new center of the window, re-setting the GEP coordinates
 			centering_oligo();
 
-
+			
 		}
 	
 		vector<bed_class> GEP;
@@ -680,7 +680,7 @@ class z_test_class{
 			local_pos = local_p;
 
 			//Calling matrix class constructor passing PWM_hamming matrix
-			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
+			matrix_class PWM_hamming_mat(PWM_hamming);
 
 			//Return from matrix class the log_PWM_hamming matrix
 			matrix_log = PWM_hamming_mat.return_log_matrix();
