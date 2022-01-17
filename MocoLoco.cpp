@@ -705,7 +705,7 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int
 	it_plus = plus.find(bases);
 
 	//Check if the current oligo "bases" is palindrome --> this function has also the aim to generate "reverse bases", the reverse complement of the current oligo
-	check_palindrome(bases, reverse_bases);
+	check_palindrome(bases/*, reverse_bases*/);
 
 	//Finding the oligo "bases" into the orizzontal minus map (REV strand)
 	it_minus = minus.find(reverse_bases);
@@ -805,7 +805,7 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 	map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_minus_rev;
 
 	//Check if the current oligo is palindrome
-	bool pal = check_palindrome(bases, reverse_bases);
+	bool pal = check_palindrome(bases/*, reverse_bases*/);
 
 	//Check if the analisys is in double strand
 	if(DS == 1){	
@@ -1096,7 +1096,7 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> &oriz
 	for(multimap<pair<unsigned int, unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev != vertical_multimap.rend(); it_rev++){
 
 		//Check if the oligo is palindrome -> K value is differentially calculated
-		bool pal = check_palindrome(it_rev->second.first, reverse_bases);
+		bool pal = check_palindrome(it_rev->second.first/*, reverse_bases*/);
 
 		if(pal == 0 && DS == 1){
 
@@ -2101,7 +2101,7 @@ void p_value_class::print_debug_p_value_DS(map<pair<string,string>,pair<unsigned
 		string Oligo_RC = it_multi->first.second;
 		unsigned int Num_Occ_FWD = it_multi->second.first;
 		unsigned int Num_Occ_REV = it_multi->second.second;
-		bool pal = check_palindrome(Oligo, reverse_bases);
+		bool pal = check_palindrome(Oligo/*, reverse_bases*/);
 		unsigned int Rank = c;
 		string PAL;
 		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
@@ -2147,7 +2147,7 @@ void p_value_class::print_debug_p_value_SS(map<pair<string,string>,pair<unsigned
 		it_multi = pair_map.find(it_pair->second);
 		string Oligo = it_multi->first.first;
 		unsigned int Num_Occ_Oligo = it_multi->second.first;
-		bool pal = check_palindrome(Oligo, reverse_bases);
+		bool pal = check_palindrome(Oligo/*, reverse_bases*/);
 		unsigned int Rank = c;
 		string PAL;
 		double P_VAL = it_pair->first;
@@ -2182,7 +2182,7 @@ void p_value_class::print_debug_occurrences_DS(map<pair<string,string>,pair<unsi
 		string Oligo_RC = it_rev->second.second;
 		unsigned int Num_Occ_FWD = it_rev->first.first;
 		unsigned int Num_Occ_REV = it_rev->first.second;
-		bool pal = check_palindrome(Oligo, reverse_bases);
+		bool pal = check_palindrome(Oligo/*, reverse_bases*/);
 		unsigned int Rank = c;
 		string PAL;
 		unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
@@ -2225,7 +2225,7 @@ void p_value_class::print_debug_occurrences_SS(map<pair<string,string>,pair<unsi
 		double FREQ, Num_Occ_FWD;
 		string Oligo = it_rev->second.first;
 		unsigned int Num_Occ_Oligo = it_rev->first.first;
-		bool pal = check_palindrome(Oligo,reverse_bases);
+		bool pal = check_palindrome(Oligo/*,reverse_bases*/);
 		unsigned int Rank = c;
 		string PAL;
 		double P_VAL = p_value_vec[c];
@@ -2273,7 +2273,7 @@ void map_class::print_debug_orizzontal(){
 				reverse_bases.clear();	
 				//reverse_bases.shrink_to_fit();
 
-				bool palindrome = check_palindrome(it_rev->second, reverse_bases);
+				bool palindrome = check_palindrome(it_rev->second/*, reverse_bases*/);
 
 				if(!palindrome){
 
