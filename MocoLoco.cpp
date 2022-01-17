@@ -812,7 +812,7 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 
 		//If the current oligo is not palindrome and the analysis is on DS --> total number of possible oligo per position (to calculate frequences) ++2, else if it is palindrome ++1
 		if(!pal){
-			tot_freq = tot_freq+2;
+			tot_freq += 2;
 		}
 		else{
 			tot_freq++;
@@ -859,9 +859,8 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 
 	//Clear bases and reverse bases to avoid interference in the next oligo analysis 
 	bases.clear();
-	//bases.shrink_to_fit();
 	reverse_bases.clear();
-	//reverse_bases.shrink_to_fit();
+
 }
 
 //Function to select the best pair (Oligo + RC or RC + Oligo) into vertical plus map
@@ -1786,7 +1785,7 @@ void z_test_class::z_score_calculation(){
 
 
 }
-/*
+
 bool check_palindrome(string bases){
 	
 	for (unsigned int i = 0; i < bases.length() / 2; i++) {
@@ -1794,15 +1793,14 @@ bool check_palindrome(string bases){
         // If S[i] is not equal to
         // the S[N-i-1]
         if (bases[i] != bases[bases.length() - i - 1]) {
-            // Return No
+
             return false;
         }
     }
-    // Return "Yes"
     return true;
 }
-*/
 
+/*
 //Function to check, given an oligo as input, if this oligo is palindrome or not
 bool check_palindrome(string bases,string& reverse_bases){
 	reverse_bases.clear();
@@ -1837,7 +1835,7 @@ bool check_palindrome(string bases,string& reverse_bases){
 	else {return false;}
 	
 }
-
+*/
 //If the p value is rounded to 0 assigne it a standar low value of 1.000001e-300 to avoid possible future errors
 double check_p_value(double p){
 	if(p == 0){
