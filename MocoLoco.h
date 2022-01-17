@@ -43,7 +43,7 @@ string alias_file = "multifasta_";
 string MFASTA_FILE;
 string ordering;
 const unsigned int overhead = 25;
-const double pseudoc = 0.001;
+const double pseudoc = 0.01;
 bool DS = 1;
 string kmers = "6,8,10";
 string dist = "1,2,3";
@@ -277,28 +277,28 @@ class matrix_class {
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
 		vector<double> col_sum;		
-		vector<double> col_sum_norm;
 
+
+		void matrix_normalization_pseudoc(vector<vector<double>>&);
 		void matrix_normalization(vector<vector<double>>&);
-		//void matrix_normalization(vector<vector<double>>&);
 		void matrix_logarithmic(vector<vector<double>>&);
 		vector<vector<double>> reverse_matrix(vector<vector<double>>&);
 		vector<double> find_col_sum(vector<vector<double>>&);
-		//void print_debug_matrix(vector<vector<double>>, string);
+		void print_debug_matrix(vector<vector<double>>, string);
 
 	public:
 
-		matrix_class(vector<vector<double>> &mat){
+		matrix_class(vector<vector<double>> &mat, string name, string tf){
 			
-//			matrix = mat;	
-//			matrix_name = name;	
-//			tf_name = tf;
+			matrix = mat;	
+			matrix_name = name;	
+			tf_name = tf;
 
 			//Function to normalize the matrix scores and add a pseudocount
-			matrix_normalization(mat);
+			matrix_normalization_pseudoc(matrix);
 
 			//Function to normalize again the matrix after pseudocount addition
-			//matrix_normalization(norm_matrix);
+			matrix_normalization(norm_matrix);
 
 			//Function to calculate logarithmic matrix from normalized matrix
 			matrix_logarithmic(norm_matrix);
@@ -306,23 +306,25 @@ class matrix_class {
 			//Function to reverse the logarithmic normalized matrix to read the oligo in reverse strand
 			inverse_matrix_log = reverse_matrix(matrix_log);
 		}
-/*
+
 		matrix_class(vector<vector<double>> mat){
 			
-//			matrix = mat;	
+			matrix = mat;	
 			
 			//Function to normalize the matrix scores and add a pseudocount
-			matrix_normalization_pseudoc(mat);
+			matrix_normalization_pseudoc(matrix);
 
 			//Function to normalize again the matrix after pseudocount addition
-			//matrix_normalization(norm_matrix);
+			matrix_normalization(norm_matrix);
 		}
-*/
-		//void debug_matrix(matrix_class);
+
+		void debug_matrix(matrix_class);
 		vector<vector<double>> return_log_matrix();
 		vector<vector<double>> return_inverse_log_matrix();
 		vector<vector<double>> return_norm_matrix();
+		vector<vector<double>> return_matrix();
 };
+
 
 class oligo_class{
 
@@ -419,7 +421,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			read_JASPAR();
 
 			//Creating matrix class: input matrix scores, name and tf matrix name
-			matrix_class M(matrix);
+			matrix_class M(matrix, matrix_name, tf_name);
 
 			//matrix_log and inverse_matrix_log calculated are returned from Matrix class to be saved here --> These are the two matrices on which the analysis will be performed
 			matrix_log = M.return_log_matrix();
@@ -680,7 +682,7 @@ class z_test_class{
 			local_pos = local_p;
 
 			//Calling matrix class constructor passing PWM_hamming matrix
-			matrix_class PWM_hamming_mat(PWM_hamming);
+			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
 
 			//Return from matrix class the log_PWM_hamming matrix
 			matrix_log = PWM_hamming_mat.return_log_matrix();

@@ -122,7 +122,7 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
 }
 
 //Function useful to normalize matrix scores and adding a pseudocount to them
-void matrix_class::matrix_normalization(vector<vector<double>> &matrix){  						//CHANGE: Possible use of reference
+void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> &matrix){  						//CHANGE: Possible use of reference
 	//PROFILE_FUNCTION();
 	double normalized_score;
 
@@ -140,36 +140,26 @@ void matrix_class::matrix_normalization(vector<vector<double>> &matrix){  						
 
 		norm_matrix.emplace_back(normalized_matrix_line);
 	}
-
-	for (unsigned int i = 0; i < norm_matrix.size(); i++) {
-
-		for (unsigned int j = 0; j < norm_matrix[i].size(); j++){
-
-			//Substitution of first normalized values with new normalized ones
-			norm_matrix[i][j] /= 1.04;
-		}
-	}
-	
 }
 
 //Function which saves into a vector called col_sum all the score column sums --> This is made to perform the next Normalization step faster
 vector<double> matrix_class::find_col_sum(vector<vector<double>> &matrix){								//CHANGE: Possible use of reference
 	//PROFILE_FUNCTION();
 	vector<double> col_sum;						
-	double sum = 0;							
-
-	for (unsigned int i = 0; i < matrix[0].size(); i++) {		
+	double sum = 0;								
+	for (unsigned int i = 0; i < matrix[0].size(); i++){	
 		for (unsigned int j = 0; j < 4; j++){			
-
+			
 			sum += matrix[j][i];			
 		}
 
 		col_sum.emplace_back(sum);				
 		sum = 0;						
 	}
+
 	return col_sum;
 }
-/*
+
 //Function to perform a second normalization on matrix scores (without a pseudocount addition)
 void matrix_class::matrix_normalization(vector<vector<double>> &matrix){									//CHANGE: Possible use of reference
 	//PROFILE_FUNCTION();
@@ -185,7 +175,7 @@ void matrix_class::matrix_normalization(vector<vector<double>> &matrix){								
 		}
 	}
 }
-*/
+
 //Function to calculate, from the normalized matrix, the logarithmic values of the scores and creates a new matrix called matrix_log
 void matrix_class::matrix_logarithmic(vector<vector<double>> &matrix){									//CHANGE: Possible use of reference
 	//PROFILE_FUNCTION();
@@ -203,6 +193,7 @@ void matrix_class::matrix_logarithmic(vector<vector<double>> &matrix){									/
 		matrix_log.emplace_back(log_matrix_line);
 	}
 }
+
 
 //Function which return the Transposed matrix from a matrix in input
 vector<vector<double>> matrix_class::reverse_matrix(vector<vector<double>> &matrix){		
@@ -374,22 +365,23 @@ void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, un
 }
 	
 //Function to read BED and 2Bit files and create GEP (vector of bed class)
-void coordinator_class::GEP_creation(vector<bed_class> &GEP /*, TwoBit* tb*/){
+void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
-	//RAM_usage();
+	RAM_usage();
 	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
 
 	ifstream in(BED_FILE); 					
+	//TwoBit * tb;
 
 	//Opening 2Bit file with twobit_open function from andrelmartens code and saved in tb variable 
-	
+	//tb = twobit_open(TWOBIT_FILE.c_str()); 
 
 	string line;
 
 	//Line counter initialization
 	unsigned int n_line = 1;
 
-	//For each line in BED file create a bed class called bed_line in which chr, start and end coordinates are controlled, centered and saved
+	//For each line in BED file create a bed class called bed_line in which chr, start and end coordinate are ridden, centered and saved
 	//Then the Fasta sequence is extracted from Twobit genome following the coordinated and saved into a string variable
 	while(getline(in,line)){
 
@@ -402,7 +394,7 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP /*, TwoBit* tb*/){
 
 		bed_class bed_line(line,tb, n_line);
 
-		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector of bed class)
+		//For each line a bed class is created --> All the bed classes are saved in GEP vector (vector og bed class)
 		GEP.emplace_back(bed_line);	
 
 		n_line = n_line + 1;		 
@@ -534,6 +526,7 @@ void coordinator_class::centering_oligo(){
 		GEP[i].extract_seq(tb,0);
 	}
 }
+
 
 //Function able to convert a string (containing numbers separated by ",") into a vector of unsigned int
 vector<unsigned int> map_class::generic_vector_creation(string numbers){
@@ -671,14 +664,14 @@ void map_class::table_creation_orizzontal(vector<bed_class> &GEP){
 		for(unsigned int j=0; j<GEP.size(); j++){
 			
 			//Extract the FASTA sequence from each bed class in GEP
-			//string sequence = GEP[j].return_sequence(GEP[j]);
+			string sequence = GEP[j].return_sequence(GEP[j]);
 			
 			//Extracted and analyzed all words of length k that are found by scrolling through the sequence
-			for(unsigned int i=0; i < ((half_length*2) - kmers_vector[k] + 1); i++){
+			for(unsigned int i=0; i < (sequence.size() - kmers_vector[k] + 1); i++){
 				
 				//The current k-length oligo is saved into bases string
-				//string bases = sequence.substr(i,kmers_vector[k]);
-				string bases = GEP[j].return_sequence(GEP[j]).substr(i,kmers_vector[k]);
+				string bases = sequence.substr(i,kmers_vector[k]);
+
 				//Function to fill orizzontal plus/minus maps --> current oligo "bases" is passed as parameter to be inserted into the maps
 				or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
 			}
@@ -735,15 +728,15 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int
 void map_class::table_creation_vertical(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
 	if (MFASTA_FILE.size() ==0){
-		//RAM_usage();
+		RAM_usage();
 		cout << "- [8] Counting all k-mers positional occurrences and making vertical maps  \n";
 	}
 	else{
-		//RAM_usage();
+		RAM_usage();
 		cout << "- [5] Counting all k-mers positional occurrences and making vertical maps  \n";
 	}
-	//Return the first sequence to know the sequences length
-	//string seq_length = GEP[0].return_sequence(GEP[0]);
+	//Return the fisrt sequence to know the sequences length
+	string seq_length = GEP[0].return_sequence(GEP[0]);
 
 	//A vector of map is created for each k-mer inserted as input
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
@@ -753,15 +746,15 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 
 
 		//Extracted and analyzed the oligo in position "i"
-		for(unsigned int i=0; i < ((half_length*2) - kmers_vector[k] + 1); i++){
+		for(unsigned int i=0; i < (seq_length.size() - kmers_vector[k] + 1); i++){
 
 			unsigned int tot_freq = 0;
 			
 			//Make the analysis of all the sequences' oligo in position "i" (vertical analisys)
 			for(unsigned int j=0; j<GEP.size(); j++){
 				
-				//string sequence = GEP[j].return_sequence(GEP[j]);
-				string bases = GEP[j].return_sequence(GEP[j]).substr(i,kmers_vector[k]);
+				string sequence = GEP[j].return_sequence(GEP[j]);
+				string bases = sequence.substr(i,kmers_vector[k]);
 				
 				//Calling of function to count oligo occurrences and to create and fill the maps
 				vertical_kmer_count(bases, vertical_plus, tot_freq);
@@ -793,7 +786,6 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 		maps_vector_positions_plus.clear();
 		//maps_vector_positions_plus.shrink_to_fit();
 	}
-	//RAM_usage();
 }
 
 //Function to count oligo occurrences and to create and fill the maps. It also count all the total oligo present in position (taking into account to the palindrome oligos) --> this count will be useful to calculate the frequency
