@@ -860,7 +860,7 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned int>>& vertical_plus){
 	//PROFILE_FUNCTION();
 	//Initialization of an empty map called copy
-	//map<pair<string,string>,pair<unsigned int,unsigned int>> copy;
+	map<pair<string,string>,pair<unsigned int,unsigned int>> copy;
 	
 	//For every element into the map a comparison is performed
 	for(map<pair<string,string>,pair<unsigned int,unsigned int>>::iterator it = vertical_plus.begin(); it!=vertical_plus.end(); it++){
@@ -870,26 +870,26 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 			
 			string oligo1 = it->first.second;	
 			string oligo2 = it->first.first;
-			//unsigned int occ1 = it->second.second;
-			//unsigned int occ2 = it->second.first;
+			unsigned int occ1 = it->second.second;
+			unsigned int occ2 = it->second.first;
 			
 			//Insert the pair RC + Oligo in the map "copy"
-			swap(it->second.first, it->second.second);
-			swap(oligo1, oligo2);
-			//copy.insert({{oligo1,oligo2},{occ1,occ2}});		
+			//swap(it->second.first, it->second.second);
+			//swap(oligo1, oligo2);
+			copy.insert({{oligo1,oligo2},{occ1,occ2}});		
 		}
 
 		//Else if Oligo occurrences are higher then RC occurrences is FWD strand
 		else{
 
 			//Insert the pair Oligo + RC in the map "copy"
-			//copy.insert({{it->first.first, it->first.second},{it->second.first,it->second.second}});		
+			copy.insert({{it->first.first, it->first.second},{it->second.first,it->second.second}});		
 		}
 	}
 
 	//Clearing the map vertical plus to be substituted by "copy", which contains only the best pairs
-	//vertical_plus.clear();
-	//vertical_plus = copy;
+	vertical_plus.clear();
+	vertical_plus = copy;
 }
 
 //Function to create a matrix of p_value class (1 dimension = different k-mers, 2 dimension = positions)
