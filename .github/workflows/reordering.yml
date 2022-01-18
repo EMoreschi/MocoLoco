@@ -42,6 +42,21 @@ jobs:
       - name: test difference between outputs 
         run: diff Multifasta_test_result.txt 6-mers_Z_scores_fasta_DS.txt
 
+      - name: run kmer test
+        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6,8,10 -d 1,2,3 -f 0.01
+
+      - name: get kmer test
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/4bc4ab52d4fae25fe5edb65ca951df2e/raw/98764dc3d4081cf3b7f1ca45502e2489f4ed2837/6_mers_multi_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/94e01af9459e8ddf99c625322ad5b98e/raw/a48bcfce54b86a22880999c43d000887d498039e/8_mers_multi_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/b718763712e5269fb9460ece74d6f75d/raw/330cd8b540bc1a13c50c12e8765f20c00c5ed5fe/10_mers_multi_test.txt
+
+      - name: test difference between outputs
+        run: |
+              diff 6_mers_multi_test.txt 6-mers_Z_scores_fasta_DS.txt && \
+              diff 8_mers_multi_test.txt 8-mers_Z_scores_fasta_DS.txt && \
+              diff 10_mers_multi_test.txt 10-mers_Z_scores_fasta_DS.txt
+
       - name: hg19 genome download 
         run: cat get_hg19.script | bash
         working-directory: Genomes/hg19
@@ -54,7 +69,6 @@ jobs:
 
       - name: test difference between outputs 
         run: diff NFY_bed_result.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
-
       
         # Runs a set of commands using the runners shell
       - name: Compiling multifasta random tool
