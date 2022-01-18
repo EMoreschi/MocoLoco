@@ -22,7 +22,7 @@
 #include <memory>
 #include <chrono>
 using namespace std;
-
+/*
 #pragma once
 #include <algorithm>
 #include <thread>
@@ -34,7 +34,7 @@ using namespace std;
 #else
 #define PROFILE_SCOPE(name)
 #endif
-
+*/
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -69,7 +69,7 @@ TwoBit * tb;
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
-
+/*
 struct ProfileResult
 {
     string Name;
@@ -213,7 +213,7 @@ class Timer
 		chrono::time_point< chrono::high_resolution_clock> m_StartTimepoint;
 
 };
-
+*/
 
 class bed_class {         
 
