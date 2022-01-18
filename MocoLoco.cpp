@@ -3,7 +3,7 @@
 
 
 int main(int argc, char *argv[]){
-	Timer timer;
+	//Timer timer;
 	//Instrumentor::Get().BeginSession("MocoLoco");
 	{
 
@@ -870,8 +870,8 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 			
 			string oligo1 = it->first.second;	
 			string oligo2 = it->first.first;
-			unsigned int occ1 = it->second.second;
-			unsigned int occ2 = it->second.first;
+			//unsigned int occ1 = it->second.second;
+			//unsigned int occ2 = it->second.first;
 			
 			//Insert the pair RC + Oligo in the map "copy"
 			swap(it->second.first, it->second.second);
