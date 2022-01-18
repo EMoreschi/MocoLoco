@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]){
 	Timer timer;
-	//Instrumentor::Get().BeginSession("MocoLoco");
+	Instrumentor::Get().BeginSession("MocoLoco");
 	{
 
 		//If arguments number is 1 means that no input file has been inserted - display help
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 	
 		return 0;
 	}
-	//Instrumentor::Get().EndSession();
+	Instrumentor::Get().EndSession();
 }
 
 //Function to analyse the RAM usage of the tool, it returns the maximum amount of memory allocated by the program
@@ -367,7 +367,7 @@ void oligo_class::find_coordinate( unsigned int length, string chr_coord_GEP, un
 //Function to read BED and 2Bit files and create GEP (vector of bed class)
 void coordinator_class::GEP_creation(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
-	RAM_usage();
+	//RAM_usage();
 	cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
 
 	ifstream in(BED_FILE); 					
@@ -417,12 +417,12 @@ vector<vector<double>> coordinator_class::read_JASPAR(){
 
 	//For each line of the JASPAR file	
 	while(getline(file,line)){
-
+		
 		//If the line start with '>' character save the words into matrix_name string and into tf_name string
 		if(line[0]=='>'){
 
 			istringstream mystream(line);			
-			mystream >> matrix_name >> tf_name;
+			//mystream >> matrix_name >> tf_name;
 		}
 
 		//If the line does not start with '>' delete the '[',']' and 'A,T,C,G' characters, extract the scores and save them into a scores matrix
@@ -728,11 +728,11 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int
 void map_class::table_creation_vertical(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
 	if (MFASTA_FILE.size() ==0){
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [8] Counting all k-mers positional occurrences and making vertical maps  \n";
 	}
 	else{
-		RAM_usage();
+		//RAM_usage();
 		cout << "- [5] Counting all k-mers positional occurrences and making vertical maps  \n";
 	}
 	//Return the fisrt sequence to know the sequences length
@@ -784,7 +784,8 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 		
 		//The maps vector are cleaved to make a new analysis with new k
 		maps_vector_positions_plus.clear();
-		//maps_vector_positions_plus.shrink_to_fit();
+
+		RAM_usage();
 	}
 }
 
@@ -815,7 +816,7 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 	else{
 		tot_freq++;
 	}
-	
+	/*
 	//Creation of a pair of strings containing current oligo (first) and his reverse complement (second)
 	pair<string,string> pair_bases;
 	pair_bases.first= bases;
@@ -825,7 +826,7 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 	pair<string,string> pair_bases_reverse;
 	pair_bases_reverse.first= reverse_bases;
 	pair_bases_reverse.second= bases;
-	
+	*/
 	//Try to find the two pairs just created into plus map
 	it_plus = plus.find(make_pair(bases, reverse_bases));
 	it_plus_rev = plus.find(make_pair(reverse_bases, bases));
@@ -852,7 +853,7 @@ void map_class::vertical_kmer_count(string bases,map<pair<string,string>,pair<un
 	//Clear bases and reverse bases to avoid interference in the next oligo analysis 
 	bases.clear();
 	reverse_bases.clear();
-
+	
 }
 
 //Function to select the best pair (Oligo + RC or RC + Oligo) into vertical plus map
@@ -866,13 +867,15 @@ void map_class::select_best(map<pair<string,string>,pair<unsigned int,unsigned i
 
 		//If Oligo occurrences are less then RC occurrences in FWD strand
 		if(it->second.first < it->second.second){
-
+			
 			string oligo1 = it->first.second;	
 			string oligo2 = it->first.first;
 			unsigned int occ1 = it->second.second;
 			unsigned int occ2 = it->second.first;
 			
 			//Insert the pair RC + Oligo in the map "copy"
+			//swap(it->second.first, it->second.second);
+			//swap(oligo1, oligo2);
 			copy.insert({{oligo1,oligo2},{occ1,occ2}});		
 		}
 
@@ -1158,7 +1161,6 @@ void p_value_class::sorting_p_value(){
 		
 		//Clear the KNT vector to mantain its size (need to be formed by 4 elements(K,N1,N2,T))
 		KNT.clear();
-		//KNT.shrink_to_fit();
 	}
 }
 
@@ -1404,7 +1406,7 @@ bool hamming_class::is_similar_oligo(string oligo_1, string oligo_2, unsigned in
 	//Counter to count the character differences 
 	unsigned int counter = 0;
 	
-	//For each character of the oligos (which have the same dimention)
+	//For each character of the oligos (which have the same dimension)
 	for(unsigned int i = 0; i<oligo_1.size() && counter <= distance; i++){
 		
 		//If the letter is different -> increase the counter
@@ -1665,7 +1667,7 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int kmer, unsigned
 	for(unsigned int i = 0; i < exp_max; i++){ 
 		EM_Epart(GEP, kmer, position);
 		EM_Mpart(position, kmer);
-		matrix_class NORM(PWM_hamming);
+		matrix_class NORM(PWM_hamming, true);
 		PWM_hamming = NORM.return_norm_matrix();
 		
 		like_ratio_map.clear();

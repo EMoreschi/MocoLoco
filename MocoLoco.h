@@ -69,7 +69,7 @@ TwoBit * tb;
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
-/*
+
 struct ProfileResult
 {
     string Name;
@@ -94,7 +94,7 @@ public:
     {
     }
 
-    void BeginSession(const string& name, const string& filepath = "multifasta.json")
+    void BeginSession(const string& name, const string& filepath = "all.json")
     {
         m_OutputStream.open(filepath);
         WriteHeader();
@@ -183,7 +183,7 @@ private:
     bool m_Stopped;
 };
 
-*/
+
 class Timer
 {
 	public:
@@ -269,8 +269,7 @@ class bed_class {
 class matrix_class {
 
 	private: 
-		string matrix_name;
-		string tf_name;
+	
 		vector<vector<double>> matrix;
 		vector<vector<double>> norm_matrix;
 		vector<vector<double>> inverse_norm_matrix;
@@ -288,14 +287,10 @@ class matrix_class {
 
 	public:
 
-		matrix_class(vector<vector<double>> &mat, string name, string tf){
-			
-			matrix = mat;	
-			matrix_name = name;	
-			tf_name = tf;
+		matrix_class(vector<vector<double>> &mat){
 
 			//Function to normalize the matrix scores and add a pseudocount
-			matrix_normalization_pseudoc(matrix);
+			matrix_normalization_pseudoc(mat);
 
 			//Function to normalize again the matrix after pseudocount addition
 			matrix_normalization(norm_matrix);
@@ -307,12 +302,10 @@ class matrix_class {
 			inverse_matrix_log = reverse_matrix(matrix_log);
 		}
 
-		matrix_class(vector<vector<double>> mat){
-			
-			matrix = mat;	
-			
+		matrix_class(vector<vector<double>> mat, bool EM){
+	
 			//Function to normalize the matrix scores and add a pseudocount
-			matrix_normalization_pseudoc(matrix);
+			matrix_normalization_pseudoc(mat);
 
 			//Function to normalize again the matrix after pseudocount addition
 			matrix_normalization(norm_matrix);
@@ -353,6 +346,7 @@ class oligo_class{
 		void scores_normalization();
 
 	public:
+	
 		oligo_class(vector<vector<double>> &matrix, string &sequence, string chr_coord_GEP, unsigned int start_coord_GEP, char strand_sign){
 
 //			global_sequence = sequence;
@@ -398,8 +392,6 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 
 	private:
 		vector<vector<double>> matrix;
-		string matrix_name;
-		string tf_name;
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
 		vector<oligo_class> oligos_vector;
@@ -421,7 +413,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			read_JASPAR();
 
 			//Creating matrix class: input matrix scores, name and tf matrix name
-			matrix_class M(matrix, matrix_name, tf_name);
+			matrix_class M(matrix);
 
 			//matrix_log and inverse_matrix_log calculated are returned from Matrix class to be saved here --> These are the two matrices on which the analysis will be performed
 			matrix_log = M.return_log_matrix();
@@ -682,7 +674,7 @@ class z_test_class{
 			local_pos = local_p;
 
 			//Calling matrix class constructor passing PWM_hamming matrix
-			matrix_class PWM_hamming_mat(PWM_hamming, " ", " ");
+			matrix_class PWM_hamming_mat(PWM_hamming);
 
 			//Return from matrix class the log_PWM_hamming matrix
 			matrix_log = PWM_hamming_mat.return_log_matrix();
