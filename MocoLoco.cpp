@@ -3,8 +3,8 @@
 
 
 int main(int argc, char *argv[]){
-	//Timer timer;
-	//Instrumentor::Get().BeginSession("MocoLoco");
+	Timer timer;
+	Instrumentor::Get().BeginSession("MocoLoco");
 	{
 
 		//If arguments number is 1 means that no input file has been inserted - display help
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 	
 		return 0;
 	}
-	//Instrumentor::Get().EndSession();
+	Instrumentor::Get().EndSession();
 }
 
 //Function to analyse the RAM usage of the tool, it returns the maximum amount of memory allocated by the program
@@ -45,7 +45,7 @@ void  GEP_path(){
 		coordinator_class C; 
 		twobit_close(tb);
 		//Create a .fasta file to check if the coordinates and the sequences extracted are correct
-		C.print_debug_GEP(C.GEP);
+		C.print_GEP(C.GEP);
 		
 		//Creating map class: input are GEP vector created from bed-twobit analysis, kmers, hamming distance
 		map_class MAP(C.GEP,kmers,dist);
@@ -567,14 +567,13 @@ void multifasta_class::extract_sequences(){
 	//if in line there is the FASTA sequence --> line is saved in current_sequence variable --> then pass to next line
 	//if in line there is the header (but not the first line) --> current_sequence previously filled by FASTA is saved in sequences vector (a vector of strings) --> then current_sequence is clean
 	while(getline(file,line)){
-		
-		
+
 		if(line[0] == '>' && !first_line){
 			
 			
 			sequences.emplace_back(current_sequence);
 			current_sequence.clear();
-			//current_sequence.shrink_to_fit();
+			
 		}
 
 		else if (!first_line){
@@ -671,12 +670,17 @@ void map_class::table_creation_orizzontal(vector<bed_class> &GEP){
 				
 				//The current k-length oligo is saved into bases string
 				string bases = sequence.substr(i,kmers_vector[k]);
-
+				kmer_oligo.emplace_back(bases);
+				
 				//Function to fill orizzontal plus/minus maps --> current oligo "bases" is passed as parameter to be inserted into the maps
 				or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
 			}
 		}
-
+		//sort(kmer_oligo.begin(), kmer_oligo.end());
+  		//kmer_oligo.erase(unique(kmer_oligo.begin(), kmer_oligo.end()), kmer_oligo.end());
+		for (unsigned int i = 0; i < kmer_oligo.size(); i++){
+			cout << kmer_oligo[i] << " " << count(kmer_oligo.begin(), kmer_oligo.end(), kmer_oligo[i])<< endl;
+		}
 		//Once map is created it is saved into a vector of map --> then an analysis with new k value (if any) is performed
 		orizzontal_plus_debug.emplace_back(orizzontal_plus);
 		orizzontal_minus_debug.emplace_back(orizzontal_minus);
@@ -693,7 +697,7 @@ void map_class::or_ver_kmer_count(string bases,unordered_map<string,unsigned int
 	//PROFILE_FUNCTION();
 	unordered_map<string,unsigned int>::iterator it_plus;
 	unordered_map<string,unsigned int>::iterator it_minus;
-	
+
 	//Finding the oligo "bases" into the orizzontal plus map (FWD strand)
 	it_plus = plus.find(bases);
 
@@ -785,7 +789,7 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 		//The maps vector are cleaved to make a new analysis with new k
 		maps_vector_positions_plus.clear();
 
-		RAM_usage();
+		//RAM_usage();
 	}
 }
 
@@ -1014,7 +1018,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 			double Frequence_1 = HAMMING_MATRIX[i][j].return_FREQUENCE_1();
 			
 			//If the local_maxima filtering is enabled
-			if(local_maxima_grouping == 1){
+			if(local_maxima_grouping == true){
 				
 				
 				double Frequence_1_prev = 0;
@@ -1512,7 +1516,7 @@ void hamming_class::PWM_hamming_creation(){
 
 void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class> &GEP) 
 {
-	
+	/*
 	cout << "Starting PWM: \n";
 	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
@@ -1520,24 +1524,24 @@ void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class
 		}
 		cout << endl;
 	}
-	cout << endl;
-	//PROFILE_FUNCTION();
-	cout << "EM_Ipwm:\n";
+	cout << endl;*/
+	PROFILE_FUNCTION();
+	//cout << "EM_Ipwm:\n";
 	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
 			PWM_hamming[i][j] = PWM_hamming[i][j]/GEP.size();
-			cout << PWM_hamming[i][j] << "\t";
+	//		cout << PWM_hamming[i][j] << "\t";
 		}
-		cout << endl;
+	//	cout << endl;
 	}
-	cout << endl;
+	//cout << endl;
 
 }
 
 void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned int position) 
 {
-	//PROFILE_FUNCTION();
-	
+	PROFILE_FUNCTION();
+	/*
 	cout << "---------------------------------" << endl;
 	cout << "#POSITION " << position + 1 << " before Epart"<< endl;
 	cout << "---------------------------------" << endl;
@@ -1546,7 +1550,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned
 			cout << PWM_hamming[i][j] << "\t";
 		}
 		cout << endl;
-	}
+	}*/
 	double sum = 0;
 	for(unordered_map<string, unsigned int>::iterator it = orizzontal_map_plus_copy.begin(); it != orizzontal_map_plus_copy.end(); it++){
 		sum = sum + it->second;
@@ -1566,7 +1570,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned
 
 			for (unsigned int k = 0; k < kmer; k++){
 
-				switch(oligo_vertical[k]){
+				switch(it->second.first[k]){
 
 					case 'A':			
 						P_oligo *= PWM_hamming[0][k];
@@ -1598,8 +1602,8 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned
 }
 
 void hamming_class::EM_Mpart(unsigned int position, unsigned int kmer){
-	//PROFILE_FUNCTION();
-	
+	PROFILE_FUNCTION();
+	/*
 	cout << "---------------------------------" << endl;
 	cout << "#POSITION " << position + 1 << " before Mpart"<< endl;
 	cout << "---------------------------------" << endl;
@@ -1608,7 +1612,7 @@ void hamming_class::EM_Mpart(unsigned int position, unsigned int kmer){
 			cout << PWM_hamming[i][j] << "\t";
 		}
 		cout << endl;
-	}
+	}*/
     vector<double> sum_vect;	
 	for (unsigned int k = 0; k < kmer; k++){
 		double sum = 0;
@@ -1648,22 +1652,22 @@ void hamming_class::EM_Mpart(unsigned int position, unsigned int kmer){
 		}
 		
 	}
-	cout << "---------------------------------" << endl;
-	cout << "#POSITION " << position + 1 << " after Mpart"<< endl;
-	cout << "---------------------------------" << endl;
-	for (unsigned int i = 0; i< sum_vect.size(); i++){
-		cout << "LR" << i +1 <<" total: " << sum_vect[i] << endl;
-	}
-	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-			cout << PWM_hamming[i][j] << "\t";
-		}
-		cout << endl;
-	}
+	//cout << "---------------------------------" << endl;
+	//cout << "#POSITION " << position + 1 << " after Mpart"<< endl;
+	//cout << "---------------------------------" << endl;
+	//for (unsigned int i = 0; i< sum_vect.size(); i++){
+	//	cout << "LR" << i +1 <<" total: " << sum_vect[i] << endl;
+	//}
+	//for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+	//	for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+	//		cout << PWM_hamming[i][j] << "\t";
+	//	}
+	//	cout << endl;
+	//}
 }
 
 void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int kmer, unsigned int position){
-	//PROFILE_FUNCTION();
+	PROFILE_FUNCTION();
 	for(unsigned int i = 0; i < exp_max; i++){ 
 		EM_Epart(GEP, kmer, position);
 		EM_Mpart(position, kmer);
@@ -1675,12 +1679,12 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int kmer, unsigned
 	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
 			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
 	        	PWM_hamming[i][j] = round(PWM_hamming[i][j]*GEP.size());
-				cout << PWM_hamming[i][j] << "\t";
+		//		cout << PWM_hamming[i][j] << "\t";
 			}
-			cout << endl;
+		//	cout << endl;
 		}
-		cout << endl;
-		cout << "---------------------------------------" << endl;
+		//cout << endl;
+		//cout << "---------------------------------------" << endl;
 		RAM_usage();
 }
 
@@ -2027,7 +2031,7 @@ void matrix_class::print_debug_matrix(vector<vector<double>> matrix, string type
 }
 */
 //Debug function: Print sequences and coordinates from GEP vector into a .fasta file to check if the sequences extraction is correct
-void coordinator_class::print_debug_GEP(vector<bed_class> &GEP){
+void coordinator_class::print_GEP(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
 	//Twobit_JASPAR_Bed used to create GEP vector saved into alias file to name the outputs	
 	alias_file = (TWOBIT_FILE.erase(0,TWOBIT_FILE.find_last_of("/")+1)+"_"+ JASPAR_FILE.erase(0,JASPAR_FILE.find_last_of("/")+1)+"_"+ BED_FILE.erase(0,BED_FILE.find_last_of("/")+1));
@@ -2576,6 +2580,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 		outfile << "The pvalue calculated from the Z score is: " << Zpvalue<< endl << endl;
 		outfile << "-------------------------------------------------------------------" << endl;	
 	}
+	
 }
 
 //Print debug for PWM_hamming outfile -> Selection of output filename
@@ -2724,7 +2729,7 @@ void command_line_parser(int argc, char** argv){
 			case 'k' : kmers.clear();
 				   kmers = string(optarg);
 				   break;
-			case 'a' : local_maxima_grouping = 0;
+			case 'a' : local_maxima_grouping = false;
 				   break;
 			case 'r' : refining_matrix = 1;
 				   break;

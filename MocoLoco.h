@@ -22,7 +22,7 @@
 #include <memory>
 #include <chrono>
 using namespace std;
-/*
+
 #pragma once
 #include <algorithm>
 #include <thread>
@@ -34,7 +34,7 @@ using namespace std;
 #else
 #define PROFILE_SCOPE(name)
 #endif
-*/
+
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -49,7 +49,7 @@ string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;		
 double freq_treshold = 0;
-bool local_maxima_grouping = 1;
+bool local_maxima_grouping = true;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
 bool err = false;
@@ -69,7 +69,7 @@ TwoBit * tb;
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
-/*
+
 struct ProfileResult
 {
     string Name;
@@ -213,7 +213,7 @@ class Timer
 		chrono::time_point< chrono::high_resolution_clock> m_StartTimepoint;
 
 };
-*/
+
 
 class bed_class {         
 
@@ -439,7 +439,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 	
 		vector<bed_class> GEP;
 		
-		void print_debug_GEP(vector <bed_class>&);
+		void print_GEP(vector <bed_class>&);
 };
 
 class multifasta_class{
@@ -508,7 +508,7 @@ class p_value_class{
 		void print_debug_p_value_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int, ofstream&, unsigned int);
 		void print_debug_occurrences_DS(map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int, ofstream&, unsigned int, vector<double>);
 		void print_debug_occurrences_SS(map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int, ofstream&, unsigned int, vector<double>);
-
+		friend class map_class;
 	public:
 
 		p_value_class(map<pair<string,string>,pair<unsigned int,unsigned int>> &pair_map, unordered_map<string,unsigned int> &orizzontal_map, unsigned int t, unsigned int position, ofstream &outfile, unsigned int freq){
@@ -731,7 +731,8 @@ class map_class{
 		vector<vector<hamming_class>> HAMMING_MATRIX;
 		vector<z_test_class> Z_TEST_VECTOR;
 		vector<vector<z_test_class>> Z_TEST_MATRIX;
-
+		vector<string> kmer_oligo;
+		vector<string> kmer_unique;
 		vector<unsigned int> generic_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>&);
 		void table_creation_vertical(vector<bed_class>&);
