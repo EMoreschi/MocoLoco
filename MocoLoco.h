@@ -69,7 +69,7 @@ TwoBit * tb;
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
-
+/*
 struct ProfileResult
 {
     string Name;
@@ -183,7 +183,7 @@ private:
     bool m_Stopped;
 };
 
-
+*/
 class Timer
 {
 	public:
@@ -224,7 +224,9 @@ class bed_class {
 		unsigned int end_coord;
 		string sequence;
 		bool flag;
-		
+		friend class coordinator_class;
+		friend class z_test_class;
+		friend class map_class;
 
 		void read_line(string);
 		//void flag_control(unsigned int, unsigned int);
@@ -256,13 +258,8 @@ class bed_class {
 			extract_seq(tb, n_line);
 		}
 
-		string return_sequence(bed_class);
-		unsigned int return_start_coord_GEP();
 		void centering_function(unsigned int, unsigned int, int, const unsigned int);
 		void extract_seq(TwoBit*, unsigned int);
-		unsigned int return_start_coord();
-		unsigned int return_end_coord();
-		string return_chr_coord();
 
 };
 
@@ -344,7 +341,8 @@ class oligo_class{
 		void find_coordinate(unsigned int, string, unsigned int);
 		void find_best_sequence(string, unsigned int);
 		void scores_normalization();
-
+		friend class coordinator_class;
+		friend class z_test_class;
 	public:
 	
 		oligo_class(vector<vector<double>> &matrix, string &sequence, string chr_coord_GEP, unsigned int start_coord_GEP, char strand_sign){
@@ -381,11 +379,8 @@ class oligo_class{
 			scores_normalization();
 		}
 
-		void shifting(vector<vector<double>>&, string&/*, unsigned int*/);
-		//void oligos_vector_debug();
-		unsigned int return_start_coord_oligo();
-		double return_best_score();
-		vector<double> return_oligo_scores();
+		void shifting(vector<vector<double>>&, string&);
+
 };
 
 class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and Oligos_vector
@@ -535,15 +530,6 @@ class p_value_class{
 			//2. Output file with oligos ordered by lowest p_value
 			checking_ordering(pair_map, position, outfile, freq);		
 		}
-
-		multimap<double,pair<string,vector<unsigned int>>> return_p_value_KNT();
-		multimap<pair<unsigned int,unsigned int>,pair<string,string>> return_vertical_multimap();
-		unsigned int return_sum_top_N();
-		vector<unsigned int> return_K_vec();
-		vector<unsigned int> return_N1_vec();
-		vector<unsigned int> return_N2_vec();
-		unsigned int return_T();
-		vector<double> return_p_value_vec();
 };
 
 class hamming_class{
@@ -567,6 +553,7 @@ class hamming_class{
         unordered_map<string,unsigned int> orizzontal_map_plus_copy;
 		map<string,double> like_ratio_map;
 		pair<double, double> FREQUENCE;
+		friend class map_class;
 
 		void find_best_oligos();
 		void checking_best_oligo(unsigned int);
@@ -633,25 +620,13 @@ class hamming_class{
 				EM_cycle(GEP, kmer, position);
 			}
 		}
-		
-		string return_real_best_oligo();
-		unsigned int return_similar_oligo_size();
-		vector<vector<double>> return_PWM_hamming();
-		double return_FREQUENCE_1();
 };
 
 class z_test_class{
 
 	private:
                 //zscores and PWM pvalues
-		double z_score;
-        double Zpvalue; 
 
-		double global_mean;
-		double global_dev_std;
-		double local_mean;
-		double local_dev_std;
-		unsigned int local_pos;
 		vector<vector<double>> matrix_log;
 		vector<vector<double>> inverse_matrix_log;
 		vector<double> oligo_scores_orizzontal_FWD;
@@ -659,7 +634,8 @@ class z_test_class{
 		vector<double> oligo_scores_orizzontal_BEST;
 		vector<double> all_global_scores;
 		vector<double> all_local_scores;
-
+		friend class map_class;
+		
 		void print_debug_oligo_vec(vector<vector<double>>&);	
 		void oligos_vector_creation_PWM(vector<bed_class>&);
 		void z_score_parameters_calculation();
@@ -668,7 +644,14 @@ class z_test_class{
 
 
 	public:
+		double z_score;
+        double Zpvalue; 
 
+		double global_mean;
+		double global_dev_std;
+		double local_mean;
+		double local_dev_std;
+		unsigned int local_pos;
 		z_test_class(vector<vector<double>> &PWM_hamming, vector<bed_class> &GEP, unsigned int local_p, vector<unsigned int> kmers_vector, vector<vector<hamming_class>> &HAMMING_MATRIX){	
 			
 			local_pos = local_p;
@@ -694,18 +677,7 @@ class z_test_class{
 			//Calculating z-score and p-value from it
 			z_score_calculation();
 			
-			//print_debug_oligo_vec(PWM_hamming);
-			
 		}
-		
-		unsigned int return_local_pos();
-		double return_global_mean();
-		double return_local_mean();
-		double return_global_std_dev();
-		double return_local_std_dev();
-		double return_Zpvalue();
-		double return_z_score();
-
 };
 
 class map_class{
@@ -807,9 +779,7 @@ class map_class{
 			Outfile_PWM_matrices();
 			Outfile_Z_score_values();
 		}
-		
-		vector<vector<z_test_class>> return_z_test_matrix();
-		unordered_map<string, unsigned int> return_horizontal_map_plus();
+
 };
 
 void GEP_path();
