@@ -658,9 +658,6 @@ void map_class::table_creation_orizzontal(vector<bed_class> &GEP){
 		//For every sequence contained into GEP vector
 		for(unsigned int j=0; j<GEP.size(); j++){
 			
-			//Extract the FASTA sequence from each bed class in GEP
-			//string sequence = GEP[j].sequence;
-			
 			//Extracted and analyzed all words of length k that are found by scrolling through the sequence
 			for(unsigned int i=0; i < (GEP[j].sequence.size() - kmers_vector[k] + 1); i++){
 				
@@ -672,8 +669,6 @@ void map_class::table_creation_orizzontal(vector<bed_class> &GEP){
 				or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
 			}
 		}
-		//sort(kmer_oligo.begin(), kmer_oligo.end());
-  		//kmer_oligo.erase(unique(kmer_oligo.begin(), kmer_oligo.end()), kmer_oligo.end());
 
 		//Once map is created it is saved into a vector of map --> then an analysis with new k value (if any) is performed
 		orizzontal_plus_debug.emplace_back(orizzontal_plus);
@@ -733,8 +728,6 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP){
 		//RAM_usage();
 		cout << "- [5] Counting all k-mers positional occurrences and making vertical maps  \n";
 	}
-	//Return the fisrt sequence to know the sequences length
-	//string seq_length = GEP[0].sequence;
 
 	//A vector of map is created for each k-mer inserted as input
 	for(unsigned int k=0; k<kmers_vector.size(); k++){
@@ -954,9 +947,6 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP){
 		//For each position in sequence
 		for(unsigned int i=0; i<P_VALUE_MATRIX[j].size(); i++){
 			
-			//The multimap corresponding to the current kmer and position is returned from the P-val matrix
-			//multimap<pair<unsigned int, unsigned int>, pair<string,string>> vertical_multimap = P_VALUE_MATRIX[j][i].vertical_multimap;
-
 			//Create a hamming_class H passing the vertical multimap, the distance inserted as input, the current position i, the number of different oligos (contained in tot_freq_matrix), the orizzontal matrix, the outfile to print the Output file and finally the GEP (which contains the sequences)
 			hamming_class H(P_VALUE_MATRIX[j][i].vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, GEP, kmers_vector);
 
@@ -1192,10 +1182,10 @@ void p_value_class::checking_ordering(map<pair<string,string>,pair<unsigned int,
 }
 
 //Scrolling the vertical positional multimap find the best oligo for occurrences. If more than one is present selecting the oligo which has more hamming neighbours.
-void hamming_class::find_best_oligos(){
+void hamming_class::find_best_oligos(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& vertical_multimap){
 	//PROFILE_FUNCTION();
 	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin();
-	
+
 	//Saving the best oligo occurrences extracting from the last multimap element (higher first value) its occurrences -> working with multimap allows to have always the max occurrences in the last position of the map
 	if(DS==1){
 		real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
@@ -1203,7 +1193,6 @@ void hamming_class::find_best_oligos(){
 	else{
 		real_best_oligo_occurrences = it_rev->first.first;
 	}
-	
 	//Flag and counter to control if the function does more cycle than multimap size (to avoid infinite loop as happened)
 	bool flag = 1;
 	unsigned int counter = 1;
@@ -1242,7 +1231,7 @@ void hamming_class::find_best_oligos(){
 }
 
 //Checking if there is one or more best oligos
-void hamming_class::checking_best_oligo(unsigned int distance){
+void hamming_class::checking_best_oligo(unsigned int distance, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap){
 	//PROFILE_FUNCTION();
 	//If there is only one best oligo for occurrences
 	if(best_oligos.size() == 1){
@@ -1251,23 +1240,23 @@ void hamming_class::checking_best_oligo(unsigned int distance){
 		real_best_oligo = best_oligos[0];
 
 		//Proceed to find his hamming distance neighbours
-		find_distanced_oligos(real_best_oligo,distance);	
+		find_distanced_oligos(real_best_oligo,distance, vertical_multimap);	
 	}
 	
 	//else means that there are more than one best oligo for occurrences
 	else{
 		
 		//Set the real best oligo after a selection function
-		real_best_oligo = select_real_best_oligo(distance);
+		real_best_oligo = select_real_best_oligo(distance, vertical_multimap);
 
 		//Proceed to find his hamming distance neighbours
-		find_distanced_oligos(real_best_oligo,distance);	
+		find_distanced_oligos(real_best_oligo,distance, vertical_multimap);	
 	}
 
 }
 
 //Function for find the real_best_oligo (selecting the one who has more neighbours than the others) if more than one best oligo has been found
-string hamming_class::select_real_best_oligo(unsigned int distance){
+string hamming_class::select_real_best_oligo(unsigned int distance, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap){
 	//PROFILE_FUNCTION();
 	unsigned int max_similarity;
 	unsigned int index;
@@ -1276,7 +1265,7 @@ string hamming_class::select_real_best_oligo(unsigned int distance){
 	for(unsigned int i=0; i<best_oligos.size(); i++){
 		
 		//Find all of its hamming neighbours
-		find_distanced_oligos(best_oligos[i], distance);
+		find_distanced_oligos(best_oligos[i], distance, vertical_multimap);
 		
 		//If the analysis is on the first best oligo -> the max similarity (that is the max number of neighbour) corresponds to its similar_oligos number
 		if(i==0){
@@ -1305,17 +1294,17 @@ string hamming_class::select_real_best_oligo(unsigned int distance){
 }
 
 //Function to perform a secondary hamming --> find of distanced d hamming from the similar oligos found
-void hamming_class::find_secondary_hamming(unsigned int distance, unsigned int number_first_hamming){
+void hamming_class::find_secondary_hamming(unsigned int distance, unsigned int number_first_hamming,multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap){
 	//PROFILE_FUNCTION();
 	//For each similar oligo
 	for(unsigned int neighbour=0; neighbour < number_first_hamming; neighbour++){
 
-		find_distanced_oligos(similar_oligos[neighbour],distance);
+		find_distanced_oligos(similar_oligos[neighbour],distance, vertical_multimap);
 	}
 }
 
 //Function to find oligo's hamming neighbours
-void hamming_class::find_distanced_oligos(string best, unsigned int distance){
+void hamming_class::find_distanced_oligos(string best, unsigned int distance, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap){
 	//PROFILE_FUNCTION();
 	bool is_similar;
 
@@ -1516,12 +1505,12 @@ void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class
 	}
 }
 
-void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned int position) 
+void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned int position, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap) 
 {
 	//PROFILE_FUNCTION();
 
 	double sum = 0;
-	for(unordered_map<string, unsigned int>::iterator it = orizzontal_map_plus_copy.begin(); it != orizzontal_map_plus_copy.end(); it++){
+	for(unordered_map<string, unsigned int>::iterator it = orizzontal_map_plus.begin(); it != orizzontal_map_plus.end(); it++){
 		sum = sum + it->second;
 	}
 	for(multimap<pair<unsigned int, unsigned int>, pair<string,string>>::iterator it = vertical_multimap.begin(); it != vertical_multimap.end(); it++)
@@ -1533,7 +1522,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned
 			double P_oligo = 1;
 			oligo_vertical = it->second.first;
 			int horizontal_occurences;
-			horizontal_occurences = orizzontal_map_plus_copy.find(oligo_vertical)->second;
+			horizontal_occurences = orizzontal_map_plus.find(oligo_vertical)->second;
 
 			P_bg = horizontal_occurences/sum;
 
@@ -1612,10 +1601,10 @@ void hamming_class::EM_Mpart(unsigned int position, unsigned int kmer){
 	}
 }
 
-void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int kmer, unsigned int position){
+void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int kmer, unsigned int position,multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap){
 	//PROFILE_FUNCTION();
 	for(unsigned int i = 0; i < exp_max; i++){ 
-		EM_Epart(GEP, kmer, position);
+		EM_Epart(GEP, kmer, position, vertical_multimap);
 		EM_Mpart(position, kmer);
 		matrix_class NORM(PWM_hamming, true);
 		PWM_hamming = NORM.return_norm_matrix();

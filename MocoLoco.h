@@ -315,7 +315,6 @@ class matrix_class {
 		vector<vector<double>> return_matrix();
 };
 
-
 class oligo_class{
 
 	private:
@@ -537,7 +536,6 @@ class hamming_class{
 	private:
 
 
-		multimap<pair<unsigned int,unsigned int>, pair<string,string>> vertical_multimap;
 		vector<string> best_oligos;
 		string real_best_oligo;
 		unsigned int real_best_oligo_occurrences;
@@ -550,16 +548,17 @@ class hamming_class{
 		double FREQUENCE_2;
 		vector<vector<double>> PWM_hamming;
 		vector<vector<double>> norm_matrix;
-        unordered_map<string,unsigned int> orizzontal_map_plus_copy;
 		map<string,double> like_ratio_map;
 		pair<double, double> FREQUENCE;
+		unordered_map<string,unsigned int> orizzontal_map_plus;
 		friend class map_class;
+		friend class p_value_class;
 
-		void find_best_oligos();
-		void checking_best_oligo(unsigned int);
-		void find_secondary_hamming(unsigned int, unsigned int);
-		void find_distanced_oligos(string, unsigned int);
-		string select_real_best_oligo(unsigned int);
+		void find_best_oligos(multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
+		void checking_best_oligo(unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
+		void find_secondary_hamming(unsigned int, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
+		void find_distanced_oligos(string, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
+		string select_real_best_oligo(unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
 		bool is_similar_oligo(string, string, unsigned int);
 		bool checking_neighbour_presence(string);
 		void print_debug_hamming(unsigned int, ofstream&);
@@ -569,30 +568,28 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, unsigned int kmer,unsigned int);
+		void EM_Epart(vector<bed_class>&, unsigned int kmer,unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
 		void EM_Mpart(unsigned int,unsigned int kmer);
-		void EM_cycle(vector<bed_class>&, unsigned int kmer, unsigned int);
+		void EM_cycle(vector<bed_class>&, unsigned int kmer, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
 
 	public:
 
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& v_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int>& orizzontal_map_plus, unordered_map<string,unsigned int>& orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
+		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int>& orizzontal_map_plus, unordered_map<string,unsigned int>& orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
 			
 			//Saving the vertical multimap passed to constructor locally
-			vertical_multimap = v_multimap;
-			orizzontal_map_plus_copy = orizzontal_map_plus;
 			kmer = kmers_vector[0];
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
-			find_best_oligos();
+			find_best_oligos(vertical_multimap);
 
 			//Checking if best oligo is one or more. If more, do the selection to find the real_best_oligo, else proceed to find hamming neighbours
-			checking_best_oligo(distance);
-			
+			checking_best_oligo(distance, vertical_multimap);
+
 			//Save the oligo size --> to avoid infinite cycle for its continous updating in the next function	
 			number_first_hamming = similar_oligos.size();	
 
 			if (refining_matrix == 1){
 				//Finding hamming of all similar oligos
-				find_secondary_hamming(distance, number_first_hamming);	
+				find_secondary_hamming(distance, number_first_hamming, vertical_multimap);	
 			}
 			
 			//Adding the real best oligo to similar oligos vector (created starting from itself)
@@ -617,7 +614,7 @@ class hamming_class{
 			if (exp_max > 0){
 
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, kmer, position);
+				EM_cycle(GEP, kmer, position, vertical_multimap);
 			}
 		}
 };
