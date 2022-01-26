@@ -124,7 +124,7 @@ void bed_class::extract_seq(TwoBit* tb, unsigned int n_line){
 //Function useful to normalize matrix scores and adding a pseudocount to them
 void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> &matrix){  						//CHANGE: Possible use of reference
 	//PROFILE_FUNCTION();
-	double normalized_score;
+	//double normalized_score;
 
 	//Calculate and save the scores column sum into a vector to perform a faster normalization step	
 	vector<double> col_sum = find_col_sum(matrix);
@@ -134,8 +134,8 @@ void matrix_class::matrix_normalization_pseudoc(vector<vector<double>> &matrix){
 		vector<double> normalized_matrix_line;
 		for (unsigned int j = 0; j < matrix[i].size(); j++){
 
-			normalized_score = matrix[i][j]/col_sum[j];
-			normalized_matrix_line.emplace_back(normalized_score + pseudoc);
+			//normalized_score = matrix[i][j]/col_sum[j];
+			normalized_matrix_line.emplace_back(matrix[i][j]/col_sum[j] + pseudoc);
 		}
 
 		norm_matrix.emplace_back(normalized_matrix_line);
@@ -182,12 +182,12 @@ void matrix_class::matrix_logarithmic(vector<vector<double>> &matrix){									/
 	for(unsigned int i=0; i < matrix.size(); i++){
 		
 		vector<double> log_matrix_line;
-		double log_scores;
+		//double log_scores;
 
 		for(unsigned int j=0; j < norm_matrix[i].size(); j++){
 
-			log_scores = log(norm_matrix[i][j]);
-			log_matrix_line.emplace_back(log_scores);
+			//log_scores = log(norm_matrix[i][j]);
+			log_matrix_line.emplace_back(log(norm_matrix[i][j]));
 		}
 
 		matrix_log.emplace_back(log_matrix_line);
@@ -663,7 +663,7 @@ void map_class::table_creation_orizzontal(vector<bed_class> &GEP){
 				
 				//The current k-length oligo is saved into bases string
 				string bases = GEP[j].sequence.substr(i,kmers_vector[k]);
-				kmer_oligo.emplace_back(bases);
+				//kmer_oligo.emplace_back(bases);
 				
 				//Function to fill orizzontal plus/minus maps --> current oligo "bases" is passed as parameter to be inserted into the maps
 				or_ver_kmer_count(bases,orizzontal_plus,orizzontal_minus);
@@ -1087,7 +1087,7 @@ void p_value_class::filling_KNT_vectors(unordered_map<string,unsigned int> &oriz
 
 			K = it_rev->first.first;
 		}
-
+		
 		//searching the current oligo in orizzontal map to find N1 value (oligo occurrences along all the sequences positions)
 		it_N1_plus = orizzontal_map.find(it_rev->second.first);
 		it_N1_minus = orizzontal_map.find(it_rev->second.second);
@@ -1416,7 +1416,8 @@ double hamming_class::frequence_1_calculation(unsigned int freq){
 
 	}
 
-	return tot_similar_occurrences/freq;
+	FREQUENCE_1 = tot_similar_occurrences/freq;
+	return FREQUENCE_1;
 
 }
 
@@ -1425,8 +1426,8 @@ double hamming_class::frequence_2_calculation(unordered_map<string,unsigned int>
 	//PROFILE_FUNCTION();
 
 	unsigned int total_orizzontal_occurrences = finding_orizzontal_occurrences(orizzontal_map_plus, orizzontal_map_minus);
-	return tot_similar_occurrences/total_orizzontal_occurrences;
-
+	FREQUENCE_2 = tot_similar_occurrences/total_orizzontal_occurrences;
+	return FREQUENCE_2;
 }
 
 //Function to find total number of best+hamming occurrences in sequences --> useful to calculate Freq_2

@@ -370,7 +370,6 @@ class oligo_class{
 		
 		oligo_class(vector<vector<double>> &matrix, string &sequence){
 			
-//			global_sequence = sequence;
 			find_minmax(matrix);
 			
 			shifting(matrix, sequence);
@@ -510,7 +509,7 @@ class p_value_class{
 			T = t;
 			
 			//From the vertical positional map (composed by two pair) a vertical multimap is generated to sorting oligos by their occurrences	
-			vertical_multimap = multimap_creation(pair_map);
+			multimap_creation(pair_map);
 
 			//N2 parameter found doing the sum of the occurrences of all the oligos along the sequences (sum of the occurrences in the horizontal map) -> The real N2 value is calculated subsequently subtracting N1 value
 			N2_calculation(orizzontal_map);
@@ -577,7 +576,7 @@ class hamming_class{
 		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int>& orizzontal_map_plus, unordered_map<string,unsigned int>& orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
 			
 			//Saving the vertical multimap passed to constructor locally
-			kmer = kmers_vector[0];
+			//kmer = kmers_vector[0];
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
 			find_best_oligos(vertical_multimap);
 
@@ -600,10 +599,10 @@ class hamming_class{
 			
 			
 			//Calculating the frequence 1 (total of similar occurrences / total of possible oligos in the position) and saving it to FREQUENCE_1 variable 
-			FREQUENCE_1 = frequence_1_calculation(freq);
+			frequence_1_calculation(freq);
 
 			//Function to calculate the frequence_2 (total of similar occurrences / total number of best+hamming occurrences in sequences)
-			FREQUENCE_2 = frequence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
+			frequence_2_calculation(orizzontal_map_plus, orizzontal_map_minus, position); 
 			
 			//Print positional hamming features in hamming output file
 			print_debug_hamming(position, outfile);
@@ -658,7 +657,7 @@ class z_test_class{
 
 			//Return from matrix class the log_PWM_hamming matrix
 			matrix_log = PWM_hamming_mat.return_log_matrix();
-			
+	
 			if(DS==1){
 			
 				//if analysis is in DS return from matrix class the inverse_log_PWM_hamming matrix to shift the reverse strand
@@ -700,7 +699,7 @@ class map_class{
 		vector<vector<hamming_class>> HAMMING_MATRIX;
 		vector<z_test_class> Z_TEST_VECTOR;
 		vector<vector<z_test_class>> Z_TEST_MATRIX;
-		vector<string> kmer_oligo;
+		//vector<string> kmer_oligo;
 		vector<string> kmer_unique;
 		vector<unsigned int> generic_vector_creation(string);
 		void table_creation_orizzontal(vector<bed_class>&);
