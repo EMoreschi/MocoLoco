@@ -672,7 +672,8 @@ class z_test_class{
 
 			//Calculating z-score and p-value from it
 			z_score_calculation();
-			
+			all_local_scores.clear();
+			all_global_scores.clear();
 		}
 };
 
