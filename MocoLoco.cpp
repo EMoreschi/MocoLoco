@@ -484,25 +484,28 @@ void coordinator_class::oligos_vector_creation(vector<oligo_class> &oligos_vecto
 void coordinator_class::best_strand(){
 	//PROFILE_FUNCTION();
 	vector<oligo_class> comparison;
-
+	
 	for(unsigned int i=0; i<oligos_vector.size(); i+=2){
-			
+	
 		//The comparison is made by oligo_class in i position against the oligo class in i+1 position (The fwd and rev strand of the same sequence, which are consecutive into the oligos_vector)
 		double best_score_norm_positive = oligos_vector[i].best_score;
 		double best_score_norm_negative = oligos_vector[i+1].best_score;
-			
-		if(best_score_norm_positive >= best_score_norm_negative){
 
+		if(best_score_norm_positive >= best_score_norm_negative){
+			
 			comparison.emplace_back(oligos_vector[i]);
+
 		}
 
 		else{
 			comparison.emplace_back(oligos_vector[i+1]);
+			
 		}
 	}
 
 		//The new oligos_vector is replaced by comparison vector, which contains only the best strand
 	oligos_vector.clear();
+	
 	//oligos_vector.shrink_to_fit();
 	oligos_vector = comparison;
 }
@@ -512,7 +515,7 @@ void coordinator_class::centering_oligo(){
 	//PROFILE_FUNCTION();
 
 	int center_oligo ;
-	
+
 	//To center on the best oligo, centering_function and extract_seq functions from bed_class need to be recalled with updated input parameters
 	for(unsigned int i=0; i<oligos_vector.size(); i++){
 
@@ -631,8 +634,9 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences){
 //Checking function to control if, for any k-mers inserted as input, there is a distance parameter
 void map_class::check_kmer_dist(){
 	//PROFILE_FUNCTION();
-	if(kmers_vector.size() != distance_vector.size()){
 	
+	if(kmers_vector.size() != distance_vector.size()){
+		
 		//If the number is not equal --> ERROR printed and help visualized
 		cerr << "\nERROR: Please insert an equal number of k-mers and distance parameters!\n";
 		display_help();
@@ -1027,9 +1031,9 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP){
 				Z_TEST_VECTOR.emplace_back(Z);
 			}
 		}
-		
 		Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
 		Z_TEST_VECTOR.clear();
+		
 	}
 }
 
@@ -1499,125 +1503,171 @@ void hamming_class::PWM_hamming_creation(){
 void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class> &GEP) 
 {
 	//PROFILE_FUNCTION();
+//	cout << "Starting PWM: \n";
+//	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
+//	cout << endl;
 	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
 			PWM_hamming[i][j] = PWM_hamming[i][j]/GEP.size();
 		}
 	}
+	
 }
 
-void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int kmer, unsigned int position, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap) 
+void hamming_class::EM_Epart(vector<bed_class> &GEP, double sum, unsigned int kmer, unsigned int position, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap,unordered_map<string,unsigned int>& orizzontal_map_plus) 
 {
 	//PROFILE_FUNCTION();
-
-	double sum = 0;
-	for(unordered_map<string, unsigned int>::iterator it = orizzontal_map_plus.begin(); it != orizzontal_map_plus.end(); it++){
-		sum = sum + it->second;
-	}
-	for(multimap<pair<unsigned int, unsigned int>, pair<string,string>>::iterator it = vertical_multimap.begin(); it != vertical_multimap.end(); it++)
-	{
-		for (unsigned int i = 0; i<GEP.size(); i++){
-
-			string oligo_vertical;
-			double P_bg;
-			double P_oligo = 1;
-			oligo_vertical = it->second.first;
-			int horizontal_occurences;
-			horizontal_occurences = orizzontal_map_plus.find(oligo_vertical)->second;
-
-			P_bg = horizontal_occurences/sum;
-
-			for (unsigned int k = 0; k < kmer; k++){
-
-				switch(it->second.first[k]){
-
-					case 'A':			
-						P_oligo *= PWM_hamming[0][k];
-						break;
-
-					case 'C':
-						P_oligo *= PWM_hamming[1][k];
-						break;
-
-					case 'G':
-						P_oligo *= PWM_hamming[2][k];
-						break;
-
-					case 'T':
-						P_oligo *= PWM_hamming[3][k];
-						break;
-
-					default:				//Case if there is N
-						break;
-				}
-
-			}
-			double likelihood_ratio = P_oligo/P_bg;
+	//cout << "---------------------------------" << endl;
+	//cout << "#POSITION " << position + 1 << " before Epart"<< endl;
+	//cout << "---------------------------------" << endl;
+	//for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+	//	for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+	//		cout << PWM_hamming[i][j] << "\t";
+	//	}
+	//	cout << endl;
+	//}
+	
+	//double sum = 0;
+	if (sum == 0){
+		for(unordered_map<string, unsigned int>::iterator it = orizzontal_map_plus.begin(); it != orizzontal_map_plus.end(); it++){
+			sum = sum + it->second;
 			
-			like_ratio_map.insert(pair<string, double>(oligo_vertical, likelihood_ratio));
-
 		}
+	}
+	for(multimap<pair<unsigned int, unsigned int>, pair<string,string>>::iterator it = vertical_multimap.begin(); it != vertical_multimap.end(); it++){
+		string oligo_vertical;
+		double P_bg;
+		double P_oligo = 1;
+		oligo_vertical = it->second.first;
+		int horizontal_occurences;
+		horizontal_occurences = orizzontal_map_plus.find(oligo_vertical)->second;
+
+		P_bg = horizontal_occurences/sum;
+
+		for (unsigned int k = 0; k < kmer; k++){
+
+			switch(it->second.first[k]){
+
+				case 'A':			
+					P_oligo *= PWM_hamming[0][k];
+					break;
+
+				case 'C':
+					P_oligo *= PWM_hamming[1][k];
+					break;
+
+				case 'G':
+					P_oligo *= PWM_hamming[2][k];
+					break;
+
+				case 'T':
+					P_oligo *= PWM_hamming[3][k];
+					break;
+
+				default:				//Case if there is N
+					break;
+			}
+		}
+
+		double likelihood_ratio = P_oligo/P_bg;
+			
+		like_ratio_map.insert(pair<string, double>(oligo_vertical, likelihood_ratio));
 	}
 }
 
 void hamming_class::EM_Mpart(unsigned int position, unsigned int kmer){
 	//PROFILE_FUNCTION();
+//	cout << "---------------------------------" << endl;
+//	cout << "#POSITION " << position + 1 << " before Mpart"<< endl;
+//	cout << "---------------------------------" << endl;
+//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
     vector<double> sum_vect;	
 	for (unsigned int k = 0; k < kmer; k++){
 		double sum = 0;
-			for(map<string, double >::const_iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
-				switch(it->first[k]){
-					case 'A':			
-						PWM_hamming[0][k] = PWM_hamming[0][k] + it->second;
-						sum += it->second;
-						break;
+		for(map<string, double >::const_iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
+			switch(it->first[k]){
+				case 'A':			
+					PWM_hamming[0][k] = PWM_hamming[0][k] + it->second;
+					sum += it->second;
+					break;
 
-					case 'C':
-						PWM_hamming[1][k] = PWM_hamming[1][k] + it->second;
-						sum += it->second;
-						break;
+				case 'C':
+					PWM_hamming[1][k] = PWM_hamming[1][k] + it->second;
+					sum += it->second;
+					break;
 
-					case 'G':
-						PWM_hamming[2][k] = PWM_hamming[2][k] + it->second;
-						sum += it->second;
-						break;
+				case 'G':
+					PWM_hamming[2][k] = PWM_hamming[2][k] + it->second;
+					sum += it->second;
+					break;
 
-					case 'T':
-						PWM_hamming[3][k] = PWM_hamming[3][k] + it->second;
-						sum += it->second;
-						break;
+				case 'T':
+					PWM_hamming[3][k] = PWM_hamming[3][k] + it->second;
+					sum += it->second;
+					break;
 
-					default:				//Case if there is N
+				default:				//Case if there is N
 
-						break;
-				}
+					break;
 			}
-			sum_vect.emplace_back(sum);
 		}
+		sum_vect.emplace_back(sum);
+	}
 
 	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
 	         PWM_hamming[i][j] = PWM_hamming[i][j]/sum_vect[j];
 		}
 	}
+//	cout << "---------------------------------" << endl;
+//	cout << "#POSITION " << position + 1 << " after Mpart"<< endl;
+//	cout << "---------------------------------" << endl;
+//	for (unsigned int i = 0; i< sum_vect.size(); i++){
+//		cout << "LR" << i +1 <<" total: " << sum_vect[i] << endl;
+//	}
+//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
 }
 
-void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int kmer, unsigned int position,multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap){
+void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int kmer, unsigned int position,multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap, unordered_map<string,unsigned int> &orizzontal_map_plus){
 	//PROFILE_FUNCTION();
 	for(unsigned int i = 0; i < exp_max; i++){ 
-		EM_Epart(GEP, kmer, position, vertical_multimap);
+		EM_Epart(GEP,sum, kmer, position, vertical_multimap, orizzontal_map_plus);
 		EM_Mpart(position, kmer);
+		
 		matrix_class NORM(PWM_hamming, true);
+		
 		PWM_hamming = NORM.return_norm_matrix();
 		
 		like_ratio_map.clear();
 	}
 	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-	        	PWM_hamming[i][j] = round(PWM_hamming[i][j]*GEP.size());
-			}
+		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+	    	PWM_hamming[i][j] = round(PWM_hamming[i][j]*GEP.size());
 		}
-		RAM_usage();
+	}
+//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
+//	cout << endl;
+//	cout << "---------------------------------------" << endl;
 }
 
 //Shifting the PWM_matrix on the sequences and calculate local scores (from positon where the matrix has been generated), and the global scores from each sequences positions
@@ -2296,7 +2346,7 @@ void map_class::Outfile_Z_score_values(){
 
 //PWM_matrices, parameters to calculate z-score, z-score and p-value printing
 void map_class::print_debug_Z_scores(ofstream& outfile, unsigned int j, unsigned int k){
-	////PROFILE_FUNCTION();
+	//PROFILE_FUNCTION();
 	outfile << "#Z_score parameters and p-value for hit positions - k = " << k << endl << endl;
 	string best_oligo;
 	

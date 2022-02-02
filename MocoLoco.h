@@ -34,7 +34,7 @@ using namespace std;
 #else
 #define PROFILE_SCOPE(name)
 #endif
-
+double sum = 0;
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -94,7 +94,7 @@ public:
     {
     }
 
-    void BeginSession(const string& name, const string& filepath = "all.json")
+    void BeginSession(const string& name, const string& filepath = "nfy_valgrind.json")
     {
         m_OutputStream.open(filepath);
         WriteHeader();
@@ -389,6 +389,7 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 		vector<vector<double>> inverse_matrix_log;
 		vector<oligo_class> oligos_vector;
 
+
 		void centering_oligo();
 		void best_strand();
 		void GEP_creation(vector<bed_class>&);
@@ -427,7 +428,6 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			//The best oligo selected for each sequence becames the new center of the window, re-setting the GEP coordinates
 			centering_oligo();
 
-			
 		}
 	
 		vector<bed_class> GEP;
@@ -549,9 +549,11 @@ class hamming_class{
 		vector<vector<double>> norm_matrix;
 		map<string,double> like_ratio_map;
 		pair<double, double> FREQUENCE;
-		unordered_map<string,unsigned int> orizzontal_map_plus;
+		unsigned int position;
+		//unordered_map<string,unsigned int> orizzontal_map_plus;
 		friend class map_class;
 		friend class p_value_class;
+
 
 		void find_best_oligos(multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
 		void checking_best_oligo(unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
@@ -567,16 +569,16 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, unsigned int kmer,unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
-		void EM_Mpart(unsigned int,unsigned int kmer);
-		void EM_cycle(vector<bed_class>&, unsigned int kmer, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
+		void EM_Epart(vector<bed_class>&, double, unsigned int ,unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
+		void EM_Mpart(unsigned int,unsigned int );
+		void EM_cycle(vector<bed_class>&, unsigned int , unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
 
 	public:
 
 		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int>& orizzontal_map_plus, unordered_map<string,unsigned int>& orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
 			
 			//Saving the vertical multimap passed to constructor locally
-			//kmer = kmers_vector[0];
+			kmer = kmers_vector[0];
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
 			find_best_oligos(vertical_multimap);
 
@@ -611,9 +613,10 @@ class hamming_class{
 			PWM_hamming_creation();
 
 			if (exp_max > 0){
-
+				
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, kmer, position, vertical_multimap);
+				EM_cycle(GEP, kmer, position, vertical_multimap, orizzontal_map_plus);
+				
 			}
 		}
 };
@@ -674,6 +677,8 @@ class z_test_class{
 			z_score_calculation();
 			all_local_scores.clear();
 			all_global_scores.clear();
+			oligo_scores_orizzontal_FWD.clear();
+			oligo_scores_orizzontal_REV.clear();
 		}
 };
 
@@ -703,6 +708,7 @@ class map_class{
 		//vector<string> kmer_oligo;
 		vector<string> kmer_unique;
 		vector<unsigned int> generic_vector_creation(string);
+
 		void table_creation_orizzontal(vector<bed_class>&);
 		void table_creation_vertical(vector<bed_class>&);
 		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
