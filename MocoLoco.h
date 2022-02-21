@@ -34,6 +34,7 @@ using namespace std;
 #else
 #define PROFILE_SCOPE(name)
 #endif
+
 double sum = 0;
 string BED_FILE;
 int half_length = 150;
@@ -224,6 +225,7 @@ class bed_class {
 		unsigned int end_coord;
 		string sequence;
 		bool flag;
+
 		friend class coordinator_class;
 		friend class z_test_class;
 		friend class map_class;
@@ -550,6 +552,9 @@ class hamming_class{
 		map<string,double> like_ratio_map;
 		pair<double, double> FREQUENCE;
 		unsigned int position;
+		double comparison;
+
+
 		//unordered_map<string,unsigned int> orizzontal_map_plus;
 		friend class map_class;
 		friend class p_value_class;
@@ -569,16 +574,17 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, double, unsigned int ,unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
-		void EM_Mpart(unsigned int,unsigned int );
-		void EM_cycle(vector<bed_class>&, unsigned int , unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
-
+		void EM_Epart(vector<bed_class>&, double, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
+		void EM_Mpart(unsigned int);
+		bool EM_convergence(vector<vector<double>>, vector<vector<double>>, bool);
+		void EM_cycle(vector<bed_class>&, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
+		
 	public:
 
 		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int>& orizzontal_map_plus, unordered_map<string,unsigned int>& orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
 			
 			//Saving the vertical multimap passed to constructor locally
-			kmer = kmers_vector[0];
+			//kmer = kmers_vector[0];
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
 			find_best_oligos(vertical_multimap);
 
@@ -613,10 +619,8 @@ class hamming_class{
 			PWM_hamming_creation();
 
 			if (exp_max > 0){
-				
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, kmer, position, vertical_multimap, orizzontal_map_plus);
-				
+				EM_cycle(GEP, position, vertical_multimap, orizzontal_map_plus);
 			}
 		}
 };
