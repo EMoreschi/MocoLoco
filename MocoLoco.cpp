@@ -1584,6 +1584,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, double sum, unsigned int po
 					break;
 
 				default:				//Case if there is N
+					P_oligo *=1;
 					break;
 			}
 		}
@@ -1626,32 +1627,40 @@ void hamming_class::EM_Mpart(unsigned int position){
 //	}
     vector<double> sum_vect;
 	//For each position of the PWM_hamming we add the likelihood ratios to modify the previous PWM	
-	for (unsigned int k = 0; k < PWM_hamming[0].size(); k++){
+	for (unsigned int b = 0; b < PWM_hamming[0].size(); b++){
 		double sum = 0;
 		for(map<string, double >::const_iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
-			switch(it->first[k]){
+			switch(it->first[b]){
 				case 'A':			
-					PWM_hamming[0][k] = PWM_hamming[0][k] + it->second;
-					sum += it->second;
+					PWM_hamming[0][b] = PWM_hamming[0][b] + it->second;
+					if (it->second != 0){
+						sum += it->second;
+					}
 					break;
 
 				case 'C':
-					PWM_hamming[1][k] = PWM_hamming[1][k] + it->second;
-					sum += it->second;
+					PWM_hamming[1][b] = PWM_hamming[1][b] + it->second;
+					if (it->second != 0){
+						sum += it->second;
+					}
 					break;
 
 				case 'G':
-					PWM_hamming[2][k] = PWM_hamming[2][k] + it->second;
-					sum += it->second;
+					PWM_hamming[2][b] = PWM_hamming[2][b] + it->second;
+					if (it->second != 0){
+						sum += it->second;
+					}
 					break;
 
 				case 'T':
-					PWM_hamming[3][k] = PWM_hamming[3][k] + it->second;
-					sum += it->second;
+					PWM_hamming[3][b] = PWM_hamming[3][b] + it->second;
+					if (it->second != 0){
+						sum += it->second;
+					}
 					break;
 
 				default:				//Case if there is N
-
+					
 					break;
 			}
 		}
@@ -1678,7 +1687,7 @@ void hamming_class::EM_Mpart(unsigned int position){
 //		}
 //		cout << endl;
 //	}
-	//sum_vect.clear();
+	sum_vect.clear();
 }
 // This function is made to check if the EM_cycle reaches convergence
 bool hamming_class::EM_convergence(vector<vector<double>> PWM_old, vector<vector<double>> PWM_hamming, bool conv){
@@ -1710,16 +1719,16 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position,multi
 	//In this cycle we repeat the EM until the convergence is reached
 	//for (unsigned int i = 0; i < exp_max; i++){ 
 	while(conv){
-		cout << i << endl;
-		cout << "Pos: " << position + 1 << endl;
-		cout << "OLD_PWM: " << endl;
-		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-	    		cout << PWM_hamming[i][j] << "\t";
-			}
-			cout << endl;
-		}
-		cout << endl;
+//		cout << i << endl;
+//		cout << "Pos: " << position + 1 << endl;
+//		cout << "OLD_PWM: " << endl;
+//		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//	    		cout << PWM_hamming[i][j] << "\t";
+//			}
+//			cout << endl;
+//		}
+//		cout << endl;
 
 		EM_Epart(GEP,sum, position, vertical_multimap, orizzontal_map_plus);
 		EM_Mpart(position);
@@ -1733,14 +1742,14 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position,multi
 		PWM_hamming = NORM.return_norm_matrix();
 		
 		like_ratio_map.clear();
-		cout << "NEW_PWM: " << endl;
-		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-	    		cout << PWM_hamming[i][j] << "\t";
-			}
-			cout << endl;
-		}
-		cout << endl;
+//		cout << "NEW_PWM: " << endl;
+//		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//	    		cout << PWM_hamming[i][j] << "\t";
+//			}
+//			cout << endl;
+//		}
+//		cout << endl;
 		conv = EM_convergence(PWM_old, PWM_hamming, conv);
 		PWM_old = PWM_hamming;
 	}
