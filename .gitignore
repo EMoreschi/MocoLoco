@@ -1,3 +1,5 @@
+*PRE_TESI*
+*TESTING_*
 test
 *.2bit
 a.out
@@ -31,3 +33,5 @@ oligo_class*
 MOCO*
 Test_Bed/test_2k.bed
 *-mers*
+*Test_*
+
