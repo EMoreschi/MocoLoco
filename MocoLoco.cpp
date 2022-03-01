@@ -1530,7 +1530,7 @@ This function is about the expectation step of the expectation-maximization algo
 where we obtain the likelihood ratio for each oligo in the vertical map
 */
 
-void hamming_class::EM_Epart(vector<bed_class> &GEP, double sum, unsigned int position, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap,unordered_map<string,unsigned int>& orizzontal_map_plus) 
+void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap,unordered_map<string,unsigned int>& orizzontal_map_plus) 
 {
 	//PROFILE_FUNCTION();
 //	cout << "---------------------------------" << endl;
@@ -1542,7 +1542,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, double sum, unsigned int po
 //		}
 //		cout << endl;
 //	}
-
+	double sum = 0;
 	//Here we calculate the sum of all the occurences in the sequences
 	for(unordered_map<string, unsigned int>::iterator it = orizzontal_map_plus.begin(); it != orizzontal_map_plus.end(); it++){
 		sum = sum + it->second;
@@ -1588,7 +1588,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, double sum, unsigned int po
 					break;
 			}
 		}
-
+		
 		double likelihood_ratio = 0;
 		likelihood_ratio = P_oligo/P_bg;
 //		cout << "P_oligo of " << oligo_vertical << " is " << P_oligo << " and background is: " << P_bg << endl;  
@@ -1730,7 +1730,7 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position,multi
 //		}
 //		cout << endl;
 
-		EM_Epart(GEP,sum, position, vertical_multimap, orizzontal_map_plus);
+		EM_Epart(GEP, position, vertical_multimap, orizzontal_map_plus);
 		EM_Mpart(position);
 		
 		
@@ -1763,14 +1763,14 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position,multi
 	}
 
 
-	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-			cout << PWM_hamming[i][j] << "\t";
-		}
-		cout << endl;
-	}
-	cout << endl;
-	cout << "---------------------------------------" << endl;
+//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
+//	cout << endl;
+//	cout << "---------------------------------------" << endl;
 }
 
 //Shifting the PWM_matrix on the sequences and calculate local scores (from positon where the matrix has been generated), and the global scores from each sequences positions

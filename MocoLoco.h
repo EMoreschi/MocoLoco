@@ -35,7 +35,6 @@ using namespace std;
 #define PROFILE_SCOPE(name)
 #endif
 
-double sum = 0;
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -574,7 +573,7 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, double, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
+		void EM_Epart(vector<bed_class>&, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
 		void EM_Mpart(unsigned int);
 		bool EM_convergence(vector<vector<double>>, vector<vector<double>>, bool);
 		void EM_cycle(vector<bed_class>&, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
