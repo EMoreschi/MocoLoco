@@ -302,7 +302,7 @@ wait
 
 #-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
 
-multi_thread=20
+multi_thread=40
 (
 for freq in ${frequenze[@]}
 do 
@@ -332,15 +332,15 @@ do
 		
 			else
 
-			if [ -z "$J" ]
-			then		
+				if [ -z "$J" ]
+				then		
 		
-				$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all -e $E &
+					$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all -e $E &
 		
-			else
+				else
 
-				$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all -e $E &
-                
+					$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all -e $E &
+                fi
 			fi
 		fi
 		
@@ -366,7 +366,7 @@ do
 	#Extraction of all the pvalue from the Z_scores_implanted files
 	awk -v fre=$freq -v p_val=$V  '!/^#|^$/ { if($8<p_val) print fre "\t"$1"\t"$8"\t"$9"\t"$10"\t"$11 } '  *Z_scores_* >> $path_out_tot;
 	#Extraction of the best pvalue for each cycle in each frequence
-	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($8<p_val) print fr"\t"$1"\t"$8"\t"$9"\t"$10"\t"$11 }' $f | sort -g -k3| tail -n1 >>$path_out ; done
+	for f in *Z_scores* ; do awk -v fr=$freq -v p_val=$V '!/^#|^$/ { if($8<p_val) print fr"\t"$1"\t"$8"\t"$9"\t"$10"\t"$11 }' $f | sort -g -k4| tail -n1 >>$path_out ; done
 	
 	cd ..;
 done

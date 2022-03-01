@@ -25,11 +25,11 @@
 <br><ul>
 1.**BED,TwoBit,Jaspar input**:
        
-       ./test -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -n <number> (optional) -ss(optional)`
+       ./test -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -n <number> (optional) -ss(optional) -a(optional) -r(optional) -e(optional)`
        
 2.**Multifasta input**:
        
-       ./test -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -ss(optional)
+       ./test -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -ss(optional) -a(optional) -r(optional) -e(optional)
 </ul><br>  
 
 ### For each k inserted as input the **output** is composed by different files in .txt format. The program can be run in Double Strand, to analyze both the DNA helices, or in Single Strand, to perform the analysis only on the forward strand.

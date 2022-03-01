@@ -31,7 +31,9 @@ TESTING_MOCOLOCO/*-mers*
 Intersect/
 oligo_class*
 MOCO*
-Test_Bed/test_2k.bed
+Test_*/
 *-mers*
 *Test_*
+Result*/
+realdata.sh
 
