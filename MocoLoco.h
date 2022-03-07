@@ -23,18 +23,6 @@
 #include <chrono>
 using namespace std;
 
-#pragma once
-#include <algorithm>
-#include <thread>
-
-#define PROFILING 1
-#if PROFILING
-#define PROFILE_SCOPE(name) InstrumentationTimer timer##__LINE__(name)
-#define PROFILE_FUNCTION() PROFILE_SCOPE(__PRETTY_FUNCTION__)
-#else
-#define PROFILE_SCOPE(name)
-#endif
-
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -55,135 +43,6 @@ unsigned int exp_max = 0;
 bool err = false;
 TwoBit * tb;
 
-//
-// Basic instrumentation profiler by Cherno
-
-// Usage: include this header file somewhere in your code (eg. precompiled header), and then use like:
-//
-// Instrumentor::Get().BeginSession("Session Name");        // Begin session 
-// {
-//     InstrumentationTimer timer("Profiled Scope Name");   // Place code like this in scopes you'd like to include in profiling
-//     // Code
-// }
-// Instrumentor::Get().EndSession();                        // End Session
-//
-// You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
-//
-/*
-struct ProfileResult
-{
-    string Name;
-    long long Start, End;
-    uint32_t ThreadID;
-};
-
-struct InstrumentationSession
-{
-    string Name;
-};
-
-class Instrumentor
-{
-private:
-    InstrumentationSession* m_CurrentSession;
-    ofstream m_OutputStream;
-    int m_ProfileCount;
-public:
-    Instrumentor()
-        : m_CurrentSession(nullptr), m_ProfileCount(0)
-    {
-    }
-
-    void BeginSession(const string& name, const string& filepath = "nfy_valgrind.json")
-    {
-        m_OutputStream.open(filepath);
-        WriteHeader();
-        m_CurrentSession = new InstrumentationSession{ name };
-    }
-
-    void EndSession()
-    {
-        WriteFooter();
-        m_OutputStream.close();
-        delete m_CurrentSession;
-        m_CurrentSession = nullptr;
-        m_ProfileCount = 0;
-    }
-
-    void WriteProfile(const ProfileResult& result)
-    {
-        if (m_ProfileCount++ > 0)
-            m_OutputStream << ",";
-
-        string name = result.Name;
-        replace(name.begin(), name.end(), '"', '\'');
-
-        m_OutputStream << "{";
-        m_OutputStream << "\"cat\":\"function\",";
-        m_OutputStream << "\"dur\":" << (result.End - result.Start) << ',';
-        m_OutputStream << "\"name\":\"" << name << "\",";
-        m_OutputStream << "\"ph\":\"X\",";
-        m_OutputStream << "\"pid\":0,";
-        m_OutputStream << "\"tid\":" << result.ThreadID << ",";
-        m_OutputStream << "\"ts\":" << result.Start;
-        m_OutputStream << "}";
-
-        m_OutputStream.flush();
-    }
-
-    void WriteHeader()
-    {
-        m_OutputStream << "{\"otherData\": {},\"traceEvents\":[";
-        m_OutputStream.flush();
-    }
-
-    void WriteFooter()
-    {
-        m_OutputStream << "]}";
-        m_OutputStream.flush();
-    }
-
-    static Instrumentor& Get()
-    {
-        static Instrumentor instance;
-        return instance;
-    }
-};
-
-class InstrumentationTimer
-{
-public:
-    InstrumentationTimer(const char* name)
-        : m_Name(name), m_Stopped(false)
-    {
-        m_StartTimepoint = chrono::high_resolution_clock::now();
-    }
-
-    ~InstrumentationTimer()
-    {
-        if (!m_Stopped)
-            Stop();
-    }
-
-    void Stop()
-    {
-        auto endTimepoint = chrono::high_resolution_clock::now();
-
-        long long start = chrono::time_point_cast<chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
-        long long end = chrono::time_point_cast<chrono::microseconds>(endTimepoint).time_since_epoch().count();
-
-        uint32_t threadID = hash<thread::id>{}(this_thread::get_id());
-        Instrumentor::Get().WriteProfile({ m_Name, start, end, threadID });
-
-        m_Stopped = true;
-    }
-private:
-    const char* m_Name;
-    chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
-    bool m_Stopped;
-};
-
-*/
 class Timer
 {
 	public:
@@ -552,7 +411,7 @@ class hamming_class{
 		pair<double, double> FREQUENCE;
 		unsigned int position;
 		double comparison;
-
+		map<string,double> similar_oligos_map;
 
 		//unordered_map<string,unsigned int> orizzontal_map_plus;
 		friend class map_class;
@@ -573,10 +432,10 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
+		void EM_Epart(vector<bed_class>&, unsigned int,unordered_map<string,unsigned int>&);
 		void EM_Mpart(unsigned int);
 		bool EM_convergence(vector<vector<double>>, vector<vector<double>>, bool);
-		void EM_cycle(vector<bed_class>&, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
+		void EM_cycle(vector<bed_class>&, unsigned int,unordered_map<string,unsigned int>&);
 		
 	public:
 
@@ -619,7 +478,7 @@ class hamming_class{
 
 			if (exp_max > 0){
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, position, vertical_multimap, orizzontal_map_plus);
+				EM_cycle(GEP, position, orizzontal_map_plus);
 			}
 		}
 };
@@ -710,6 +569,7 @@ class map_class{
 		vector<vector<z_test_class>> Z_TEST_MATRIX;
 		//vector<string> kmer_oligo;
 		vector<string> kmer_unique;
+		
 		vector<unsigned int> generic_vector_creation(string);
 
 		void table_creation_orizzontal(vector<bed_class>&);

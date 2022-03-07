@@ -1,4 +1,5 @@
 #include "MocoLoco.h" 
+//#include "Profiling.h"
 #include <sys/resource.h>
 
 
@@ -950,7 +951,7 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP){
 		
 		//For each position in sequence
 		for(unsigned int i=0; i<P_VALUE_MATRIX[j].size(); i++){
-			
+
 			//Create a hamming_class H passing the vertical multimap, the distance inserted as input, the current position i, the number of different oligos (contained in tot_freq_matrix), the orizzontal matrix, the outfile to print the Output file and finally the GEP (which contains the sequences)
 			hamming_class H(P_VALUE_MATRIX[j][i].vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, GEP, kmers_vector);
 
@@ -1460,7 +1461,6 @@ void hamming_class::PWM_hamming_creation(){
 	//PROFILE_FUNCTION();
 	//Vector for each bases initialized to count, position by position, the occurrences of that base
 	vector<double> vec_A, vec_C, vec_G, vec_T;
-	
 	//For each bases (position) of oligo
 	for(unsigned int character = 0; character < similar_oligos[0].size(); character++){
 
@@ -1471,7 +1471,9 @@ void hamming_class::PWM_hamming_creation(){
 		
 		//For each oligo in similar oligos vector
 		for(unsigned int oligo = 0; oligo < similar_oligos.size(); oligo++){
-
+			string oligo_map = similar_oligos[oligo];
+			cout << similar_oligos_occurrences[oligo] << endl;
+			similar_oligos_map.insert(pair<string, double>(oligo_map, similar_oligos_occurrences[oligo]));
 			switch(similar_oligos[oligo][character]){
 
 				//Increment base counters of the oligo occurrences
@@ -1530,7 +1532,7 @@ This function is about the expectation step of the expectation-maximization algo
 where we obtain the likelihood ratio for each oligo in the vertical map
 */
 
-void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap,unordered_map<string,unsigned int>& orizzontal_map_plus) 
+void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position,unordered_map<string,unsigned int>& orizzontal_map_plus) 
 {
 	//PROFILE_FUNCTION();
 //	cout << "---------------------------------" << endl;
@@ -1549,13 +1551,13 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position, mult
 	}
 
 	//In this cycle for each element in vertical map we calculate the probability that this oligo is present in the hamming matrix 
-	for(multimap<pair<unsigned int, unsigned int>, pair<string,string>>::iterator it = vertical_multimap.begin(); it != vertical_multimap.end(); it++){
-		string oligo_vertical;
+	for(map<string,double>::iterator it = similar_oligos_map.begin(); it != similar_oligos_map.end(); it++){
+		string similar_oligo;
 		double P_bg = 0;
 		double P_oligo = 1;
-		oligo_vertical = it->second.first;
+		similar_oligo = it->first;
 		int horizontal_occurences = 0;
-		horizontal_occurences = orizzontal_map_plus.find(oligo_vertical)->second;
+		horizontal_occurences = orizzontal_map_plus.find(similar_oligo)->second;
 		/*
 		This is the background probability where we have the ratio between how times 
 		the oligo is present in the BED and the total number of possible oligos in the 
@@ -1565,7 +1567,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position, mult
 
 		for (unsigned int k = 0; k < PWM_hamming[0].size(); k++){
 
-			switch(it->second.first[k]){
+			switch(it->first[k]){
 
 				case 'A':			
 					P_oligo *= PWM_hamming[0][k];
@@ -1591,8 +1593,12 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position, mult
 		
 		double likelihood_ratio = 0;
 		likelihood_ratio = P_oligo/P_bg;
-//		cout << "P_oligo of " << oligo_vertical << " is " << P_oligo << " and background is: " << P_bg << endl;  
-//		cout << "Likelihood ratio of " << oligo_vertical << " is " << likelihood_ratio << endl;
+//		if (P_oligo != 0){
+//			cout << "P_oligo of " << oligo_vertical << " is " << P_oligo << " and background is: " << P_bg << endl;  
+//		}
+//		if (likelihood_ratio != 0){
+//			cout << "Likelihood ratio of " << oligo_vertical << " is " << likelihood_ratio << endl;
+//		}
 		
 		/*
 		The like_ratio_map is a map where for each oligo present in the vertical map
@@ -1600,12 +1606,14 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position, mult
 		to have the oligo in the PWM_hamming and the background probability
 		*/
 
-		like_ratio_map.insert(pair<string, double>(oligo_vertical, likelihood_ratio));
+		like_ratio_map.insert(pair<string, double>(similar_oligo, likelihood_ratio));
 	}
 
 //	for(map<string, double>::iterator it = like_ratio_map.begin(); it != like_ratio_map.end(); ++it)
 //	{
-//	    cout << it->first << " " << it->second << "\n";
+//		if (it->second != 0){
+//			cout << it->first << " " << it->second << "\n";
+//		}
 //	}
 
 }
@@ -1613,18 +1621,18 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position, mult
 //In this function there is the second part of the EM algorithm and this is the maximization part
 void hamming_class::EM_Mpart(unsigned int position){
 	//PROFILE_FUNCTION();
-//	cout << "---------------------------------" << endl;
-//	cout << "#POSITION " << position + 1 << " before Mpart"<< endl;
-//	cout << "---------------------------------" << endl;
+	cout << "---------------------------------" << endl;
+	cout << "#POSITION " << position + 1 << " before Mpart"<< endl;
+	cout << "---------------------------------" << endl;
 	//vector<vector<double>> PWM_hamming_new;
 	//PWM_hamming_new = PWM_hamming;
-//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-//			cout << PWM_hamming[i][j] << "\t";
-			//PWM_hamming_new[i][j] = 0;
-//		}
-//		cout << endl;
-//	}
+	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+			cout << PWM_hamming[i][j] << "\t";
+			PWM_hamming[i][j] = 0;
+		}
+		cout << endl;
+	}
     vector<double> sum_vect;
 	//For each position of the PWM_hamming we add the likelihood ratios to modify the previous PWM	
 	for (unsigned int b = 0; b < PWM_hamming[0].size(); b++){
@@ -1674,19 +1682,19 @@ void hamming_class::EM_Mpart(unsigned int position){
 			 PWM_hamming[i][j] = round(PWM_hamming[i][j]*1000)/1000;
 		}
 	}
-//	cout << "---------------------------------" << endl;
-//	cout << "#POSITION " << position + 1 << " after Mpart"<< endl;
-//	cout << "---------------------------------" << endl;
+	cout << "---------------------------------" << endl;
+	cout << "#POSITION " << position + 1 << " after Mpart"<< endl;
+	cout << "---------------------------------" << endl;
 	for (unsigned int i = 0; i< sum_vect.size(); i++){
-//		cout << "LR" << i +1 <<" total: " << sum_vect[i] << endl;
+		cout << "LR" << i +1 <<" total: " << sum_vect[i] << endl;
 		sum_vect[i] = 0;
 	}
-//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-//			cout << PWM_hamming[i][j] << "\t";
-//		}
-//		cout << endl;
-//	}
+	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+			cout << PWM_hamming[i][j] << "\t";
+		}
+		cout << endl;
+	}
 	sum_vect.clear();
 }
 // This function is made to check if the EM_cycle reaches convergence
@@ -1709,7 +1717,7 @@ bool hamming_class::EM_convergence(vector<vector<double>> PWM_old, vector<vector
 
 
 
-void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position,multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap, unordered_map<string,unsigned int> &orizzontal_map_plus){
+void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position, unordered_map<string,unsigned int> &orizzontal_map_plus){
 	//PROFILE_FUNCTION();
 	bool conv = true;
 	int i = 0;
@@ -1719,37 +1727,37 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position,multi
 	//In this cycle we repeat the EM until the convergence is reached
 	//for (unsigned int i = 0; i < exp_max; i++){ 
 	while(conv){
-//		cout << i << endl;
-//		cout << "Pos: " << position + 1 << endl;
-//		cout << "OLD_PWM: " << endl;
-//		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-//			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-//	    		cout << PWM_hamming[i][j] << "\t";
-//			}
-//			cout << endl;
-//		}
-//		cout << endl;
+		cout << i << endl;
+		cout << "Pos: " << position + 1 << endl;
+		cout << "OLD_PWM: " << endl;
+		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+	    		cout << PWM_hamming[i][j] << "\t";
+			}
+			cout << endl;
+		}
+		cout << endl;
 
-		EM_Epart(GEP, position, vertical_multimap, orizzontal_map_plus);
+		EM_Epart(GEP, position, orizzontal_map_plus);
 		EM_Mpart(position);
 		
 		
 		//cout << "------------" << endl;
 		i++;
 	
-		matrix_class NORM(PWM_hamming, true);
+		//matrix_class NORM(PWM_hamming, true);
 		
-		PWM_hamming = NORM.return_norm_matrix();
+		//PWM_hamming = NORM.return_norm_matrix();
 		
 		like_ratio_map.clear();
-//		cout << "NEW_PWM: " << endl;
-//		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-//			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-//	    		cout << PWM_hamming[i][j] << "\t";
-//			}
-//			cout << endl;
-//		}
-//		cout << endl;
+		cout << "NEW_PWM: " << endl;
+		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+	    		cout << PWM_hamming[i][j] << "\t";
+			}
+			cout << endl;
+		}
+		cout << endl;
 		conv = EM_convergence(PWM_old, PWM_hamming, conv);
 		PWM_old = PWM_hamming;
 	}
@@ -2382,8 +2390,33 @@ void map_class::Outfile_PWM_matrices(){
 
 	}
 }
-
+/*
 //PWM_matrices, parameters to calculate z-score, z-score and p-value printing
+void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsigned int k){
+	//PROFILE_FUNCTION();
+
+	vector<vector<double>> PWM_hamming;
+	string ACGT = "ACGT";
+	for(unsigned int position = 0; position < Z_TEST_MATRIX[j].size(); position++){
+	
+		PWM_hamming = HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].PWM_hamming;
+		
+		outfile << ">Position" << Z_TEST_MATRIX[j][position].local_pos << " " << Z_TEST_MATRIX[j][position].local_pos <<endl; 
+
+
+		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
+			outfile << ACGT[i] << "\t" << "[" << "\t";
+			for(unsigned int j = 0; j<PWM_hamming[i].size(); j++){
+				outfile << PWM_hamming[i][j] << "\t";
+			}
+			outfile << "]\n";
+		}
+		
+		//outfile << endl << endl;
+	}
+	
+}
+*/
 void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsigned int k){
 	//PROFILE_FUNCTION();
 	outfile << "#PWM Matrices calculated from the best oligo for each position and his hamming distanced oligos - k = " << k << endl << endl;
@@ -2398,7 +2431,10 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 		outfile << "#Position " << Z_TEST_MATRIX[j][position].local_pos << ": \n#PWM calculated from oligo " << 
 		HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].real_best_oligo << " and his " <<
 		HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].similar_oligos.size()-1 << " hamming distanced neighbours.\n\n";
-
+		for(map<string, double >::iterator it = HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].similar_oligos_map.begin(); it != HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].similar_oligos_map.end(); ++it)
+		{
+			outfile << it->first << " " << it->second << "\n";
+		}
 		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
 			
 			outfile << ACGT[i] << "\t" << "[" << "\t";
