@@ -36,7 +36,7 @@ bool DS = 1;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;		
-double freq_treshold = 0;
+double freq_treshold = 0.02;
 bool local_maxima_grouping = true;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
@@ -432,10 +432,10 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, unsigned int,unordered_map<string,unsigned int>&);
-		void EM_Mpart(unsigned int);
-		bool EM_convergence(vector<vector<double>>, vector<vector<double>>, bool);
-		void EM_cycle(vector<bed_class>&, unsigned int,unordered_map<string,unsigned int>&);
+		void EM_Epart(vector<bed_class>&, unordered_map<string,unsigned int>&, unsigned int,unordered_map<string,unsigned int>&);
+		void EM_Mpart(unsigned int,unordered_map<string,unsigned int>&);
+		bool EM_convergence(vector<vector<double>>&, vector<vector<double>>&, bool);
+		void EM_cycle(vector<bed_class>&, unordered_map<string,unsigned int>&, unsigned int,unordered_map<string,unsigned int>&);
 		
 	public:
 
@@ -477,8 +477,10 @@ class hamming_class{
 			PWM_hamming_creation();
 
 			if (exp_max > 0){
+						
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, position, orizzontal_map_plus);
+				EM_cycle(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
+
 			}
 		}
 };
