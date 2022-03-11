@@ -1512,7 +1512,7 @@ void hamming_class::PWM_hamming_creation(){
 void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class> &GEP) 
 {
 	//PROFILE_FUNCTION();
-	/*	
+	/*
 	cout << "Starting PWM: \n";
 	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
@@ -1736,6 +1736,7 @@ bool hamming_class::EM_convergence(vector<vector<double>>& PWM_old, vector<vecto
 void hamming_class::EM_cycle(vector<bed_class> &GEP, unordered_map<string,unsigned int>& orizzontal_map_minus, unsigned int position, unordered_map<string,unsigned int> &orizzontal_map_plus){
 	//PROFILE_FUNCTION();
 	bool conv = true;
+	int i = 0;
 	
 	vector<vector<double>> PWM_old;
 	PWM_old = PWM_hamming;
@@ -2454,7 +2455,7 @@ void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsig
 		outfile << "#Position " << Z_TEST_MATRIX[j][position].local_pos << ": \n#PWM calculated from oligo " << 
 		HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].real_best_oligo << " and his " <<
 		HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].similar_oligos.size()-1 << " hamming distanced neighbours.\n\n";
-		
+
 		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
 			
 			outfile << ACGT[i] << "\t" << "[" << "\t";

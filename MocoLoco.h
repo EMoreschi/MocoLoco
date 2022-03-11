@@ -40,6 +40,7 @@ double freq_treshold = 0.02;
 bool local_maxima_grouping = true;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
+bool tomtom = false;
 bool err = false;
 TwoBit * tb;
 
@@ -482,6 +483,11 @@ class hamming_class{
 				EM_cycle(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
 
 			}
+			for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+				for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+	    			PWM_hamming[i][j] = round(PWM_hamming[i][j]);
+				}
+			}
 		}
 };
 
@@ -592,6 +598,7 @@ class map_class{
 		void Outfile_PWM_matrices();
 		void Outfile_Z_score_values();
 		void print_debug_PWM_hamming(ofstream&, unsigned int, unsigned int);
+		void print_debug_PWM_hamming_tomtom(ofstream&, unsigned int, unsigned int);
 		void print_debug_Z_scores(ofstream&, unsigned int, unsigned int);
 		bool find_local_max(double,double,double);
 		unsigned int sequences_number_T;
