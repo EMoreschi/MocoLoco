@@ -48,142 +48,14 @@ bool DS = 1;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;		
-double freq_treshold = 0;
+double freq_treshold = 0.02;
 bool local_maxima_grouping = true;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
+bool tomtom = false;
 bool err = false;
 TwoBit * tb;
 
-//
-// Basic instrumentation profiler by Cherno
-
-// Usage: include this header file somewhere in your code (eg. precompiled header), and then use like:
-//
-// Instrumentor::Get().BeginSession("Session Name");        // Begin session 
-// {
-//     InstrumentationTimer timer("Profiled Scope Name");   // Place code like this in scopes you'd like to include in profiling
-//     // Code
-// }
-// Instrumentor::Get().EndSession();                        // End Session
-//
-// You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
-//
-/*
-struct ProfileResult
-{
-    string Name;
-    long long Start, End;
-    uint32_t ThreadID;
-};
-
-struct InstrumentationSession
-{
-    string Name;
-};
-
-class Instrumentor
-{
-private:
-    InstrumentationSession* m_CurrentSession;
-    ofstream m_OutputStream;
-    int m_ProfileCount;
-public:
-    Instrumentor()
-        : m_CurrentSession(nullptr), m_ProfileCount(0)
-    {
-    }
-
-    void BeginSession(const string& name, const string& filepath = "nfy_valgrind.json")
-    {
-        m_OutputStream.open(filepath);
-        WriteHeader();
-        m_CurrentSession = new InstrumentationSession{ name };
-    }
-
-    void EndSession()
-    {
-        WriteFooter();
-        m_OutputStream.close();
-        delete m_CurrentSession;
-        m_CurrentSession = nullptr;
-        m_ProfileCount = 0;
-    }
-
-    void WriteProfile(const ProfileResult& result)
-    {
-        if (m_ProfileCount++ > 0)
-            m_OutputStream << ",";
-
-        string name = result.Name;
-        replace(name.begin(), name.end(), '"', '\'');
-
-        m_OutputStream << "{";
-        m_OutputStream << "\"cat\":\"function\",";
-        m_OutputStream << "\"dur\":" << (result.End - result.Start) << ',';
-        m_OutputStream << "\"name\":\"" << name << "\",";
-        m_OutputStream << "\"ph\":\"X\",";
-        m_OutputStream << "\"pid\":0,";
-        m_OutputStream << "\"tid\":" << result.ThreadID << ",";
-        m_OutputStream << "\"ts\":" << result.Start;
-        m_OutputStream << "}";
-
-        m_OutputStream.flush();
-    }
-
-    void WriteHeader()
-    {
-        m_OutputStream << "{\"otherData\": {},\"traceEvents\":[";
-        m_OutputStream.flush();
-    }
-
-    void WriteFooter()
-    {
-        m_OutputStream << "]}";
-        m_OutputStream.flush();
-    }
-
-    static Instrumentor& Get()
-    {
-        static Instrumentor instance;
-        return instance;
-    }
-};
-
-class InstrumentationTimer
-{
-public:
-    InstrumentationTimer(const char* name)
-        : m_Name(name), m_Stopped(false)
-    {
-        m_StartTimepoint = chrono::high_resolution_clock::now();
-    }
-
-    ~InstrumentationTimer()
-    {
-        if (!m_Stopped)
-            Stop();
-    }
-
-    void Stop()
-    {
-        auto endTimepoint = chrono::high_resolution_clock::now();
-
-        long long start = chrono::time_point_cast<chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
-        long long end = chrono::time_point_cast<chrono::microseconds>(endTimepoint).time_since_epoch().count();
-
-        uint32_t threadID = hash<thread::id>{}(this_thread::get_id());
-        Instrumentor::Get().WriteProfile({ m_Name, start, end, threadID });
-
-        m_Stopped = true;
-    }
-private:
-    const char* m_Name;
-    chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
-    bool m_Stopped;
-};
-
-*/
 class Timer
 {
 	public:
@@ -552,6 +424,7 @@ class hamming_class{
 		pair<double, double> FREQUENCE;
 		unsigned int position;
 		double comparison;
+				map<string,double> similar_oligos_map;
 		string reverse_bases;
 		bool pal;
 		multimap<unsigned int,pair<string,string>> sum_occurrences_multimap;
@@ -577,11 +450,12 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
-		void EM_Mpart(unsigned int);
-		bool EM_convergence(vector<vector<double>>, vector<vector<double>>, bool);
-		void EM_cycle(vector<bed_class>&, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
-		
+		void EM_Epart(vector<bed_class>&, unordered_map<string,unsigned int>&, unsigned int,unordered_map<string,unsigned int>&);
+		void EM_Mpart(unsigned int,unordered_map<string,unsigned int>&);
+		bool EM_convergence(vector<vector<double>>&, vector<vector<double>>&, bool);
+		void EM_cycle(vector<bed_class>&, unordered_map<string,unsigned int>&, unsigned int,unordered_map<string,unsigned int>&);
+		void print_PWM(string, vector<vector<double>>);
+	
 	public:
 		
 		//Occurrences constructor
@@ -640,12 +514,15 @@ class hamming_class{
 
 			if (exp_max > 0){
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, position, vertical_multimap, orizzontal_map_plus);
+				EM_cycle(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
+				if(tomtom){
+					for(unsigned int x = 0; x < PWM_hamming.size(); x++){
+						for(unsigned int y = 0; y < PWM_hamming[0].size(); y++){
+							PWM_hamming[x][y] = round(PWM_hamming[x][y]*100);
+						}
+					}
+				}
 			}
-		
-			cout << "OLIGO " << similar_oligos.size() << endl;
-			cout << "OCCURR " << similar_oligos_occurrences.size() << endl;
-			cout << "----" << endl;
 		}
 };
 
@@ -755,6 +632,7 @@ class map_class{
 		void Outfile_PWM_matrices();
 		void Outfile_Z_score_values();
 		void print_debug_PWM_hamming(ofstream&, unsigned int, unsigned int);
+		void print_debug_PWM_hamming_tomtom(ofstream&, unsigned int, unsigned int);
 		void print_debug_Z_scores(ofstream&, unsigned int, unsigned int);
 		bool find_local_max(double,double,double);
 		unsigned int sequences_number_T;
