@@ -1,5 +1,4 @@
 #include "MocoLoco.h" 
-//#include "Profiling.h"
 #include <sys/resource.h>
 
 
@@ -643,13 +642,6 @@ void map_class::check_kmer_dist(){
 		display_help();
 		exit(1);
 	}
-	for(unsigned int i = 0; i < kmers_vector.size(); i++){
-		if(distance_vector[i] > kmers_vector[i]){
-			cerr << "\nERROR: Please distance parmater must be lower or equal to k-mers length!\n";
-		display_help();
-		exit(1);
-		}
-	}
 }
 
 //Function to create a map of oligos + their occurrences along all the sequences
@@ -958,12 +950,15 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP){
 		
 		//For each position in sequence
 		for(unsigned int i=0; i<P_VALUE_MATRIX[j].size(); i++){
-
-			//Create a hamming_class H passing the vertical multimap, the distance inserted as input, the current position i, the number of different oligos (contained in tot_freq_matrix), the orizzontal matrix, the outfile to print the Output file and finally the GEP (which contains the sequences)
-			hamming_class H(P_VALUE_MATRIX[j][i].vertical_multimap,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, GEP, kmers_vector);
-
+			
+			//Create a hamming_class H passing the vertical multimap, the distance inserted as input, the current position i, the number of different oligos (contained in tot_freq_matrix), the orizzontal matrix, the outfile to print the Output file and finally the GEP (which contains the sequences) --> the ordering p or not distinguishes the multimap passed as input
+			
+			hamming_class H(P_VALUE_MATRIX[j][i].vertical_multimap, vector_kmers_maps_plus[j][i], P_VALUE_MATRIX[j][i].p_value_sort,distance_vector[j],i,tot_freq_matrix[j][i],orizzontal_plus_debug[j], orizzontal_minus_debug[j], outfile, GEP, kmers_vector);
+			
 			//A vector of hamming classes is created 
 			HAMMING_VECTOR.emplace_back(H);
+
+
 		}
 
 		//The vector of hamming_classes is stored into a bigger P_VALUE_MATRIX
@@ -1061,14 +1056,12 @@ bool map_class::find_local_max(double center, double prev, double post){
 }
 
 //Transforming a map of pair into a multimap, ordered by oligo occurrences
-multimap<pair<unsigned int, unsigned int>,pair<string,string>> p_value_class::multimap_creation(map<pair<string,string>, pair<unsigned int,unsigned int>> pair_map){
+void p_value_class::multimap_creation(map<pair<string,string>, pair<unsigned int,unsigned int>> pair_map){
 	//PROFILE_FUNCTION();
 	for(map<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it = pair_map.begin(); it != pair_map.end(); it++){ 	
 
 		vertical_multimap.insert({it->second,it->first});
 	}
-
-	return vertical_multimap;
 }
 
 //Finding N2 parameters thanks to the accumulate function, which allows to sum all the values present in a map -> accumulate function uses a lambda function (https://en.cppreference.com/w/cpp/algorithm/accumulate) 
@@ -1193,18 +1186,38 @@ void p_value_class::checking_ordering(map<pair<string,string>,pair<unsigned int,
 	}
 }
 
+
+multimap<unsigned int,pair<string,string>> hamming_class::creating_sum_occurrences_multimap(multimap<pair<unsigned int,unsigned int>,pair<string,string>>& pair_map){
+
+	multimap<unsigned int,pair<string,string>> sum_occurrences_multimap;
+
+	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator rev_it = pair_map.rbegin(); rev_it != pair_map.rend(); rev_it ++){
+
+		sum_occurrences_multimap.insert({(rev_it->first.first + rev_it->first.second),make_pair(rev_it->second.first,rev_it->second.second)});
+	}
+
+	return sum_occurrences_multimap;
+}
+
 //Scrolling the vertical positional multimap find the best oligo for occurrences. If more than one is present selecting the oligo which has more hamming neighbours.
-void hamming_class::find_best_oligos(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& vertical_multimap){
+void hamming_class::find_best_oligos(multimap<pair<unsigned int,unsigned int>, pair<string,string>>& vertical_multimap, map<pair<string,string>,pair<unsigned int,unsigned int>>& vertical_map, multimap<unsigned int,pair<string,string>>& sum_occurrences_multimap){
+
+
 	//PROFILE_FUNCTION();
-	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin();
+	multimap<unsigned int, pair<string,string>>::reverse_iterator it_rev_DS = sum_occurrences_multimap.rbegin();
+	multimap<pair<unsigned int,unsigned int>, pair<string,string>>::reverse_iterator it_rev_SS = vertical_multimap.rbegin();
 
 	//Saving the best oligo occurrences extracting from the last multimap element (higher first value) its occurrences -> working with multimap allows to have always the max occurrences in the last position of the map
-	if(DS==1){
-		real_best_oligo_occurrences = (it_rev->first.first + it_rev->first.second);
+	if(DS == 1){
+		real_best_oligo_occurrences = it_rev_DS->first;
+	
 	}
+
 	else{
-		real_best_oligo_occurrences = it_rev->first.first;
+		
+		real_best_oligo_occurrences = it_rev_SS->first.first;
 	}
+
 	//Flag and counter to control if the function does more cycle than multimap size (to avoid infinite loop as happened)
 	bool flag = 1;
 	unsigned int counter = 1;
@@ -1212,15 +1225,15 @@ void hamming_class::find_best_oligos(multimap<pair<unsigned int,unsigned int>, p
 	//If all the sequences have the same oligo (100%) in a specific position --> vertical_multimap.size() == 1 --> This control is made to avoid an infinite while cycle
 	//This control is specific for DS analysis
 	if(DS==1){
-		while(it_rev->first.first + it_rev->first.second == real_best_oligo_occurrences && flag == 1){
+		while(it_rev_DS->first == real_best_oligo_occurrences && flag == 1){
 
 			if(counter == vertical_multimap.size()){
 				flag = 0;
 			}
 			
 			//If another oligo has the same occurrences as the best -> save it into a vector of best_oligos
-			best_oligos.emplace_back(it_rev->second.first);
-			it_rev++;
+			best_oligos.emplace_back(it_rev_DS->second.first);
+			it_rev_DS++;
 			counter++;
 		}
 	}
@@ -1228,15 +1241,15 @@ void hamming_class::find_best_oligos(multimap<pair<unsigned int,unsigned int>, p
 	//If all the sequences have the same oligo (100%) in a specific position --> vertical_multimap.size() == 1 --> This control is made to avoid an infinite while cycle
 	//This control is specific for SS analysis
 	else{
-		while(it_rev->first.first == real_best_oligo_occurrences && flag == 1){
+		while(it_rev_SS->first.first == real_best_oligo_occurrences && flag == 1){
 
 			if(counter == vertical_multimap.size()){
 				flag = 0;
 			}
 
 			//If another oligo has the same occurrences as the best -> save it into a vector of best_oligos
-			best_oligos.emplace_back(it_rev->second.first);
-			it_rev++;
+			best_oligos.emplace_back(it_rev_SS->second.first);
+			it_rev_SS++;
 			counter++;
 		}
 	}
@@ -1468,6 +1481,7 @@ void hamming_class::PWM_hamming_creation(){
 	//PROFILE_FUNCTION();
 	//Vector for each bases initialized to count, position by position, the occurrences of that base
 	vector<double> vec_A, vec_C, vec_G, vec_T;
+	
 	//For each bases (position) of oligo
 	for(unsigned int character = 0; character < similar_oligos[0].size(); character++){
 
@@ -1478,8 +1492,7 @@ void hamming_class::PWM_hamming_creation(){
 		
 		//For each oligo in similar oligos vector
 		for(unsigned int oligo = 0; oligo < similar_oligos.size(); oligo++){
-			string oligo_map = similar_oligos[oligo];
-			similar_oligos_map.insert(pair<string, double>(oligo_map, similar_oligos_occurrences[oligo]));
+
 			switch(similar_oligos[oligo][character]){
 
 				//Increment base counters of the oligo occurrences
@@ -1512,31 +1525,25 @@ void hamming_class::PWM_hamming_creation(){
 void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class> &GEP) 
 {
 	//PROFILE_FUNCTION();
-	/*
-	cout << "Starting PWM: \n";
+//	cout << "Starting PWM: \n";
+//	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
+//	cout << endl;
+	
 	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
-			cout << PWM_hamming[i][j] << "\t";
+		PWM_hamming[i][j] = PWM_hamming[i][j]/tot_similar_occurrences;
+		PWM_hamming[i][j] = round(PWM_hamming[i][j]*1000)/1000;
+//		cout << PWM_hamming[i][j] << "\t";
 		}
-		cout << endl;
+//		cout << endl;
 	}
-	cout << endl;
-	*/
-	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
-		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
-			PWM_hamming[i][j] = PWM_hamming[i][j]/tot_similar_occurrences;
-		}
-	}
-	/*
-	cout << "Starting PFM: \n";
-	for (unsigned short int i = 0; i<PWM_hamming.size(); i++){
-		for (unsigned short int j = 0; j<PWM_hamming[i].size(); j++){
-			cout << PWM_hamming[i][j] << "\t";
-		}
-		cout << endl;
-	}
-	cout << endl;
-	*/
+//	cout << endl;
+
 }
 
 /*
@@ -1544,68 +1551,42 @@ This function is about the expectation step of the expectation-maximization algo
 where we obtain the likelihood ratio for each oligo in the vertical map
 */
 
-void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsigned int>& orizzontal_map_minus, unsigned int position,unordered_map<string,unsigned int>& orizzontal_map_plus) 
+void hamming_class::EM_Epart(vector<bed_class> &GEP, unsigned int position, multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap,unordered_map<string,unsigned int>& orizzontal_map_plus) 
 {
 	//PROFILE_FUNCTION();
-	string oligo_bg;
-	/*
-	cout << "---------------------------------" << endl;
-	cout << "#POSITION " << position + 1 << " before Epart"<< endl;
-	cout << "---------------------------------" << endl;
-	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-			cout << PWM_hamming[i][j] << "\t";
-		}
-		cout << endl;
-	}
-	*/
-	unsigned int hor_occ = 0;
+//	cout << "---------------------------------" << endl;
+//	cout << "#POSITION " << position + 1 << /*" before Epart"<<*/ endl;
+//	cout << "---------------------------------" << endl;
+//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
+	double sum = 0;
 	//Here we calculate the sum of all the occurences in the sequences
-	for(map<string, double>::iterator it = similar_oligos_map.begin(); it != similar_oligos_map.end(); it++){
-		unordered_map<string,unsigned int>::iterator occ_oligo_it = orizzontal_map_plus.begin();
-		unordered_map<string,unsigned int>::iterator occ_oligo_it_rev = orizzontal_map_minus.begin();
-		string oligo_occ = it->first;
-		
-		occ_oligo_it = orizzontal_map_plus.find(oligo_occ);
-		occ_oligo_it_rev = orizzontal_map_minus.find(oligo_occ);
-		
-		if(occ_oligo_it != orizzontal_map_plus.end()){
-			hor_occ = hor_occ + occ_oligo_it->second;
-
-		}
-		if(occ_oligo_it_rev != orizzontal_map_minus.end()){
-			hor_occ = hor_occ + occ_oligo_it_rev->second;
-		}
+	for(unordered_map<string, unsigned int>::iterator it = orizzontal_map_plus.begin(); it != orizzontal_map_plus.end(); it++){
+		sum = sum + it->second;
 	}
-	
+
 	//In this cycle for each element in vertical map we calculate the probability that this oligo is present in the hamming matrix 
-	for(map<string,double>::iterator it = similar_oligos_map.begin(); it != similar_oligos_map.end(); it++){
-		unordered_map<string,unsigned int>::iterator occ_oligo_it = orizzontal_map_plus.begin();
-		unordered_map<string,unsigned int>::iterator occ_oligo_it_rev = orizzontal_map_minus.begin();
-		string similar_oligo = it->first;
-		double P_oligo = 1;
+	for(multimap<pair<unsigned int, unsigned int>, pair<string,string>>::iterator it = vertical_multimap.begin(); it != vertical_multimap.end(); it++){
+		string oligo_vertical;
 		double P_bg = 0;
-		double horizontal_occurences = 0;
-		double likelihood_ratio = 0;
-
-		occ_oligo_it = orizzontal_map_plus.find(similar_oligo);
-		occ_oligo_it_rev = orizzontal_map_minus.find(similar_oligo);
-
-		if(occ_oligo_it != orizzontal_map_plus.end()){
-			horizontal_occurences = horizontal_occurences + occ_oligo_it->second;
-		}
-		if(occ_oligo_it_rev != orizzontal_map_minus.end()){
-			horizontal_occurences = horizontal_occurences + occ_oligo_it_rev->second;
-		}
+		double P_oligo = 1;
+		oligo_vertical = it->second.first;
+		int horizontal_occurences = 0;
+		horizontal_occurences = orizzontal_map_plus.find(oligo_vertical)->second;
 		/*
 		This is the background probability where we have the ratio between how times 
 		the oligo is present in the BED and the total number of possible oligos in the 
 		BED
 		*/
-		P_bg = horizontal_occurences/hor_occ;
+		P_bg = horizontal_occurences/sum;
 
 		for (unsigned int k = 0; k < PWM_hamming[0].size(); k++){
-			switch(it->first[k]){
+
+			switch(it->second.first[k]){
 
 				case 'A':			
 					P_oligo *= PWM_hamming[0][k];
@@ -1629,101 +1610,115 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 			}
 		}
 		
+		double likelihood_ratio = 0;
 		likelihood_ratio = P_oligo/P_bg;
-		//cout << "Oligo: "<< similar_oligo << "\tProbabiliy oligo: " << P_oligo << "\tProbability background: " << P_bg << "\tLR: " << likelihood_ratio << endl;
+//		cout << "P_oligo of " << oligo_vertical << " is " << P_oligo << " and background is: " << P_bg << endl;  
+//		cout << "Likelihood ratio of " << oligo_vertical << " is " << likelihood_ratio << endl;
 		
 		/*
-		 *The like_ratio_map is a map where for each oligo present in the vertical map
-		 *we couple the likelihood ratio previously calculated with the ratio between the probability
-		 *to have the oligo in the PWM_hamming and the background probability
-		 */
+		The like_ratio_map is a map where for each oligo present in the vertical map
+		we couple the likelihood ratio previously calculated with the ratio between the probability
+		to have the oligo in the PWM_hamming and the background probability
+		*/
 
-		like_ratio_map.insert(pair<string, double>(similar_oligo, likelihood_ratio));
+		like_ratio_map.insert(pair<string, double>(oligo_vertical, likelihood_ratio));
 	}
+
+//	for(map<string, double>::iterator it = like_ratio_map.begin(); it != like_ratio_map.end(); ++it)
+//	{
+//	    cout << it->first << " " << it->second << "\n";
+//	}
+
 }
 
 //In this function there is the second part of the EM algorithm and this is the maximization part
-void hamming_class::EM_Mpart(unsigned int position,unordered_map<string,unsigned int> &orizzontal_map_plus){
+void hamming_class::EM_Mpart(unsigned int position){
 	//PROFILE_FUNCTION();
-	/*
-	cout << "---------------------------------" << endl;
-	cout << "#POSITION " << position + 1 << " before Mpart"<< endl;
-	cout << "---------------------------------" << endl;
-	*/
-	for (unsigned int i = 0; i < PWM_hamming.size(); i++){
-		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-			PWM_hamming[i][j] = 0;
-		}
-	}
+//	cout << "---------------------------------" << endl;
+//	cout << "#POSITION " << position + 1 << " before Mpart"<< endl;
+//	cout << "---------------------------------" << endl;
+	//vector<vector<double>> PWM_hamming_new;
+	//PWM_hamming_new = PWM_hamming;
+//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+			//PWM_hamming_new[i][j] = 0;
+//		}
+//		cout << endl;
+//	}
     vector<double> sum_vect;
 	//For each position of the PWM_hamming we add the likelihood ratios to modify the previous PWM	
 	for (unsigned int b = 0; b < PWM_hamming[0].size(); b++){
 		double sum = 0;
-		for(map<string, double >::iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
+		for(map<string, double >::const_iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
 			switch(it->first[b]){
 				case 'A':			
 					PWM_hamming[0][b] = PWM_hamming[0][b] + it->second;
-					sum += it->second;	
+					if (it->second != 0){
+						sum += it->second;
+					}
 					break;
 
 				case 'C':
 					PWM_hamming[1][b] = PWM_hamming[1][b] + it->second;
-					sum += it->second;		
+					if (it->second != 0){
+						sum += it->second;
+					}
 					break;
 
 				case 'G':
 					PWM_hamming[2][b] = PWM_hamming[2][b] + it->second;
-					sum += it->second;
+					if (it->second != 0){
+						sum += it->second;
+					}
 					break;
 
 				case 'T':
 					PWM_hamming[3][b] = PWM_hamming[3][b] + it->second;
-					sum += it->second;
+					if (it->second != 0){
+						sum += it->second;
+					}
 					break;
 
 				default:				//Case if there is N
+					
 					break;
 			}
 		}
 		sum_vect.emplace_back(sum);
 	}
-	/*
-	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-			cout << PWM_hamming[i][j] << "\t";
-		}
-		cout << endl;
-	}
-	*/
+	//PWM_hamming = PWM_hamming_new;
 	//And here we divide each position for the sum of all the likelihood ratio
 	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
 	         PWM_hamming[i][j] = PWM_hamming[i][j]/sum_vect[j];
+			 PWM_hamming[i][j] = round(PWM_hamming[i][j]*1000)/1000;
 		}
 	}
-	/*
-	cout << "---------------------------------" << endl;
-	cout << "#POSITION " << position + 1 << " after Mpart"<< endl;
-	cout << "---------------------------------" << endl;
-	
-	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-			cout << PWM_hamming[i][j] << "\t";
-		}
-		cout << endl;
+//	cout << "---------------------------------" << endl;
+//	cout << "#POSITION " << position + 1 << " after Mpart"<< endl;
+//	cout << "---------------------------------" << endl;
+	for (unsigned int i = 0; i< sum_vect.size(); i++){
+//		cout << "LR" << i +1 <<" total: " << sum_vect[i] << endl;
+		sum_vect[i] = 0;
 	}
-	*/
+//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
 	sum_vect.clear();
 }
 // This function is made to check if the EM_cycle reaches convergence
-bool hamming_class::EM_convergence(vector<vector<double>>& PWM_old, vector<vector<double>> &PWM_hamming, bool conv){
+bool hamming_class::EM_convergence(vector<vector<double>> PWM_old, vector<vector<double>> PWM_hamming, bool conv){
 
 	conv = false;
 	for (unsigned int i = 0; i < PWM_hamming.size(); i++)
 	{
         for (unsigned int j = 0; j < PWM_hamming[0].size(); j++)
 		{
-            if (round(PWM_old[i][j]*1000)/1000 != round(PWM_hamming[i][j]*1000)/1000){
+            if (PWM_old[i][j] != PWM_hamming[i][j]){
                 conv = true;
 				break;
 			}
@@ -1733,7 +1728,9 @@ bool hamming_class::EM_convergence(vector<vector<double>>& PWM_old, vector<vecto
 	return conv;
 }
 
-void hamming_class::EM_cycle(vector<bed_class> &GEP, unordered_map<string,unsigned int>& orizzontal_map_minus, unsigned int position, unordered_map<string,unsigned int> &orizzontal_map_plus){
+
+
+void hamming_class::EM_cycle(vector<bed_class> &GEP, unsigned int position,multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap, unordered_map<string,unsigned int> &orizzontal_map_plus){
 	//PROFILE_FUNCTION();
 	bool conv = true;
 	int i = 0;
@@ -1743,66 +1740,58 @@ void hamming_class::EM_cycle(vector<bed_class> &GEP, unordered_map<string,unsign
 	//In this cycle we repeat the EM until the convergence is reached
 	//for (unsigned int i = 0; i < exp_max; i++){ 
 	while(conv){
-		/*
-		cout << i << endl;
-		cout << "Pos: " << position + 1 << endl;
-		cout << "OLD_PWM: " << endl;
-		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-	    		cout << PWM_hamming[i][j] << "\t";
-			}
-			cout << endl;
-		}
-		cout << endl;
-		*/
-		EM_Epart(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
-		EM_Mpart(position, orizzontal_map_plus);
+//		cout << i << endl;
+//		cout << "Pos: " << position + 1 << endl;
+//		cout << "OLD_PWM: " << endl;
+//		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//	    		cout << PWM_hamming[i][j] << "\t";
+//			}
+//			cout << endl;
+//		}
+//		cout << endl;
+
+		EM_Epart(GEP, position, vertical_multimap, orizzontal_map_plus);
+		EM_Mpart(position);
 		
 		
 		//cout << "------------" << endl;
-		//i++;
+		i++;
 	
-		//matrix_class NORM(PWM_hamming, true);
+		matrix_class NORM(PWM_hamming, true);
 		
-		//PWM_hamming = NORM.return_norm_matrix();
+		PWM_hamming = NORM.return_norm_matrix();
 		
 		like_ratio_map.clear();
-		/*
-		cout << "NEW_PWM: " << endl;
-		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-	    		cout << PWM_hamming[i][j] << "\t";
-			}
-			cout << endl;
-		}
-		cout << endl;
-		*/
+//		cout << "NEW_PWM: " << endl;
+//		for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//			for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//	    		cout << PWM_hamming[i][j] << "\t";
+//			}
+//			cout << endl;
+//		}
+//		cout << endl;
 		conv = EM_convergence(PWM_old, PWM_hamming, conv);
 		PWM_old = PWM_hamming;
-		
 	}
 
 	
 	//Now we transfrom the  position probability matrix into position frequency matrix 
 	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
 		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-			if(PWM_hamming[i][j] < 0.01){
-				PWM_hamming[i][j] = 0;
-			}
 	    	PWM_hamming[i][j] = PWM_hamming[i][j]*tot_similar_occurrences;
 		}
 	}
 
-	/*
-	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-			cout << PWM_hamming[i][j] << "\t";
-		}
-		cout << endl;
-	}
-	cout << endl;
-	cout << "---------------------------------------" << endl;
-	*/
+
+//	for (unsigned int i = 0; i<PWM_hamming.size(); i++){
+//		for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
+//			cout << PWM_hamming[i][j] << "\t";
+//		}
+//		cout << endl;
+//	}
+//	cout << endl;
+//	cout << "---------------------------------------" << endl;
 }
 
 //Shifting the PWM_matrix on the sequences and calculate local scores (from positon where the matrix has been generated), and the global scores from each sequences positions
@@ -2082,15 +2071,21 @@ void p_value_class::print_debug_occurrences_DS(map<pair<string,string>,pair<unsi
 	//PROFILE_FUNCTION();
 	unsigned int c=0;
 	sum_top_N = 0;
+	multimap<unsigned int,pair<string,string>> sum_occurrences_multimap;
+	multimap<pair<string,string>,pair<unsigned int,unsigned int>>::iterator pair_map_it = pair_map.begin();
+	
+	sum_occurrences_multimap = creating_sum_occurrences_multimap(vertical_multimap);
 
 	//Scrollig the p_value_sort multimap from first element to -nth element assign the rigth value to each feature and print them
-	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator it_rev = vertical_multimap.rbegin(); it_rev!=vertical_multimap.rend() && c<top_N; it_rev++, c++){
+	for(multimap<unsigned int,pair<string,string>>::reverse_iterator it_rev = sum_occurrences_multimap.rbegin(); it_rev!=sum_occurrences_multimap.rend() && c<top_N; it_rev++, c++){
+		
+		pair_map_it = pair_map.find(make_pair(it_rev->second.first, it_rev->second.second));
 
 		double FREQ, Sum_Occ_Oligo;
-		string Oligo = it_rev->second.first;
-		string Oligo_RC = it_rev->second.second;
-		unsigned int Num_Occ_FWD = it_rev->first.first;
-		unsigned int Num_Occ_REV = it_rev->first.second;
+		string Oligo = pair_map_it->first.first;
+		string Oligo_RC = pair_map_it->first.second;
+		unsigned int Num_Occ_FWD = pair_map_it->second.first;
+		unsigned int Num_Occ_REV = pair_map_it->second.second;
 		bool pal = check_palindrome(Oligo, reverse_bases);
 		unsigned int Rank = c;
 		string PAL;
@@ -2120,6 +2115,19 @@ void p_value_class::print_debug_occurrences_DS(map<pair<string,string>,pair<unsi
 		sum_top_N = sum_top_N + Sum_Occ_Oligo;
 
 	}
+}
+
+
+multimap<unsigned int,pair<string,string>> p_value_class::creating_sum_occurrences_multimap(multimap<pair<unsigned int,unsigned int>,pair<string,string>>& pair_map){
+
+	multimap<unsigned int,pair<string,string>> sum_occurrences_multimap;
+
+	for(multimap<pair<unsigned int,unsigned int>,pair<string,string>>::reverse_iterator rev_it = pair_map.rbegin(); rev_it != pair_map.rend(); rev_it ++){
+
+		sum_occurrences_multimap.insert({(rev_it->first.first + rev_it->first.second),make_pair(rev_it->second.first,rev_it->second.second)});
+	}
+
+	return sum_occurrences_multimap;
 }
 
 //If the analysis is on Single Strand and oligos need to be ordered by occurrences this is the function which writes on the output file
@@ -2414,33 +2422,8 @@ void map_class::Outfile_PWM_matrices(){
 
 	}
 }
-/*
+
 //PWM_matrices, parameters to calculate z-score, z-score and p-value printing
-void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsigned int k){
-	//PROFILE_FUNCTION();
-
-	vector<vector<double>> PWM_hamming;
-	string ACGT = "ACGT";
-	for(unsigned int position = 0; position < Z_TEST_MATRIX[j].size(); position++){
-	
-		PWM_hamming = HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].PWM_hamming;
-		
-		outfile << ">Position" << Z_TEST_MATRIX[j][position].local_pos << " " << Z_TEST_MATRIX[j][position].local_pos <<endl; 
-
-
-		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
-			outfile << ACGT[i] << "\t" << "[" << "\t";
-			for(unsigned int j = 0; j<PWM_hamming[i].size(); j++){
-				outfile << PWM_hamming[i][j] << "\t";
-			}
-			outfile << "]\n";
-		}
-		
-		//outfile << endl << endl;
-	}
-	
-}
-*/
 void map_class::print_debug_PWM_hamming(ofstream& outfile, unsigned int j, unsigned int k){
 	//PROFILE_FUNCTION();
 	outfile << "#PWM Matrices calculated from the best oligo for each position and his hamming distanced oligos - k = " << k << endl << endl;

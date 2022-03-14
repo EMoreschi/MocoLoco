@@ -23,6 +23,18 @@
 #include <chrono>
 using namespace std;
 
+#pragma once
+#include <algorithm>
+#include <thread>
+
+#define PROFILING 1
+#if PROFILING
+#define PROFILE_SCOPE(name) InstrumentationTimer timer##__LINE__(name)
+#define PROFILE_FUNCTION() PROFILE_SCOPE(__PRETTY_FUNCTION__)
+#else
+#define PROFILE_SCOPE(name)
+#endif
+
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -36,14 +48,142 @@ bool DS = 1;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;		
-double freq_treshold = 0.02;
+double freq_treshold = 0;
 bool local_maxima_grouping = true;
 bool refining_matrix = 0;
 unsigned int exp_max = 0;
-bool tomtom = false;
 bool err = false;
 TwoBit * tb;
 
+//
+// Basic instrumentation profiler by Cherno
+
+// Usage: include this header file somewhere in your code (eg. precompiled header), and then use like:
+//
+// Instrumentor::Get().BeginSession("Session Name");        // Begin session 
+// {
+//     InstrumentationTimer timer("Profiled Scope Name");   // Place code like this in scopes you'd like to include in profiling
+//     // Code
+// }
+// Instrumentor::Get().EndSession();                        // End Session
+//
+// You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
+//
+/*
+struct ProfileResult
+{
+    string Name;
+    long long Start, End;
+    uint32_t ThreadID;
+};
+
+struct InstrumentationSession
+{
+    string Name;
+};
+
+class Instrumentor
+{
+private:
+    InstrumentationSession* m_CurrentSession;
+    ofstream m_OutputStream;
+    int m_ProfileCount;
+public:
+    Instrumentor()
+        : m_CurrentSession(nullptr), m_ProfileCount(0)
+    {
+    }
+
+    void BeginSession(const string& name, const string& filepath = "nfy_valgrind.json")
+    {
+        m_OutputStream.open(filepath);
+        WriteHeader();
+        m_CurrentSession = new InstrumentationSession{ name };
+    }
+
+    void EndSession()
+    {
+        WriteFooter();
+        m_OutputStream.close();
+        delete m_CurrentSession;
+        m_CurrentSession = nullptr;
+        m_ProfileCount = 0;
+    }
+
+    void WriteProfile(const ProfileResult& result)
+    {
+        if (m_ProfileCount++ > 0)
+            m_OutputStream << ",";
+
+        string name = result.Name;
+        replace(name.begin(), name.end(), '"', '\'');
+
+        m_OutputStream << "{";
+        m_OutputStream << "\"cat\":\"function\",";
+        m_OutputStream << "\"dur\":" << (result.End - result.Start) << ',';
+        m_OutputStream << "\"name\":\"" << name << "\",";
+        m_OutputStream << "\"ph\":\"X\",";
+        m_OutputStream << "\"pid\":0,";
+        m_OutputStream << "\"tid\":" << result.ThreadID << ",";
+        m_OutputStream << "\"ts\":" << result.Start;
+        m_OutputStream << "}";
+
+        m_OutputStream.flush();
+    }
+
+    void WriteHeader()
+    {
+        m_OutputStream << "{\"otherData\": {},\"traceEvents\":[";
+        m_OutputStream.flush();
+    }
+
+    void WriteFooter()
+    {
+        m_OutputStream << "]}";
+        m_OutputStream.flush();
+    }
+
+    static Instrumentor& Get()
+    {
+        static Instrumentor instance;
+        return instance;
+    }
+};
+
+class InstrumentationTimer
+{
+public:
+    InstrumentationTimer(const char* name)
+        : m_Name(name), m_Stopped(false)
+    {
+        m_StartTimepoint = chrono::high_resolution_clock::now();
+    }
+
+    ~InstrumentationTimer()
+    {
+        if (!m_Stopped)
+            Stop();
+    }
+
+    void Stop()
+    {
+        auto endTimepoint = chrono::high_resolution_clock::now();
+
+        long long start = chrono::time_point_cast<chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
+        long long end = chrono::time_point_cast<chrono::microseconds>(endTimepoint).time_since_epoch().count();
+
+        uint32_t threadID = hash<thread::id>{}(this_thread::get_id());
+        Instrumentor::Get().WriteProfile({ m_Name, start, end, threadID });
+
+        m_Stopped = true;
+    }
+private:
+    const char* m_Name;
+    chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
+    bool m_Stopped;
+};
+
+*/
 class Timer
 {
 	public:
@@ -352,7 +492,8 @@ class p_value_class{
 		multimap<double,pair<string,string>> p_value_sort;
 		multimap<double,pair<string,vector<unsigned int>>> p_value_KNT;
 
-		multimap<pair<unsigned int,unsigned int>, pair<string,string>>  multimap_creation(map<pair<string,string>,pair<unsigned int,unsigned int>>);
+		multimap<unsigned int, pair<string,string>> creating_sum_occurrences_multimap(multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
+		void multimap_creation(map<pair<string,string>,pair<unsigned int,unsigned int>>);
 		void filling_KNT_vectors(unordered_map<string,unsigned int>&);
 		void N2_calculation(unordered_map<string,unsigned int>&);
 		void calculating_p_value();
@@ -395,7 +536,6 @@ class hamming_class{
 	
 	private:
 
-
 		vector<string> best_oligos;
 		string real_best_oligo;
 		unsigned int real_best_oligo_occurrences;
@@ -412,14 +552,18 @@ class hamming_class{
 		pair<double, double> FREQUENCE;
 		unsigned int position;
 		double comparison;
-		map<string,double> similar_oligos_map;
+		string reverse_bases;
+		bool pal;
+		multimap<unsigned int,pair<string,string>> sum_occurrences_multimap;
+
 
 		//unordered_map<string,unsigned int> orizzontal_map_plus;
 		friend class map_class;
 		friend class p_value_class;
 
 
-		void find_best_oligos(multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
+		multimap<unsigned int, pair<string,string>> creating_sum_occurrences_multimap(multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
+		void find_best_oligos(multimap<pair<unsigned int,unsigned int>, pair<string,string>>&, map<pair<string,string>,pair<unsigned int,unsigned int>>&, multimap<unsigned int,pair<string,string>>&);
 		void checking_best_oligo(unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
 		void find_secondary_hamming(unsigned int, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
 		void find_distanced_oligos(string, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
@@ -433,23 +577,40 @@ class hamming_class{
 		void PWM_hamming_creation();
 		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
-		void EM_Epart(vector<bed_class>&, unordered_map<string,unsigned int>&, unsigned int,unordered_map<string,unsigned int>&);
-		void EM_Mpart(unsigned int,unordered_map<string,unsigned int>&);
-		bool EM_convergence(vector<vector<double>>&, vector<vector<double>>&, bool);
-		void EM_cycle(vector<bed_class>&, unordered_map<string,unsigned int>&, unsigned int,unordered_map<string,unsigned int>&);
+		void EM_Epart(vector<bed_class>&, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
+		void EM_Mpart(unsigned int);
+		bool EM_convergence(vector<vector<double>>, vector<vector<double>>, bool);
+		void EM_cycle(vector<bed_class>&, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&,unordered_map<string,unsigned int>&);
 		
 	public:
-
-		hamming_class(multimap<pair<unsigned int,unsigned int>, pair<string,string>> &vertical_multimap, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int>& orizzontal_map_plus, unordered_map<string,unsigned int>& orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
+		
+		//Occurrences constructor
+		hamming_class(multimap<pair<unsigned int, unsigned int>, pair<string,string>>&vertical_multimap, map<pair<string, string>, pair<unsigned int, unsigned int>>&vertical_map, multimap<double, pair<string,string>> &p_value_sort, unsigned int distance, unsigned int position, unsigned int freq, unordered_map<string,unsigned int>& orizzontal_map_plus, unordered_map<string,unsigned int>& orizzontal_map_minus, ofstream& outfile, vector<bed_class> GEP, vector<unsigned int> kmers_vector){
 			
+			sum_occurrences_multimap = creating_sum_occurrences_multimap(vertical_multimap);
+
+			if(ordering == "p"){
+	
+				multimap<double,pair<string,string>>::iterator it_p_val = p_value_sort.begin();
+				multimap<pair<string,string>,pair<unsigned int, unsigned int>>::iterator it_occ = vertical_map.begin();
+		
+				real_best_oligo = it_p_val->second.first;
+				best_oligos.emplace_back(real_best_oligo);	
+				it_occ = vertical_map.find(make_pair(real_best_oligo, it_p_val->second.second));
+				real_best_oligo_occurrences = it_occ->second.first + it_occ->second.second;	
+
+				find_distanced_oligos(real_best_oligo,distance,vertical_multimap);
+			}
+		
+			else{
 			//Saving the vertical multimap passed to constructor locally
 			//kmer = kmers_vector[0];
 			//Find the best oligo (by occurrences) scrolling the vertical multimap
-			find_best_oligos(vertical_multimap);
-
+			find_best_oligos(vertical_multimap, vertical_map, sum_occurrences_multimap);
+			
 			//Checking if best oligo is one or more. If more, do the selection to find the real_best_oligo, else proceed to find hamming neighbours
 			checking_best_oligo(distance, vertical_multimap);
-
+			}
 			//Save the oligo size --> to avoid infinite cycle for its continous updating in the next function	
 			number_first_hamming = similar_oligos.size();	
 
@@ -463,7 +624,7 @@ class hamming_class{
 
 			//Adding real best oligo occurrences to similar occurrences vector
 			similar_oligos_occurrences.emplace_back(real_best_oligo_occurrences);
-			
+				
 			
 			//Calculating the frequence 1 (total of similar occurrences / total of possible oligos in the position) and saving it to FREQUENCE_1 variable 
 			frequence_1_calculation(freq);
@@ -478,16 +639,13 @@ class hamming_class{
 			PWM_hamming_creation();
 
 			if (exp_max > 0){
-						
 			    EM_Ipwm(PWM_hamming, GEP);
-				EM_cycle(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
-
+				EM_cycle(GEP, position, vertical_multimap, orizzontal_map_plus);
 			}
-			for (unsigned int i = 0; i<PWM_hamming.size(); i++){
-				for (unsigned int j = 0; j < PWM_hamming[i].size(); j++){
-	    			PWM_hamming[i][j] = round(PWM_hamming[i][j]);
-				}
-			}
+		
+			cout << "OLIGO " << similar_oligos.size() << endl;
+			cout << "OCCURR " << similar_oligos_occurrences.size() << endl;
+			cout << "----" << endl;
 		}
 };
 
@@ -577,7 +735,6 @@ class map_class{
 		vector<vector<z_test_class>> Z_TEST_MATRIX;
 		//vector<string> kmer_oligo;
 		vector<string> kmer_unique;
-		
 		vector<unsigned int> generic_vector_creation(string);
 
 		void table_creation_orizzontal(vector<bed_class>&);
@@ -598,7 +755,6 @@ class map_class{
 		void Outfile_PWM_matrices();
 		void Outfile_Z_score_values();
 		void print_debug_PWM_hamming(ofstream&, unsigned int, unsigned int);
-		void print_debug_PWM_hamming_tomtom(ofstream&, unsigned int, unsigned int);
 		void print_debug_Z_scores(ofstream&, unsigned int, unsigned int);
 		bool find_local_max(double,double,double);
 		unsigned int sequences_number_T;

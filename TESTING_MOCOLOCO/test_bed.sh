@@ -2,7 +2,7 @@
 #	$RMC -n $N -l $L -j ../../${J} -p $P -o $i && $MOCO -m random_multifa_implanted1.fasta  -k $K -d $D &
 usage() { echo "Usage: $0 -j <JASPAR_MATRIX> -f <Hit.txt> -n <n> -l <l> -p <p> -k <k> -d <d> -e <e> " 1>&2; exit 1; }
 
-while getopts ":b:t:j:o:k:d:f:v:e:ra" o; do
+while getopts ":b:t:j:z:o:k:d:f:v:e:ra" o; do
     case "${o}" in
         
 	b)
@@ -13,6 +13,9 @@ while getopts ":b:t:j:o:k:d:f:v:e:ra" o; do
             ;;
         j)
             J=${OPTARG}
+            ;;
+        z)
+            Z=${OPTARG}
             ;;
         o)
             O=${OPTARG}
@@ -45,7 +48,7 @@ while getopts ":b:t:j:o:k:d:f:v:e:ra" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${B}" ] || [ -z "${T}" ] || [ -z "${J}" ] || [ -z "${O}" ] || [ -z "${K}" ] || [ -z "${D}" ];
+if [ -z "${B}" ] || [ -z "${T}" ] || [ -z "${J}" ] || [ -z "${Z}" ] || [ -z "${K}" ] || [ -z "${D}" ];
 then
 
     usage
@@ -67,7 +70,7 @@ then
 fi
 
 MOCO=$(realpath MOCO)
-path_out=$(realpath $O)
+path_out=$(realpath $Z)
 path_out_tot=${path_out::-4}_tot.txt
 Out_dir=${B#../*/};
 
@@ -95,9 +98,14 @@ else
 	cd ${Out_dir}_test_k${K}_f${F}_r;
 
 fi 
-	
-$MOCO -b ../${B} -t ../${T} -j ../${J} -k $K -d $D -f $F -e $E $Refine $all &
-  
+
+if [ -z "${O}" ]
+then
+	$MOCO -b ../${B} -t ../${T} -j ../${J} -k $K -d $D -f $F -e $E $Refine $all &
+else
+	$MOCO -b ../${B} -t ../${T} -j ../${J} -k $K -d $D -f $F -e $E $Refine $all -o $O &
+fi
+
 wait
 
 	#Extraction of all the pvalue from the Z_scores_implanted files
