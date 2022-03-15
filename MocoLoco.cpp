@@ -1543,6 +1543,9 @@ void hamming_class::print_PWM(string name, vector<vector<double>> PWM_hamming){
 void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,vector<bed_class> &GEP) 
 {
 	//PROFILE_FUNCTION();
+
+	//matrix::normalize()
+
 	double sum = 0;
 	double corr = 0;
 
@@ -1586,7 +1589,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 	*/
 	
 	unsigned int sum_hor = 0;
-	//Here we calculate the sum of all the occurences in the sequences
+
 	for(map<string, double>::iterator it = similar_oligos_map.begin(); it != similar_oligos_map.end(); it++){
 		unordered_map<string,unsigned int>::iterator occ_oligo_it = orizzontal_map_plus.begin();
 		unordered_map<string,unsigned int>::iterator occ_oligo_it_rev = orizzontal_map_minus.begin();
@@ -1625,7 +1628,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 		if(occ_oligo_it_rev != orizzontal_map_minus.end()){
 			horizontal_occurences = horizontal_occurences + occ_oligo_it_rev->second;
 		}
-		cout << "Oligo: "<< similar_oligo << "\tHorizontal occurrences: " << horizontal_occurences << endl;
+		
 		P_bg = horizontal_occurences/sum_hor;
 
 		for (unsigned int k = 0; k < PWM_hamming[0].size(); k++){
@@ -1666,6 +1669,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 	}
 
 	double sum = 0;
+	double Nsites = ceil((similar_oligos_map.size()/2) + 1);
 
 	for (unsigned int i = 0; i < similar_oligos_map.size(); i++){
 		sum += LR[i];
@@ -1673,7 +1677,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 
 	for (unsigned int i = 0; i < similar_oligos_map.size(); i++){
 		LR[i] = LR[i]/sum;
-		LR[i] = LR[i] * similar_oligos_map.size()/2;
+		LR[i] = LR[i] * Nsites;
 		like_ratio_map.insert(pair<string, double>(oligo[i], LR[i]));
 	}
 
@@ -1681,7 +1685,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 	//matrix::squash()
 
 	double total = 0;
-	double Nsites = ceil((similar_oligos_map.size()/2) + 1);
+	
 	bool renorm = true;
 
 	for(map<string, double >::iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
@@ -1730,7 +1734,8 @@ void hamming_class::EM_Mpart(unsigned int position,unordered_map<string,unsigned
 	cout << "---------------------------------" << endl;
 	*/
 
-	//get_p()
+	//matrix::get_p()
+	
 	for(unsigned int x = 0; x < PWM_hamming.size(); x++)
 	{
 		for(unsigned int y = 0; y < PWM_hamming[0].size(); y++)

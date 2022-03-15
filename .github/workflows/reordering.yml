@@ -73,6 +73,19 @@ jobs:
       - name: test difference between outputs 
         run: diff NFY_bed_result.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
       
+      - name: Run EM test
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6,8 -d 1,2 -f 0.01 -e 100
+          
+      - name: get sample test 
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/8b6737e9142edbf7660f6f8a941c107d/raw/069438fb27aa64f3bbd0c6f4073a66b9eaacb472/6_mers_EM_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/7605ac3a241d9db15adf591d7f5a4a04/raw/b540e8343808589f597f00d556aeba1ce1102162/8_mers_EM_test.txt
+
+      - name: test difference between outputs 
+        run: |
+              diff 6_mers_EM_test.txt 6-mers_Z_scores_fasta_DS.txt && \
+              diff 8_mers_EM_test.txt 8-mers_Z_scores_fasta_DS.txt
+
         # Runs a set of commands using the runners shell
       - name: Compiling multifasta random tool
         run: g++ -o random_multifa -Wall $GITHUB_WORKSPACE/Random_multifa_TOOL/Multifa_random_tool.cpp
