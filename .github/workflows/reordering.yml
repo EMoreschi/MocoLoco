@@ -40,7 +40,7 @@ jobs:
         run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
           
       - name: get sample test 
-        run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/ba5d470ea8547abf79437a95bad1a98559fe22c9/Multifasta_test_result.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/df864e4ef71d0f0c6fcebf753caf24397c5ed1d0/Multifasta_test_result.txt
           
       - name: test difference between outputs 
         run: diff Multifasta_test_result.txt 6-mers_Z_scores_fasta_DS.txt
@@ -50,9 +50,9 @@ jobs:
 
       - name: get kmer test
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/4bc4ab52d4fae25fe5edb65ca951df2e/raw/4385ad8c1330d53c0f7bc5074c00775efede7d1d/6_mers_multi_test.txt && \
-              wget https://gist.githubusercontent.com/AmarettiL/94e01af9459e8ddf99c625322ad5b98e/raw/8617ba2208831b6ba0da21f32678bbabb61117fe/8_mers_multi_test.txt && \
-              wget https://gist.githubusercontent.com/AmarettiL/b718763712e5269fb9460ece74d6f75d/raw/cb66b6608d9407816802de91c529582693f5cff6/10_mers_multi_test.txt
+              wget https://gist.githubusercontent.com/AmarettiL/4bc4ab52d4fae25fe5edb65ca951df2e/raw/564c4851ffdb489d1b4f81a5a9d6fc012428ad5f/6_mers_multi_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/94e01af9459e8ddf99c625322ad5b98e/raw/81a0730f11426a64edc8208df85aac372ed267aa/8_mers_multi_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/b718763712e5269fb9460ece74d6f75d/raw/88d892793f0024c64c0e9ea737fb69a00c74eecf/10_mers_multi_test.txt
 
       - name: test difference between outputs
         run: |
@@ -68,7 +68,7 @@ jobs:
         run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
           
       - name: get sample test 
-        run: wget https://gist.githubusercontent.com/AmarettiL/57ff3b08d8983a32de46f7cd3ae898a3/raw/006582b46c1b871d08ad7f3208e68d5664c4696d/NFY_bed_result.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/57ff3b08d8983a32de46f7cd3ae898a3/raw/9a513a72f2890520c27135a3be3a3794b1a022b7/NFY_bed_result.txt
 
       - name: test difference between outputs 
         run: diff NFY_bed_result.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
