@@ -83,8 +83,8 @@ jobs:
 
       - name: test difference between outputs 
         run: |
-              diff 6_mers_EM_test.txt 6-mers_Z_scores_fasta_DS.txt && \
-              diff 8_mers_EM_test.txt 8-mers_Z_scores_fasta_DS.txt
+              diff 6_mers_EM_test.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt && \
+              diff 8_mers_EM_test.txt 8-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
 
         # Runs a set of commands using the runners shell
       - name: Compiling multifasta random tool
