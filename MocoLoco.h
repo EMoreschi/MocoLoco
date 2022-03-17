@@ -55,6 +55,7 @@ string exp_max;
 bool tomtom = false;
 bool err = false;
 TwoBit * tb;
+double sim_tresh = 0.001;
 
 class Timer
 {
@@ -121,9 +122,6 @@ class bed_class {
 			//Take line from bed file and extract chr_coord, start_coord and end_coord
 			read_line(line);
 
-			//check if start coordinates are not greather then end coordinates
-			//flag_control(start_coord,end_coord);
-
 			//Set the new start and end coordinates following p (half_length) input and add overhead to end coordinates
 			centering_function(start_coord, end_coord, half_length, overhead);
 
@@ -172,15 +170,6 @@ class matrix_class {
 			inverse_matrix_log = reverse_matrix(matrix_log);
 		}
 
-		matrix_class(vector<vector<double>> mat, bool EM){
-	
-			//Function to normalize the matrix scores and add a pseudocount
-			matrix_normalization_pseudoc(mat);
-
-			//Function to normalize again the matrix after pseudocount addition
-			matrix_normalization(norm_matrix);
-		}
-
 		void debug_matrix(matrix_class);
 		vector<vector<double>> return_log_matrix();
 		vector<vector<double>> return_inverse_log_matrix();
@@ -219,9 +208,6 @@ class oligo_class{
 	
 		oligo_class(vector<vector<double>> &matrix, string &sequence, string chr_coord_GEP, unsigned int start_coord_GEP, char strand_sign){
 
-//			global_sequence = sequence;
-//			strand = strand_sign;
-
 			//Function to annotate in min_possible_score and max_possible_score the worst and the best score that an oligo can reach based on the current jaspar matrix
 			find_minmax(matrix);
 			
@@ -238,7 +224,13 @@ class oligo_class{
 			find_best_sequence(sequence, matrix[0].size());
 
 			//The coordinates of the best oligo are saved --> It will be useful to center the window on the best oligo
-			find_coordinate(matrix[0].size(), chr_coord_GEP, start_coord_GEP);
+			//find_coordinate(matrix[0].size(), chr_coord_GEP, start_coord_GEP);
+
+			chr_coord_oligo = chr_coord_GEP;
+			
+			start_coord_oligo = start_coord_GEP + local_position;
+			
+			end_coord_oligo = start_coord_oligo + matrix[0].size();
 		}
 		
 		oligo_class(vector<vector<double>> &matrix, string &sequence){
@@ -436,7 +428,7 @@ class hamming_class{
 
 
 		multimap<unsigned int, pair<string,string>> creating_sum_occurrences_multimap(multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
-		void find_best_oligos(multimap<pair<unsigned int,unsigned int>, pair<string,string>>&, map<pair<string,string>,pair<unsigned int,unsigned int>>&, multimap<unsigned int,pair<string,string>>&);
+		void find_best_oligos(multimap<pair<unsigned int,unsigned int>,pair<string,string>>&, multimap<unsigned int,pair<string,string>>&);
 		void checking_best_oligo(unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
 		void find_secondary_hamming(unsigned int, unsigned int, multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
 		void find_distanced_oligos(string, unsigned int,multimap<pair<unsigned int,unsigned int>, pair<string,string>>&);
@@ -477,13 +469,13 @@ class hamming_class{
 			}
 		
 			else{
-			//Saving the vertical multimap passed to constructor locally
-			//kmer = kmers_vector[0];
-			//Find the best oligo (by occurrences) scrolling the vertical multimap
-			find_best_oligos(vertical_multimap, vertical_map, sum_occurrences_multimap);
+				//Saving the vertical multimap passed to constructor locally
+				//kmer = kmers_vector[0];
+				//Find the best oligo (by occurrences) scrolling the vertical multimap
+				find_best_oligos(vertical_multimap, sum_occurrences_multimap);
 			
-			//Checking if best oligo is one or more. If more, do the selection to find the real_best_oligo, else proceed to find hamming neighbours
-			checking_best_oligo(distance, vertical_multimap);
+				//Checking if best oligo is one or more. If more, do the selection to find the real_best_oligo, else proceed to find hamming neighbours
+				checking_best_oligo(distance, vertical_multimap);
 			}
 			//Save the oligo size --> to avoid infinite cycle for its continous updating in the next function	
 			number_first_hamming = similar_oligos.size();	
@@ -580,6 +572,7 @@ class z_test_class{
 
 			//Calculating z-score and p-value from it
 			z_score_calculation();
+			
 			all_local_scores.clear();
 			all_global_scores.clear();
 			oligo_scores_orizzontal_FWD.clear();
@@ -614,7 +607,7 @@ class map_class{
 		vector<string> kmer_unique;
 		vector<unsigned int> generic_vector_creation(string);
 
-		void table_creation_orizzontal(vector<bed_class>&);
+		void table_creation_horizontal(vector<bed_class>&);
 		void table_creation_vertical(vector<bed_class>&);
 		void or_ver_kmer_count(string,unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
 		void vertical_kmer_count(string,map<pair<string,string>,pair<unsigned int, unsigned int>>&, unsigned int &);
@@ -651,7 +644,7 @@ class map_class{
 			check_kmer_dist();			
 
 			//Counting all k-mers occurrences along all the sequences (orizzontal count) --> Maps composed by strings (oligos) and unsigned integers (oligo occurrences)
-			table_creation_orizzontal(GEP);
+			table_creation_horizontal(GEP);
 
 			//Counting k-mers occurrences for each position (vertical count) --> Maps (one per position) are composed by pair of strings(oligo + reverse complement) and unsigned integers (oligo occ. + reverse oligo occ.)
 			table_creation_vertical(GEP);
@@ -697,5 +690,5 @@ void display_help();
 bool is_file_exist(string fileName, string buf);
 void check_input_file();
 bool check_palindrome(string, string&);
-double check_p_value(double);
+double check_p_value(double,string);
 void RAM_usage();
