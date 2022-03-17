@@ -78,8 +78,8 @@ jobs:
           
       - name: get sample test 
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/8b6737e9142edbf7660f6f8a941c107d/raw/069438fb27aa64f3bbd0c6f4073a66b9eaacb472/6_mers_EM_test.txt && \
-              wget https://gist.githubusercontent.com/AmarettiL/7605ac3a241d9db15adf591d7f5a4a04/raw/b540e8343808589f597f00d556aeba1ce1102162/8_mers_EM_test.txt
+              wget https://gist.githubusercontent.com/AmarettiL/8b6737e9142edbf7660f6f8a941c107d/raw/141db9a2c4e95808b7bc27373789c776fdca318d/6_mers_EM_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/7605ac3a241d9db15adf591d7f5a4a04/raw/9bbd73b740d966486368d93003fd03bc8c042538/8_mers_EM_test.txt
 
       - name: test difference between outputs 
         run: |
