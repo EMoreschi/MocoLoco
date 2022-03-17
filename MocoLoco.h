@@ -51,7 +51,7 @@ unsigned int top_N = 10;
 double freq_treshold = 0.02;
 bool local_maxima_grouping = true;
 bool refining_matrix = 0;
-unsigned int exp_max = 0;
+string exp_max;
 bool tomtom = false;
 bool err = false;
 TwoBit * tb;
@@ -512,7 +512,7 @@ class hamming_class{
 			//Building a PWM matrix from best oligo sequence and his hamming neigbours sequences and occurrences
 			PWM_hamming_creation();
 
-			if (exp_max > 0){
+			if (exp_max.length()>0){
 			    EM_Ipwm(PWM_hamming, GEP);
 				EM_cycle(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
 				if(tomtom){

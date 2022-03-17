@@ -1832,12 +1832,24 @@ void hamming_class::EM_Mpart(unsigned int position,unordered_map<string,unsigned
 // This function is made to check if the EM_cycle reaches convergence
 bool hamming_class::EM_convergence(vector<vector<double>>& PWM_old, vector<vector<double>> &PWM_hamming, bool conv){
 
+	vector<vector<double>> PWM_old_conv;
+	vector<vector<double>> PWM_hamming_conv;
+
+	PWM_old_conv = PWM_old;
+	PWM_hamming_conv = PWM_hamming;
+
 	conv = false;
 	for (unsigned int i = 0; i < PWM_hamming.size(); i++)
 	{
         for (unsigned int j = 0; j < PWM_hamming[0].size(); j++)
 		{
-            if (round(PWM_old[i][j]*1000)/1000 != round(PWM_hamming[i][j]*1000)/1000){
+			// if (PWM_old_conv[i][j] < 0.00001){
+			// 	PWM_old_conv[i][j] = 0;
+			// }
+			// if (PWM_hamming_conv[i][j] < 0.00001){
+			// 	PWM_old_conv[i][j] = 0;
+			// }
+            if (abs(PWM_old_conv[i][j] - PWM_hamming_conv[i][j])>0.001){
                 conv = true;
 				break;
 			}
@@ -1849,37 +1861,41 @@ bool hamming_class::EM_convergence(vector<vector<double>>& PWM_old, vector<vecto
 
 void hamming_class::EM_cycle(vector<bed_class> &GEP, unordered_map<string,unsigned int>& orizzontal_map_minus, unsigned int position, unordered_map<string,unsigned int> &orizzontal_map_plus){
 	//PROFILE_FUNCTION();
-
+	bool conv = true;
 	int i = 0;
+
+	vector<vector<double>> PWM_old;
 	
-	//vector<vector<double>> PWM_old;
-	//PWM_old = PWM_hamming;
 	//In this cycle we repeat the EM until the convergence is reached
-	for (unsigned int i = 0; i < exp_max; i++){ 
-	//while(i < 150){
-		/*
-		cout << i << endl;
-		cout << "Pos: " << position + 1 << endl;
-		*/
-		EM_Epart(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
-		EM_Mpart(position, orizzontal_map_plus);
+	//for (unsigned int i = 0; i < exp_max; i++){ 
+	if (exp_max == "c"){
 
+		while(conv && i < 200){
+			
+			PWM_old = PWM_hamming;
 
-		//cout << "------------" << endl;
+			EM_Epart(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
+			EM_Mpart(position, orizzontal_map_plus);
 		
-		i++;
+			like_ratio_map.clear();
 
-		like_ratio_map.clear();
-
-		//conv = EM_convergence(PWM_old, PWM_hamming, conv);
-		//PWM_old = PWM_hamming;
+			conv = EM_convergence(PWM_old, PWM_hamming, conv);
+			PWM_old = PWM_hamming;
+			i++;
+		}
 
 	}
-	/*
-	print_PWM("", PWM_hamming);
+	else{
 
-	cout << "---------------------------------------" << endl;
-	*/
+		double em = stod(exp_max);
+		for(unsigned int i = 0; i < em; i++){
+			EM_Epart(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
+			EM_Mpart(position, orizzontal_map_plus);
+		
+			like_ratio_map.clear();
+		}
+
+	}
 }
 
 //Shifting the PWM_matrix on the sequences and calculate local scores (from positon where the matrix has been generated), and the global scores from each sequences positions
@@ -2532,7 +2548,7 @@ void map_class::print_debug_PWM_hamming_tomtom(ofstream& outfile, unsigned int j
 	
 		PWM_hamming = HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos-1].PWM_hamming;
 		
-		outfile << ">Position" << Z_TEST_MATRIX[j][position].local_pos << " " << Z_TEST_MATRIX[j][position].local_pos <<endl; 
+		outfile << ">Position" << Z_TEST_MATRIX[j][position].local_pos << " " << Z_TEST_MATRIX[j][position].Zpvalue <<endl; 
 
 
 		for(unsigned int i = 0; i< PWM_hamming.size(); i++){
@@ -2707,7 +2723,7 @@ void command_line_parser(int argc, char** argv){
 				break;
 			case 'r' : refining_matrix = 1;
 				   break;
-			case 'e' : exp_max = stoi(optarg);
+			case 'e' : exp_max = string(optarg);
 				   break;
 			case 'f' : freq_treshold = stod(optarg);
 				   if(freq_treshold == 0){
@@ -2786,8 +2802,8 @@ void display_help(){
 	cerr << "\n --freq || -f <n1> to set the frequence treshold to calculate the z_score. (DEFAULT: 0.02)\n";
 	cerr << "\n --all || -a to disable the local maxima filtering\n"; 
 	cerr << "\n --refine || -r to refine PWM matrices with secondary hamming\n"; 
-	cerr << "\n --exp_maximization || -e to refine PWM matrices with the expectation maximization method\n\n";
-
+	cerr << "\n --exp_maximization || -e to refine PWM matrices with the expectation maximization method, if you type a number this will be the number of cycles but if you want to reach convergence you can type just 'c'\n\n";
+	cerr << "\n --tomtom || -t will give as output a format of matrices adapted for tomtom analysis\n\n";
 	exit(EXIT_SUCCESS);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
