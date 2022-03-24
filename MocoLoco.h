@@ -54,6 +54,10 @@ bool refining_matrix = 0;
 string exp_max;
 bool tomtom = false;
 bool err = false;
+vector<bool> rev;
+string reverse_sequence;
+string reverse_matrix_seq;
+string oligos_reverse;
 TwoBit * tb;
 double sim_tresh = 0.001;
 
@@ -188,7 +192,6 @@ class oligo_class{
 		double min_possible_score;
 		double max_possible_score;
 		double best_score;
-		//double best_score_normalized;
 		string global_sequence;
 		string best_oligo_seq;
 		unsigned int local_position;
@@ -226,6 +229,10 @@ class oligo_class{
 			//The coordinates of the best oligo are saved --> It will be useful to center the window on the best oligo
 			//find_coordinate(matrix[0].size(), chr_coord_GEP, start_coord_GEP);
 
+			strand = strand_sign;
+
+			global_sequence = sequence;
+			
 			chr_coord_oligo = chr_coord_GEP;
 			
 			start_coord_oligo = start_coord_GEP + local_position;
@@ -292,7 +299,10 @@ class coordinator_class{ 					//Coordinator class to connect Matrix to Bed and O
 			
 			//The best oligo selected for each sequence becames the new center of the window, re-setting the GEP coordinates
 			centering_oligo();
-
+			for (unsigned int i = 0; i < GEP.size(); i++){
+				cout << "Rev " << rev[i] << " sequence number " << i+1 << " matrix is: " << oligos_vector[i].best_oligo_seq << endl;
+				cout << GEP[i].sequence << endl;
+			}
 		}
 	
 		vector<bed_class> GEP;
@@ -416,7 +426,7 @@ class hamming_class{
 		pair<double, double> FREQUENCE;
 		unsigned int position;
 		double comparison;
-				map<string,double> similar_oligos_map;
+		map<string,double> similar_oligos_map;
 		string reverse_bases;
 		bool pal;
 		multimap<unsigned int,pair<string,string>> sum_occurrences_multimap;
@@ -440,7 +450,6 @@ class hamming_class{
 		double frequence_2_calculation(unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&, unsigned int);
 		unsigned int finding_orizzontal_occurrences(unordered_map<string,unsigned int>&, unordered_map<string,unsigned int>&);
 		void PWM_hamming_creation();
-		//void likelihood_ratio(vector<vector<double>>);
 		void EM_Ipwm(vector<vector<double>>&,vector<bed_class>&);
 		void EM_Epart(vector<bed_class>&, unordered_map<string,unsigned int>&, unsigned int,unordered_map<string,unsigned int>&);
 		void EM_Mpart(unsigned int,unordered_map<string,unsigned int>&);
@@ -603,8 +612,6 @@ class map_class{
 		vector<vector<hamming_class>> HAMMING_MATRIX;
 		vector<z_test_class> Z_TEST_VECTOR;
 		vector<vector<z_test_class>> Z_TEST_MATRIX;
-		//vector<string> kmer_oligo;
-		vector<string> kmer_unique;
 		vector<unsigned int> generic_vector_creation(string);
 
 		void table_creation_horizontal(vector<bed_class>&);

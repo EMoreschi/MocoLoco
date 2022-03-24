@@ -218,9 +218,9 @@ void oligo_class::find_minmax(vector<vector<double>> &matrix){
 }	
 
 //Function to calculate the score of a general oligo against a JASPAR matrix
-void oligo_class::shifting(vector<vector<double>> &matrix, string &sequence/*, unsigned int s_iterator*/){
+void oligo_class::shifting(vector<vector<double>> &matrix, string &sequence){
 	//PROFILE_FUNCTION();
-	unsigned int max;
+	unsigned int max = 0;
 	max = sequence.size() - matrix[0].size();
 	for (unsigned int s_iterator = 0; s_iterator <= max; s_iterator++){
 		double sum_scores = 0;
@@ -267,10 +267,9 @@ void oligo_class::shifting(vector<vector<double>> &matrix, string &sequence/*, u
 void oligo_class::scores_normalization(){
 	//PROFILE_FUNCTION();
 
-	for(unsigned int score = 0; score < oligo_scores.size(); score++){
+	for(unsigned int i = 0; i < oligo_scores.size(); i++){
 
-	oligo_scores[score] = 1 + ((oligo_scores[score] - max_possible_score)/(max_possible_score - min_possible_score));
-	
+	oligo_scores[i] = 1 + ((oligo_scores[i] - max_possible_score)/(max_possible_score - min_possible_score));
 	}
 }
 
@@ -467,19 +466,18 @@ void coordinator_class::best_strand(){
 		if(best_score_norm_positive >= best_score_norm_negative){
 			
 			comparison.emplace_back(oligos_vector[i]);
-
+			rev.emplace_back(false);
 		}
 
 		else{
+			rev.emplace_back(true);
 			comparison.emplace_back(oligos_vector[i+1]);
-			
 		}
 	}
 
 		//The new oligos_vector is replaced by comparison vector, which contains only the best strand
 	oligos_vector.clear();
-	
-	//oligos_vector.shrink_to_fit();
+
 	oligos_vector = comparison;
 }
 
@@ -496,6 +494,10 @@ void coordinator_class::centering_oligo(){
 		center_oligo = oligos_vector[i].start_coord_oligo + matrix_log[0].size()/2;
 		GEP[i].centering_function(center_oligo,center_oligo,half_length,0);
 		GEP[i].extract_seq(tb,0);
+		if (rev[i]){
+			check_palindrome(GEP[i].sequence, reverse_sequence);
+			GEP[i].sequence = reverse_sequence;
+		}
 	}
 }
 
@@ -503,7 +505,7 @@ void coordinator_class::centering_oligo(){
 //Function able to convert a string (containing numbers separated by ",") into a vector of unsigned int
 vector<unsigned int> map_class::generic_vector_creation(string numbers){
 	//PROFILE_FUNCTION();
-	int index;
+	int index = 0;
 	vector<unsigned int> vec;
 
 	//When index is == -1 means that it is pointing to the end character of the string
@@ -1613,7 +1615,6 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 		likelihood_ratio = P_oligo/P_bg;
 		LR.emplace_back(likelihood_ratio);
 		oligo.emplace_back(similar_oligo);
-		//cout << "Oligo: "<< similar_oligo << "\tProbabiliy oligo: " << P_oligo << "\tProbability background: " << P_bg << "\tLR: " << likelihood_ratio << endl;
 		
 		/*
 		 *The like_ratio_map is a map where for each oligo present in the vertical map
@@ -1632,6 +1633,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 	for (unsigned int i = 0; i < similar_oligos_map.size(); i++){
 		LR[i] = LR[i]/sum;
 		LR[i] = LR[i] * Nsites;
+		//cout << "Oligo: "<< oligo[i] << "\tLR: " << LR[i] << endl;
 		like_ratio_map.insert(pair<string, double>(oligo[i], LR[i]));
 	}
 
@@ -1645,6 +1647,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 	for(map<string, double >::iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
 		total += it->second;
 	}
+	
 	while(renorm)
     {
     	renorm = false;
@@ -1653,9 +1656,7 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
         total = 0;
 
         for(map<string, double >::iterator it = like_ratio_map.begin();it != like_ratio_map.end(); ++it){
-            
 			double p = it->second;
-
             if(p < 1){
 				p /= norm; 
 			}                            
@@ -1671,10 +1672,11 @@ void hamming_class::EM_Epart(vector<bed_class> &GEP, unordered_map<string,unsign
 
             if(p <= 1){
 				total += p;
-			}              
+			}   
+        
         }
     }
-	
+
 	LR.clear();
 	oligo.clear();
 }
@@ -1801,8 +1803,6 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> &GEP){
 	//PROFILE_FUNCTION();
 	//For every sequence
 	for(unsigned int i=0; i<GEP.size(); i++){
-		
-		//string sequence = GEP[i].sequence;
 		
 		//Calling oligo class to accede to all functions useful to shift a matrix on sequences --> Shifting on FWD strand
 		oligo_class SHIFTING_PWM(matrix_log, GEP[i].sequence);

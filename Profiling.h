@@ -49,7 +49,7 @@ public:
     {
     }
 
-    void BeginSession(const string& name, const string& filepath = "nfy_valgrind.json")
+    void BeginSession(const string& name, const string& filepath = "test.json")
     {
         m_OutputStream.open(filepath);
         WriteHeader();
