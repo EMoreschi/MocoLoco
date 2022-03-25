@@ -548,7 +548,20 @@ void coordinator_class::centering_oligo() {
         oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2;
     GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
     GEP[i].extract_seq(tb, 0);
-    if (rev[i]) {
+    if (rev[i] && direction) {
+      check_palindrome(GEP[i].sequence, reverse_sequence);
+      GEP[i].sequence = reverse_sequence;
+      if(matrix_log[0].size() % 2 == 0){
+        center_oligo =
+          (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2);
+      GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
+      }
+       else{
+        center_oligo =
+          (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2) + 1;
+         GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
+       }
+      GEP[i].extract_seq(tb, 0);
       check_palindrome(GEP[i].sequence, reverse_sequence);
       GEP[i].sequence = reverse_sequence;
     }
@@ -3056,7 +3069,7 @@ void map_class::print_debug_Z_scores(ofstream &outfile, unsigned int j,
 
 void command_line_parser(int argc, char **argv) {
 
-  const char *const short_opts = "hp:k:b:j:m:d:o:f:alrt:n:e:s";
+  const char *const short_opts = "hp:k:b:j:m:ud:o:f:alrt:n:e:s";
 
   // Specifying the expected options
   const option long_opts[] = {
@@ -3066,6 +3079,7 @@ void command_line_parser(int argc, char **argv) {
       {"kmer", required_argument, nullptr, 'k'},
       {"all", no_argument, nullptr, 'a'},
       {"tomtom", no_argument, nullptr, 'l'},
+      {"unidirection", no_argument, nullptr, 'u'},
       {"refine", no_argument, nullptr, 'r'},
       {"freq", required_argument, nullptr, 'f'},
       {"distance", required_argument, nullptr, 'd'},
@@ -3123,6 +3137,9 @@ void command_line_parser(int argc, char **argv) {
       break;
     case 'l':
       tomtom = true;
+      break;
+    case 'u':
+      direction = true;
       break;
     case 'r':
       refining_matrix = 1;
@@ -3231,6 +3248,7 @@ void display_help() {
           "type just 'c'\n\n";
   cerr << "\n --tomtom || -t will give as output a format of matrices adapted "
           "for tomtom analysis\n\n";
+  cerr << "\n --unidirection || -u parameter orders the sequences based on the matrix direction \n\n"
   exit(EXIT_SUCCESS);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

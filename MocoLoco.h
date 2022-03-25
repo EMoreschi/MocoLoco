@@ -59,6 +59,7 @@ string reverse_matrix_seq;
 string oligos_reverse;
 TwoBit *tb;
 double sim_tresh = 0.001;
+bool direction = false;
 
 class Timer {
 public:
@@ -99,7 +100,6 @@ private:
   friend class map_class;
 
   void read_line(string);
-  // void flag_control(unsigned int, unsigned int);
 
 public:
   // Bed class constructor if input is a Multifasta file
@@ -302,11 +302,11 @@ public:
     // The best oligo selected for each sequence becames the new center of the
     // window, re-setting the GEP coordinates
     centering_oligo();
-    for (unsigned int i = 0; i < GEP.size(); i++) {
-      cout << "Rev " << rev[i] << " sequence number " << i + 1
-           << " matrix is: " << oligos_vector[i].best_oligo_seq << endl;
-      cout << GEP[i].sequence << endl;
-    }
+    // for (unsigned int i = 0; i < GEP.size(); i++) {
+    //   cout << "Rev " << rev[i] << " sequence number " << i + 1
+    //        << " matrix is: " << oligos_vector[i].best_oligo_seq << endl;
+    //   cout << GEP[i].sequence << endl;
+    // }
   }
 
   vector<bed_class> GEP;
