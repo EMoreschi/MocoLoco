@@ -3248,7 +3248,7 @@ void display_help() {
           "type just 'c'\n\n";
   cerr << "\n --tomtom || -t will give as output a format of matrices adapted "
           "for tomtom analysis\n\n";
-  cerr << "\n --unidirection || -u parameter orders the sequences based on the matrix direction \n\n"
+  cerr << "\n --unidirection || -u parameter orders the sequences based on the matrix direction \n\n";
   exit(EXIT_SUCCESS);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
