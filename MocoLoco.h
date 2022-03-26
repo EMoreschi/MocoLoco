@@ -20,6 +20,8 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include <iomanip>
+
 using namespace std;
 
 #pragma once
@@ -43,13 +45,13 @@ string MFASTA_FILE;
 string ordering;
 const unsigned int overhead = 25;
 const double pseudoc = 0.01;
-bool DS = 1;
+bool DS = true;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;
 double freq_treshold = 0.02;
 bool local_maxima_grouping = true;
-bool refining_matrix = 0;
+bool refining_matrix = false;
 string exp_max;
 bool tomtom = false;
 bool err = false;
@@ -294,7 +296,7 @@ public:
     // If the analysis is performed on Double Strand the function best_strand is
     // useful to select if an oligo has the best score on FWD or REV strand,
     // discarding the other
-    if (DS == 1) {
+    if (DS) {
 
       best_strand();
     }
@@ -546,7 +548,7 @@ public:
     // updating in the next function
     number_first_hamming = similar_oligos.size();
 
-    if (refining_matrix == 1) {
+    if (refining_matrix) {
       // Finding hamming of all similar oligos
       find_secondary_hamming(distance, number_first_hamming, vertical_multimap);
     }
@@ -629,7 +631,7 @@ public:
     // Return from matrix class the log_PWM_hamming matrix
     matrix_log = PWM_hamming_mat.return_log_matrix();
 
-    if (DS == 1) {
+    if (DS) {
 
       // if analysis is in DS return from matrix class the
       // inverse_log_PWM_hamming matrix to shift the reverse strand

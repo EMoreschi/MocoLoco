@@ -87,11 +87,11 @@ void bed_class::centering_function(unsigned int start, unsigned int end,
   unsigned int center = (start + end) / 2;
   if (start > end) {
 
-    flag = 0;
+    flag = false;
   }
 
   else {
-    flag = 1;
+    flag = true;
   }
   // No overhead for start coordinates but overhead added to end coordinates
   start_coord = center - half_length;
@@ -104,7 +104,7 @@ void bed_class::extract_seq(TwoBit *tb, unsigned int n_line) {
   // PROFILE_FUNCTION();
   // CONTROL: if flag is 1 means that the current line has starting coordinate >
   // end coordinate, so it is correct
-  if (flag == 1) {
+  if (flag) {
 
     // Extract the sequence from the object with the twobit_sequence function
     sequence =
@@ -485,7 +485,7 @@ void coordinator_class::oligos_vector_creation(
 
     // If the analysis is on DS calling the oligo_class constructor to analyze
     // the shifting of sequence on inverse_log_matrix (REVERSE strande analysis)
-    if (DS == 1) {
+    if (DS) {
 
       oligo_class SHIFTING(matrix_log_inverse, GEP[i].sequence,
                            GEP[i].chr_coord, GEP[i].start_coord, '-');
@@ -604,7 +604,7 @@ void multifasta_class::extract_sequences() {
 
   // First line is flagged to 1 to ignore it (because in MF format sometimes
   // there is an header first line)
-  bool first_line = 1;
+  bool first_line = true;
 
   // The while cycle follows a complex reasoning:
   // if in line there is the first line --> all ignored --> then first line flag
@@ -634,7 +634,7 @@ void multifasta_class::extract_sequences() {
     }
 
     // After the first cicle the first line flag is set to 0
-    first_line = 0;
+    first_line = false;
   }
   sequences.emplace_back(current_sequence);
 }
@@ -833,7 +833,7 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP) {
         vertical_kmer_count(bases, vertical_plus, tot_freq);
       }
 
-      if (DS == 1) {
+      if (DS) {
 
         // Into vertical plus map we have (oligo + RC) pair but also (RC +
         // oligo) pair --> here we select the best one to keep (it will be the
@@ -884,7 +884,7 @@ void map_class::vertical_kmer_count(
   bool pal = check_palindrome(bases, reverse_bases);
 
   // Check if the analisys is in double strand
-  if (DS == 1) {
+  if (DS) {
 
     // If the current oligo is not palindrome and the analysis is on DS -->
     // total number of possible oligo per position (to calculate frequences)
@@ -1085,7 +1085,7 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP) {
 // Function to create a matrix of z_test class
 void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP) {
   // PROFILE_FUNCTION();
-  bool local_max = 1;
+  bool local_max = true;
 
   if (MFASTA_FILE.size() == 0) {
     // RAM_usage();
@@ -1128,7 +1128,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP) {
       // If it is a local max and its freq_1 value overcome the threshold build
       // a z_test_class Z and then save it into a vector and finally into a
       // matrix (as done with hamming and p_value classes)
-      if (HAMMING_MATRIX[i][j].FREQUENCE_1 >= freq_treshold && local_max == 1) {
+      if (HAMMING_MATRIX[i][j].FREQUENCE_1 >= freq_treshold && local_max) {
 
         z_test_class Z(HAMMING_MATRIX[i][j].PWM_hamming, GEP, j + 1,
                        kmers_vector, HAMMING_MATRIX);
@@ -1200,7 +1200,7 @@ void p_value_class::filling_KNT_vectors(
     // Check if the oligo is palindrome -> K value is differentially calculated
     bool pal = check_palindrome(it_rev->second.first, reverse_bases);
 
-    if (pal == 0 && DS == 1) {
+    if (pal == false && DS) {
 
       K = it_rev->first.first + it_rev->first.second;
     } else {
@@ -1217,7 +1217,7 @@ void p_value_class::filling_KNT_vectors(
     // the N1 parameter is calculated as the sum of the oligo + oligo RC
     // occurrences in orizzontal map. Else, only the oligo occurrences can be
     // used for the N1 definition.
-    if (it_N1_minus != orizzontal_map.end() && DS == 1) {
+    if (it_N1_minus != orizzontal_map.end() && DS) {
 
       N1 = it_N1_plus->second + it_N1_minus->second;
     } else {
@@ -1295,7 +1295,7 @@ void p_value_class::checking_ordering(
   if (ordering == "p") {
 
     // Select for Double strand analysis or Single strand analysis
-    if (DS == 1) {
+    if (DS) {
 
       print_debug_p_value_DS(pair_map, position, outfile, freq);
     }
@@ -1307,7 +1307,7 @@ void p_value_class::checking_ordering(
   }
 
   else {
-    if (DS == 1) {
+    if (DS) {
 
       print_debug_occurrences_DS(pair_map, position, outfile, freq,
                                  p_value_vec);
@@ -1359,7 +1359,7 @@ void hamming_class::find_best_oligos(
   // Saving the best oligo occurrences extracting from the last multimap element
   // (higher first value) its occurrences -> working with multimap allows to
   // have always the max occurrences in the last position of the map
-  if (DS == 1) {
+  if (DS) {
     real_best_oligo_occurrences = it_rev_DS->first;
 
   }
@@ -1371,17 +1371,17 @@ void hamming_class::find_best_oligos(
 
   // Flag and counter to control if the function does more cycle than multimap
   // size (to avoid infinite loop as happened)
-  bool flag = 1;
+  bool flag = true;
   unsigned int counter = 1;
 
   // If all the sequences have the same oligo (100%) in a specific position -->
   // vertical_multimap.size() == 1 --> This control is made to avoid an infinite
   // while cycle This control is specific for DS analysis
-  if (DS == 1) {
-    while (it_rev_DS->first == real_best_oligo_occurrences && flag == 1) {
+  if (DS) {
+    while (it_rev_DS->first == real_best_oligo_occurrences && flag) {
 
       if (counter == vertical_multimap.size()) {
-        flag = 0;
+        flag = false;
       }
 
       // If another oligo has the same occurrences as the best -> save it into a
@@ -1396,10 +1396,10 @@ void hamming_class::find_best_oligos(
   // vertical_multimap.size() == 1 --> This control is made to avoid an infinite
   // while cycle This control is specific for SS analysis
   else {
-    while (it_rev_SS->first.first == real_best_oligo_occurrences && flag == 1) {
+    while (it_rev_SS->first.first == real_best_oligo_occurrences && flag) {
 
       if (counter == vertical_multimap.size()) {
-        flag = 0;
+        flag = false;
       }
 
       // If another oligo has the same occurrences as the best -> save it into a
@@ -1528,11 +1528,11 @@ void hamming_class::find_distanced_oligos(
       // If real_best_oligo and the current oligo are similar they can be
       // considered neighbours and the current oligo (from FWD strand) and its
       // occurrences can be saved into vectors
-      if (is_similar == 1) {
+      if (is_similar) {
 
         // If -r option is active check if the neighbour found is already
         // present in similar oligos vector
-        if (refining_matrix == 1) {
+        if (refining_matrix) {
 
           bool is_present = checking_neighbour_presence(it_rev->second.first);
 
@@ -1554,16 +1554,16 @@ void hamming_class::find_distanced_oligos(
       // If analysis is in DS -> call the function is_similar_oligo to compare
       // the real_best_oligo to the current oligo's Reverse Complement (RC). The
       // function returns 1 if it is, otherwise 0
-      if (DS == 1) {
+      if (DS) {
 
         is_similar = is_similar_oligo(best, it_rev->second.second, distance);
         // If they are similar add the oligo's RC and its occurrences to
         // neighbours vectors
-        if (is_similar == 1) {
+        if (is_similar) {
 
           // If -r option is active check if the neighbour found is already
           // present in similar oligos vector
-          if (refining_matrix == 1) {
+          if (refining_matrix) {
 
             bool is_present =
                 checking_neighbour_presence(it_rev->second.second);
@@ -2072,7 +2072,7 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> &GEP) {
     oligo_scores_orizzontal_FWD = SHIFTING_PWM.oligo_scores;
 
     // If analysis is in Double strand
-    if (DS == 1) {
+    if (DS) {
 
       // Make the shifting also on reverse strand, putting as input the
       // inverse_log_matrix --> Shifting on REV strand
@@ -2303,20 +2303,17 @@ void p_value_class::print_debug_p_value_DS(
     unsigned int Num_Occ_REV = it_multi->second.second;
     bool pal = check_palindrome(Oligo, reverse_bases);
     unsigned int Rank = c;
-    string PAL;
+
     unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
     double P_VAL = it_pair->first;
 
-    if (pal == 1) {
-
-      PAL = "TRUE";
+    if (pal) {
       Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV =
           Sum_Occ_RC = Num_Occ_FWD;
       FREQ = Sum_Occ_Oligo / freq;
     }
 
     else {
-      PAL = "FALSE";
       Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
       Num_Occ_RC_FWD = Num_Occ_REV;
       Num_Occ_RC_REV = Num_Occ_FWD;
@@ -2329,7 +2326,7 @@ void p_value_class::print_debug_p_value_DS(
             << Sum_Occ_Oligo << "\t";
     outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV
             << "\t" << Sum_Occ_RC << "\t";
-    outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL
+    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL
             << endl;
     sum_top_N = sum_top_N + Sum_Occ_Oligo;
   }
@@ -2359,21 +2356,14 @@ void p_value_class::print_debug_p_value_SS(
     unsigned int Num_Occ_Oligo = it_multi->second.first;
     bool pal = check_palindrome(Oligo, reverse_bases);
     unsigned int Rank = c;
-    string PAL;
+
     double P_VAL = it_pair->first;
     Num_Occ_FWD = Num_Occ_Oligo;
     FREQ = Num_Occ_FWD / freq;
 
-    if (pal == 0) {
-
-      PAL = "FALSE";
-    } else {
-      PAL = "TRUE";
-    }
-
     outfile << position + 1 << "\t" << Rank + 1 << "\t";
     outfile << Oligo << "\t" << Num_Occ_FWD << "\t";
-    outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL << endl;
     sum_top_N = sum_top_N + Num_Occ_FWD;
   }
 }
@@ -2410,20 +2400,17 @@ void p_value_class::print_debug_occurrences_DS(
     unsigned int Num_Occ_REV = pair_map_it->second.second;
     bool pal = check_palindrome(Oligo, reverse_bases);
     unsigned int Rank = c;
-    string PAL;
+
     unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
     double P_VAL = p_value_vec[c];
 
-    if (pal == 1) {
-
-      PAL = "TRUE";
+    if (pal) {
       Num_Occ_REV = Sum_Occ_Oligo = Num_Occ_RC_FWD = Num_Occ_RC_REV =
           Sum_Occ_RC = Num_Occ_FWD;
       FREQ = Sum_Occ_Oligo / freq;
     }
 
     else {
-      PAL = "FALSE";
       Sum_Occ_Oligo = Num_Occ_FWD + Num_Occ_REV;
       Num_Occ_RC_FWD = Num_Occ_REV;
       Num_Occ_RC_REV = Num_Occ_FWD;
@@ -2436,7 +2423,7 @@ void p_value_class::print_debug_occurrences_DS(
             << Sum_Occ_Oligo << "\t";
     outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV
             << "\t" << Sum_Occ_RC << "\t";
-    outfile << PAL << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL
+    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL
             << endl;
     sum_top_N = sum_top_N + Sum_Occ_Oligo;
   }
@@ -2484,21 +2471,14 @@ void p_value_class::print_debug_occurrences_SS(
     unsigned int Num_Occ_Oligo = it_rev->first.first;
     bool pal = check_palindrome(Oligo, reverse_bases);
     unsigned int Rank = c;
-    string PAL;
+
     double P_VAL = p_value_vec[c];
     Num_Occ_FWD = Num_Occ_Oligo;
     FREQ = Num_Occ_FWD / freq;
 
-    if (pal == 0) {
-
-      PAL = "FALSE";
-    } else {
-      PAL = "TRUE";
-    }
-
     outfile << position + 1 << "\t" << Rank + 1 << "\t";
     outfile << Oligo << "\t" << Num_Occ_FWD << "\t";
-    outfile << PAL << "\t" << FREQ << "\t" << P_VAL << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL << endl;
     sum_top_N = sum_top_N + Num_Occ_FWD;
   }
 }
@@ -2511,7 +2491,7 @@ void map_class::print_debug_orizzontal() {
 
     ofstream outfile;
 
-    if (DS == 1) {
+    if (DS) {
       outfile.open(to_string(kmers_vector[i]) + "-mers_occurrences_" +
                    alias_file + "_DS.txt");
     }
@@ -2533,7 +2513,7 @@ void map_class::print_debug_orizzontal() {
              orizzontal_output.rbegin();
          it_rev != orizzontal_output.rend(); it_rev++) {
 
-      if (DS == 1) {
+      if (DS) {
         reverse_bases.clear();
         // reverse_bases.shrink_to_fit();
 
@@ -2568,7 +2548,7 @@ ofstream map_class::outfile_header(unsigned int j) {
 
   ofstream outfile;
 
-  if (DS == 1) {
+  if (DS) {
 
     if (ordering == "p") {
 
@@ -2655,12 +2635,12 @@ void map_class::TopN_sum_and_freq() {
 
   for (unsigned int i = 0; i < tot_sum_matrix.size(); i++) {
 
-    if (DS == 1 && ordering == "p") {
+    if (DS && ordering == "p") {
       outfile.open(to_string(kmers_vector[i]) + "-mers_Top" + to_string(top_N) +
                    "_sum_and_frequence_DS_p_val.txt");
     }
 
-    else if (DS == 1 && ordering != "p") {
+    else if (DS && ordering != "p") {
       outfile.open(to_string(kmers_vector[i]) + "-mers_Top" + to_string(top_N) +
                    "_sum_and_frequence_DS_occ.txt");
     }
@@ -2706,7 +2686,7 @@ void map_class::p_value_parameters_debug_p_val() {
 
     // Different names to differentiate if the analysis has been made on Double
     // strand or Single strand
-    if (DS == 1) {
+    if (DS) {
       outfile.open(to_string(kmers_vector[j]) +
                    "-mers_p_value_parameters_control_p_val_" + BED_FILE +
                    "DS.txt");
@@ -2755,7 +2735,7 @@ void map_class::p_value_parameters_debug_occ() {
 
   for (unsigned int j = 0; j < P_VALUE_MATRIX.size(); j++) {
 
-    if (DS == 1) {
+    if (DS) {
       outfile.open(to_string(kmers_vector[j]) +
                    "-mers_p_value_parameters_control_occ_" + BED_FILE +
                    "DS.txt");
@@ -2818,7 +2798,7 @@ ofstream map_class::outfile_header_hamming(unsigned int j) {
 
   ofstream outfile;
 
-  if (DS == 1) {
+  if (DS) {
     outfile.open(to_string(kmers_vector[j]) + "-mers_hamming_" + alias_file +
                  "DS.txt");
   } else {
@@ -2866,7 +2846,7 @@ void map_class::Outfile_PWM_matrices() {
 
   for (unsigned int j = 0; j < kmers_vector.size(); j++) {
 
-    if (DS == 1) {
+    if (DS) {
 
       outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
                    alias_file + "DS.txt");
@@ -2990,7 +2970,7 @@ void map_class::Outfile_Z_score_values() {
 
   for (unsigned int j = 0; j < kmers_vector.size(); j++) {
 
-    if (DS == 1) {
+    if (DS) {
 
       outfile.open(to_string(kmers_vector[j]) + "-mers_Z_scores_" + alias_file +
                    "DS.txt");
@@ -3142,7 +3122,7 @@ void command_line_parser(int argc, char **argv) {
       direction = true;
       break;
     case 'r':
-      refining_matrix = 1;
+      refining_matrix = true;
       break;
     case 'e':
       exp_max = string(optarg);
@@ -3166,7 +3146,7 @@ void command_line_parser(int argc, char **argv) {
       dist = string(optarg);
       break;
     case 's':
-      DS = 0;
+      DS = false;
       break;
     case 'm':
       MFASTA_FILE = string(optarg);
