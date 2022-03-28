@@ -85,10 +85,18 @@ jobs:
         run: |
               diff 6_mers_EM_test.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt && \
               diff 8_mers_EM_test.txt 8-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
-
-        # Runs a set of commands using the runners shell
-      - name: Compiling multifasta random tool
-        run: g++ -o random_multifa -Wall $GITHUB_WORKSPACE/Random_multifa_TOOL/Multifa_random_tool.cpp
-        
       
+      - name: Run unidirection test (with -o)
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19.2bit -p 150 -k 6,8 -d 1,2 -f 0.01 -o p -a -e c -u
+          
+      - name: get sample test 
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/d6a33158c23f4f061539028613133e9f/raw/d40d26294bbb3dac3a587a515c449777b7413653/6_mers_unidirection.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/f72df332e05e354b0060d7d44aead8de/raw/b2f21464df38d34cb7b8b812a32f7b44355bf37b/8_mers_unidirection.txt
+
+      - name: test difference between outputs 
+        run: |
+              diff 6_mers_unidirection.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt && \
+              diff 8_mers_unidirection.txt 8-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
+
 
