@@ -9,6 +9,7 @@
 #include <gsl/gsl_cdf.h>
 #include <gsl/gsl_sf.h>
 #include <gsl/gsl_sf_bessel.h>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <list>
@@ -20,7 +21,6 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include <iomanip>
 
 using namespace std;
 
@@ -776,6 +776,7 @@ void command_line_parser(int, char **);
 void display_help();
 bool is_file_exist(string fileName, string buf);
 void check_input_file();
-bool check_palindrome(string, string &);
+bool check_palindrome(string);
+string CR_complement(string);
 double check_p_value(double, string);
 void RAM_usage();

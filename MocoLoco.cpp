@@ -549,21 +549,18 @@ void coordinator_class::centering_oligo() {
     GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
     GEP[i].extract_seq(tb, 0);
     if (rev[i] && direction) {
-      check_palindrome(GEP[i].sequence, reverse_sequence);
-      GEP[i].sequence = reverse_sequence;
-      if(matrix_log[0].size() % 2 == 0){
+      reverse_sequence = CR_complement(GEP[i].sequence);
+      if (matrix_log[0].size() % 2 == 0) {
         center_oligo =
-          (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2);
-      GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
+            (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2);
+        GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
+      } else {
+        center_oligo =
+            (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2) + 1;
+        GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
       }
-       else{
-        center_oligo =
-          (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2) + 1;
-         GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
-       }
       GEP[i].extract_seq(tb, 0);
-      check_palindrome(GEP[i].sequence, reverse_sequence);
-      GEP[i].sequence = reverse_sequence;
+      reverse_sequence = CR_complement(GEP[i].sequence);
     }
   }
 }
@@ -767,7 +764,7 @@ void map_class::or_ver_kmer_count(string bases,
   // Check if the current oligo "bases" is palindrome --> this function has also
   // the aim to generate "reverse bases", the reverse complement of the current
   // oligo
-  check_palindrome(bases, reverse_bases);
+  reverse_bases = CR_complement(bases);
 
   // Finding the oligo "bases" into the orizzontal minus map (REV strand)
   it_minus = minus.find(reverse_bases);
@@ -881,7 +878,7 @@ void map_class::vertical_kmer_count(
       it_plus_rev;
 
   // Check if the current oligo is palindrome
-  bool pal = check_palindrome(bases, reverse_bases);
+  bool pal = check_palindrome(bases);
 
   // Check if the analisys is in double strand
   if (DS) {
@@ -1198,7 +1195,7 @@ void p_value_class::filling_KNT_vectors(
        it_rev != vertical_multimap.rend(); it_rev++) {
 
     // Check if the oligo is palindrome -> K value is differentially calculated
-    bool pal = check_palindrome(it_rev->second.first, reverse_bases);
+    bool pal = check_palindrome(it_rev->second.first);
 
     if (pal == false && DS) {
 
@@ -2172,12 +2169,10 @@ void z_test_class::z_score_calculation() {
 
 // Function to check, given an oligo as input, if this oligo is palindrome or
 // not
-bool check_palindrome(string bases, string &reverse_bases) {
-  reverse_bases.clear();
-  // For any character of the string insert into another string (called reverse
-  // bases) the complementary character
-  for (int i = bases.length() - 1; i >= 0; i--) {
 
+string CR_complement(string bases) {
+  string reverse_bases;
+  for (int i = bases.length() - 1; i >= 0; i--) {
     char base;
     base = bases[i];
     switch (base) {
@@ -2199,13 +2194,13 @@ bool check_palindrome(string bases, string &reverse_bases) {
       break;
     }
   }
+  return reverse_bases;
+}
 
+bool check_palindrome(string bases) {
+  string reverse_bases = CR_complement(bases);
   // If they are equal --> it means that the oligo "bases" is palindrome
-  if (reverse_bases == bases) {
-    return true;
-  } else {
-    return false;
-  }
+  return reverse_bases == bases;
 }
 
 // If the p value is rounded to 0 assigne it a standar low value
@@ -2301,7 +2296,7 @@ void p_value_class::print_debug_p_value_DS(
     string Oligo_RC = it_multi->first.second;
     unsigned int Num_Occ_FWD = it_multi->second.first;
     unsigned int Num_Occ_REV = it_multi->second.second;
-    bool pal = check_palindrome(Oligo, reverse_bases);
+    bool pal = check_palindrome(Oligo);
     unsigned int Rank = c;
 
     unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
@@ -2326,8 +2321,8 @@ void p_value_class::print_debug_p_value_DS(
             << Sum_Occ_Oligo << "\t";
     outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV
             << "\t" << Sum_Occ_RC << "\t";
-    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL
-            << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t"
+            << FREQ << "\t" << P_VAL << endl;
     sum_top_N = sum_top_N + Sum_Occ_Oligo;
   }
 }
@@ -2354,7 +2349,7 @@ void p_value_class::print_debug_p_value_SS(
     it_multi = pair_map.find(it_pair->second);
     string Oligo = it_multi->first.first;
     unsigned int Num_Occ_Oligo = it_multi->second.first;
-    bool pal = check_palindrome(Oligo, reverse_bases);
+    bool pal = check_palindrome(Oligo);
     unsigned int Rank = c;
 
     double P_VAL = it_pair->first;
@@ -2363,7 +2358,8 @@ void p_value_class::print_debug_p_value_SS(
 
     outfile << position + 1 << "\t" << Rank + 1 << "\t";
     outfile << Oligo << "\t" << Num_Occ_FWD << "\t";
-    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL
+            << endl;
     sum_top_N = sum_top_N + Num_Occ_FWD;
   }
 }
@@ -2398,7 +2394,7 @@ void p_value_class::print_debug_occurrences_DS(
     string Oligo_RC = pair_map_it->first.second;
     unsigned int Num_Occ_FWD = pair_map_it->second.first;
     unsigned int Num_Occ_REV = pair_map_it->second.second;
-    bool pal = check_palindrome(Oligo, reverse_bases);
+    bool pal = check_palindrome(Oligo);
     unsigned int Rank = c;
 
     unsigned int Num_Occ_RC_FWD, Num_Occ_RC_REV, Sum_Occ_RC;
@@ -2423,8 +2419,8 @@ void p_value_class::print_debug_occurrences_DS(
             << Sum_Occ_Oligo << "\t";
     outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV
             << "\t" << Sum_Occ_RC << "\t";
-    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL
-            << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t"
+            << FREQ << "\t" << P_VAL << endl;
     sum_top_N = sum_top_N + Sum_Occ_Oligo;
   }
 }
@@ -2469,7 +2465,7 @@ void p_value_class::print_debug_occurrences_SS(
     double FREQ, Num_Occ_FWD;
     string Oligo = it_rev->second.first;
     unsigned int Num_Occ_Oligo = it_rev->first.first;
-    bool pal = check_palindrome(Oligo, reverse_bases);
+    bool pal = check_palindrome(Oligo);
     unsigned int Rank = c;
 
     double P_VAL = p_value_vec[c];
@@ -2478,7 +2474,8 @@ void p_value_class::print_debug_occurrences_SS(
 
     outfile << position + 1 << "\t" << Rank + 1 << "\t";
     outfile << Oligo << "\t" << Num_Occ_FWD << "\t";
-    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL
+            << endl;
     sum_top_N = sum_top_N + Num_Occ_FWD;
   }
 }
@@ -2517,7 +2514,7 @@ void map_class::print_debug_orizzontal() {
         reverse_bases.clear();
         // reverse_bases.shrink_to_fit();
 
-        bool palindrome = check_palindrome(it_rev->second, reverse_bases);
+        bool palindrome = check_palindrome(it_rev->second);
 
         if (!palindrome) {
 
@@ -3228,7 +3225,8 @@ void display_help() {
           "type just 'c'\n\n";
   cerr << "\n --tomtom || -t will give as output a format of matrices adapted "
           "for tomtom analysis\n\n";
-  cerr << "\n --unidirection || -u parameter orders the sequences based on the matrix direction \n\n";
+  cerr << "\n --unidirection || -u parameter orders the sequences based on the "
+          "matrix direction \n\n";
   exit(EXIT_SUCCESS);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
