@@ -879,7 +879,7 @@ void map_class::vertical_kmer_count(
 
   // Check if the current oligo is palindrome
   bool pal = check_palindrome(bases);
-
+  reverse_bases = CR_complement(bases);
   // Check if the analisys is in double strand
   if (DS) {
 
@@ -2513,7 +2513,7 @@ void map_class::print_debug_orizzontal() {
       if (DS) {
         reverse_bases.clear();
         // reverse_bases.shrink_to_fit();
-
+        reverse_bases = CR_complement(it_rev->second);
         bool palindrome = check_palindrome(it_rev->second);
 
         if (!palindrome) {
