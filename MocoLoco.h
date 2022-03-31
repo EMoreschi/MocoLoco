@@ -297,18 +297,12 @@ public:
     // useful to select if an oligo has the best score on FWD or REV strand,
     // discarding the other
     if (DS) {
-
       best_strand();
     }
 
     // The best oligo selected for each sequence becames the new center of the
     // window, re-setting the GEP coordinates
     centering_oligo();
-    // for (unsigned int i = 0; i < GEP.size(); i++) {
-    //   cout << "Rev " << rev[i] << " sequence number " << i + 1
-    //        << " matrix is: " << oligos_vector[i].best_oligo_seq << endl;
-    //   cout << GEP[i].sequence << endl;
-    // }
   }
 
   vector<bed_class> GEP;
@@ -459,7 +453,6 @@ private:
   bool pal;
   multimap<unsigned int, pair<string, string>> sum_occurrences_multimap;
 
-  // unordered_map<string,unsigned int> orizzontal_map_plus;
   friend class map_class;
   friend class p_value_class;
 
@@ -492,12 +485,12 @@ private:
   finding_orizzontal_occurrences(unordered_map<string, unsigned int> &,
                                  unordered_map<string, unsigned int> &);
   void PWM_hamming_creation();
-  void EM_Ipwm(vector<vector<double>> &, vector<bed_class> &);
-  void EM_Epart(vector<bed_class> &, unordered_map<string, unsigned int> &,
+  void EM_Ipwm(vector<vector<double>> &);
+  void EM_Epart(unordered_map<string, unsigned int> &,
                 unsigned int, unordered_map<string, unsigned int> &);
   void EM_Mpart(unsigned int, unordered_map<string, unsigned int> &);
   bool EM_convergence(vector<vector<double>> &, vector<vector<double>> &, bool);
-  void EM_cycle(vector<bed_class> &, unordered_map<string, unsigned int> &,
+  void EM_cycle(unordered_map<string, unsigned int> &,
                 unsigned int, unordered_map<string, unsigned int> &);
   void print_PWM(string, vector<vector<double>>);
 
@@ -511,7 +504,7 @@ public:
       unsigned int distance, unsigned int position, unsigned int freq,
       unordered_map<string, unsigned int> &orizzontal_map_plus,
       unordered_map<string, unsigned int> &orizzontal_map_minus,
-      ofstream &outfile, vector<bed_class> GEP,
+      ofstream &outfile,
       vector<unsigned int> kmers_vector) {
 
     sum_occurrences_multimap =
@@ -577,8 +570,8 @@ public:
     PWM_hamming_creation();
 
     if (exp_max.length() > 0) {
-      EM_Ipwm(PWM_hamming, GEP);
-      EM_cycle(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
+      EM_Ipwm(PWM_hamming);
+      EM_cycle(orizzontal_map_minus, position, orizzontal_map_plus);
       if (tomtom) {
         for (unsigned int x = 0; x < PWM_hamming.size(); x++) {
           for (unsigned int y = 0; y < PWM_hamming[0].size(); y++) {
@@ -620,8 +613,7 @@ public:
   double local_dev_std;
   unsigned int local_pos;
   z_test_class(vector<vector<double>> &PWM_hamming, vector<bed_class> &GEP,
-               unsigned int local_p, vector<unsigned int> kmers_vector,
-               vector<vector<hamming_class>> &HAMMING_MATRIX) {
+               unsigned int local_p, vector<unsigned int> kmers_vector) {
 
     local_pos = local_p;
 
@@ -677,6 +669,7 @@ private:
   vector<vector<p_value_class>> P_VALUE_MATRIX;
   vector<hamming_class> HAMMING_VECTOR;
   vector<vector<hamming_class>> HAMMING_MATRIX;
+  //vector<vector<vector<hamming_class>>> HAMMING_3D;
   vector<z_test_class> Z_TEST_VECTOR;
   vector<vector<z_test_class>> Z_TEST_MATRIX;
   vector<unsigned int> generic_vector_creation(string);
@@ -692,7 +685,7 @@ private:
   select_best(map<pair<string, string>, pair<unsigned int, unsigned int>> &);
   void print_debug_orizzontal();
   void P_VALUE_MATRIX_creation();
-  void HAMMING_MATRIX_creation(vector<bed_class> &);
+  void HAMMING_MATRIX_creation();
   void Z_TEST_MATRIX_creation(vector<bed_class> &);
   ofstream outfile_header(unsigned int);
   ofstream outfile_header_hamming(unsigned int);
@@ -759,7 +752,7 @@ public:
     TopN_sum_and_freq();
 
     // Function to call and handle the hamming_class constructor
-    HAMMING_MATRIX_creation(GEP);
+    HAMMING_MATRIX_creation();
 
     // Function to call and handle the z_test_class constructor
     Z_TEST_MATRIX_creation(GEP);

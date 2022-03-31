@@ -1027,7 +1027,7 @@ void map_class::P_VALUE_MATRIX_creation() {
 
 // Function to create a matrix of hamming class (1 dimension = different k-mers,
 // 2 dimension = positions)
-void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP) {
+void map_class::HAMMING_MATRIX_creation() {
   // PROFILE_FUNCTION();
   if (MFASTA_FILE.size() == 0) {
     // RAM_usage();
@@ -1039,6 +1039,7 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP) {
             "Hamming matrix  \n";
   }
   // For every kmer in input
+
   for (unsigned int j = 0; j < P_VALUE_MATRIX.size(); j++) {
 
     // Outfile_header function to handle Output file
@@ -1053,26 +1054,57 @@ void map_class::HAMMING_MATRIX_creation(vector<bed_class> &GEP) {
       // outfile to print the Output file and finally the GEP (which contains
       // the sequences) --> the ordering p or not distinguishes the multimap
       // passed as input
+      
+      // int c = 0;
+      // cout << i +1 << endl;
+      // for (multimap<double, pair<string, string>>::iterator it_pair =
+      //      P_VALUE_MATRIX[j][i].p_value_sort.begin();
+      //  it_pair != P_VALUE_MATRIX[j][i].p_value_sort.end() && c < 1; it_pair++, c++) 
+      //  {
+      //     double P_VAL = it_pair->first;
+      //     string oligo = it_pair->second.first;
 
-      hamming_class H(P_VALUE_MATRIX[j][i].vertical_multimap,
+      //     if(P_VAL < 1e-20){    
+
+            hamming_class H(P_VALUE_MATRIX[j][i].vertical_multimap,
                       vector_kmers_maps_plus[j][i],
                       P_VALUE_MATRIX[j][i].p_value_sort, distance_vector[j], i,
                       tot_freq_matrix[j][i], orizzontal_plus_debug[j],
-                      orizzontal_minus_debug[j], outfile, GEP, kmers_vector);
+                      orizzontal_minus_debug[j], outfile, kmers_vector);
+            
 
-      // A vector of hamming classes is created
-      HAMMING_VECTOR.emplace_back(H);
-    }
+            // A vector of hamming classes is created
+            HAMMING_VECTOR.emplace_back(H);
+            
+          //   map<pair<string, string>, pair<unsigned int, unsigned int>> copy;
+          //   //copy = P_VALUE_MATRIX[j][i].vertical_multimap;
+          //   for(unsigned int i = 0; i < H.similar_oligos.size(); i++){
 
-    // The vector of hamming_classes is stored into a bigger P_VALUE_MATRIX
-    HAMMING_MATRIX.emplace_back(HAMMING_VECTOR);
+          //     string oligo = H.similar_oligos[i];
 
-    // Vector is cleaned up to avoid interference on the next cycle
-    HAMMING_VECTOR.clear();
+          //     for(map<pair<string, string>, pair<unsigned int, unsigned int>>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end();it++){
+          //       //it->first retrieves key and it->second retrieves value 
+          //       //cout << it -> first.first << "\t" << it -> first.second << "\t" << it->second.first << "\t" << it->second.second << endl;
+          //       if(it->first.first != oligo || it->first.second != oligo){
+          //         copy.insert({{it->first.first, it->first.second}, {it->second.first, it->second.second}});
+          //       }
+          //     }
+          //   }
+          //   vector_kmers_maps_plus[j][i].clear();
+          //   vector_kmers_maps_plus[j][i] = copy;
+          //   copy.clear();
+          // }
+          
+        }
+        HAMMING_MATRIX.emplace_back(HAMMING_VECTOR);
+        HAMMING_VECTOR.clear();
+        // The vector of hamming_classes is stored into a bigger P_VALUE_MATRIX
+        //HAMMING_3D.emplace_back(HAMMING_MATRIX);
+        //HAMMING_MATRIX.clear();
 
-    outfile.close();
+        outfile.close();
+      
   }
-
   if (MFASTA_FILE.size() == 0) {
     // RAM_usage();
     cout << "- [11] PWM matrices from hit positions calculated \n";
@@ -1131,7 +1163,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP) {
       if (HAMMING_MATRIX[i][j].FREQUENCE_1 >= freq_treshold && local_max) {
 
         z_test_class Z(HAMMING_MATRIX[i][j].PWM_hamming, GEP, j + 1,
-                       kmers_vector, HAMMING_MATRIX);
+                       kmers_vector);
         Z_TEST_VECTOR.emplace_back(Z);
       }
     }
@@ -1741,8 +1773,7 @@ void hamming_class::print_PWM(string name, vector<vector<double>> PWM_hamming) {
 }
 // In this function we transfrom the position frequency matrix into position
 // probability matrix
-void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming,
-                            vector<bed_class> &GEP) {
+void hamming_class::EM_Ipwm(vector<vector<double>> &PWM_hamming) {
   // PROFILE_FUNCTION();
 
   // matrix::normalize()
@@ -1780,7 +1811,7 @@ map
 */
 
 void hamming_class::EM_Epart(
-    vector<bed_class> &GEP,
+
     unordered_map<string, unsigned int> &orizzontal_map_minus,
     unsigned int position,
     unordered_map<string, unsigned int> &orizzontal_map_plus) {
@@ -2017,7 +2048,7 @@ bool hamming_class::EM_convergence(vector<vector<double>> &PWM_old,
 }
 
 void hamming_class::EM_cycle(
-    vector<bed_class> &GEP,
+
     unordered_map<string, unsigned int> &orizzontal_map_minus,
     unsigned int position,
     unordered_map<string, unsigned int> &orizzontal_map_plus) {
@@ -2034,7 +2065,7 @@ void hamming_class::EM_cycle(
 
       PWM_old = PWM_hamming;
 
-      EM_Epart(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
+      EM_Epart(orizzontal_map_minus, position, orizzontal_map_plus);
       EM_Mpart(position, orizzontal_map_plus);
 
       like_ratio_map.clear();
@@ -2048,7 +2079,7 @@ void hamming_class::EM_cycle(
 
     double em = stod(exp_max);
     for (unsigned int i = 0; i < em; i++) {
-      EM_Epart(GEP, orizzontal_map_minus, position, orizzontal_map_plus);
+      EM_Epart(orizzontal_map_minus, position, orizzontal_map_plus);
       EM_Mpart(position, orizzontal_map_plus);
 
       like_ratio_map.clear();
