@@ -9,6 +9,7 @@
 #include <gsl/gsl_cdf.h>
 #include <gsl/gsl_sf.h>
 #include <gsl/gsl_sf_bessel.h>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <list>
@@ -20,7 +21,6 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include <iomanip>
 
 using namespace std;
 
@@ -432,6 +432,9 @@ public:
 class hamming_class {
 
 private:
+  friend class map_class;
+  friend class p_value_class;
+
   vector<string> best_oligos;
   string real_best_oligo;
   unsigned int real_best_oligo_occurrences;
@@ -445,16 +448,10 @@ private:
   vector<vector<double>> PWM_hamming;
   vector<vector<double>> norm_matrix;
   map<string, double> like_ratio_map;
-  pair<double, double> FREQUENCE;
   unsigned int position;
-  double comparison;
   map<string, double> similar_oligos_map;
-  string reverse_bases;
   bool pal;
   multimap<unsigned int, pair<string, string>> sum_occurrences_multimap;
-
-  friend class map_class;
-  friend class p_value_class;
 
   multimap<unsigned int, pair<string, string>>
   creating_sum_occurrences_multimap(
@@ -466,7 +463,7 @@ private:
       unsigned int,
       multimap<pair<unsigned int, unsigned int>, pair<string, string>> &);
   void find_secondary_hamming(
-      unsigned int, unsigned int,
+      unsigned int,
       multimap<pair<unsigned int, unsigned int>, pair<string, string>> &);
   void find_distanced_oligos(
       string, unsigned int,
@@ -498,13 +495,13 @@ public:
   // Occurrences constructor
   hamming_class(
       multimap<pair<unsigned int, unsigned int>, pair<string, string>>
-          &vertical_multimap,
-      map<pair<string, string>, pair<unsigned int, unsigned int>> &vertical_map,
-      multimap<double, pair<string, string>> &p_value_sort,
+          vertical_multimap,
+      map<pair<string, string>, pair<unsigned int, unsigned int>> vertical_map,
+      multimap<double, pair<string, string>> p_value_sort,
       unsigned int distance, unsigned int position, unsigned int freq,
-      unordered_map<string, unsigned int> &orizzontal_map_plus,
-      unordered_map<string, unsigned int> &orizzontal_map_minus,
-      ofstream &outfile,
+      unordered_map<string, unsigned int> orizzontal_map_plus,
+      unordered_map<string, unsigned int> orizzontal_map_minus,
+      ofstream &outfile, vector<bed_class> GEP,
       vector<unsigned int> kmers_vector) {
 
     sum_occurrences_multimap =
@@ -543,7 +540,7 @@ public:
 
     if (refining_matrix) {
       // Finding hamming of all similar oligos
-      find_secondary_hamming(distance, number_first_hamming, vertical_multimap);
+      find_secondary_hamming(distance, vertical_multimap);
     }
 
     // Adding the real best oligo to similar oligos vector (created starting
@@ -587,6 +584,7 @@ class z_test_class {
 
 private:
   // zscores and PWM pvalues
+  friend class map_class;
 
   vector<vector<double>> matrix_log;
   vector<vector<double>> inverse_matrix_log;
@@ -595,7 +593,6 @@ private:
   vector<double> oligo_scores_orizzontal_BEST;
   vector<double> all_global_scores;
   vector<double> all_local_scores;
-  friend class map_class;
 
   void print_debug_oligo_vec(vector<vector<double>> &);
   void oligos_vector_creation_PWM(vector<bed_class> &);

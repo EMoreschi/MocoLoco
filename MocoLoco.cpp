@@ -551,16 +551,15 @@ void coordinator_class::centering_oligo() {
     if (rev[i] && direction) {
       check_palindrome(GEP[i].sequence, reverse_sequence);
       GEP[i].sequence = reverse_sequence;
-      if(matrix_log[0].size() % 2 == 0){
+      if (matrix_log[0].size() % 2 == 0) {
         center_oligo =
-          (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2);
-      GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
+            (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2);
+        GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
+      } else {
+        center_oligo =
+            (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2) + 1;
+        GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
       }
-       else{
-        center_oligo =
-          (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2) + 1;
-         GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
-       }
       GEP[i].extract_seq(tb, 0);
       check_palindrome(GEP[i].sequence, reverse_sequence);
       GEP[i].sequence = reverse_sequence;
@@ -1520,7 +1519,7 @@ string hamming_class::select_real_best_oligo(
 // Function to perform a secondary hamming --> find of distanced d hamming from
 // the similar oligos found
 void hamming_class::find_secondary_hamming(
-    unsigned int distance, unsigned int number_first_hamming,
+    unsigned int distance,
     multimap<pair<unsigned int, unsigned int>, pair<string, string>>
         &vertical_multimap) {
   // PROFILE_FUNCTION();
@@ -2357,8 +2356,8 @@ void p_value_class::print_debug_p_value_DS(
             << Sum_Occ_Oligo << "\t";
     outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV
             << "\t" << Sum_Occ_RC << "\t";
-    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL
-            << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t"
+            << FREQ << "\t" << P_VAL << endl;
     sum_top_N = sum_top_N + Sum_Occ_Oligo;
   }
 }
@@ -2394,7 +2393,8 @@ void p_value_class::print_debug_p_value_SS(
 
     outfile << position + 1 << "\t" << Rank + 1 << "\t";
     outfile << Oligo << "\t" << Num_Occ_FWD << "\t";
-    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL
+            << endl;
     sum_top_N = sum_top_N + Num_Occ_FWD;
   }
 }
@@ -2454,8 +2454,8 @@ void p_value_class::print_debug_occurrences_DS(
             << Sum_Occ_Oligo << "\t";
     outfile << Oligo_RC << "\t" << Num_Occ_RC_FWD << "\t" << Num_Occ_RC_REV
             << "\t" << Sum_Occ_RC << "\t";
-    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t" << FREQ << "\t" << P_VAL
-            << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << Sum_Occ_Oligo << "\t"
+            << FREQ << "\t" << P_VAL << endl;
     sum_top_N = sum_top_N + Sum_Occ_Oligo;
   }
 }
@@ -2509,7 +2509,8 @@ void p_value_class::print_debug_occurrences_SS(
 
     outfile << position + 1 << "\t" << Rank + 1 << "\t";
     outfile << Oligo << "\t" << Num_Occ_FWD << "\t";
-    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL << endl;
+    outfile << boolalpha << pal << noboolalpha << "\t" << FREQ << "\t" << P_VAL
+            << endl;
     sum_top_N = sum_top_N + Num_Occ_FWD;
   }
 }
@@ -3259,7 +3260,8 @@ void display_help() {
           "type just 'c'\n\n";
   cerr << "\n --tomtom || -t will give as output a format of matrices adapted "
           "for tomtom analysis\n\n";
-  cerr << "\n --unidirection || -u parameter orders the sequences based on the matrix direction \n\n";
+  cerr << "\n --unidirection || -u parameter orders the sequences based on the "
+          "matrix direction \n\n";
   exit(EXIT_SUCCESS);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
