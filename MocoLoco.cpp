@@ -223,6 +223,9 @@ matrix_class::reverse_matrix(vector<vector<double>> &matrix) {
 void oligo_class::find_minmax(vector<vector<double>> &matrix) {
   // PROFILE_FUNCTION();
   vector<double> column;
+  vector<double> o_matrix_maxes;
+
+
   // Extract the mins and the maxes from each columns, saved into vectors and
   // their total sum will be the best and the worst score that an oligo can
   // reach
@@ -356,21 +359,6 @@ unsigned int oligo_class::find_best_score() {
   return positions[0];
 }
 
-// The oligo which has generated the best score is extracted from fasta sequence
-// and saved into best_oligo_seq variable
-void oligo_class::find_best_sequence(string sequence, unsigned int length) {
-  // PROFILE_FUNCTION();
-  best_oligo_seq = sequence.substr(local_position, length);
-}
-
-// Best oligo coordinates are saved
-void oligo_class::find_coordinate(unsigned int length, string chr_coord_GEP,
-                                  unsigned int start_coord_GEP) {
-  // PROFILE_FUNCTION();
-  chr_coord_oligo = chr_coord_GEP;
-  start_coord_oligo = start_coord_GEP + local_position;
-  end_coord_oligo = start_coord_oligo + length;
-}
 
 // Function to read BED and 2Bit files and create GEP (vector of bed class)
 void coordinator_class::GEP_creation(vector<bed_class> &GEP) {
@@ -476,8 +464,7 @@ void coordinator_class::oligos_vector_creation(
 
     // Calling the oligo_class constructor to analyze the shifting of the
     // sequence on log_matrix (FWD strand analysis)
-    oligo_class SHIFTING(matrix_log, GEP[i].sequence, GEP[i].chr_coord,
-                         GEP[i].start_coord, '+');
+    oligo_class SHIFTING(matrix_log, GEP[i].sequence, GEP[i].start_coord);
 
     // The oligo class just created is saved into oligos_vector (oligo_class
     // vector)
@@ -487,8 +474,7 @@ void coordinator_class::oligos_vector_creation(
     // the shifting of sequence on inverse_log_matrix (REVERSE strande analysis)
     if (DS) {
 
-      oligo_class SHIFTING(matrix_log_inverse, GEP[i].sequence,
-                           GEP[i].chr_coord, GEP[i].start_coord, '-');
+      oligo_class SHIFTING(matrix_log_inverse, GEP[i].sequence, GEP[i].start_coord);
       oligos_vector.emplace_back(SHIFTING);
     }
   }
@@ -549,8 +535,8 @@ void coordinator_class::centering_oligo() {
     GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
     GEP[i].extract_seq(tb, 0);
     if (rev[i] && direction) {
-      check_palindrome(GEP[i].sequence, reverse_sequence);
-      GEP[i].sequence = reverse_sequence;
+      check_palindrome(GEP[i].sequence, reverse_bases);
+      GEP[i].sequence = reverse_bases;
       if (matrix_log[0].size() % 2 == 0) {
         center_oligo =
             (oligos_vector[i].start_coord_oligo + matrix_log[0].size() / 2);
@@ -561,8 +547,8 @@ void coordinator_class::centering_oligo() {
         GEP[i].centering_function(center_oligo, center_oligo, half_length, 0);
       }
       GEP[i].extract_seq(tb, 0);
-      check_palindrome(GEP[i].sequence, reverse_sequence);
-      GEP[i].sequence = reverse_sequence;
+      check_palindrome(GEP[i].sequence, reverse_bases);
+      GEP[i].sequence = reverse_bases;
     }
   }
 }
@@ -1134,7 +1120,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP) {
     for (unsigned int j = 0; j < HAMMING_MATRIX[i].size(); j++) {
 
       // If the local_maxima filtering is enabled
-      if (local_maxima_grouping == true) {
+      if (local_maxima_grouping == false) {
 
         double Frequence_1_prev = 0;
         double Frequence_1_post = 0;
@@ -1220,7 +1206,8 @@ void p_value_class::filling_KNT_vectors(
   unsigned int K;
   unsigned int N1;
   unsigned int N2;
-
+  unordered_map<string, unsigned int>::iterator it_N1_plus;
+  unordered_map<string, unsigned int>::iterator it_N1_minus;
   // For each oligo present in positional vertical multimap (in the current
   // position)
   for (multimap<pair<unsigned int, unsigned int>,
@@ -2263,10 +2250,6 @@ vector<vector<double>> matrix_class::return_log_matrix() {
   return matrix_log;
 }
 
-vector<vector<double>> matrix_class::return_norm_matrix() {
-  // PROFILE_FUNCTION();
-  return norm_matrix;
-}
 
 // Debug function: Print sequences and coordinates from GEP vector into a .fasta
 // file to check if the sequences extraction is correct
@@ -3145,7 +3128,7 @@ void command_line_parser(int argc, char **argv) {
       kmers = string(optarg);
       break;
     case 'a':
-      local_maxima_grouping = false;
+      local_maxima_grouping = true;
       break;
     case 'l':
       tomtom = true;

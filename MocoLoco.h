@@ -36,6 +36,15 @@ using namespace std;
 #define PROFILE_SCOPE(name)
 #endif
 
+////////////////////////GLOBAL VARIABLES////////////////////////
+const unsigned int overhead = 25;
+const double pseudoc = 0.01;
+vector<bool> rev;
+TwoBit *tb;
+double sim_tresh = 0.001;
+string reverse_bases;
+
+////////////////////////PARSER VARIABLES////////////////////////
 string BED_FILE;
 int half_length = 150;
 string TWOBIT_FILE;
@@ -43,24 +52,16 @@ string JASPAR_FILE;
 string alias_file = "multifasta_";
 string MFASTA_FILE;
 string ordering;
-const unsigned int overhead = 25;
-const double pseudoc = 0.01;
 bool DS = true;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;
 double freq_treshold = 0.02;
-bool local_maxima_grouping = true;
+bool local_maxima_grouping = false;
 bool refining_matrix = false;
 string exp_max;
 bool tomtom = false;
 bool err = false;
-vector<bool> rev;
-string reverse_sequence;
-string reverse_matrix_seq;
-string oligos_reverse;
-TwoBit *tb;
-double sim_tresh = 0.001;
 bool direction = false;
 
 class Timer {
@@ -140,7 +141,6 @@ private:
   vector<vector<double>> inverse_norm_matrix;
   vector<vector<double>> matrix_log;
   vector<vector<double>> inverse_matrix_log;
-  vector<double> col_sum;
 
   void matrix_normalization_pseudoc(vector<vector<double>> &);
   void matrix_normalization(vector<vector<double>> &);
@@ -166,11 +166,10 @@ public:
     inverse_matrix_log = reverse_matrix(matrix_log);
   }
 
-  void debug_matrix(matrix_class);
+
   vector<vector<double>> return_log_matrix();
   vector<vector<double>> return_inverse_log_matrix();
-  vector<vector<double>> return_norm_matrix();
-  vector<vector<double>> return_matrix();
+
 };
 
 class oligo_class {
@@ -178,30 +177,21 @@ class oligo_class {
 private:
   vector<double> oligo_scores;
   vector<double> o_matrix_mins;
-  vector<double> o_matrix_maxes;
   double min_possible_score;
   double max_possible_score;
   double best_score;
-  string global_sequence;
-  string best_oligo_seq;
   unsigned int local_position;
-  string chr_coord_oligo;
   unsigned int start_coord_oligo;
-  unsigned int end_coord_oligo;
-  char strand;
 
   void find_minmax(vector<vector<double>> &);
   unsigned int find_best_score();
-  void find_coordinate(unsigned int, string, unsigned int);
-  void find_best_sequence(string, unsigned int);
   void scores_normalization();
   friend class coordinator_class;
   friend class z_test_class;
 
 public:
   oligo_class(vector<vector<double>> &matrix, string &sequence,
-              string chr_coord_GEP, unsigned int start_coord_GEP,
-              char strand_sign) {
+              unsigned int start_coord_GEP) {
 
     // Function to annotate in min_possible_score and max_possible_score the
     // worst and the best score that an oligo can reach based on the current
@@ -219,22 +209,7 @@ public:
     // find more than one select as best the nearest to the center
     local_position = find_best_score();
 
-    // Function to extract and save the best oligo sequence
-    find_best_sequence(sequence, matrix[0].size());
-
-    // The coordinates of the best oligo are saved --> It will be useful to
-    // center the window on the best oligo find_coordinate(matrix[0].size(),
-    // chr_coord_GEP, start_coord_GEP);
-
-    strand = strand_sign;
-
-    global_sequence = sequence;
-
-    chr_coord_oligo = chr_coord_GEP;
-
     start_coord_oligo = start_coord_GEP + local_position;
-
-    end_coord_oligo = start_coord_oligo + matrix[0].size();
   }
 
   oligo_class(vector<vector<double>> &matrix, string &sequence) {
@@ -350,13 +325,9 @@ private:
   vector<unsigned int> N2_vec;
   unsigned int T;
   vector<double> p_value_vec;
-  string reverse_bases;
   string oligo;
-  string oligo_RC;
   multimap<pair<unsigned int, unsigned int>, pair<string, string>>
       vertical_multimap;
-  unordered_map<string, unsigned int>::iterator it_N1_plus;
-  unordered_map<string, unsigned int>::iterator it_N1_minus;
   unsigned int total_oligo_N2;
   unsigned int position;
   unsigned int rank;
@@ -501,7 +472,7 @@ public:
       unsigned int distance, unsigned int position, unsigned int freq,
       unordered_map<string, unsigned int> orizzontal_map_plus,
       unordered_map<string, unsigned int> orizzontal_map_minus,
-      ofstream &outfile, vector<bed_class> GEP,
+      ofstream &outfile,
       vector<unsigned int> kmers_vector) {
 
     sum_occurrences_multimap =
@@ -656,7 +627,6 @@ private:
   unordered_map<string, unsigned int> orizzontal_plus;
   unordered_map<string, unsigned int> orizzontal_minus;
   map<pair<string, string>, pair<unsigned int, unsigned int>> vertical_plus;
-  string reverse_bases;
   vector<vector<unsigned int>> tot_freq_matrix;
   vector<unsigned int> tot_sum_vector;
   vector<vector<unsigned int>> tot_sum_matrix;
@@ -666,7 +636,6 @@ private:
   vector<vector<p_value_class>> P_VALUE_MATRIX;
   vector<hamming_class> HAMMING_VECTOR;
   vector<vector<hamming_class>> HAMMING_MATRIX;
-  //vector<vector<vector<hamming_class>>> HAMMING_3D;
   vector<z_test_class> Z_TEST_VECTOR;
   vector<vector<z_test_class>> Z_TEST_MATRIX;
   vector<unsigned int> generic_vector_creation(string);
