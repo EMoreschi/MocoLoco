@@ -27,10 +27,11 @@
 
 using namespace std;
 
+unsigned int dist = 1;
 //Variable for the ordination of pvalues
-bool ordering = false;
+bool ordering = true;
 //Double strand condition
-bool DS = true;
+bool DS = false;
 //Input file
 string MFASTA_FILE;
 //k-mer vector
@@ -146,6 +147,22 @@ public:
   }
 };
 
+class HammingClass{
+  private:
+    string seed;
+    vector<string> seed_vector;
+
+  public:
+    static void FillSeed(vector<PvalueClass> &, vector<string> &);
+    static void CheckSeed(vector<string> ,
+    multimap<int, string, greater<int>> );
+    static void HammingVector(multimap<int, string>::iterator &, string, vector<string>);
+
+    HammingClass(){
+
+    }
+};
+
 //Debug pvalue vector
 void DVector(vector<PvalueClass>&);
 
@@ -202,6 +219,68 @@ bool comp(const PvalueClass& P1, const PvalueClass& P2)
   return P1.pvalue < P2.pvalue;
 }
 
+
+
+void HammingClass::CheckSeed(vector<string> seed_vector,
+    multimap<int, string, greater<int>> pos){
+      vector<string> hamming_seed;
+    for(unsigned int i = 0; i < seed_vector.size(); i++){
+      string seed = seed_vector[i];
+      for(multimap<int, string>::iterator it = pos.begin(); 
+      it != pos.end(); it++){
+        HammingVector(it, seed, hamming_seed);
+      }
+    }
+    cout << hamming_seed.size() << endl;
+    for (unsigned int i = 0; i < hamming_seed.size(); i++){
+      cout << hamming_seed[i] << endl;
+    }
+}
+void HammingClass::HammingVector(multimap<int, string>::iterator &it, string seed,vector<string> hamming_seed){
+  
+  string oligo = it ->second;
+  unsigned int i = 0, count = 0;
+    while (seed[i] != '\0')
+    {
+        if (seed[i] != oligo[i])
+            count++;
+        i++;
+    }
+
+  if (count <= dist){
+    hamming_seed.emplace_back(oligo);
+  }
+}
+
+void HammingClass::FillSeed(vector<PvalueClass> &P_vector,vector<string> &seed_vector){
+  
+  double pval = 0;
+  unsigned int vertical_occ = 0;
+  for (unsigned int i = 0; i < P_vector.size(); i++){
+      cout << "ENTRA for" << endl;
+    if(ordering){
+      if(P_vector[i].pvalue == pval || pval == 0){
+        pval = P_vector[i].pvalue;
+        seed_vector.emplace_back(P_vector[i].oligo);
+      }
+      else{
+        break;
+      }
+      cout << seed_vector.size() << endl;
+    }
+    else{
+      if(P_vector[i].vertical_occurrences == vertical_occ 
+        || vertical_occ == 0){
+        vertical_occ = P_vector[i].vertical_occurrences;
+        seed_vector.emplace_back(P_vector[i].oligo);
+      }
+      else{
+        break;
+      }
+      cout << seed_vector.size() << endl;
+    }
+  }
+}
 void DVector(vector<PvalueClass> &P_vector){
   for (unsigned int i = 0; i < P_vector.size(); i++){
     cout << "Oligo: " << P_vector[i].oligo << endl;
@@ -455,12 +534,17 @@ int main(int argc,  char **argv){
          it != M.vector_positions_occurrences[i][j].end(); it++) {
             PvalueClass P(it, M.mappa_vector[i], i);
             P_vector.push_back(P);
-          }
-          if (ordering){
-            sort(begin(P_vector), end(P_vector), comp);
-          }
-          DVector(P_vector);
-          P_vector.clear();
+      }
+      if (ordering){
+        sort(begin(P_vector), end(P_vector), comp);
+      }
+          // DVector(P_vector);
+      vector<string> seed_vector;
+      HammingClass::FillSeed(P_vector,seed_vector);
+      if(seed_vector.size() > 1){
+        HammingClass::CheckSeed(seed_vector, M.vector_positions_occurrences[i][j]);
+      }
+      P_vector.clear();
     }
   }
 }
