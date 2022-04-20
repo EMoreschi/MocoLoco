@@ -26,6 +26,9 @@
 #include <thread>
 
 using namespace std;
+
+//Variable for the ordination of pvalues
+bool ordering = false;
 //Double strand condition
 bool DS = true;
 //Input file
@@ -36,6 +39,7 @@ vector<unsigned int> kv = {6};
 vector<unsigned int> len;
 //sequences vector
 vector<string> sequences;
+
 
 string reverse_oligo(string);
 
@@ -96,9 +100,9 @@ public:
   MapClass() {
     MainMapVector();
     VerticalMapVector();
-    // // Functions that starts with D are debug functions
-    DMainMapVector();
-    //DVerticalMapVector();
+    // Functions that starts with D are debug functions
+    // DMainMapVector();
+    // DVerticalMapVector();
   }
 };
 
@@ -112,28 +116,41 @@ class PvalueClass {
   // N2 = numero totale di tutti gli oligo di tutte le sequenze - N1 labda su
   // elemento vettore mappa_vector T = Tot oligo della colonna (numero
   // sequenze)position_occurrences[i].size N1
-  int tot_oligos;
-  vector<int> Kv, N1v, N2v;
-  vector<double> pvalues;
+  unsigned int tot_oligos;
 
+  
 public:
-  void TKN1Calc(multimap<int, string, greater<int> >,
-                unordered_map<string, KmerClass>, unsigned int);
-  int N2Calc(unordered_map<string, KmerClass> &);
+  unsigned int K, N1, N2;
+  double pvalue;
+  string oligo;
+  unsigned int vertical_occurrences;
+
+  void TKN1Calc(multimap<int, string>::iterator &,
+                unordered_map<string, KmerClass> &, unsigned int);
+  // int N2Calc(unordered_map<string, KmerClass> &);
   void DTKN1Calc();
   void DN2Calc();
   void Dpvalues();
-  void N2vFill(unordered_map<string, KmerClass>);
-  
-  PvalueClass(multimap<int, string, greater<int> > positions_occurrences,
-              unordered_map<string, KmerClass> mappa_vector, unsigned int i) {
+  // void N2vFill(unordered_map<string, KmerClass>);
+
+
+
+  PvalueClass(multimap<int, string>::iterator &it,
+              unordered_map<string, KmerClass> &mappa_vector, unsigned int i) {
     //N2Calc(mappa_vector);
-    TKN1Calc(positions_occurrences, mappa_vector, i);
+    TKN1Calc(it, mappa_vector, i);
     // Dpvalues();
-    //    DN2Calc();
-    //    DTKN1Calc();
+    // DN2Calc();
+    // DTKN1Calc();
+
   }
 };
+
+//Debug pvalue vector
+void DVector(vector<PvalueClass>&);
+
+//Comparison function
+bool comp(const PvalueClass& , const PvalueClass& );
 
 //Function from MocoLoco to read a multifasta file and store the sequences in a vector
 void extract_sequences() {
@@ -179,10 +196,25 @@ void extract_sequences() {
   sequences.emplace_back(current_sequence);
 }
 
+
+bool comp(const PvalueClass& P1, const PvalueClass& P2)
+{
+  return P1.pvalue < P2.pvalue;
+}
+
+void DVector(vector<PvalueClass> &P_vector){
+  for (unsigned int i = 0; i < P_vector.size(); i++){
+    cout << "Oligo: " << P_vector[i].oligo << endl;
+    cout << "K: " << P_vector[i].K << " N1: " << P_vector[i].N1 << " N2: " << P_vector[i].N2 << endl;
+    cout << "Ver_occ: " << P_vector[i].vertical_occurrences <<
+    " Pval: " << P_vector[i].pvalue << endl;
+  }
+}
+
 //Function where K, N1, N2 and T are calculated in order to obtain the p value
 void PvalueClass::TKN1Calc(
-    multimap<int, string, greater<int> > positions_occurrences,
-    unordered_map<string, KmerClass> mappa_vector, unsigned int i) {
+    multimap<int, string>::iterator &it,
+    unordered_map<string, KmerClass> &mappa_vector, unsigned int i) {
   
   //T is the number of sequences
   int T = sequences.size();
@@ -191,17 +223,18 @@ void PvalueClass::TKN1Calc(
 
   //Remember N1 is the number of horizontal occurrences of oligo, T is the total number of sequences, N2 is the 
   //total number of oligos in all sequences minus N1 and K is the vertical occurrences of the oligo.
-  for (multimap<int, string>::iterator it = positions_occurrences.begin();
-         it != positions_occurrences.end(); it++) {
-      int N1 = 0;
-      int K = it->first;
+  // for (multimap<int, string>::iterator it = positions_occurrences.begin();
+  //        it != positions_occurrences.end(); it++) {
+      N1 = 0;
+      vertical_occurrences = it->first;
+      K = it->first;
       // Kv.emplace_back(K);
-      string o = it->second;
-      cout << "Oligo: " << o << endl;
+      oligo = it->second;
+      // cout << "Oligo: " << oligos << endl;
       unordered_map<string, KmerClass>::iterator itBigMap =
-          mappa_vector.find(o);
+          mappa_vector.find(oligo);
       unordered_map<string, KmerClass>::iterator itBigMap_rc =
-          mappa_vector.find(reverse_oligo(o));
+          mappa_vector.find(reverse_oligo(oligo));
       if (itBigMap == mappa_vector.end()) {
 
         if (!itBigMap_rc->second.palindrome) {
@@ -216,49 +249,42 @@ void PvalueClass::TKN1Calc(
       tot_oligos = sequences.size() * len[i];
 
       //Calculation of N2
-      int N2 = tot_oligos - N1;
-      
-      //Debug prints
-      cout << "K " << K << endl;
-      cout << "T " << T << endl;
-      cout << "N1 " << N1 << endl;
-      cout << "N2 " << N2 << endl;
+      N2 = tot_oligos - N1;
 
       //Using the gsl library for the hypergeometric p_value
-      double pval = gsl_cdf_hypergeometric_Q(K, N1, N2, T);
-      if (pval == 0){
-        pval = 1e-300;
+      pvalue = gsl_cdf_hypergeometric_Q(K, N1, N2, T);
+      if (pvalue == 0){
+        pvalue = 1e-300;
       }
-      cout << pval << endl;
+      // cout << pval << endl;
       //All the p_values are inserted in a vector
-      pvalues.push_back(pval);
 
-       N1v.emplace_back(N1);
-    }
+      // N1v.emplace_back(N1);
+    // }
 }
 //N2 calculation with lambda (good for ss but not for ds)
-int PvalueClass::N2Calc(unordered_map<string, KmerClass> &mappa) {
-  int N2 = accumulate(begin(mappa), end(mappa), 0,
-                  [](unsigned int val,
-                     const unordered_map<string, KmerClass>::value_type &p) {
-                    return val + (p.second.orizzontal_count +
-                                  p.second.orizzontal_count_rc);
-                  });
-  return N2;
-}
+// int PvalueClass::N2Calc(unordered_map<string, KmerClass> &mappa) {
+//   int N2 = accumulate(begin(mappa), end(mappa), 0,
+//                   [](unsigned int val,
+//                      const unordered_map<string, KmerClass>::value_type &p) {
+//                     return val + (p.second.orizzontal_count +
+//                                   p.second.orizzontal_count_rc);
+//                   });
+//   return N2;
+// }
 
 //Debug output of pvalues
 void PvalueClass::Dpvalues() {
 
-    for (unsigned int j = 0; j < pvalues.size(); j++){
-      // cout << "P_value: " << pvalues[j] << endl;
-    }
+    // for (unsigned int j = 0; j < pvalues.size(); j++){
+    //   // cout << "P_value: " << pvalues[j] << endl;
+    // }
 }
 
 //Fil the vector of N2s
-void PvalueClass::N2vFill(unordered_map<string, KmerClass> map_vector) {
-  N2v.push_back(N2Calc(map_vector));
-}
+// void PvalueClass::N2vFill(unordered_map<string, KmerClass> map_vector) {
+//   N2v.push_back(N2Calc(map_vector));
+// }
 
 //Other debug functions
 
@@ -421,9 +447,20 @@ int main(int argc,  char **argv){
     len.emplace_back(sequences[0].size() - kv[i] + 1);
   }
   MapClass M;
+  vector<PvalueClass> P_vector;
   for (unsigned int i = 0; i < kv.size(); i++){
     for (unsigned int j = 0; j < len[i]; j++){
-      PvalueClass P(M.vector_positions_occurrences[i][j], M.mappa_vector[i], i);
+      cout << "Position: " << j << endl;
+      for (multimap<int, string>::iterator it = M.vector_positions_occurrences[i][j].begin();
+         it != M.vector_positions_occurrences[i][j].end(); it++) {
+            PvalueClass P(it, M.mappa_vector[i], i);
+            P_vector.push_back(P);
+          }
+          if (ordering){
+            sort(begin(P_vector), end(P_vector), comp);
+          }
+          DVector(P_vector);
+          P_vector.clear();
     }
   }
 }
