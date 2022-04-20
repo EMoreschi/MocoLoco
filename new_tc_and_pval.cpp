@@ -151,12 +151,13 @@ class HammingClass{
   private:
     string seed;
     vector<string> seed_vector;
-
+    vector<string> hamming_seed;
   public:
+
+
     static void FillSeed(vector<PvalueClass> &, vector<string> &);
     static void CheckSeed(vector<string> ,
-    multimap<int, string, greater<int>> );
-    static void HammingVector(multimap<int, string>::iterator &, string, vector<string>);
+    multimap<int, string, greater<int>>, vector<string>);
 
     HammingClass(){
 
@@ -222,34 +223,30 @@ bool comp(const PvalueClass& P1, const PvalueClass& P2)
 
 
 void HammingClass::CheckSeed(vector<string> seed_vector,
-    multimap<int, string, greater<int>> pos){
-      vector<string> hamming_seed;
+    multimap<int, string, greater<int>> pos, vector<string> hamming_seed){
+      
     for(unsigned int i = 0; i < seed_vector.size(); i++){
       string seed = seed_vector[i];
       for(multimap<int, string>::iterator it = pos.begin(); 
       it != pos.end(); it++){
-        HammingVector(it, seed, hamming_seed);
+        string oligo = it ->second;
+        unsigned int i = 0, count = 0;
+        while (seed[i] != '\0')
+        {
+          if (seed[i] != oligo[i])
+              count++;
+            i++;
+        }
+
+        if (count <= dist){
+          hamming_seed.emplace_back(oligo);
+        }
       }
     }
     cout << hamming_seed.size() << endl;
     for (unsigned int i = 0; i < hamming_seed.size(); i++){
       cout << hamming_seed[i] << endl;
     }
-}
-void HammingClass::HammingVector(multimap<int, string>::iterator &it, string seed,vector<string> hamming_seed){
-  
-  string oligo = it ->second;
-  unsigned int i = 0, count = 0;
-    while (seed[i] != '\0')
-    {
-        if (seed[i] != oligo[i])
-            count++;
-        i++;
-    }
-
-  if (count <= dist){
-    hamming_seed.emplace_back(oligo);
-  }
 }
 
 void HammingClass::FillSeed(vector<PvalueClass> &P_vector,vector<string> &seed_vector){
@@ -540,9 +537,10 @@ int main(int argc,  char **argv){
       }
           // DVector(P_vector);
       vector<string> seed_vector;
+      vector<string> hamming_seed;
       HammingClass::FillSeed(P_vector,seed_vector);
       if(seed_vector.size() > 1){
-        HammingClass::CheckSeed(seed_vector, M.vector_positions_occurrences[i][j]);
+        HammingClass::CheckSeed(seed_vector, M.vector_positions_occurrences[i][j], hamming_seed);
       }
       P_vector.clear();
     }
