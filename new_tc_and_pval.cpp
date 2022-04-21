@@ -1,5 +1,6 @@
-//This C++ script takes as input a multifasta file and it does the equivalent of 
-//MocoLoco table_creation_horizontal and vertical functions and the p_value_class
+// This C++ script takes as input a multifasta file and it does the equivalent
+// of MocoLoco table_creation_horizontal and vertical functions and the
+// p_value_class
 
 #include <algorithm>
 #include <chrono>
@@ -19,79 +20,80 @@
 #include <numeric>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
-#include <thread>
 
 using namespace std;
 
-unsigned int dist = 1;
-//Variable for the ordination of pvalues
+unsigned int dist = 0;
+// Variable for the ordination of pvalues
 bool ordering = false;
-//Double strand condition
+// Double strand condition
 bool DS = true;
-//Input file
+// Input file
 string MFASTA_FILE;
-//k-mer vector
+// k-mer vector
 vector<unsigned int> kv = {6};
-//sequence length
+// sequence length
 vector<unsigned int> len;
-//sequences vector
+// sequences vector
 vector<string> sequences;
-
 
 string reverse_oligo(string);
 
 void extract_sequences();
 
 class Timer {
-  public:
-    Timer() { m_StartTimepoint = chrono::high_resolution_clock::now(); }
-    ~Timer() { Stop(); }
+public:
+  Timer() { m_StartTimepoint = chrono::high_resolution_clock::now(); }
+  ~Timer() { Stop(); }
 
-    void Stop() {
-      auto endTimepoint = chrono::high_resolution_clock::now();
+  void Stop() {
+    auto endTimepoint = chrono::high_resolution_clock::now();
 
-      auto start = chrono::time_point_cast<chrono::microseconds>(m_StartTimepoint)
+    auto start = chrono::time_point_cast<chrono::microseconds>(m_StartTimepoint)
                      .time_since_epoch()
                      .count();
-      auto end = chrono::time_point_cast<chrono::microseconds>(endTimepoint)
+    auto end = chrono::time_point_cast<chrono::microseconds>(endTimepoint)
                    .time_since_epoch()
                    .count();
 
-      auto duration = end - start;
-      double ms = duration * 0.000001;
+    auto duration = end - start;
+    double ms = duration * 0.000001;
 
-      cout << duration << "us (" << ms << "s)\n";
-    }
+    cout << duration << "us (" << ms << "s)\n";
+  }
 
-  private:
-    chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
+private:
+  chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
 };
-
 
 class KmerClass {
   friend class MapClass;
   friend class PvalueClass;
+  friend class HammingClass;
 
 private:
   string oligo, oligo_rc;                    // TTGCAT - ATGCAA
   int orizzontal_count, orizzontal_count_rc; // in occorrenze reverse complement
-  vector<int> vertical_count, vertical_count_rc; // vettore di 0 grande come seq -k +1
-  bool palindrome;  //T or F
+  vector<int> vertical_count,
+      vertical_count_rc; // vettore di 0 grande come seq -k +1
+  bool palindrome;       // T or F
 };
 
 class MapClass {
 
   friend class PvalueClass;
+  friend class HammingClass;
 
 public:
   unordered_map<string, KmerClass> mappa;
   vector<unordered_map<string, KmerClass>> mappa_vector;
-  vector<multimap<int, string, greater<int> >> positions_occurrences;
-  vector<vector<multimap<int, string, greater<int>>>> vector_positions_occurrences;
+  vector<multimap<int, string, greater<int>>> positions_occurrences;
+  vector<vector<multimap<int, string, greater<int>>>>
+      vector_positions_occurrences;
   void CountOccurrences(string, int);
   void MainMapVector();
   void VerticalMapVector();
@@ -119,7 +121,6 @@ class PvalueClass {
   // sequenze)position_occurrences[i].size N1
   unsigned int tot_oligos;
 
-  
 public:
   unsigned int K, N1, N2;
   double pvalue;
@@ -134,44 +135,58 @@ public:
   void Dpvalues();
   // void N2vFill(unordered_map<string, KmerClass>);
 
-
-
   PvalueClass(multimap<int, string>::iterator &it,
               unordered_map<string, KmerClass> &mappa_vector, unsigned int i) {
-    //N2Calc(mappa_vector);
+    // N2Calc(mappa_vector);
     TKN1Calc(it, mappa_vector, i);
     // Dpvalues();
     // DN2Calc();
     // DTKN1Calc();
-
   }
 };
 
-class HammingClass{
-  private:
+class SeedClass {
+private:
+public:
+  vector<string> seed_vector; // questo deve diventare mappa posizione seed
+  void FillSeed(vector<PvalueClass> &);
 
-  public:
-    string seed;
-    vector<string> seed_vector;
-    vector<string> hamming_seed;
-    map<string, vector<string>> hamming_oligos;
-    unsigned int hamming_v_occ = 0;
-    void FillSeed(vector<PvalueClass> &);
-    void CheckSeed(multimap<int, string, greater<int>>);
-
-    HammingClass(vector<PvalueClass> &P_vector, multimap<int, string, greater<int>> position_occurrences){
-      FillSeed(P_vector);
-      CheckSeed(position_occurrences);
-    }
+  SeedClass(vector<PvalueClass> &P_vector) { FillSeed(P_vector); }
 };
 
-//Debug pvalue vector
-void DVector(vector<PvalueClass>&);
+class HammingClass {
 
-//Comparison function
-bool comp(const PvalueClass& , const PvalueClass& );
+private:
+public:
+  string seed;
+  vector<string> hamming_seed;
+  // vector<vector<string>> hamming_oligos;
+  unsigned int hamming_v_occ = 0;
+  unsigned int hamming_H_occ = 0;
+  double freq1, freq2;
+  void HoccCalc(unordered_map<string, KmerClass> &);
+  void CheckSeed(string, multimap<int, string, greater<int>>);
+  void Freq1Calc(multimap<int, string, greater<int>> &);
+  // void Freq2Calc();
 
-//Function from MocoLoco to read a multifasta file and store the sequences in a vector
+  HammingClass(string seed,
+               multimap<int, string, greater<int>> position_occurrences,
+               unordered_map<string, KmerClass> mappa) {
+    CheckSeed(seed, position_occurrences);
+    Freq1Calc(position_occurrences);
+    HoccCalc(mappa);
+    //		Freq2Calc();
+  }
+};
+void PrintVector(vector<string>);
+// Debug pvalue vector
+void DVector(vector<PvalueClass> &);
+
+// Comparison function
+bool comp(const PvalueClass &, const PvalueClass &);
+
+// Function from MocoLoco to read a multifasta file and store the sequences in a
+// vector
 void extract_sequences() {
 
   ifstream file(MFASTA_FILE);
@@ -215,165 +230,183 @@ void extract_sequences() {
   sequences.emplace_back(current_sequence);
 }
 
-
-bool comp(const PvalueClass& P1, const PvalueClass& P2)
-{
+bool comp(const PvalueClass &P1, const PvalueClass &P2) {
   return P1.pvalue < P2.pvalue;
 }
 
+void HammingClass::CheckSeed(string seed,
+                             multimap<int, string, greater<int>> pos) {
 
+  for (multimap<int, string>::iterator it = pos.begin(); it != pos.end();
+       it++) {
 
-void HammingClass::CheckSeed(multimap<int, string, greater<int>> pos){
-    cout << "Seed_vector " << seed_vector.size() << endl;
-    for(unsigned int i = 0; i < seed_vector.size(); i++){
-      string seed = seed_vector[i];
-
-      for(multimap<int, string>::iterator it = pos.begin(); 
-      it != pos.end(); it++){
-
-        string oligo = it ->second;
-        if(oligo != seed){
-          unsigned int i = 0, count = 0;
-          while (seed[i] != '\0')
-          {
-            if (seed[i] != oligo[i])
-                count++;
-              i++;
-          }
-
-          if (count <= dist){
-            hamming_v_occ += it -> first;
-            hamming_seed.emplace_back(oligo);
-          }
-        }
-        else{
-            hamming_v_occ += it->first;
-        }
+    string oligo = it->second;
+    if (oligo != seed) {
+      unsigned int i = 0, count = 0;
+      while (seed[i] != '\0') {
+        if (seed[i] != oligo[i])
+          count++;
+        i++;
       }
-      hamming_oligos.emplace(seed, hamming_seed);
-      cout << "Best oligo: " << seed << endl;
-      cout << "Hamming v occ: " << hamming_v_occ << endl;
-      for (unsigned int i = 0; i < hamming_seed.size(); i++){
-        cout << hamming_seed[i] << endl;
+
+      if (count <= dist) {
+        hamming_v_occ += it->first;
+        hamming_seed.push_back(oligo);
       }
-      hamming_seed.clear();
-    }    
-    
+    } else {
+      hamming_v_occ += it->first;
+      hamming_seed.push_back(seed);
+    }
+  }
+  // hamming_oligos.push_back(hamming_seed);
+  //  cout << "Best oligo: " << seed << endl;
+  // cout << "Hamming v occ: " << hamming_v_occ << endl;
+  for (unsigned int i = 0; i < hamming_seed.size(); i++) {
+    cout << hamming_seed[i] << endl;
+  }
+  // hamming_seed.clear();
 }
 
-void HammingClass::FillSeed(vector<PvalueClass> &P_vector){
-  
+void HammingClass::Freq1Calc(multimap<int, string, greater<int>> &pos) {
+
+  freq1 = static_cast<double>(hamming_v_occ) / static_cast<double>(pos.size());
+}
+
+void HammingClass::HoccCalc(unordered_map<string, KmerClass> &mappa) {
+  hamming_H_occ = 0;
+
+  for (unsigned int i = 0; i < hamming_seed.size(); i++) {
+    string oligo = hamming_seed[i];
+    string reverse_o = reverse_oligo(oligo);
+    unordered_map<string, KmerClass>::iterator it = mappa.find(oligo);
+    unordered_map<string, KmerClass>::iterator itrc = mappa.find(reverse_o);
+    if (it != mappa.end()) {
+      hamming_H_occ += it->second.orizzontal_count;
+    } else {
+      hamming_H_occ += itrc->second.orizzontal_count;
+    }
+  }
+}
+
+void PrintVector(vector<string> pippo) {
+  for (unsigned int i = 0; i < pippo.size(); i++) {
+    cout << pippo[i] << endl;
+  }
+}
+
+void SeedClass::FillSeed(vector<PvalueClass> &P_vector) {
+
   double pval = 0;
   unsigned int vertical_occ = 0;
-  for (unsigned int i = 0; i < P_vector.size(); i++){
-    if(ordering){
-      if(P_vector[i].pvalue == pval || pval == 0){
+  for (unsigned int i = 0; i < P_vector.size(); i++) {
+    if (ordering) {
+      if (P_vector[i].pvalue == pval || pval == 0) {
         pval = P_vector[i].pvalue;
         seed_vector.emplace_back(P_vector[i].oligo);
-      }
-      else{
+      } else {
         break;
       }
       cout << seed_vector.size() << endl;
-    }
-    else{
-      if(P_vector[i].vertical_occurrences == vertical_occ 
-        || vertical_occ == 0){
+    } else {
+      if (P_vector[i].vertical_occurrences == vertical_occ ||
+          vertical_occ == 0) {
         vertical_occ = P_vector[i].vertical_occurrences;
         seed_vector.emplace_back(P_vector[i].oligo);
-      }
-      else{
+      } else {
         break;
       }
       cout << seed_vector.size() << endl;
     }
   }
 }
-void DVector(vector<PvalueClass> &P_vector){
-  for (unsigned int i = 0; i < P_vector.size(); i++){
+void DVector(vector<PvalueClass> &P_vector) {
+  for (unsigned int i = 0; i < P_vector.size(); i++) {
     cout << "Oligo: " << P_vector[i].oligo << endl;
-    cout << "K: " << P_vector[i].K << " N1: " << P_vector[i].N1 << " N2: " << P_vector[i].N2 << endl;
-    cout << "Ver_occ: " << P_vector[i].vertical_occurrences <<
-    " Pval: " << P_vector[i].pvalue << endl;
+    cout << "K: " << P_vector[i].K << " N1: " << P_vector[i].N1
+         << " N2: " << P_vector[i].N2 << endl;
+    cout << "Ver_occ: " << P_vector[i].vertical_occurrences
+         << " Pval: " << P_vector[i].pvalue << endl;
   }
 }
 
-//Function where K, N1, N2 and T are calculated in order to obtain the p value
-void PvalueClass::TKN1Calc(
-    multimap<int, string>::iterator &it,
-    unordered_map<string, KmerClass> &mappa_vector, unsigned int i) {
-  
-  //T is the number of sequences
+// Function where K, N1, N2 and T are calculated in order to obtain the p value
+void PvalueClass::TKN1Calc(multimap<int, string>::iterator &it,
+                           unordered_map<string, KmerClass> &mappa_vector,
+                           unsigned int i) {
+
+  // T is the number of sequences
   int T = sequences.size();
 
-  //For each oligo in the multimap of vertical occurrences T, N1, N2 and K are calculated.
+  // For each oligo in the multimap of vertical occurrences T, N1, N2 and K are
+  // calculated.
 
-  //Remember N1 is the number of horizontal occurrences of oligo, T is the total number of sequences, N2 is the 
-  //total number of oligos in all sequences minus N1 and K is the vertical occurrences of the oligo.
-  // for (multimap<int, string>::iterator it = positions_occurrences.begin();
-  //        it != positions_occurrences.end(); it++) {
-      N1 = 0;
-      vertical_occurrences = it->first;
-      K = it->first;
-      // Kv.emplace_back(K);
-      oligo = it->second;
-      // cout << "Oligo: " << oligos << endl;
-      unordered_map<string, KmerClass>::iterator itBigMap =
-          mappa_vector.find(oligo);
-      unordered_map<string, KmerClass>::iterator itBigMap_rc =
-          mappa_vector.find(reverse_oligo(oligo));
-      if (itBigMap == mappa_vector.end()) {
+  // Remember N1 is the number of horizontal occurrences of oligo, T is the
+  // total number of sequences, N2 is the total number of oligos in all
+  // sequences minus N1 and K is the vertical occurrences of the oligo.
+  //  for (multimap<int, string>::iterator it = positions_occurrences.begin();
+  //         it != positions_occurrences.end(); it++) {
+  N1 = 0;
+  vertical_occurrences = it->first;
+  K = it->first;
+  // Kv.emplace_back(K);
+  oligo = it->second;
+  // cout << "Oligo: " << oligos << endl;
+  unordered_map<string, KmerClass>::iterator itBigMap =
+      mappa_vector.find(oligo);
+  unordered_map<string, KmerClass>::iterator itBigMap_rc =
+      mappa_vector.find(reverse_oligo(oligo));
+  if (itBigMap == mappa_vector.end()) {
 
-        if (!itBigMap_rc->second.palindrome) {
-          N1 = itBigMap_rc->second.orizzontal_count_rc;
-        }
-      } else {
+    if (!itBigMap_rc->second.palindrome) {
+      N1 = itBigMap_rc->second.orizzontal_count_rc;
+    }
+  } else {
 
-        N1 = itBigMap->second.orizzontal_count;
+    N1 = itBigMap->second.orizzontal_count;
+  }
+  // Calculation of total number of oligos in the multifasta
+  tot_oligos = sequences.size() * len[i];
 
-      }
-      //Calculation of total number of oligos in the multifasta
-      tot_oligos = sequences.size() * len[i];
+  // Calculation of N2
+  N2 = tot_oligos - N1;
 
-      //Calculation of N2
-      N2 = tot_oligos - N1;
+  // Using the gsl library for the hypergeometric p_value
+  pvalue = gsl_cdf_hypergeometric_Q(K, N1, N2, T);
+  if (pvalue == 0) {
+    pvalue = 1e-300;
+  }
+  // cout << pval << endl;
+  // All the p_values are inserted in a vector
 
-      //Using the gsl library for the hypergeometric p_value
-      pvalue = gsl_cdf_hypergeometric_Q(K, N1, N2, T);
-      if (pvalue == 0){
-        pvalue = 1e-300;
-      }
-      // cout << pval << endl;
-      //All the p_values are inserted in a vector
-
-      // N1v.emplace_back(N1);
-    // }
+  // N1v.emplace_back(N1);
+  // }
 }
-//N2 calculation with lambda (good for ss but not for ds)
-// int PvalueClass::N2Calc(unordered_map<string, KmerClass> &mappa) {
-//   int N2 = accumulate(begin(mappa), end(mappa), 0,
-//                   [](unsigned int val,
-//                      const unordered_map<string, KmerClass>::value_type &p) {
-//                     return val + (p.second.orizzontal_count +
-//                                   p.second.orizzontal_count_rc);
-//                   });
-//   return N2;
-// }
+// N2 calculation with lambda (good for ss but not for ds)
+//  int PvalueClass::N2Calc(unordered_map<string, KmerClass> &mappa) {
+//    int N2 = accumulate(begin(mappa), end(mappa), 0,
+//                    [](unsigned int val,
+//                       const unordered_map<string, KmerClass>::value_type &p)
+//                       {
+//                      return val + (p.second.orizzontal_count +
+//                                    p.second.orizzontal_count_rc);
+//                    });
+//    return N2;
+//  }
 
-//Debug output of pvalues
+// Debug output of pvalues
 void PvalueClass::Dpvalues() {
 
-    // for (unsigned int j = 0; j < pvalues.size(); j++){
-    //   // cout << "P_value: " << pvalues[j] << endl;
-    // }
+  // for (unsigned int j = 0; j < pvalues.size(); j++){
+  //   // cout << "P_value: " << pvalues[j] << endl;
+  // }
 }
 
-//Fil the vector of N2s
-// void PvalueClass::N2vFill(unordered_map<string, KmerClass> map_vector) {
-//   N2v.push_back(N2Calc(map_vector));
-// }
+// Fil the vector of N2s
+//  void PvalueClass::N2vFill(unordered_map<string, KmerClass> map_vector) {
+//    N2v.push_back(N2Calc(map_vector));
+//  }
 
-//Other debug functions
+// Other debug functions
 
 // void PvalueClass::DN2Calc() {
 //   for (unsigned int i = 0; i < N2v.size(); i++) {
@@ -390,8 +423,8 @@ void PvalueClass::Dpvalues() {
 //   }
 // }
 
-//Function for counting the horizontal and vertical occurrences for each oligo and 
-//putting them inside a map.
+// Function for counting the horizontal and vertical occurrences for each oligo
+// and putting them inside a map.
 void MapClass::CountOccurrences(string sequence, int k) {
 
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
@@ -403,15 +436,15 @@ void MapClass::CountOccurrences(string sequence, int k) {
 
       it->second.orizzontal_count++;
       it->second.vertical_count[i]++;
-      if(DS){
-          it->second.orizzontal_count_rc++;
-          it->second.vertical_count_rc[i]++;
+      if (DS) {
+        it->second.orizzontal_count_rc++;
+        it->second.vertical_count_rc[i]++;
       }
     } else if (it_rc != mappa.end()) {
-      if(!it_rc->second.palindrome){
+      if (!it_rc->second.palindrome) {
         it_rc->second.orizzontal_count_rc++;
         it_rc->second.vertical_count_rc[i]++;
-        if(DS){
+        if (DS) {
           it_rc->second.orizzontal_count++;
           it_rc->second.vertical_count[i]++;
         }
@@ -425,9 +458,9 @@ void MapClass::CountOccurrences(string sequence, int k) {
       M.vertical_count.resize(((sequence.size() - k) + 1), 0);
       M.vertical_count_rc.resize(((sequence.size() - k) + 1), 0);
       M.vertical_count[i] = 1;
-      if(DS){
-          M.vertical_count_rc[i] = 1;
-          M.orizzontal_count_rc = 1;
+      if (DS) {
+        M.vertical_count_rc[i] = 1;
+        M.orizzontal_count_rc = 1;
       }
       mappa.emplace(oligo, M);
     }
@@ -470,20 +503,20 @@ void MapClass::MainMapVector() {
   }
 }
 void MapClass::VerticalMapVector() {
-  
+
   for (unsigned int i = 0; i < kv.size(); i++) {
 
-    for (unsigned int j = 0; j < len[i] ; j++) {
-    multimap<int, string, greater<int> > pos;
-    for (unordered_map<string, KmerClass>::iterator it = mappa_vector[i].begin();
-         it != mappa_vector[i].end(); it++) {
-        if(it->second.vertical_count[j] > 0){
+    for (unsigned int j = 0; j < len[i]; j++) {
+      multimap<int, string, greater<int>> pos;
+      for (unordered_map<string, KmerClass>::iterator it =
+               mappa_vector[i].begin();
+           it != mappa_vector[i].end(); it++) {
+        if (it->second.vertical_count[j] > 0) {
           pos.emplace(it->second.vertical_count[j], it->first);
-        } 
+        }
         if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
           pos.emplace(it->second.vertical_count_rc[j], it->second.oligo_rc);
         }
-         
       }
       positions_occurrences.push_back(pos);
       pos.clear();
@@ -493,7 +526,7 @@ void MapClass::VerticalMapVector() {
   }
 }
 
-//Debug function
+// Debug function
 void MapClass::DVerticalMapVector() {
   for (unsigned int i = 0; i < kv.size(); i++) {
     cout << "I: " << i << endl;
@@ -508,7 +541,7 @@ void MapClass::DVerticalMapVector() {
   }
 }
 
-//Debug function
+// Debug function
 void MapClass::DMainMapVector() {
   for (unsigned int i = 0; i < kv.size(); i++) {
     int sum = 0;
@@ -516,43 +549,52 @@ void MapClass::DMainMapVector() {
              mappa_vector[i].begin();
          it != mappa_vector[i].end(); it++) {
       cout << it->first << " " << it->second.vertical_count[0] << " "
-           << it->second.orizzontal_count << "\t"
-           << it->second.oligo_rc << " " << it->second.vertical_count_rc[0] << " " 
-           << it->second.orizzontal_count_rc << " " 
+           << it->second.orizzontal_count << "\t" << it->second.oligo_rc << " "
+           << it->second.vertical_count_rc[0] << " "
+           << it->second.orizzontal_count_rc << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
-      sum = sum + it->second.vertical_count_rc[0] + it->second.vertical_count[0];
+      sum =
+          sum + it->second.vertical_count_rc[0] + it->second.vertical_count[0];
     }
   }
 }
 
-int main(int argc,  char **argv){
-  
+int main(int argc, char **argv) {
+
   MFASTA_FILE = argv[1];
   extract_sequences();
   Timer timer;
-  for(unsigned int i = 0; i < kv.size(); i++){
+  for (unsigned int i = 0; i < kv.size(); i++) {
     len.emplace_back(sequences[0].size() - kv[i] + 1);
   }
   MapClass M;
   vector<PvalueClass> P_vector;
-  for (unsigned int i = 0; i < kv.size(); i++){
-    for (unsigned int j = 0; j < len[i]; j++){
+  for (unsigned int i = 0; i < kv.size(); i++) {
+    for (unsigned int j = 0; j < len[i]; j++) {
       cout << "Position: " << j << endl;
-      for (multimap<int, string>::iterator it = M.vector_positions_occurrences[i][j].begin();
-         it != M.vector_positions_occurrences[i][j].end(); it++) {
-            PvalueClass P(it, M.mappa_vector[i], i);
-            P_vector.push_back(P);
+      for (multimap<int, string>::iterator it =
+               M.vector_positions_occurrences[i][j].begin();
+           it != M.vector_positions_occurrences[i][j].end(); it++) {
+        PvalueClass P(it, M.mappa_vector[i], i);
+        P_vector.push_back(P);
       }
-      if (ordering){
+      if (ordering) {
         sort(begin(P_vector), end(P_vector), comp);
       }
-          // DVector(P_vector);
-      
-      
-      HammingClass H(P_vector, M.vector_positions_occurrences[i][j]);
+      //      DVector(P_vector);
+      SeedClass S(P_vector);
+      for (unsigned int x = 0; x < S.seed_vector.size(); x++) {
+        HammingClass H(S.seed_vector[x], M.vector_positions_occurrences[i][j],
+                       M.mappa_vector[i]);
 
+        //      cout << H.seed << endl
+        //           << "vertical occurrences :" << H.hamming_v_occ << endl;
+        cout << H.seed << endl
+             << "Horizzontal occurrences :" << H.hamming_H_occ << endl;
+        //      cout << H.freq1 << endl << "freq1" << endl;
+        //}
+      }
       P_vector.clear();
-      cout << H.seed << endl;
     }
   }
 }
