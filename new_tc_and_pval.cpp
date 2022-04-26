@@ -27,11 +27,12 @@
 
 using namespace std;
 
-unsigned int dist = 0;
+unsigned int secondary = 1;
+unsigned int dist = 1;
 // Variable for the ordination of pvalues
-bool ordering = false;
+bool ordering = true;
 // Double strand condition
-bool DS = true;
+bool DS = false;
 // Input file
 string MFASTA_FILE;
 // k-mer vector
@@ -70,18 +71,52 @@ private:
   chrono::time_point<chrono::high_resolution_clock> m_StartTimepoint;
 };
 
-class KmerClass {
+class HorizontalClass {
   friend class MapClass;
   friend class PvalueClass;
   friend class HammingClass;
-
-private:
-  string oligo, oligo_rc;                    // TTGCAT - ATGCAA
-  int orizzontal_count, orizzontal_count_rc; // in occorrenze reverse complement
-  vector<int> vertical_count,
-      vertical_count_rc; // vettore di 0 grande come seq -k +1
-  bool palindrome;       // T or F
+  private:
+    string oligo, oligo_rc;                    // TTGCAT - ATGCAA
+    int horizontal_count, horizontal_count_rc; // in occorrenze reverse complement
+    int horizontal_count_REV, horizontal_count_rc_REV;
+    int horizontal_count_FWD, horizontal_count_rc_FWD;
+    bool palindrome;
 };
+
+class VerticalClass {
+  friend class MapClass;
+  friend class PvalueClass;
+  friend class HammingClass;
+  private:
+    string oligo, oligo_rc;  
+    vector<int> vertical_count,
+      vertical_count_rc;
+    vector<int> vertical_count_FWD,
+      vertical_count_rc_FWD;
+    vector<int> vertical_count_REV,
+      vertical_count_rc_REV;
+    bool palindrome;
+};
+
+// class KmerClass {
+//   friend class MapClass;
+//   friend class PvalueClass;
+//   friend class HammingClass;
+
+//   private:
+//     string oligo, oligo_rc;                    // TTGCAT - ATGCAA
+//     int horizontal_count, horizontal_count_rc; // in occorrenze reverse complement
+//     int horizontal_count_REV, horizontal_count_rc_REV;
+//     int horizontal_count_FWD, horizontal_count_rc_FWD;
+//     vector<int> vertical_count,
+//       vertical_count_rc; // vettore di 0 grande come seq -k +1
+//     vector<int> vertical_count_FWD,
+//       vertical_count_rc_FWD;
+//     vector<int> vertical_count_REV,
+//       vertical_count_rc_REV;
+//     bool palindrome;       // T or F
+
+// };
 
 class MapClass {
 
@@ -89,22 +124,32 @@ class MapClass {
   friend class HammingClass;
 
 public:
-  unordered_map<string, KmerClass> mappa;
-  vector<unordered_map<string, KmerClass>> mappa_vector;
+  unordered_map<string, HorizontalClass> horizontal_map;
+  vector<unordered_map<string, HorizontalClass>> vector_map_hor;
+  unordered_map<string, VerticalClass> vertical_map;
+  vector<unordered_map<string, VerticalClass>> vector_map_ver;
   vector<multimap<int, string, greater<int>>> positions_occurrences;
   vector<vector<multimap<int, string, greater<int>>>>
       vector_positions_occurrences;
-  void CountOccurrences(string, int);
+  void CountOccurrencesHor(string, int);
+  void CountOccurrencesVer(string, int);
   void MainMapVector();
   void VerticalMapVector();
-  void DMainMapVector();
+  void DMainMapVectorDS();
+  void DMainMapVectorSS();
   void DVerticalMapVector();
 
   MapClass() {
     MainMapVector();
     VerticalMapVector();
     // Functions that starts with D are debug functions
-    // DMainMapVector();
+    
+    if(DS){
+      DMainMapVectorDS();
+    }
+    else{
+      DMainMapVectorSS();
+    }
     // DVerticalMapVector();
   }
 };
@@ -117,7 +162,7 @@ class PvalueClass {
   // position occurrence: oligo  .
   // N1 = numero occorrenze oligo in tutte le sequenze --> oligo
   // N2 = numero totale di tutti gli oligo di tutte le sequenze - N1 labda su
-  // elemento vettore mappa_vector T = Tot oligo della colonna (numero
+  // elemento vettore vector_map_hor T = Tot oligo della colonna (numero
   // sequenze)position_occurrences[i].size N1
   unsigned int tot_oligos;
 
@@ -128,7 +173,7 @@ public:
   unsigned int vertical_occurrences;
 
   void TKN1Calc(multimap<int, string>::iterator &,
-                unordered_map<string, KmerClass> &, unsigned int);
+                unordered_map<string, HorizontalClass> &, unsigned int);
   // int N2Calc(unordered_map<string, KmerClass> &);
   void DTKN1Calc();
   void DN2Calc();
@@ -136,9 +181,9 @@ public:
   // void N2vFill(unordered_map<string, KmerClass>);
 
   PvalueClass(multimap<int, string>::iterator &it,
-              unordered_map<string, KmerClass> &mappa_vector, unsigned int i) {
-    // N2Calc(mappa_vector);
-    TKN1Calc(it, mappa_vector, i);
+              unordered_map<string, HorizontalClass> &vector_map_hor, unsigned int i) {
+    // N2Calc(vector_map_hor);
+    TKN1Calc(it, vector_map_hor, i);
     // Dpvalues();
     // DN2Calc();
     // DTKN1Calc();
@@ -161,24 +206,42 @@ public:
   string seed;
   vector<string> hamming_seed;
   // vector<vector<string>> hamming_oligos;
-  unsigned int hamming_v_occ = 0;
-  unsigned int hamming_H_occ = 0;
+  vector<unsigned int> vert_vector;
+  unsigned int hamming_v_occ;
+  unsigned int hamming_H_occ;
   double freq1, freq2;
-  void HoccCalc(unordered_map<string, KmerClass> &);
-  void CheckSeed(string, multimap<int, string, greater<int>>);
-  void Freq1Calc(multimap<int, string, greater<int>> &);
-  // void Freq2Calc();
+  unsigned int tot_freq = 0;
+  vector<vector<double>> PWM_hamming;
+
+  void HoccCalc(unordered_map<string, HorizontalClass>);
+  void CheckSeed(string, unordered_map<string, VerticalClass>, multimap<int, string, greater<int>>, unsigned int);
+  void Freq1Calc();
+  void Freq2Calc();
+  void PWMHammingCalc();
+  void DPWMHamming(vector<vector<double>>&);
 
   HammingClass(string seed,
+               unordered_map<string, VerticalClass> map_vertical,
                multimap<int, string, greater<int>> position_occurrences,
-               unordered_map<string, KmerClass> mappa) {
-    CheckSeed(seed, position_occurrences);
-    Freq1Calc(position_occurrences);
-    HoccCalc(mappa);
-    //		Freq2Calc();
+               unordered_map<string, HorizontalClass> map_horizontal, 
+               unsigned int position) {
+    
+    CheckSeed(seed, map_vertical, position_occurrences, position);
+    Freq1Calc();
+    HoccCalc(map_horizontal);
+    Freq2Calc();
+    PWMHammingCalc();
+    DPWMHamming(PWM_hamming);
   }
 };
-void PrintVector(vector<string>);
+
+class EMClass{
+  private:
+
+  public:
+    
+};
+
 // Debug pvalue vector
 void DVector(vector<PvalueClass> &);
 
@@ -234,71 +297,149 @@ bool comp(const PvalueClass &P1, const PvalueClass &P2) {
   return P1.pvalue < P2.pvalue;
 }
 
-void HammingClass::CheckSeed(string seed,
-                             multimap<int, string, greater<int>> pos) {
+void HammingClass::PWMHammingCalc() {
+  // Vector for each bases initialized to count, position by position, the
+  // occurrences of that base
+  vector<double> vec_A, vec_C, vec_G, vec_T;
 
+
+  // For each bases (position) of oligo
+  for (unsigned int i = 0; i < hamming_seed[0].size();i++){
+
+    double counter_A = 0;
+    double counter_C = 0;
+    double counter_G = 0;
+    double counter_T = 0;
+
+    // For each oligo in similar oligos vector
+    for (unsigned int j = 0; j < hamming_seed.size(); j++) {
+
+      // similar_oligos_map.insert(pair<string, double>(
+      //     hamming_seed[j], vert_vector[j]));
+
+      switch (hamming_seed[j][i]) {
+
+      // Increment base counters of the oligo occurrences
+      case 'A':
+        counter_A += vert_vector[j];
+        break;
+      case 'C':
+        counter_C += vert_vector[j];
+        break;
+      case 'G':
+        counter_G += vert_vector[j];
+        break;
+      case 'T':
+        counter_T += vert_vector[j];
+        break;
+      }
+    }
+
+    // Fill base vectors
+    vec_A.emplace_back(counter_A);
+    vec_C.emplace_back(counter_C);
+    vec_G.emplace_back(counter_G);
+    vec_T.emplace_back(counter_T);
+  }
+
+  // Build the PWM matrix
+  PWM_hamming.emplace_back(vec_A);
+  PWM_hamming.emplace_back(vec_C);
+  PWM_hamming.emplace_back(vec_G);
+  PWM_hamming.emplace_back(vec_T);
+}
+
+void HammingClass::DPWMHamming(vector<vector<double>> &PWM_hamming){
+  for (unsigned short int i = 0; i < PWM_hamming.size(); i++) {
+    for (unsigned short int j = 0; j < PWM_hamming[i].size(); j++) {
+      cout << PWM_hamming[i][j] << "\t";
+    }
+    cout << endl;
+  }
+  cout << endl;
+}
+
+void HammingClass::CheckSeed(string seed,
+                             unordered_map<string, VerticalClass> map_vertical,
+                             multimap<int, string, greater<int>> pos,
+                             unsigned int position) {
+  
   for (multimap<int, string>::iterator it = pos.begin(); it != pos.end();
        it++) {
-
+    hamming_v_occ = 0;
+    tot_freq += it->first;
     string oligo = it->second;
-    if (oligo != seed) {
-      unsigned int i = 0, count = 0;
-      while (seed[i] != '\0') {
-        if (seed[i] != oligo[i])
-          count++;
-        i++;
-      }
+    unsigned int i = 0, count = 0;
+    while (seed[i] != '\0') {
+      if (seed[i] != oligo[i])
+        count++;
+      i++;
+    }
 
-      if (count <= dist) {
-        hamming_v_occ += it->first;
-        hamming_seed.push_back(oligo);
+    if (count <= dist) {
+      string reverse_o = reverse_oligo(oligo);
+      unordered_map<string, VerticalClass>::iterator it_ver = map_vertical.find(oligo);
+      unordered_map<string, VerticalClass>::iterator it_ver_rc = map_vertical.find(reverse_o);
+      if (it_ver != map_vertical.end()) {
+        hamming_v_occ += it_ver->second.vertical_count_FWD[position];
+      } else {
+        hamming_v_occ += it_ver_rc->second.vertical_count_rc_FWD[position];
+      }        
+      if(DS){
+        if (it_ver != map_vertical.end()) {
+          hamming_v_occ += it_ver->second.vertical_count_REV[position];
+        } else {
+          hamming_v_occ += it_ver_rc->second.vertical_count_FWD[position];
+        } 
       }
-    } else {
-      hamming_v_occ += it->first;
-      hamming_seed.push_back(seed);
+      vert_vector.push_back(hamming_v_occ);
+      hamming_seed.push_back(oligo);
+      cout << oligo << " " << hamming_v_occ << endl;
     }
   }
   // hamming_oligos.push_back(hamming_seed);
-  //  cout << "Best oligo: " << seed << endl;
-  // cout << "Hamming v occ: " << hamming_v_occ << endl;
+  cout << "Best oligo: " << seed << endl;
   for (unsigned int i = 0; i < hamming_seed.size(); i++) {
     cout << hamming_seed[i] << endl;
   }
   // hamming_seed.clear();
 }
 
-void HammingClass::Freq1Calc(multimap<int, string, greater<int>> &pos) {
+void HammingClass::Freq1Calc() {
 
-  freq1 = static_cast<double>(hamming_v_occ) / static_cast<double>(pos.size());
+  freq1 = static_cast<double>(hamming_v_occ) / static_cast<double>(tot_freq);
+  cout << "Freq1: " << freq1 << endl;
 }
 
-void HammingClass::HoccCalc(unordered_map<string, KmerClass> &mappa) {
+void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> map_horizontal) {
+ 
   hamming_H_occ = 0;
-
   for (unsigned int i = 0; i < hamming_seed.size(); i++) {
     string oligo = hamming_seed[i];
     string reverse_o = reverse_oligo(oligo);
-    unordered_map<string, KmerClass>::iterator it = mappa.find(oligo);
-    unordered_map<string, KmerClass>::iterator itrc = mappa.find(reverse_o);
-    if (it != mappa.end()) {
-      hamming_H_occ += it->second.orizzontal_count;
+    unordered_map<string, HorizontalClass>::iterator it = map_horizontal.find(oligo);
+    unordered_map<string, HorizontalClass>::iterator itrc = map_horizontal.find(reverse_o);
+    if (it != map_horizontal.end()) {
+      hamming_H_occ += it->second.horizontal_count;
+      cout << it->first << " " << it->second.horizontal_count << endl;
     } else {
-      hamming_H_occ += itrc->second.orizzontal_count;
+      hamming_H_occ += itrc->second.horizontal_count_rc;
+      cout << itrc->second.oligo_rc << " " << itrc->second.horizontal_count_rc << endl;
     }
   }
 }
 
-void PrintVector(vector<string> pippo) {
-  for (unsigned int i = 0; i < pippo.size(); i++) {
-    cout << pippo[i] << endl;
-  }
+void HammingClass::Freq2Calc() {
+
+  freq2 = static_cast<double>(hamming_v_occ) / static_cast<double>(hamming_H_occ);
+  cout << "Freq2: " << freq2 << endl;
 }
 
 void SeedClass::FillSeed(vector<PvalueClass> &P_vector) {
 
   double pval = 0;
   unsigned int vertical_occ = 0;
-  for (unsigned int i = 0; i < P_vector.size(); i++) {
+  for (unsigned int i = 0; i < P_vector.size() && i < secondary; i++) {
     if (ordering) {
       if (P_vector[i].pvalue == pval || pval == 0) {
         pval = P_vector[i].pvalue;
@@ -306,7 +447,7 @@ void SeedClass::FillSeed(vector<PvalueClass> &P_vector) {
       } else {
         break;
       }
-      cout << seed_vector.size() << endl;
+      cout << "Seed vector size: " << seed_vector.size() << endl;
     } else {
       if (P_vector[i].vertical_occurrences == vertical_occ ||
           vertical_occ == 0) {
@@ -315,7 +456,7 @@ void SeedClass::FillSeed(vector<PvalueClass> &P_vector) {
       } else {
         break;
       }
-      cout << seed_vector.size() << endl;
+      cout << "Seed vector size: " << seed_vector.size() << endl;
     }
   }
 }
@@ -331,7 +472,7 @@ void DVector(vector<PvalueClass> &P_vector) {
 
 // Function where K, N1, N2 and T are calculated in order to obtain the p value
 void PvalueClass::TKN1Calc(multimap<int, string>::iterator &it,
-                           unordered_map<string, KmerClass> &mappa_vector,
+                           unordered_map<string, HorizontalClass> &vector_map_hor,
                            unsigned int i) {
 
   // T is the number of sequences
@@ -351,18 +492,18 @@ void PvalueClass::TKN1Calc(multimap<int, string>::iterator &it,
   // Kv.emplace_back(K);
   oligo = it->second;
   // cout << "Oligo: " << oligos << endl;
-  unordered_map<string, KmerClass>::iterator itBigMap =
-      mappa_vector.find(oligo);
-  unordered_map<string, KmerClass>::iterator itBigMap_rc =
-      mappa_vector.find(reverse_oligo(oligo));
-  if (itBigMap == mappa_vector.end()) {
+  unordered_map<string, HorizontalClass>::iterator itBigMap =
+      vector_map_hor.find(oligo);
+  unordered_map<string, HorizontalClass>::iterator itBigMap_rc =
+      vector_map_hor.find(reverse_oligo(oligo));
+  if (itBigMap == vector_map_hor.end()) {
 
     if (!itBigMap_rc->second.palindrome) {
-      N1 = itBigMap_rc->second.orizzontal_count_rc;
+      N1 = itBigMap_rc->second.horizontal_count_rc;
     }
   } else {
 
-    N1 = itBigMap->second.orizzontal_count;
+    N1 = itBigMap->second.horizontal_count;
   }
   // Calculation of total number of oligos in the multifasta
   tot_oligos = sequences.size() * len[i];
@@ -387,8 +528,8 @@ void PvalueClass::TKN1Calc(multimap<int, string>::iterator &it,
 //                    [](unsigned int val,
 //                       const unordered_map<string, KmerClass>::value_type &p)
 //                       {
-//                      return val + (p.second.orizzontal_count +
-//                                    p.second.orizzontal_count_rc);
+//                      return val + (p.second.horizontal_count +
+//                                    p.second.horizontal_count_rc);
 //                    });
 //    return N2;
 //  }
@@ -425,44 +566,119 @@ void PvalueClass::Dpvalues() {
 
 // Function for counting the horizontal and vertical occurrences for each oligo
 // and putting them inside a map.
-void MapClass::CountOccurrences(string sequence, int k) {
+void MapClass::CountOccurrencesHor(string sequence, int k) {
 
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
     string oligo = sequence.substr(i, k);
     string oligo_rc = reverse_oligo(oligo);
-    unordered_map<string, KmerClass>::iterator it = mappa.find(oligo);
-    unordered_map<string, KmerClass>::iterator it_rc = mappa.find(oligo_rc);
-    if (it != mappa.end()) {
-
-      it->second.orizzontal_count++;
-      it->second.vertical_count[i]++;
+    unordered_map<string, HorizontalClass>::iterator it = horizontal_map.find(oligo);
+    unordered_map<string, HorizontalClass>::iterator it_rc = horizontal_map.find(oligo_rc);
+    if (it != horizontal_map.end()) {
+      it->second.horizontal_count++;
+      it->second.horizontal_count_FWD++;
       if (DS) {
-        it->second.orizzontal_count_rc++;
-        it->second.vertical_count_rc[i]++;
+        if(it->second.palindrome){
+          it->second.horizontal_count_REV++;
+          it->second.horizontal_count_rc_FWD++;
+          it->second.horizontal_count++;
+          it->second.horizontal_count_rc++;
+        }
+        it->second.horizontal_count_rc++;
+        it->second.horizontal_count_rc_REV++;
+        it->second.horizontal_count_FWD++;
       }
-    } else if (it_rc != mappa.end()) {
+    } else if (it_rc != horizontal_map.end()) {
       if (!it_rc->second.palindrome) {
-        it_rc->second.orizzontal_count_rc++;
-        it_rc->second.vertical_count_rc[i]++;
+        it_rc->second.horizontal_count_rc++;
+        it_rc->second.horizontal_count_rc_FWD++;
         if (DS) {
-          it_rc->second.orizzontal_count++;
-          it_rc->second.vertical_count[i]++;
+          it_rc->second.horizontal_count_REV++;
+          it_rc->second.horizontal_count_rc_FWD++;
+          it_rc->second.horizontal_count++;
         }
       }
 
     } else {
-      KmerClass M;
-      M.oligo = oligo, M.oligo_rc = oligo_rc;
-      M.palindrome = bool(oligo == oligo_rc);
-      M.orizzontal_count = 1, M.orizzontal_count_rc = 0;
-      M.vertical_count.resize(((sequence.size() - k) + 1), 0);
-      M.vertical_count_rc.resize(((sequence.size() - k) + 1), 0);
-      M.vertical_count[i] = 1;
+      HorizontalClass Hor;
+      Hor.oligo = oligo, Hor.oligo_rc = oligo_rc;
+      Hor.palindrome = bool(oligo == oligo_rc);
+      Hor.horizontal_count = 1, Hor.horizontal_count_rc = 0;
       if (DS) {
-        M.vertical_count_rc[i] = 1;
-        M.orizzontal_count_rc = 1;
+        Hor.horizontal_count_FWD = 1, Hor.horizontal_count_rc_FWD = 0;
+        Hor.horizontal_count_REV = 0, Hor.horizontal_count_rc_REV = 1;
+        Hor.horizontal_count_rc = 1;
+        if(oligo == oligo_rc){
+          Hor.horizontal_count_rc_FWD = 1;
+          Hor.horizontal_count_REV = 1;
+          Hor.horizontal_count = 2, Hor.horizontal_count_rc = 2;
+        }
       }
-      mappa.emplace(oligo, M);
+    
+      horizontal_map.emplace(oligo, Hor);
+    }
+  }
+}
+
+void MapClass::CountOccurrencesVer(string sequence, int k) {
+
+  for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
+    unsigned int tot_freq = 0;
+    string oligo = sequence.substr(i, k);
+    string oligo_rc = reverse_oligo(oligo);
+    unordered_map<string, VerticalClass>::iterator it = vertical_map.find(oligo);
+    unordered_map<string, VerticalClass>::iterator it_rc = vertical_map.find(oligo_rc);
+    if (it != vertical_map.end()) {
+      it->second.vertical_count[i]++;
+      it->second.vertical_count_FWD[i]++;
+      tot_freq++;
+      if (DS) {
+        if(it->second.palindrome){         
+          it->second.vertical_count[i]++;
+          it->second.vertical_count_rc[i]++;
+          it->second.vertical_count_REV[i]++;
+          it->second.vertical_count_rc_FWD[i]++;
+        }
+        tot_freq++;
+        it->second.vertical_count_FWD[i]++;
+        it->second.vertical_count_rc_REV[i]++;
+        it->second.vertical_count_rc[i]++;
+      }
+    } else if (it_rc != vertical_map.end()) {
+      if (!it_rc->second.palindrome) {
+        it_rc->second.vertical_count_rc[i]++;
+        it_rc->second.vertical_count_rc_FWD[i]++;
+        if (DS) {
+          it_rc->second.vertical_count[i]++;
+          it_rc->second.vertical_count_REV[i]++;
+          it_rc->second.vertical_count_rc_FWD[i]++;
+        }
+      }
+
+    } else {
+      VerticalClass Ver;
+      Ver.oligo = oligo, Ver.oligo_rc = oligo_rc;
+      Ver.palindrome = bool(oligo == oligo_rc);
+      Ver.vertical_count.resize(((sequence.size() - k) + 1), 0);
+      Ver.vertical_count_rc.resize(((sequence.size() - k) + 1), 0);
+      Ver.vertical_count_FWD.resize(((sequence.size() - k) + 1), 0);
+      Ver.vertical_count_rc_FWD.resize(((sequence.size() - k) + 1), 0);
+      Ver.vertical_count_REV.resize(((sequence.size() - k) + 1), 0);
+      Ver.vertical_count_rc_REV.resize(((sequence.size() - k) + 1), 0);
+      Ver.vertical_count_FWD[i] = 1;
+      Ver.vertical_count[i] = 1;
+      if (DS) {
+        Ver.vertical_count_rc[i] = 1;
+        Ver.vertical_count_FWD[i] = 1, Ver.vertical_count_rc_REV[i] = 1;
+        Ver.vertical_count_REV[i] = 0, Ver.vertical_count_rc_FWD[i] = 0;
+        if(oligo == oligo_rc){
+          Ver.vertical_count_rc_FWD[i] = 1;
+          Ver.vertical_count_REV[i] = 1;
+          Ver.vertical_count[i] = 2;
+          Ver.vertical_count_rc[i] = 2;
+        }
+      }
+    
+      vertical_map.emplace(oligo, Ver);
     }
   }
 }
@@ -496,21 +712,25 @@ string reverse_oligo(string bases) {
 void MapClass::MainMapVector() {
   for (unsigned int i = 0; i < kv.size(); i++) {
     for (unsigned int j = 0; j < sequences.size(); j++) {
-      CountOccurrences(sequences[j], kv[i]);
+      CountOccurrencesHor(sequences[j], kv[i]);
+      CountOccurrencesVer(sequences[j], kv[i]);
     }
-    mappa_vector.push_back(mappa);
-    mappa.clear();
+    vector_map_hor.push_back(horizontal_map);
+    horizontal_map.clear();
+    vector_map_ver.push_back(vertical_map);
+    vertical_map.clear();
   }
 }
+
 void MapClass::VerticalMapVector() {
 
   for (unsigned int i = 0; i < kv.size(); i++) {
 
     for (unsigned int j = 0; j < len[i]; j++) {
       multimap<int, string, greater<int>> pos;
-      for (unordered_map<string, KmerClass>::iterator it =
-               mappa_vector[i].begin();
-           it != mappa_vector[i].end(); it++) {
+      for (unordered_map<string, VerticalClass>::iterator it =
+               vector_map_ver[i].begin();
+           it != vector_map_ver[i].end(); it++) {
         if (it->second.vertical_count[j] > 0) {
           pos.emplace(it->second.vertical_count[j], it->first);
         }
@@ -542,19 +762,49 @@ void MapClass::DVerticalMapVector() {
 }
 
 // Debug function
-void MapClass::DMainMapVector() {
+void MapClass::DMainMapVectorDS() {
   for (unsigned int i = 0; i < kv.size(); i++) {
-    int sum = 0;
-    for (unordered_map<string, KmerClass>::iterator it =
-             mappa_vector[i].begin();
-         it != mappa_vector[i].end(); it++) {
-      cout << it->first << " " << it->second.vertical_count[0] << " "
-           << it->second.orizzontal_count << "\t" << it->second.oligo_rc << " "
-           << it->second.vertical_count_rc[0] << " "
-           << it->second.orizzontal_count_rc << " "
+    for (unordered_map<string, HorizontalClass>::iterator it =
+             vector_map_hor[i].begin();
+         it != vector_map_hor[i].end(); it++) {
+      cout << it->first << " " << it->second.horizontal_count_FWD << " " 
+           << it->second.horizontal_count_REV << " " << it->second.horizontal_count
+           << "\t" << it->second.oligo_rc << " " << it->second.horizontal_count_rc_FWD
+           << " " << it->second.horizontal_count_rc_REV << " "
+           << it->second.horizontal_count_rc << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
-      sum =
-          sum + it->second.vertical_count_rc[0] + it->second.vertical_count[0];
+    }
+    for (unordered_map<string, VerticalClass>::iterator it =
+             vector_map_ver[i].begin();
+         it != vector_map_ver[i].end(); it++) {
+      cout << it->first << " " << it->second.vertical_count_FWD[0] << " " 
+           << it->second.vertical_count_REV[0] << " " << it->second.vertical_count[0]
+           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[0]
+           << " " << it->second.vertical_count_rc_REV[0] << " "
+           << it->second.vertical_count_rc[0] << " "
+           << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
+    }
+  }
+}
+
+void MapClass::DMainMapVectorSS() {
+  for (unsigned int i = 0; i < kv.size(); i++) {
+    for (unordered_map<string, HorizontalClass>::iterator it =
+             vector_map_hor[i].begin();
+         it != vector_map_hor[i].end(); it++) {
+      cout << it->first << " " << it->second.horizontal_count << "\t" 
+           << it->second.oligo_rc << " " << it->second.horizontal_count_rc << " "
+           << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
+    }
+        for (unordered_map<string, VerticalClass>::iterator it =
+             vector_map_ver[i].begin();
+         it != vector_map_ver[i].end(); it++) {
+      cout << it->first << " " << it->second.vertical_count_FWD[0] << " " 
+           << it->second.vertical_count_REV[0] << " " << it->second.vertical_count[0]
+           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[0]
+           << " " << it->second.vertical_count_rc_REV[0] << " "
+           << it->second.vertical_count_rc[0] << " "
+           << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
   }
 }
@@ -575,22 +825,24 @@ int main(int argc, char **argv) {
       for (multimap<int, string>::iterator it =
                M.vector_positions_occurrences[i][j].begin();
            it != M.vector_positions_occurrences[i][j].end(); it++) {
-        PvalueClass P(it, M.mappa_vector[i], i);
+        PvalueClass P(it, M.vector_map_hor[i], i);
         P_vector.push_back(P);
       }
       if (ordering) {
         sort(begin(P_vector), end(P_vector), comp);
       }
-      //      DVector(P_vector);
+      //DVector(P_vector);
       SeedClass S(P_vector);
       for (unsigned int x = 0; x < S.seed_vector.size(); x++) {
-        HammingClass H(S.seed_vector[x], M.vector_positions_occurrences[i][j],
-                       M.mappa_vector[i]);
+        HammingClass H(S.seed_vector[x],
+                        M.vector_map_ver[i],
+                        M.vector_positions_occurrences[i][j],
+                        M.vector_map_hor[i], j);
 
-        //      cout << H.seed << endl
-        //           << "vertical occurrences :" << H.hamming_v_occ << endl;
+             cout << H.seed << endl
+                   << "vertical occurrences :" << H.hamming_v_occ << endl;
         cout << H.seed << endl
-             << "Horizzontal occurrences :" << H.hamming_H_occ << endl;
+             << "Horizontal occurrences :" << H.hamming_H_occ << endl;
         //      cout << H.freq1 << endl << "freq1" << endl;
         //}
       }
