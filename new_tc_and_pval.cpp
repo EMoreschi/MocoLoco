@@ -75,27 +75,26 @@ class HorizontalClass {
   friend class MapClass;
   friend class PvalueClass;
   friend class HammingClass;
-  private:
-    string oligo, oligo_rc;                    // TTGCAT - ATGCAA
-    int horizontal_count, horizontal_count_rc; // in occorrenze reverse complement
-    int horizontal_count_REV, horizontal_count_rc_REV;
-    int horizontal_count_FWD, horizontal_count_rc_FWD;
-    bool palindrome;
+
+private:
+  string oligo, oligo_rc;                    // TTGCAT - ATGCAA
+  int horizontal_count, horizontal_count_rc; // in occorrenze reverse complement
+  int horizontal_count_REV, horizontal_count_rc_REV;
+  int horizontal_count_FWD, horizontal_count_rc_FWD;
+  bool palindrome;
 };
 
 class VerticalClass {
   friend class MapClass;
   friend class PvalueClass;
   friend class HammingClass;
-  private:
-    string oligo, oligo_rc;  
-    vector<int> vertical_count,
-      vertical_count_rc;
-    vector<int> vertical_count_FWD,
-      vertical_count_rc_FWD;
-    vector<int> vertical_count_REV,
-      vertical_count_rc_REV;
-    bool palindrome;
+
+private:
+  string oligo, oligo_rc;
+  vector<int> vertical_count, vertical_count_rc;
+  vector<int> vertical_count_FWD, vertical_count_rc_FWD;
+  vector<int> vertical_count_REV, vertical_count_rc_REV;
+  bool palindrome;
 };
 
 // class KmerClass {
@@ -105,10 +104,10 @@ class VerticalClass {
 
 //   private:
 //     string oligo, oligo_rc;                    // TTGCAT - ATGCAA
-//     int horizontal_count, horizontal_count_rc; // in occorrenze reverse complement
-//     int horizontal_count_REV, horizontal_count_rc_REV;
-//     int horizontal_count_FWD, horizontal_count_rc_FWD;
-//     vector<int> vertical_count,
+//     int horizontal_count, horizontal_count_rc; // in occorrenze reverse
+//     complement int horizontal_count_REV, horizontal_count_rc_REV; int
+//     horizontal_count_FWD, horizontal_count_rc_FWD; vector<int>
+//     vertical_count,
 //       vertical_count_rc; // vettore di 0 grande come seq -k +1
 //     vector<int> vertical_count_FWD,
 //       vertical_count_rc_FWD;
@@ -143,11 +142,10 @@ public:
     MainMapVector();
     VerticalMapVector();
     // Functions that starts with D are debug functions
-    
-    if(DS){
+
+    if (DS) {
       DMainMapVectorDS();
-    }
-    else{
+    } else {
       DMainMapVectorSS();
     }
     // DVerticalMapVector();
@@ -181,7 +179,8 @@ public:
   // void N2vFill(unordered_map<string, KmerClass>);
 
   PvalueClass(multimap<int, string>::iterator &it,
-              unordered_map<string, HorizontalClass> &vector_map_hor, unsigned int i) {
+              unordered_map<string, HorizontalClass> &vector_map_hor,
+              unsigned int i) {
     // N2Calc(vector_map_hor);
     TKN1Calc(it, vector_map_hor, i);
     // Dpvalues();
@@ -207,25 +206,24 @@ public:
   vector<string> hamming_seed;
   // vector<vector<string>> hamming_oligos;
   vector<unsigned int> vert_vector;
-  unsigned int hamming_v_occ;
   unsigned int hamming_H_occ;
   double freq1, freq2;
   unsigned int tot_freq = 0;
   vector<vector<double>> PWM_hamming;
 
   void HoccCalc(unordered_map<string, HorizontalClass>);
-  void CheckSeed(string, unordered_map<string, VerticalClass>, multimap<int, string, greater<int>>, unsigned int);
+  void CheckSeed(string, unordered_map<string, VerticalClass>,
+                 multimap<int, string, greater<int>>, unsigned int);
   void Freq1Calc();
   void Freq2Calc();
   void PWMHammingCalc();
-  void DPWMHamming(vector<vector<double>>&);
+  void DPWMHamming(vector<vector<double>> &);
 
-  HammingClass(string seed,
-               unordered_map<string, VerticalClass> map_vertical,
+  HammingClass(string seed, unordered_map<string, VerticalClass> map_vertical,
                multimap<int, string, greater<int>> position_occurrences,
-               unordered_map<string, HorizontalClass> map_horizontal, 
+               unordered_map<string, HorizontalClass> map_horizontal,
                unsigned int position) {
-    
+
     CheckSeed(seed, map_vertical, position_occurrences, position);
     Freq1Calc();
     HoccCalc(map_horizontal);
@@ -235,11 +233,9 @@ public:
   }
 };
 
-class EMClass{
-  private:
-
-  public:
-    
+class EMClass {
+private:
+public:
 };
 
 // Debug pvalue vector
@@ -302,9 +298,8 @@ void HammingClass::PWMHammingCalc() {
   // occurrences of that base
   vector<double> vec_A, vec_C, vec_G, vec_T;
 
-
   // For each bases (position) of oligo
-  for (unsigned int i = 0; i < hamming_seed[0].size();i++){
+  for (unsigned int i = 0; i < hamming_seed[0].size(); i++) {
 
     double counter_A = 0;
     double counter_C = 0;
@@ -349,7 +344,7 @@ void HammingClass::PWMHammingCalc() {
   PWM_hamming.emplace_back(vec_T);
 }
 
-void HammingClass::DPWMHamming(vector<vector<double>> &PWM_hamming){
+void HammingClass::DPWMHamming(vector<vector<double>> &PWM_hamming) {
   for (unsigned short int i = 0; i < PWM_hamming.size(); i++) {
     for (unsigned short int j = 0; j < PWM_hamming[i].size(); j++) {
       cout << PWM_hamming[i][j] << "\t";
@@ -363,10 +358,10 @@ void HammingClass::CheckSeed(string seed,
                              unordered_map<string, VerticalClass> map_vertical,
                              multimap<int, string, greater<int>> pos,
                              unsigned int position) {
-  
+
   for (multimap<int, string>::iterator it = pos.begin(); it != pos.end();
        it++) {
-    hamming_v_occ = 0;
+    unsigned int hamming_v_occ = 0;
     tot_freq += it->first;
     string oligo = it->second;
     unsigned int i = 0, count = 0;
@@ -378,19 +373,21 @@ void HammingClass::CheckSeed(string seed,
 
     if (count <= dist) {
       string reverse_o = reverse_oligo(oligo);
-      unordered_map<string, VerticalClass>::iterator it_ver = map_vertical.find(oligo);
-      unordered_map<string, VerticalClass>::iterator it_ver_rc = map_vertical.find(reverse_o);
+      unordered_map<string, VerticalClass>::iterator it_ver =
+          map_vertical.find(oligo);
+      unordered_map<string, VerticalClass>::iterator it_ver_rc =
+          map_vertical.find(reverse_o);
       if (it_ver != map_vertical.end()) {
         hamming_v_occ += it_ver->second.vertical_count_FWD[position];
       } else {
         hamming_v_occ += it_ver_rc->second.vertical_count_rc_FWD[position];
-      }        
-      if(DS){
+      }
+      if (DS) {
         if (it_ver != map_vertical.end()) {
           hamming_v_occ += it_ver->second.vertical_count_REV[position];
         } else {
           hamming_v_occ += it_ver_rc->second.vertical_count_FWD[position];
-        } 
+        }
       }
       vert_vector.push_back(hamming_v_occ);
       hamming_seed.push_back(oligo);
@@ -407,31 +404,36 @@ void HammingClass::CheckSeed(string seed,
 
 void HammingClass::Freq1Calc() {
 
-  freq1 = static_cast<double>(hamming_v_occ) / static_cast<double>(tot_freq);
+  freq1 = static_cast<double>(vert_vector[0]) / static_cast<double>(tot_freq);
   cout << "Freq1: " << freq1 << endl;
 }
 
-void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> map_horizontal) {
- 
+void HammingClass::HoccCalc(
+    unordered_map<string, HorizontalClass> map_horizontal) {
+
   hamming_H_occ = 0;
   for (unsigned int i = 0; i < hamming_seed.size(); i++) {
     string oligo = hamming_seed[i];
     string reverse_o = reverse_oligo(oligo);
-    unordered_map<string, HorizontalClass>::iterator it = map_horizontal.find(oligo);
-    unordered_map<string, HorizontalClass>::iterator itrc = map_horizontal.find(reverse_o);
+    unordered_map<string, HorizontalClass>::iterator it =
+        map_horizontal.find(oligo);
+    unordered_map<string, HorizontalClass>::iterator itrc =
+        map_horizontal.find(reverse_o);
     if (it != map_horizontal.end()) {
       hamming_H_occ += it->second.horizontal_count;
       cout << it->first << " " << it->second.horizontal_count << endl;
     } else {
       hamming_H_occ += itrc->second.horizontal_count_rc;
-      cout << itrc->second.oligo_rc << " " << itrc->second.horizontal_count_rc << endl;
+      cout << itrc->second.oligo_rc << " " << itrc->second.horizontal_count_rc
+           << endl;
     }
   }
 }
 
 void HammingClass::Freq2Calc() {
 
-  freq2 = static_cast<double>(hamming_v_occ) / static_cast<double>(hamming_H_occ);
+  freq2 =
+      static_cast<double>(vert_vector[0]) / static_cast<double>(hamming_H_occ);
   cout << "Freq2: " << freq2 << endl;
 }
 
@@ -471,9 +473,9 @@ void DVector(vector<PvalueClass> &P_vector) {
 }
 
 // Function where K, N1, N2 and T are calculated in order to obtain the p value
-void PvalueClass::TKN1Calc(multimap<int, string>::iterator &it,
-                           unordered_map<string, HorizontalClass> &vector_map_hor,
-                           unsigned int i) {
+void PvalueClass::TKN1Calc(
+    multimap<int, string>::iterator &it,
+    unordered_map<string, HorizontalClass> &vector_map_hor, unsigned int i) {
 
   // T is the number of sequences
   int T = sequences.size();
@@ -571,13 +573,15 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
     string oligo = sequence.substr(i, k);
     string oligo_rc = reverse_oligo(oligo);
-    unordered_map<string, HorizontalClass>::iterator it = horizontal_map.find(oligo);
-    unordered_map<string, HorizontalClass>::iterator it_rc = horizontal_map.find(oligo_rc);
+    unordered_map<string, HorizontalClass>::iterator it =
+        horizontal_map.find(oligo);
+    unordered_map<string, HorizontalClass>::iterator it_rc =
+        horizontal_map.find(oligo_rc);
     if (it != horizontal_map.end()) {
       it->second.horizontal_count++;
       it->second.horizontal_count_FWD++;
       if (DS) {
-        if(it->second.palindrome){
+        if (it->second.palindrome) {
           it->second.horizontal_count_REV++;
           it->second.horizontal_count_rc_FWD++;
           it->second.horizontal_count++;
@@ -607,13 +611,13 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
         Hor.horizontal_count_FWD = 1, Hor.horizontal_count_rc_FWD = 0;
         Hor.horizontal_count_REV = 0, Hor.horizontal_count_rc_REV = 1;
         Hor.horizontal_count_rc = 1;
-        if(oligo == oligo_rc){
+        if (oligo == oligo_rc) {
           Hor.horizontal_count_rc_FWD = 1;
           Hor.horizontal_count_REV = 1;
           Hor.horizontal_count = 2, Hor.horizontal_count_rc = 2;
         }
       }
-    
+
       horizontal_map.emplace(oligo, Hor);
     }
   }
@@ -625,14 +629,16 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
     unsigned int tot_freq = 0;
     string oligo = sequence.substr(i, k);
     string oligo_rc = reverse_oligo(oligo);
-    unordered_map<string, VerticalClass>::iterator it = vertical_map.find(oligo);
-    unordered_map<string, VerticalClass>::iterator it_rc = vertical_map.find(oligo_rc);
+    unordered_map<string, VerticalClass>::iterator it =
+        vertical_map.find(oligo);
+    unordered_map<string, VerticalClass>::iterator it_rc =
+        vertical_map.find(oligo_rc);
     if (it != vertical_map.end()) {
       it->second.vertical_count[i]++;
       it->second.vertical_count_FWD[i]++;
       tot_freq++;
       if (DS) {
-        if(it->second.palindrome){         
+        if (it->second.palindrome) {
           it->second.vertical_count[i]++;
           it->second.vertical_count_rc[i]++;
           it->second.vertical_count_REV[i]++;
@@ -670,14 +676,14 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
         Ver.vertical_count_rc[i] = 1;
         Ver.vertical_count_FWD[i] = 1, Ver.vertical_count_rc_REV[i] = 1;
         Ver.vertical_count_REV[i] = 0, Ver.vertical_count_rc_FWD[i] = 0;
-        if(oligo == oligo_rc){
+        if (oligo == oligo_rc) {
           Ver.vertical_count_rc_FWD[i] = 1;
           Ver.vertical_count_REV[i] = 1;
           Ver.vertical_count[i] = 2;
           Ver.vertical_count_rc[i] = 2;
         }
       }
-    
+
       vertical_map.emplace(oligo, Ver);
     }
   }
@@ -767,20 +773,22 @@ void MapClass::DMainMapVectorDS() {
     for (unordered_map<string, HorizontalClass>::iterator it =
              vector_map_hor[i].begin();
          it != vector_map_hor[i].end(); it++) {
-      cout << it->first << " " << it->second.horizontal_count_FWD << " " 
-           << it->second.horizontal_count_REV << " " << it->second.horizontal_count
-           << "\t" << it->second.oligo_rc << " " << it->second.horizontal_count_rc_FWD
-           << " " << it->second.horizontal_count_rc_REV << " "
+      cout << it->first << " " << it->second.horizontal_count_FWD << " "
+           << it->second.horizontal_count_REV << " "
+           << it->second.horizontal_count << "\t" << it->second.oligo_rc << " "
+           << it->second.horizontal_count_rc_FWD << " "
+           << it->second.horizontal_count_rc_REV << " "
            << it->second.horizontal_count_rc << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
     for (unordered_map<string, VerticalClass>::iterator it =
              vector_map_ver[i].begin();
          it != vector_map_ver[i].end(); it++) {
-      cout << it->first << " " << it->second.vertical_count_FWD[0] << " " 
-           << it->second.vertical_count_REV[0] << " " << it->second.vertical_count[0]
-           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[0]
-           << " " << it->second.vertical_count_rc_REV[0] << " "
+      cout << it->first << " " << it->second.vertical_count_FWD[0] << " "
+           << it->second.vertical_count_REV[0] << " "
+           << it->second.vertical_count[0] << "\t" << it->second.oligo_rc << " "
+           << it->second.vertical_count_rc_FWD[0] << " "
+           << it->second.vertical_count_rc_REV[0] << " "
            << it->second.vertical_count_rc[0] << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
@@ -792,17 +800,19 @@ void MapClass::DMainMapVectorSS() {
     for (unordered_map<string, HorizontalClass>::iterator it =
              vector_map_hor[i].begin();
          it != vector_map_hor[i].end(); it++) {
-      cout << it->first << " " << it->second.horizontal_count << "\t" 
-           << it->second.oligo_rc << " " << it->second.horizontal_count_rc << " "
+      cout << it->first << " " << it->second.horizontal_count << "\t"
+           << it->second.oligo_rc << " " << it->second.horizontal_count_rc
+           << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
-        for (unordered_map<string, VerticalClass>::iterator it =
+    for (unordered_map<string, VerticalClass>::iterator it =
              vector_map_ver[i].begin();
          it != vector_map_ver[i].end(); it++) {
-      cout << it->first << " " << it->second.vertical_count_FWD[0] << " " 
-           << it->second.vertical_count_REV[0] << " " << it->second.vertical_count[0]
-           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[0]
-           << " " << it->second.vertical_count_rc_REV[0] << " "
+      cout << it->first << " " << it->second.vertical_count_FWD[0] << " "
+           << it->second.vertical_count_REV[0] << " "
+           << it->second.vertical_count[0] << "\t" << it->second.oligo_rc << " "
+           << it->second.vertical_count_rc_FWD[0] << " "
+           << it->second.vertical_count_rc_REV[0] << " "
            << it->second.vertical_count_rc[0] << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
@@ -831,16 +841,15 @@ int main(int argc, char **argv) {
       if (ordering) {
         sort(begin(P_vector), end(P_vector), comp);
       }
-      //DVector(P_vector);
+      // DVector(P_vector);
       SeedClass S(P_vector);
       for (unsigned int x = 0; x < S.seed_vector.size(); x++) {
-        HammingClass H(S.seed_vector[x],
-                        M.vector_map_ver[i],
-                        M.vector_positions_occurrences[i][j],
-                        M.vector_map_hor[i], j);
+        HammingClass H(S.seed_vector[x], M.vector_map_ver[i],
+                       M.vector_positions_occurrences[i][j],
+                       M.vector_map_hor[i], j);
 
-             cout << H.seed << endl
-                   << "vertical occurrences :" << H.hamming_v_occ << endl;
+        cout << H.seed << endl
+             << "vertical occurrences :" << H.vert_vector[x] << endl;
         cout << H.seed << endl
              << "Horizontal occurrences :" << H.hamming_H_occ << endl;
         //      cout << H.freq1 << endl << "freq1" << endl;
