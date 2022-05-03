@@ -93,13 +93,15 @@ void GEP_path() {
             z_test_class Z(H.PWM_hamming, C.GEP, 
                             j + 1, kmers_vector);
             Z_TEST_VECTOR.emplace_back(Z);
+            H_HAMMING_VECTOR.emplace_back(H);
           } 
         }    
         P_vector.clear(); 
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
-      
+      H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
       Z_TEST_VECTOR.clear();
+      H_HAMMING_VECTOR.clear();
       Outfile_Z_score_values();
       Outfile_PWM_matrices();
     }
@@ -1863,11 +1865,11 @@ void Outfile_PWM_matrices() {
 
       outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
                    alias_file + "DS.txt");
-      // if (tomtom) {
-      //   print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
-      // } else {
-      //   print_debug_PWM_hamming(outfile, j, kmers_vector[j]);
-      // }
+      if (tomtom) {
+        print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
+      } else {
+        print_debug_PWM_hamming(outfile, j, kmers_vector[j]);
+      }
       outfile.close();
     }
 
