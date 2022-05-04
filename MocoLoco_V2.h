@@ -574,7 +574,7 @@ class ZetaClass{
     double global_dev_std;
     double local_mean;
     double local_dev_std;
-    unsigned int local_pos;
+    // unsigned int local_pos;
     
     ZetaClass(vector<double> all_global_scores, vector<double> all_local_scores){
       z_score_parameters_calculation(all_global_scores, all_local_scores);
@@ -605,13 +605,13 @@ double check_p_value(double, string);
 void RAM_usage();
 vector<unsigned int> generic_vector_creation(string);
 
+void Outfile_PWM_matrices(unsigned int);
+
 void print_debug_PWM_hamming(ofstream &, unsigned int, unsigned int);
 void print_debug_PWM_hamming_tomtom(ofstream &, unsigned int, unsigned int);
 
-void Outfile_PWM_matrices();
-
 vector<double> BestStrandOligo(vector<double>,vector<double>);
 
-void Outfile_Z_score_values();
+void Outfile_Z_score_values(unsigned int);
 void print_debug_Z_scores(ofstream &, unsigned int, unsigned int);
 

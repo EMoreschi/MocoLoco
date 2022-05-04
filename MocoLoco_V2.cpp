@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
   Timer timer;
-  // Instrumentor::Get().BeginSession("MocoLoco");
+  //Instrumentor::Get().BeginSession("MocoLoco");
   {
 
     // If arguments number is 1 means that no input file has been inserted -
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
     return 0;
   }
-  // Instrumentor::Get().EndSession();
+  //Instrumentor::Get().EndSession();
 }
 
 // Function to analyse the RAM usage of the tool, it returns the maximum amount
@@ -102,9 +102,10 @@ void GEP_path() {
       H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
       Z_TEST_VECTOR.clear();
       H_HAMMING_VECTOR.clear();
-      Outfile_Z_score_values();
-      Outfile_PWM_matrices();
+      Outfile_PWM_matrices(i);
+      Outfile_Z_score_values(i);
     }
+
     RAM_usage();
   }
                 // if(H.freq1 >= freq_treshold){
@@ -194,16 +195,19 @@ void GEP_path() {
         if(H.freq1 >= freq_treshold){
             z_test_class Z(H.PWM_hamming, MULTIFA.GEP, j + 1, kmers_vector);
             Z_TEST_VECTOR.emplace_back(Z);
+            H_HAMMING_VECTOR.emplace_back(H);
           } 
         }    
         P_vector.clear(); 
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
-      
+      H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
       Z_TEST_VECTOR.clear();
-      Outfile_Z_score_values();
-      Outfile_PWM_matrices();
+      H_HAMMING_VECTOR.clear();
+      Outfile_PWM_matrices(i);
+      Outfile_Z_score_values(i);
     }
+
     RAM_usage();
   }
 }
@@ -485,7 +489,7 @@ unsigned int oligo_class::find_best_score() {
     itr = find(dist_center.begin(), dist_center.end(), min_distance);
     unsigned int index = distance(dist_center.begin(), itr);
 
-    // Index of min_distance on distance vector == the corrisponding position in
+    // Index of min_distance on distance vector == the corresponding position in
     // the positions vector
     return positions[index];
   }
@@ -805,6 +809,7 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences) {
 }
 
 bool comp(const PvalueClass &P1, const PvalueClass &P2) {
+  // PROFILE_FUNCTION();
   return P1.pvalue < P2.pvalue;
 }
 
@@ -843,6 +848,7 @@ void ZetaClass::z_score_calculation(vector<double> all_local_scores) {
 }
 
 void HammingClass::PWMHammingCalc() {
+  // PROFILE_FUNCTION();
   // Vector for each bases initialized to count, position by position, the
   // occurrences of that base
   vector<double> vec_A, vec_C, vec_G, vec_T;
@@ -895,6 +901,7 @@ void HammingClass::PWMHammingCalc() {
 }
 
 void HammingClass::DPWMHamming(vector<vector<double>> &PWM_hamming){
+  // PROFILE_FUNCTION();
   for (unsigned short int i = 0; i < PWM_hamming.size(); i++) {
     for (unsigned short int j = 0; j < PWM_hamming[i].size(); j++) {
       cout << PWM_hamming[i][j] << "\t";
@@ -906,6 +913,7 @@ void HammingClass::DPWMHamming(vector<vector<double>> &PWM_hamming){
 
 vector<double> BestStrandOligo(vector<double> oligo_scores_horizontal_FWD, 
                       vector<double> oligo_scores_horizontal_REV) {
+  // PROFILE_FUNCTION();
   vector<double> oligo_scores_horizontal_BEST;
   // For all oligo scores
   for (unsigned int oligo = 0; oligo < oligo_scores_horizontal_FWD.size();
@@ -934,7 +942,7 @@ void HammingClass::CheckSeed(string seed,
                              unordered_map<string, VerticalClass> &map_vertical,
                              multimap<int, string, greater<int>> &pos,
                              unsigned int position) {
-  
+  // PROFILE_FUNCTION();
   for (multimap<int, string>::iterator it = pos.begin(); it != pos.end();
        it++) {
     hamming_v_occ = 0;
@@ -974,11 +982,12 @@ void HammingClass::CheckSeed(string seed,
 }
 
 void HammingClass::Freq1Calc() {
+  // PROFILE_FUNCTION();
   freq1 = static_cast<double>(vert_vector[0]) / static_cast<double>(tot_freq);
 }
 
 void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> &map_horizontal) {
- 
+ // PROFILE_FUNCTION();
   hamming_H_occ = 0;
   for (unsigned int i = 0; i < hamming_seed.size(); i++) {
     string oligo = hamming_seed[i];
@@ -994,12 +1003,12 @@ void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> &map_horizont
 }
 
 void HammingClass::Freq2Calc() {
-
+  // PROFILE_FUNCTION();
   freq2 = static_cast<double>(vert_vector[0]) / static_cast<double>(hamming_H_occ);
 }
 
 void SeedClass::FillSeed(vector<PvalueClass> &P_vector) {
-
+  // PROFILE_FUNCTION();
   double pval = 0;
   unsigned int vertical_occ = 0;
   for (unsigned int i = 0; i < P_vector.size() && i < secondary; i++) {
@@ -1022,6 +1031,7 @@ void SeedClass::FillSeed(vector<PvalueClass> &P_vector) {
   }
 }
 void DVector(vector<PvalueClass> &P_vector) {
+  // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < P_vector.size(); i++) {
     cout << "Oligo: " << P_vector[i].oligo << endl;
     cout << "K: " << P_vector[i].K << " N1: " << P_vector[i].N1
@@ -1036,7 +1046,7 @@ void PvalueClass::TKN1Calc(vector<bed_class> &GEP,
                            multimap<int, string>::iterator &it,
                            unordered_map<string, HorizontalClass> &vector_map_hor,
                            unsigned int i) {
-
+  // PROFILE_FUNCTION();
   // T is the number of sequences
   int T = GEP.size();
 
@@ -1091,7 +1101,7 @@ void PvalueClass::Dpvalues() {
 // Function for counting the horizontal and vertical occurrences for each oligo
 // and putting them inside a map.
 void MapClass::CountOccurrencesHor(string sequence, int k) {
-
+  // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
     string oligo = sequence.substr(i, k);
     string oligo_rc = reverse_oligo(oligo);
@@ -1144,7 +1154,7 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
 }
 
 void MapClass::CountOccurrencesVer(string sequence, int k) {
-
+  // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
     unsigned int tot_freq = 0;
     string oligo = sequence.substr(i, k);
@@ -1208,6 +1218,7 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
 }
 
 string reverse_oligo(string bases) {
+  // PROFILE_FUNCTION();
   string reverse_string;
   for (int i = bases.length() - 1; i >= 0; i--) {
 
@@ -1234,6 +1245,7 @@ string reverse_oligo(string bases) {
 }
 
 void MapClass::MainMapVector(vector<bed_class> &GEP) {
+  // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
     for (unsigned int j = 0; j < GEP.size(); j++) {
       CountOccurrencesHor(GEP[j].sequence, kmers_vector[i]);
@@ -1247,7 +1259,7 @@ void MapClass::MainMapVector(vector<bed_class> &GEP) {
 }
 
 void MapClass::VerticalMapVector() {
-
+  // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
 
     for (unsigned int j = 0; j < len[i]; j++) {
@@ -1272,6 +1284,7 @@ void MapClass::VerticalMapVector() {
 
 // Debug function
 void MapClass::DVerticalMapVector() {
+  // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
     cout << "I: " << i << endl;
     for (unsigned int j = 0; j < vector_positions_occurrences[i].size(); j++) {
@@ -1287,6 +1300,7 @@ void MapClass::DVerticalMapVector() {
 
 // Debug function
 void MapClass::DMainMapVectorDS() {
+  // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
     for (unordered_map<string, HorizontalClass>::iterator it =
              vector_map_hor[i].begin();
@@ -1312,6 +1326,7 @@ void MapClass::DMainMapVectorDS() {
 }
 
 void MapClass::DMainMapVectorSS() {
+  // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
     for (unordered_map<string, HorizontalClass>::iterator it =
              vector_map_hor[i].begin();
@@ -1334,6 +1349,7 @@ void MapClass::DMainMapVectorSS() {
 }
 
 void EMClass::print_PWM(string name, vector<vector<double>> &PWM_hamming) {
+  // PROFILE_FUNCTION();
   cout << name << endl;
   for (unsigned short int i = 0; i < PWM_hamming.size(); i++) {
     for (unsigned short int j = 0; j < PWM_hamming[i].size(); j++) {
@@ -1579,7 +1595,7 @@ void EMClass::EM_Mpart(vector<vector<double>> &PWM_hamming) {
 bool EMClass::EM_convergence(vector<vector<double>> &PWM_old,
                                    vector<vector<double>> &PWM_hamming,
                                    bool conv) {
-
+  // PROFILE_FUNCTION();
   vector<vector<double>> PWM_old_conv;
   vector<vector<double>> PWM_hamming_conv;
 
@@ -1855,14 +1871,12 @@ void coordinator_class::print_GEP(vector<bed_class> &GEP) {
   outfile.close();
 }
 
-void Outfile_PWM_matrices() {
+void Outfile_PWM_matrices(unsigned int j) {
   // // PROFILE_FUNCTION();
   ofstream outfile;
-
-  for (unsigned int j = 0; j < kmers_vector.size(); j++) {
+  // for (unsigned int j = 0; j < kmers_vector.size(); j++) {
 
     if (DS) {
-
       outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
                    alias_file + "DS.txt");
       if (tomtom) {
@@ -1884,24 +1898,20 @@ void Outfile_PWM_matrices() {
       }
       outfile.close();
     }
-  }
+  // }
 }
 
 void print_debug_PWM_hamming_tomtom(ofstream &outfile,
                                                unsigned int j, unsigned int k) {
   // PROFILE_FUNCTION();
-
   vector<vector<double>> PWM_hamming;
   string ACGT = "ACGT";
   for (unsigned int position = 0; position < Z_TEST_MATRIX[j].size();
        position++) {
-
     PWM_hamming =
         H_HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos - 1].PWM_hamming;
-
     outfile << ">Position" << Z_TEST_MATRIX[j][position].local_pos << " "
             << Z_TEST_MATRIX[j][position].Zpvalue << endl;
-
     for (unsigned int i = 0; i < PWM_hamming.size(); i++) {
       outfile << ACGT[i] << "\t"
               << "["
@@ -1976,11 +1986,11 @@ void print_debug_PWM_hamming(ofstream &outfile, unsigned int j,
 }
 
 // // Print debug for PWM_hamming outfile -> Selection of output filename
-void Outfile_Z_score_values() {
+void Outfile_Z_score_values(unsigned int j) {
   // PROFILE_FUNCTION();
   ofstream outfile;
 
-  for (unsigned int j = 0; j < kmers_vector.size(); j++) {
+  // for (unsigned int j = 0; j < kmers_vector.size(); j++) {
 
     if (DS) {
 
@@ -1998,7 +2008,7 @@ void Outfile_Z_score_values() {
       print_debug_Z_scores(outfile, j, kmers_vector[j]);
       outfile.close();
     }
-  }
+  // }
 }
 
 // // PWM_matrices, parameters to calculate z-score, z-score and p-value printing
