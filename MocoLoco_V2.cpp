@@ -65,8 +65,9 @@ void GEP_path() {
     MapClass M(C.GEP);
     
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
-      vector<PvalueClass> P_vector;
+      
       for (unsigned int j = 0; j < len[i]; j++) {
+        vector<PvalueClass> P_vector;
         cout << "Position: " << j << endl;
         for (multimap<int, string>::iterator it =
         M.vector_positions_occurrences[i][j].begin();
@@ -88,7 +89,7 @@ void GEP_path() {
           EMClass E(H.cluster_map, H.PWM_hamming, 
                     M.vector_map_hor[i]);
         }
-
+        
         if(H.freq1 >= freq_treshold){
             z_test_class Z(H.PWM_hamming, C.GEP, 
                             j + 1, kmers_vector);
@@ -96,12 +97,15 @@ void GEP_path() {
             H_HAMMING_VECTOR.emplace_back(H);
           } 
         }    
-        P_vector.clear(); 
+        // P_vector.clear(); 
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
       H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
       Z_TEST_VECTOR.clear();
       H_HAMMING_VECTOR.clear();
+      cout << H_HAMMING_MATRIX.size() << "\t" << H_HAMMING_MATRIX[0].size() << endl;
+      cout << Z_TEST_MATRIX.size() << "\t" << Z_TEST_MATRIX[0].size() << endl;
+
       Outfile_PWM_matrices(i);
       Outfile_Z_score_values(i);
     }
@@ -169,8 +173,9 @@ void GEP_path() {
     MapClass M(MULTIFA.GEP);
     cout << "After Map Class" << endl;
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
-      vector<PvalueClass> P_vector;
+      
       for (unsigned int j = 0; j < len[i]; j++) {
+        vector<PvalueClass> P_vector;
         cout << "Position: " << j << endl;
         for (multimap<int, string>::iterator it =
         M.vector_positions_occurrences[i][j].begin();
@@ -191,19 +196,21 @@ void GEP_path() {
         if (!exp_max.empty()){
           EMClass E(H.cluster_map, H.PWM_hamming, M.vector_map_hor[i]);
         }
-
+        
         if(H.freq1 >= freq_treshold){
             z_test_class Z(H.PWM_hamming, MULTIFA.GEP, j + 1, kmers_vector);
             Z_TEST_VECTOR.emplace_back(Z);
             H_HAMMING_VECTOR.emplace_back(H);
           } 
         }    
-        P_vector.clear(); 
+        // P_vector.clear(); 
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
       H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
       Z_TEST_VECTOR.clear();
       H_HAMMING_VECTOR.clear();
+      cout << H_HAMMING_MATRIX.size() << "\t" << H_HAMMING_MATRIX[0].size() << endl;
+      cout << Z_TEST_MATRIX.size() << "\t" << Z_TEST_MATRIX[0].size() << endl;
       Outfile_PWM_matrices(i);
       Outfile_Z_score_values(i);
     }
@@ -1909,7 +1916,7 @@ void print_debug_PWM_hamming_tomtom(ofstream &outfile,
   for (unsigned int position = 0; position < Z_TEST_MATRIX[j].size();
        position++) {
     PWM_hamming =
-        H_HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos - 1].PWM_hamming;
+        H_HAMMING_MATRIX[j][position].PWM_hamming;
     outfile << ">Position" << Z_TEST_MATRIX[j][position].local_pos << " "
             << Z_TEST_MATRIX[j][position].Zpvalue << endl;
     for (unsigned int i = 0; i < PWM_hamming.size(); i++) {
@@ -1941,7 +1948,7 @@ void print_debug_PWM_hamming(ofstream &outfile, unsigned int j,
        position++) {
 
     PWM_hamming =
-        H_HAMMING_MATRIX[j][Z_TEST_MATRIX[j][position].local_pos - 1].PWM_hamming;
+        H_HAMMING_MATRIX[j][position].PWM_hamming;
 
     outfile << "#Position " << Z_TEST_MATRIX[j][position].local_pos
             << ": \n#PWM calculated from oligo "
