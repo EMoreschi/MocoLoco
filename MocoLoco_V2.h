@@ -69,7 +69,7 @@ bool direction = false;
 
 bool secondary = true;
 double pval_threshold = 10e-30;
-unsigned int max_matrix = 3;
+unsigned int max_matrix = 5;
 
 class Timer {
   public:
@@ -607,13 +607,16 @@ double check_p_value(double, string);
 void RAM_usage();
 vector<unsigned int> generic_vector_creation(string);
 
-void Outfile_PWM_matrices(unsigned int);
+void Outfile_PWM_matrices(unsigned int, vector<string> &);
 
-void print_debug_PWM_hamming(ofstream &, unsigned int, unsigned int);
-void print_debug_PWM_hamming_tomtom(ofstream &, unsigned int, unsigned int);
+void print_debug_PWM_hamming(ofstream &, unsigned int, 
+                              unsigned int, vector<string> &);
+void print_debug_PWM_hamming_tomtom(ofstream &, unsigned int, 
+                                      unsigned int);
 
 vector<double> BestStrandOligo(vector<double>,vector<double>);
 
 void Outfile_Z_score_values(unsigned int, vector<string> &);
-void print_debug_Z_scores(ofstream &, unsigned int, unsigned int, vector<string> &);
+void print_debug_Z_scores(ofstream &, unsigned int, unsigned int, 
+                            vector<string> &);
 

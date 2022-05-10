@@ -52,57 +52,75 @@ void GEP_path() {
     // Create a .fasta file to check if the coordinates and the sequences
     // extracted are correct
     C.print_GEP(C.GEP);
-        // Reading k-mers in input and saving them into a vector
+    // Reading k-mers in input and saving them into a vector
     kmers_vector = generic_vector_creation(kmers);
 
     // Reading distance parameters in input and saving them into a vector
     distance_vector = generic_vector_creation(dist);
-    // Creating map class: input are GEP vector created from bed-twobit
-    // analysis, kmers, hamming distance
+    // Vector len contains all the lengths of sequences for each kmer 
     for(unsigned int i = 0; i < kmers_vector.size(); i++){
       len.emplace_back(C.GEP[0].sequence.size() - kmers_vector[i] + 1);
     }
+    //In this class horizontal and vertical maps are created, these maps will  
+    //be useful later on 
     MapClass M(C.GEP);
-    
+    //For each kmer
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
       vector<PvalueClass> P_vector;
       vector<string> seed_oligo;
+      //For each position in the sequence
       for (unsigned int j = 0; j < len[i]; j++) {
         double Pval = 0;
-        unsigned int counter = 0;
-        while(secondary && counter < max_matrix &&
+        unsigned int size = 1000;
+        // Loop for eventually other matrices that are hidden by the best motif
+        //secondary is a boolean variable
+        while(secondary && size != 0 && 
                  (Pval == 0 || Pval < pval_threshold)) {
           cout << "Position: " << j << endl;
+          //For each oligo present in the vertical map
           for (multimap<int, string>::iterator it =
           M.vector_positions_occurrences[i][j].begin();
           it != M.vector_positions_occurrences[i][j].end(); it++) {
+
+            //In the PvalueClass to each oligo is associated its pvalue
             PvalueClass P(C.GEP, it, M.vector_map_hor[i], i);
             P_vector.push_back(P);
           }
+          //The element in P_vector are ordered on the basis of pvalues
+          //otherwise the normal ordering (by occurrences in vertical map)
+          //is maintained
           if (ordering == "p") {
             sort(begin(P_vector), end(P_vector), comp);
           }
-          DVector(P_vector, j);
+          // DVector(P_vector, j);
+          //Vector containing all seed oligos for the output files
           seed_oligo.emplace_back(P_vector[0].oligo);
+          //Creation of clusters of oligos at hamming distance
+          //and creation of PWM for each position
           HammingClass H(P_vector[0].oligo,
                           M.vector_map_ver[i],
                           M.vector_positions_occurrences[i][j],
                           M.vector_map_hor[i], j);
+          size = M.vector_positions_occurrences[i][j].size();
           if (!exp_max.empty()){
             EMClass E(H.cluster_map, H.PWM_hamming, 
                       M.vector_map_hor[i]);
           }
           
+          //If the frequence of seed oligo is higher than a threshold
+          //the z_score is calculated
           if(H.freq1 >= freq_treshold){
               z_test_class Z(H.PWM_hamming, C.GEP, 
                               j + 1, kmers_vector);
-              Z_TEST_VECTOR.emplace_back(Z);
-              H_HAMMING_VECTOR.emplace_back(H);
               Pval = Z.Zpvalue;
-            } 
- 
+              //If it is the first cycle of while loop or if the pval is lower 
+              //than a certain threshold the z_score and PWM are calculated
+              if(Pval == 0 || Pval < pval_threshold){
+                Z_TEST_VECTOR.emplace_back(Z);
+                H_HAMMING_VECTOR.emplace_back(H);
+              }
+            }  
           P_vector.clear(); 
-          counter++;
         }
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
@@ -110,7 +128,7 @@ void GEP_path() {
       Z_TEST_VECTOR.clear();
       H_HAMMING_VECTOR.clear();
 
-      Outfile_PWM_matrices(i);
+      Outfile_PWM_matrices(i, seed_oligo);
       Outfile_Z_score_values(i, seed_oligo);
     }
 
@@ -129,49 +147,70 @@ void GEP_path() {
 
     // map_class MAP(MULTIFA.GEP, kmers_vector, distance_vector);
 
+ // Vector len contains all the lengths of sequences for each kmer 
     for(unsigned int i = 0; i < kmers_vector.size(); i++){
-      len.emplace_back(MULTIFA.GEP[0].sequence.size() - kmers_vector[i] + 1);
+      len.emplace_back(C.GEP[0].sequence.size() - kmers_vector[i] + 1);
     }
-    MapClass M(MULTIFA.GEP);
+    //In this class horizontal and vertical maps are created, these maps will  
+    //be useful later on 
+    MapClass M(C.GEP);
+    //For each kmer
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
       vector<PvalueClass> P_vector;
       vector<string> seed_oligo;
+      //For each position in the sequence
       for (unsigned int j = 0; j < len[i]; j++) {
         double Pval = 0;
-        unsigned int counter = 0;
-        while(secondary && counter < max_matrix &&
+        unsigned int size = 1000;
+        // Loop for eventually other matrices that are hidden by the best motif
+        //secondary is a boolean variable
+        while(secondary && size != 0 && 
                  (Pval == 0 || Pval < pval_threshold)) {
           cout << "Position: " << j << endl;
+          //For each oligo present in the vertical map
           for (multimap<int, string>::iterator it =
           M.vector_positions_occurrences[i][j].begin();
           it != M.vector_positions_occurrences[i][j].end(); it++) {
+
+            //In the PvalueClass to each oligo is associated its pvalue
             PvalueClass P(MULTIFA.GEP, it, M.vector_map_hor[i], i);
             P_vector.push_back(P);
           }
+          //The element in P_vector are ordered on the basis of pvalues
+          //otherwise the normal ordering (by occurrences in vertical map)
+          //is maintained
           if (ordering == "p") {
             sort(begin(P_vector), end(P_vector), comp);
           }
-          DVector(P_vector, j);
+          // DVector(P_vector, j);
+          //Vector containing all seed oligos for the output files
           seed_oligo.emplace_back(P_vector[0].oligo);
+          //Creation of clusters of oligos at hamming distance
+          //and creation of PWM for each position
           HammingClass H(P_vector[0].oligo,
                           M.vector_map_ver[i],
                           M.vector_positions_occurrences[i][j],
                           M.vector_map_hor[i], j);
+          size = M.vector_positions_occurrences[i][j].size();
           if (!exp_max.empty()){
             EMClass E(H.cluster_map, H.PWM_hamming, 
                       M.vector_map_hor[i]);
           }
           
+          //If the frequence of seed oligo is higher than a threshold
+          //the z_score is calculated
           if(H.freq1 >= freq_treshold){
               z_test_class Z(H.PWM_hamming, MULTIFA.GEP, 
                               j + 1, kmers_vector);
-              Z_TEST_VECTOR.emplace_back(Z);
-              H_HAMMING_VECTOR.emplace_back(H);
               Pval = Z.Zpvalue;
-            } 
- 
+              //If it is the first cycle of while loop or if the pval is lower 
+              //than a certain threshold the z_score and PWM are calculated
+              if(Pval == 0 || Pval < pval_threshold){
+                Z_TEST_VECTOR.emplace_back(Z);
+                H_HAMMING_VECTOR.emplace_back(H);
+              }
+            }  
           P_vector.clear(); 
-          counter++;
         }
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
@@ -179,7 +218,7 @@ void GEP_path() {
       Z_TEST_VECTOR.clear();
       H_HAMMING_VECTOR.clear();
 
-      Outfile_PWM_matrices(i);
+      Outfile_PWM_matrices(i, seed_oligo);
       Outfile_Z_score_values(i, seed_oligo);
     }
 
@@ -1864,38 +1903,34 @@ void coordinator_class::print_GEP(vector<bed_class> &GEP) {
   outfile.close();
 }
 
-void Outfile_PWM_matrices(unsigned int j) {
+void Outfile_PWM_matrices(unsigned int j, vector<string> &seed_oligo) {
   // // PROFILE_FUNCTION();
   ofstream outfile;
-  // for (unsigned int j = 0; j < kmers_vector.size(); j++) {
-
-    if (DS) {
-      outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
+   if (DS) {
+     outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
                    alias_file + "DS.txt");
-      if (tomtom) {
-        print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
-      } else {
-        print_debug_PWM_hamming(outfile, j, kmers_vector[j]);
-      }
-      outfile.close();
+    if (tomtom) {
+      print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
+    } else {
+      print_debug_PWM_hamming(outfile, j, kmers_vector[j], seed_oligo);
     }
+    outfile.close();
+  }
 
-    else {
-      outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
-                   alias_file + "SS.txt");
-
-      if (tomtom) {
-        print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
-      } else {
-        print_debug_PWM_hamming(outfile, j, kmers_vector[j]);
-      }
-      outfile.close();
+  else {
+    outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
+                 alias_file + "SS.txt");
+    if (tomtom) {
+      print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
+    } else {
+      print_debug_PWM_hamming(outfile, j, kmers_vector[j], seed_oligo);
     }
-  // }
+    outfile.close();
+  }
 }
 
-void print_debug_PWM_hamming_tomtom(ofstream &outfile,
-                                               unsigned int j, unsigned int k) {
+void print_debug_PWM_hamming_tomtom(ofstream &outfile, unsigned int j, 
+                                  unsigned int k) {
   // PROFILE_FUNCTION();
   vector<vector<double>> PWM_hamming;
   string ACGT = "ACGT";
@@ -1914,13 +1949,11 @@ void print_debug_PWM_hamming_tomtom(ofstream &outfile,
       }
       outfile << "]\n";
     }
-
-    // outfile << endl << endl;
   }
 }
 // PWM_matrices, parameters to calculate z-score, z-score and p-value printing
-void print_debug_PWM_hamming(ofstream &outfile, unsigned int j,
-                                        unsigned int k) {
+void print_debug_PWM_hamming(ofstream &outfile, unsigned int j, 
+                              unsigned int k, vector<string> &seed_oligo) {
   // PROFILE_FUNCTION();
   outfile << "#PWM Matrices calculated from the best oligo for each position "
              "and his hamming distanced oligos - k = "
@@ -1938,10 +1971,8 @@ void print_debug_PWM_hamming(ofstream &outfile, unsigned int j,
 
     outfile << "#Position " << Z_TEST_MATRIX[j][position].local_pos
             << ": \n#PWM calculated from oligo "
-            << "TEST"
-            << " and his "
-            << "TEST"
-            << " hamming distanced neighbours.\n\n";
+            << seed_oligo[position]
+            << "\n\n";
 
     for (unsigned int i = 0; i < PWM_hamming.size(); i++) {
 
