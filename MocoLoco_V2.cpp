@@ -65,46 +65,48 @@ void GEP_path() {
     MapClass M(C.GEP);
     
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
-      
+      vector<PvalueClass> P_vector;
       for (unsigned int j = 0; j < len[i]; j++) {
-        vector<PvalueClass> P_vector;
-        cout << "Position: " << j << endl;
-        for (multimap<int, string>::iterator it =
-        M.vector_positions_occurrences[i][j].begin();
-        it != M.vector_positions_occurrences[i][j].end(); it++) {
-          PvalueClass P(C.GEP, it, M.vector_map_hor[i], i);
-          P_vector.push_back(P);
+        double Pval = 0;
+        unsigned int counter = 0;
+        while(secondary && counter < max_matrix &&
+                 (Pval == 0 || Pval < pval_threshold)) {
+          cout << "Position: " << j << endl;
+          for (multimap<int, string>::iterator it =
+          M.vector_positions_occurrences[i][j].begin();
+          it != M.vector_positions_occurrences[i][j].end(); it++) {
+            PvalueClass P(C.GEP, it, M.vector_map_hor[i], i);
+            P_vector.push_back(P);
+          }
+          if (ordering == "p") {
+            sort(begin(P_vector), end(P_vector), comp);
+          }
+          DVector(P_vector, j);
+          HammingClass H(P_vector[0].oligo,
+                          M.vector_map_ver[i],
+                          M.vector_positions_occurrences[i][j],
+                          M.vector_map_hor[i], j);
+          if (!exp_max.empty()){
+            EMClass E(H.cluster_map, H.PWM_hamming, 
+                      M.vector_map_hor[i]);
+          }
+          
+          if(H.freq1 >= freq_treshold){
+              z_test_class Z(H.PWM_hamming, C.GEP, 
+                              j + 1, kmers_vector);
+              Z_TEST_VECTOR.emplace_back(Z);
+              H_HAMMING_VECTOR.emplace_back(H);
+              Pval = Z.Zpvalue;
+            } 
+ 
+          P_vector.clear(); 
+          counter++;
         }
-        if (ordering == "p") {
-          sort(begin(P_vector), end(P_vector), comp);
-        }
-        //DVector(P_vector);
-        SeedClass S(P_vector);
-        for (unsigned int x = 0; x < S.seed_vector.size(); x++) {
-        HammingClass H(S.seed_vector[x],
-                        M.vector_map_ver[i],
-                        M.vector_positions_occurrences[i][j],
-                        M.vector_map_hor[i], j);
-        if (!exp_max.empty()){
-          EMClass E(H.cluster_map, H.PWM_hamming, 
-                    M.vector_map_hor[i]);
-        }
-        
-        if(H.freq1 >= freq_treshold){
-            z_test_class Z(H.PWM_hamming, C.GEP, 
-                            j + 1, kmers_vector);
-            Z_TEST_VECTOR.emplace_back(Z);
-            H_HAMMING_VECTOR.emplace_back(H);
-          } 
-        }    
-        // P_vector.clear(); 
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
       H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
       Z_TEST_VECTOR.clear();
       H_HAMMING_VECTOR.clear();
-      cout << H_HAMMING_MATRIX.size() << "\t" << H_HAMMING_MATRIX[0].size() << endl;
-      cout << Z_TEST_MATRIX.size() << "\t" << Z_TEST_MATRIX[0].size() << endl;
 
       Outfile_PWM_matrices(i);
       Outfile_Z_score_values(i);
@@ -112,47 +114,6 @@ void GEP_path() {
 
     RAM_usage();
   }
-                // if(H.freq1 >= freq_treshold){
-                //   vector<double> all_global_scores;
-                //   vector<double> all_local_scores;
-                //   matrix_class PWM_hamming_mat(H.PWM_hamming);
-                //   vector<vector<double>> matrix_log = PWM_hamming_mat.return_log_matrix();
-
-                //   for (unsigned int s = 0; s < C.GEP.size(); s++) {
-
-                //     oligo_class SHIFTING_PWM(matrix_log, C.GEP[s].sequence);
-                //     vector<double> oligo_scores_horizontal_FWD = SHIFTING_PWM.oligo_scores;
-
-                //     if (DS) {
-                //       vector<vector<double>> inverse_matrix_log;
-                //       inverse_matrix_log = PWM_hamming_mat.return_inverse_log_matrix();
-
-                //       oligo_class SHIFTING_PWM_2(inverse_matrix_log, C.GEP[s].sequence);
-                //       vector<double> oligo_scores_horizontal_REV = SHIFTING_PWM_2.oligo_scores;
-                //       vector<double> oligo_scores_horizontal_BEST;
-                //       oligo_scores_horizontal_BEST = BestStrandOligo(oligo_scores_horizontal_FWD,oligo_scores_horizontal_REV);
-                //       cout << "Position: " << j+1<<endl;
-                //       cout << oligo_scores_horizontal_BEST.size() << endl;
-                //       all_local_scores.emplace_back(
-                //         oligo_scores_horizontal_BEST[j]);
-                //       cout << oligo_scores_horizontal_BEST[j] << endl;
-                //       all_global_scores.insert(all_global_scores.end(),
-                //                oligo_scores_horizontal_BEST.begin(),
-                //                oligo_scores_horizontal_BEST.end());
-                //       oligo_scores_horizontal_FWD.clear();
-                //       oligo_scores_horizontal_REV.clear();
-                //     }
-                //    else {
-
-                //       all_local_scores.emplace_back(oligo_scores_horizontal_FWD[j]);
-                //       all_global_scores.insert(all_global_scores.end(),
-                //                oligo_scores_horizontal_FWD.begin(),
-                //                oligo_scores_horizontal_FWD.end());
-                //     }
-                //   ZetaClass Z(all_local_scores, all_global_scores);  
-                //   oligo_scores_horizontal_FWD.clear();
-                //   }
-                // }
 
   // else if the input is a Multifasta file
   else {
@@ -169,48 +130,49 @@ void GEP_path() {
     for(unsigned int i = 0; i < kmers_vector.size(); i++){
       len.emplace_back(MULTIFA.GEP[0].sequence.size() - kmers_vector[i] + 1);
     }
-    cout << "Before Map Class" << endl;
     MapClass M(MULTIFA.GEP);
-    cout << "After Map Class" << endl;
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
-      
+      vector<PvalueClass> P_vector;
       for (unsigned int j = 0; j < len[i]; j++) {
-        vector<PvalueClass> P_vector;
-        cout << "Position: " << j << endl;
-        for (multimap<int, string>::iterator it =
-        M.vector_positions_occurrences[i][j].begin();
-        it != M.vector_positions_occurrences[i][j].end(); it++) {
-          PvalueClass P(MULTIFA.GEP, it, M.vector_map_hor[i], i);
-          P_vector.push_back(P);
+        double Pval = 0;
+        while(secondary && (Pval == 0 || Pval < pval_threshold)) {
+          cout << "Position: " << j << endl;
+
+          for (multimap<int, string>::iterator it =
+          M.vector_positions_occurrences[i][j].begin();
+          it != M.vector_positions_occurrences[i][j].end(); it++) {
+            PvalueClass P(MULTIFA.GEP, it, M.vector_map_hor[i], i);
+            P_vector.push_back(P);
+          }
+          if (ordering == "p") {
+            sort(begin(P_vector), end(P_vector), comp);
+          }
+          DVector(P_vector, j);
+
+          HammingClass H(P_vector[0].oligo,
+                          M.vector_map_ver[i],
+                          M.vector_positions_occurrences[i][j],
+                          M.vector_map_hor[i], j);
+          if (!exp_max.empty()){
+            EMClass E(H.cluster_map, H.PWM_hamming, 
+                      M.vector_map_hor[i]);
+          }
+          
+          if(H.freq1 >= freq_treshold){
+              z_test_class Z(H.PWM_hamming, MULTIFA.GEP, 
+                              j + 1, kmers_vector);
+              Z_TEST_VECTOR.emplace_back(Z);
+              H_HAMMING_VECTOR.emplace_back(H);
+              Pval = Z.Zpvalue;
+            } 
+          P_vector.clear(); 
         }
-        if (ordering == "p") {
-          sort(begin(P_vector), end(P_vector), comp);
-        }
-        //DVector(P_vector);
-        SeedClass S(P_vector);
-        for (unsigned int x = 0; x < S.seed_vector.size(); x++) {
-        HammingClass H(S.seed_vector[x],
-                        M.vector_map_ver[i],
-                        M.vector_positions_occurrences[i][j],
-                        M.vector_map_hor[i], j);
-        if (!exp_max.empty()){
-          EMClass E(H.cluster_map, H.PWM_hamming, M.vector_map_hor[i]);
-        }
-        
-        if(H.freq1 >= freq_treshold){
-            z_test_class Z(H.PWM_hamming, MULTIFA.GEP, j + 1, kmers_vector);
-            Z_TEST_VECTOR.emplace_back(Z);
-            H_HAMMING_VECTOR.emplace_back(H);
-          } 
-        }    
-        // P_vector.clear(); 
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
       H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
       Z_TEST_VECTOR.clear();
       H_HAMMING_VECTOR.clear();
-      cout << H_HAMMING_MATRIX.size() << "\t" << H_HAMMING_MATRIX[0].size() << endl;
-      cout << Z_TEST_MATRIX.size() << "\t" << Z_TEST_MATRIX[0].size() << endl;
+
       Outfile_PWM_matrices(i);
       Outfile_Z_score_values(i);
     }
@@ -962,7 +924,7 @@ void HammingClass::CheckSeed(string seed,
       i++;
     }
 
-    if (count <= distance_hamming) {
+    if (count <= distance_vector[0]) {
       string reverse_o = reverse_oligo(oligo);
       unordered_map<string, VerticalClass>::iterator it_ver = map_vertical.find(oligo);
       unordered_map<string, VerticalClass>::iterator it_ver_rc = map_vertical.find(reverse_o);
@@ -1014,37 +976,44 @@ void HammingClass::Freq2Calc() {
   freq2 = static_cast<double>(vert_vector[0]) / static_cast<double>(hamming_H_occ);
 }
 
-void SeedClass::FillSeed(vector<PvalueClass> &P_vector) {
-  // PROFILE_FUNCTION();
-  double pval = 0;
-  unsigned int vertical_occ = 0;
-  for (unsigned int i = 0; i < P_vector.size() && i < secondary; i++) {
-    if (ordering == "p") {
-      if (P_vector[i].pvalue == pval || pval == 0) {
-        pval = P_vector[i].pvalue;
-        seed_vector.emplace_back(P_vector[i].oligo);
-      } else {
-        break;
-      }
-    } else {
-      if (P_vector[i].vertical_occurrences == vertical_occ ||
-          vertical_occ == 0) {
-        vertical_occ = P_vector[i].vertical_occurrences;
-        seed_vector.emplace_back(P_vector[i].oligo);
-      } else {
+void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos){
+  for(unsigned int i = 0; i < hamming_seed.size(); i++){
+    for(multimap<int, string, greater<int>>::iterator it = pos.begin();
+      it != pos.end(); ++it)
+    {
+      string oligo = it->second;
+    
+      if(oligo == hamming_seed[i]){
+        pos.erase(it);
         break;
       }
     }
   }
 }
-void DVector(vector<PvalueClass> &P_vector) {
+
+void SeedClass::FillSeed(vector<PvalueClass> &P_vector) {
   // PROFILE_FUNCTION();
-  for (unsigned int i = 0; i < P_vector.size(); i++) {
-    cout << "Oligo: " << P_vector[i].oligo << endl;
-    cout << "K: " << P_vector[i].K << " N1: " << P_vector[i].N1
-         << " N2: " << P_vector[i].N2 << endl;
-    cout << "Ver_occ: " << P_vector[i].vertical_occurrences
-         << " Pval: " << P_vector[i].pvalue << endl;
+  for(unsigned int i = 0; i < 1; i++){
+    seed_vector.emplace_back(P_vector[i].oligo);
+  }
+}
+
+void DVector(vector<PvalueClass> &P_vector, unsigned int j) {
+  // PROFILE_FUNCTION();
+  for (unsigned int i = 0; i < P_vector.size() && i < 10; i++) {
+    cout << j + 1 << "\t";
+    cout << i + 1 << "\t";
+    cout << P_vector[i].oligo << "\t";
+    cout << P_vector[i].K << "\t";
+    cout << P_vector[i].N1 << "\t";
+    cout << P_vector[i].N2 << "\t";
+    cout << P_vector[i].pvalue << "\t";
+    cout << log10(P_vector[i].pvalue) * -1 << endl;
+    // cout << "Oligo: " << P_vector[i].oligo << endl;
+    // cout << "K: " << P_vector[i].K << " N1: " << P_vector[i].N1
+    //      << " N2: " << P_vector[i].N2 << endl;
+    // cout << "Ver_occ: " << P_vector[i].vertical_occurrences
+    //      << " Pval: " << P_vector[i].pvalue << endl;
   }
 }
 
@@ -1055,7 +1024,7 @@ void PvalueClass::TKN1Calc(vector<bed_class> &GEP,
                            unsigned int i) {
   // PROFILE_FUNCTION();
   // T is the number of sequences
-  int T = GEP.size();
+  unsigned int T = GEP.size();
 
   // For each oligo in the multimap of vertical occurrences T, N1, N2 and K are
   // calculated.
@@ -1072,13 +1041,13 @@ void PvalueClass::TKN1Calc(vector<bed_class> &GEP,
   // cout << "Oligo: " << oligos << endl;
   unordered_map<string, HorizontalClass>::iterator itBigMap =
       vector_map_hor.find(oligo);
-  unordered_map<string, HorizontalClass>::iterator itBigMap_rc =
-      vector_map_hor.find(reverse_oligo(oligo));
+  // unordered_map<string, HorizontalClass>::iterator itBigMap_rc =
+  //     vector_map_hor.find(reverse_oligo(oligo));
   if (itBigMap == vector_map_hor.end()) {
 
-    if (!itBigMap_rc->second.palindrome) {
-      N1 = itBigMap_rc->second.horizontal_count_rc;
-    }
+    // if (!itBigMap_rc->second.palindrome) {
+    //   N1 = itBigMap_rc->second.horizontal_count_rc;
+    // }
   } else {
 
     N1 = itBigMap->second.horizontal_count;
@@ -1277,9 +1246,9 @@ void MapClass::VerticalMapVector() {
         if (it->second.vertical_count[j] > 0) {
           pos.emplace(it->second.vertical_count[j], it->first);
         }
-        if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
-          pos.emplace(it->second.vertical_count_rc[j], it->second.oligo_rc);
-        }
+        // if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
+        //   pos.emplace(it->second.vertical_count_rc[j], it->second.oligo_rc);
+        // }
       }
       positions_occurrences.push_back(pos);
       pos.clear();

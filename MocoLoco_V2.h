@@ -67,8 +67,9 @@ bool tomtom = false;
 bool err = false;
 bool direction = false;
 
-unsigned int secondary = 1;
-unsigned int distance_hamming = 1;
+bool secondary = true;
+double pval_threshold = 10e-30;
+unsigned int max_matrix = 4;
 
 class Timer {
   public:
@@ -513,7 +514,7 @@ private:
   void Freq2Calc();
   void PWMHammingCalc();
   void DPWMHamming(vector<vector<double>>&);
-
+  void ClearVertical(multimap<int, string, greater<int>> &);
 
 public:
   string seed;
@@ -538,7 +539,7 @@ public:
     HoccCalc(map_horizontal);
     Freq2Calc();
     PWMHammingCalc();
-
+    ClearVertical(position_occurrences);
     // DPWMHamming(PWM_hamming);
   }
 };
@@ -590,7 +591,7 @@ class ZetaClass{
 string reverse_oligo(string);
 
 // Debug pvalue vector
-void DVector(vector<PvalueClass> &);
+void DVector(vector<PvalueClass> &, unsigned int);
 
 // Comparison function
 bool comp(const PvalueClass &, const PvalueClass &);
