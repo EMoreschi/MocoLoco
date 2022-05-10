@@ -66,6 +66,7 @@ void GEP_path() {
     
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
       vector<PvalueClass> P_vector;
+      vector<string> seed_oligo;
       for (unsigned int j = 0; j < len[i]; j++) {
         double Pval = 0;
         unsigned int counter = 0;
@@ -82,6 +83,7 @@ void GEP_path() {
             sort(begin(P_vector), end(P_vector), comp);
           }
           DVector(P_vector, j);
+          seed_oligo.emplace_back(P_vector[0].oligo);
           HammingClass H(P_vector[0].oligo,
                           M.vector_map_ver[i],
                           M.vector_positions_occurrences[i][j],
@@ -109,7 +111,7 @@ void GEP_path() {
       H_HAMMING_VECTOR.clear();
 
       Outfile_PWM_matrices(i);
-      Outfile_Z_score_values(i);
+      Outfile_Z_score_values(i, seed_oligo);
     }
 
     RAM_usage();
@@ -133,11 +135,13 @@ void GEP_path() {
     MapClass M(MULTIFA.GEP);
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
       vector<PvalueClass> P_vector;
+      vector<string> seed_oligo;
       for (unsigned int j = 0; j < len[i]; j++) {
         double Pval = 0;
-        while(secondary && (Pval == 0 || Pval < pval_threshold)) {
+        unsigned int counter = 0;
+        while(secondary && counter < max_matrix &&
+                 (Pval == 0 || Pval < pval_threshold)) {
           cout << "Position: " << j << endl;
-
           for (multimap<int, string>::iterator it =
           M.vector_positions_occurrences[i][j].begin();
           it != M.vector_positions_occurrences[i][j].end(); it++) {
@@ -148,7 +152,7 @@ void GEP_path() {
             sort(begin(P_vector), end(P_vector), comp);
           }
           DVector(P_vector, j);
-
+          seed_oligo.emplace_back(P_vector[0].oligo);
           HammingClass H(P_vector[0].oligo,
                           M.vector_map_ver[i],
                           M.vector_positions_occurrences[i][j],
@@ -165,7 +169,9 @@ void GEP_path() {
               H_HAMMING_VECTOR.emplace_back(H);
               Pval = Z.Zpvalue;
             } 
+ 
           P_vector.clear(); 
+          counter++;
         }
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
@@ -174,7 +180,7 @@ void GEP_path() {
       H_HAMMING_VECTOR.clear();
 
       Outfile_PWM_matrices(i);
-      Outfile_Z_score_values(i);
+      Outfile_Z_score_values(i, seed_oligo);
     }
 
     RAM_usage();
@@ -976,8 +982,19 @@ void HammingClass::Freq2Calc() {
   freq2 = static_cast<double>(vert_vector[0]) / static_cast<double>(hamming_H_occ);
 }
 
-void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos){
+void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos,
+                                  unordered_map<string, VerticalClass> &map_vertical, unsigned int j){
+
   for(unsigned int i = 0; i < hamming_seed.size(); i++){
+    
+    unordered_map<string, VerticalClass>::iterator it = map_vertical.find(hamming_seed[i]);
+    it->second.vertical_count[j] = 0;
+    it->second.vertical_count_FWD[j] = 0;
+    it->second.vertical_count_rc[j] = 0;
+    it->second.vertical_count_rc_FWD[j] = 0;
+    it->second.vertical_count_rc_REV[j] = 0;
+    it->second.vertical_count_REV[j] = 0;
+    
     for(multimap<int, string, greater<int>>::iterator it = pos.begin();
       it != pos.end(); ++it)
     {
@@ -1962,7 +1979,7 @@ void print_debug_PWM_hamming(ofstream &outfile, unsigned int j,
 }
 
 // // Print debug for PWM_hamming outfile -> Selection of output filename
-void Outfile_Z_score_values(unsigned int j) {
+void Outfile_Z_score_values(unsigned int j, vector<string> &seed_oligo) {
   // PROFILE_FUNCTION();
   ofstream outfile;
 
@@ -1972,7 +1989,7 @@ void Outfile_Z_score_values(unsigned int j) {
 
       outfile.open(to_string(kmers_vector[j]) + "-mers_Z_scores_" + alias_file +
                    "DS.txt");
-      print_debug_Z_scores(outfile, j, kmers_vector[j]);
+      print_debug_Z_scores(outfile, j, kmers_vector[j], seed_oligo);
       outfile.close();
     }
 
@@ -1981,7 +1998,7 @@ void Outfile_Z_score_values(unsigned int j) {
       outfile.open(to_string(kmers_vector[j]) + "-mers_Z_scores_" + alias_file +
                    "SS.txt");
 
-      print_debug_Z_scores(outfile, j, kmers_vector[j]);
+      print_debug_Z_scores(outfile, j, kmers_vector[j], seed_oligo);
       outfile.close();
     }
   // }
@@ -1989,7 +2006,7 @@ void Outfile_Z_score_values(unsigned int j) {
 
 // // PWM_matrices, parameters to calculate z-score, z-score and p-value printing
 void print_debug_Z_scores(ofstream &outfile, unsigned int j,
-                                     unsigned int k) {
+                                     unsigned int k, vector<string> &seed_oligo) {
   // PROFILE_FUNCTION();
   outfile << "#Z_score parameters and p-value for hit positions - k = " << k
           << endl
@@ -2029,8 +2046,8 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
     // best_oligo = HAMMING_MATRIX[j][local_pos-1].real_best_oligo;
 
     outfile << Z_TEST_MATRIX[j][position].local_pos << "\t"
-            << "TEST"
-            << "\t" << Z_TEST_MATRIX[j][position].local_mean << "\t"
+            << seed_oligo[position] << "\t" 
+            << Z_TEST_MATRIX[j][position].local_mean << "\t"
             << Z_TEST_MATRIX[j][position].global_mean << "\t"
             << Z_TEST_MATRIX[j][position].local_dev_std << "\t"
             << Z_TEST_MATRIX[j][position].global_dev_std << "\t"

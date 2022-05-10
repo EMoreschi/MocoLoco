@@ -69,7 +69,7 @@ bool direction = false;
 
 bool secondary = true;
 double pval_threshold = 10e-30;
-unsigned int max_matrix = 4;
+unsigned int max_matrix = 3;
 
 class Timer {
   public:
@@ -514,7 +514,8 @@ private:
   void Freq2Calc();
   void PWMHammingCalc();
   void DPWMHamming(vector<vector<double>>&);
-  void ClearVertical(multimap<int, string, greater<int>> &);
+  void ClearVertical(multimap<int, string, greater<int>> &,
+                      unordered_map<string, VerticalClass> &, unsigned int);
 
 public:
   string seed;
@@ -539,7 +540,7 @@ public:
     HoccCalc(map_horizontal);
     Freq2Calc();
     PWMHammingCalc();
-    ClearVertical(position_occurrences);
+    ClearVertical(position_occurrences, map_vertical, pos);
     // DPWMHamming(PWM_hamming);
   }
 };
@@ -613,6 +614,6 @@ void print_debug_PWM_hamming_tomtom(ofstream &, unsigned int, unsigned int);
 
 vector<double> BestStrandOligo(vector<double>,vector<double>);
 
-void Outfile_Z_score_values(unsigned int);
-void print_debug_Z_scores(ofstream &, unsigned int, unsigned int);
+void Outfile_Z_score_values(unsigned int, vector<string> &);
+void print_debug_Z_scores(ofstream &, unsigned int, unsigned int, vector<string> &);
 
