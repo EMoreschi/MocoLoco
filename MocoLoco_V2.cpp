@@ -72,10 +72,11 @@ void GEP_path() {
       for (unsigned int j = 0; j < len[i]; j++) {
         double Pval = 0;
         unsigned int size = 1000;
+        // bool flag = true;
         // Loop for eventually other matrices that are hidden by the best motif
         //secondary is a boolean variable
-        while(secondary && size != 0 && 
-                 (Pval == 0 || Pval < pval_threshold)) {
+        // while(secondary && size != 0 && 
+        //          (Pval == 0 || Pval < pval_threshold)) {
           cout << "Position: " << j << endl;
           //For each oligo present in the vertical map
           for (multimap<int, string>::iterator it =
@@ -94,7 +95,7 @@ void GEP_path() {
           }
           // DVector(P_vector, j);
           //Vector containing all seed oligos for the output files
-          seed_oligo.emplace_back(P_vector[0].oligo);
+          
           //Creation of clusters of oligos at hamming distance
           //and creation of PWM for each position
           HammingClass H(P_vector[0].oligo,
@@ -113,16 +114,18 @@ void GEP_path() {
               z_test_class Z(H.PWM_hamming, C.GEP, 
                               j + 1, kmers_vector);
               Pval = Z.Zpvalue;
-              cout << "Pvalue: " << Pval << endl;
               //If it is the first cycle of while loop or if the pval is lower 
               //than a certain threshold the z_score and PWM are calculated
-              if(Pval == 0 || Pval < pval_threshold){
+              // if(flag || Pval < pval_threshold){
+                // cout << "Pvalue: " << Pval << endl;
+                seed_oligo.emplace_back(P_vector[0].oligo);
                 Z_TEST_VECTOR.emplace_back(Z);
                 H_HAMMING_VECTOR.emplace_back(H);
-              }
+              // }
             }  
           P_vector.clear(); 
-        }
+          // flag = false;
+        // }
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
       H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
@@ -958,19 +961,27 @@ void HammingClass::CheckSeed(string seed,
                              multimap<int, string, greater<int>> &pos,
                              unsigned int position) {
   // PROFILE_FUNCTION();
+
+  // cout << "Seed oligo: " << seed << endl; 
   for (multimap<int, string>::iterator it = pos.begin(); it != pos.end();
        it++) {
     hamming_v_occ = 0;
     tot_freq += it->first;
     string oligo = it->second;
+    if (oligo == seed){
+      seed_vertical = it->first;
+    }
     unsigned int i = 0, count = 0;
     while (seed[i] != '\0') {
-      if (seed[i] != oligo[i])
+      if (seed[i] != oligo[i]){
+
         count++;
+      }
       i++;
     }
 
     if (count <= distance_vector[0]) {
+
       string reverse_o = reverse_oligo(oligo);
       unordered_map<string, VerticalClass>::iterator it_ver = map_vertical.find(oligo);
       unordered_map<string, VerticalClass>::iterator it_ver_rc = map_vertical.find(reverse_o);
@@ -988,17 +999,17 @@ void HammingClass::CheckSeed(string seed,
       }
       vert_vector.push_back(hamming_v_occ);
       hamming_seed.push_back(oligo);
-      // cout << oligo << " " << hamming_v_occ << endl;
+      // cout << oligo << "\t" << hamming_v_occ << endl;
     }
   }
-  // hamming_oligos.push_back(hamming_seed);
-  // cout << "Hamming_seed.size(): " << hamming_seed.size() << endl;
-  // hamming_seed.clear();
+        // cout << "Seed: " << seed << "\t" << seed_vertical << endl;
+
 }
 
 void HammingClass::Freq1Calc() {
   // PROFILE_FUNCTION();
-  freq1 = static_cast<double>(vert_vector[0]) / static_cast<double>(tot_freq);
+  freq1 = static_cast<double>(seed_vertical) / static_cast<double>(tot_freq);
+  // cout << "Freq1: " << freq1 << endl;
 }
 
 void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> &map_horizontal) {
@@ -1019,7 +1030,7 @@ void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> &map_horizont
 
 void HammingClass::Freq2Calc() {
   // PROFILE_FUNCTION();
-  freq2 = static_cast<double>(vert_vector[0]) / static_cast<double>(hamming_H_occ);
+  freq2 = static_cast<double>(seed_vertical) / static_cast<double>(hamming_H_occ);
 }
 
 void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos,
@@ -1027,13 +1038,13 @@ void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos,
 
   for(unsigned int i = 0; i < hamming_seed.size(); i++){
     
-    unordered_map<string, VerticalClass>::iterator it = map_vertical.find(hamming_seed[i]);
-    it->second.vertical_count[j] = 0;
-    it->second.vertical_count_FWD[j] = 0;
-    it->second.vertical_count_rc[j] = 0;
-    it->second.vertical_count_rc_FWD[j] = 0;
-    it->second.vertical_count_rc_REV[j] = 0;
-    it->second.vertical_count_REV[j] = 0;
+    // unordered_map<string, VerticalClass>::iterator it = map_vertical.find(hamming_seed[i]);
+    // it->second.vertical_count[j] = 0;
+    // it->second.vertical_count_FWD[j] = 0;
+    // it->second.vertical_count_rc[j] = 0;
+    // it->second.vertical_count_rc_FWD[j] = 0;
+    // it->second.vertical_count_rc_REV[j] = 0;
+    // it->second.vertical_count_REV[j] = 0;
     
     for(multimap<int, string, greater<int>>::iterator it = pos.begin();
       it != pos.end(); ++it)
@@ -1152,7 +1163,6 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
         }
         it->second.horizontal_count_rc++;
         it->second.horizontal_count_rc_REV++;
-        it->second.horizontal_count_FWD++;
       }
     } else if (it_rc != horizontal_map.end()) {
       if (!it_rc->second.palindrome) {
@@ -1160,7 +1170,6 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
         it_rc->second.horizontal_count_rc_FWD++;
         if (DS) {
           it_rc->second.horizontal_count_REV++;
-          it_rc->second.horizontal_count_rc_FWD++;
           it_rc->second.horizontal_count++;
         }
       }
@@ -1170,10 +1179,12 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
       Hor.oligo = oligo, Hor.oligo_rc = oligo_rc;
       Hor.palindrome = bool(oligo == oligo_rc);
       Hor.horizontal_count = 1, Hor.horizontal_count_rc = 0;
+      Hor.horizontal_count_FWD = 1, Hor.horizontal_count_rc_FWD = 0;
+      Hor.horizontal_count_REV = 0, Hor.horizontal_count_rc_REV = 0;
       if (DS) {
         Hor.horizontal_count_FWD = 1, Hor.horizontal_count_rc_FWD = 0;
         Hor.horizontal_count_REV = 0, Hor.horizontal_count_rc_REV = 1;
-        Hor.horizontal_count_rc = 1;
+        Hor.horizontal_count_rc = 1, Hor.horizontal_count = 1;
         if(oligo == oligo_rc){
           Hor.horizontal_count_rc_FWD = 1;
           Hor.horizontal_count_REV = 1;
@@ -1189,7 +1200,7 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
 void MapClass::CountOccurrencesVer(string sequence, int k) {
   // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
-    unsigned int tot_freq = 0;
+    // unsigned int tot_freq = 0;
     string oligo = sequence.substr(i, k);
     string oligo_rc = reverse_oligo(oligo);
     unordered_map<string, VerticalClass>::iterator it = vertical_map.find(oligo);
@@ -1197,7 +1208,7 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
     if (it != vertical_map.end()) {
       it->second.vertical_count[i]++;
       it->second.vertical_count_FWD[i]++;
-      tot_freq++;
+      // tot_freq++;
       if (DS) {
         if(it->second.palindrome){         
           it->second.vertical_count[i]++;
@@ -1205,8 +1216,7 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
           it->second.vertical_count_REV[i]++;
           it->second.vertical_count_rc_FWD[i]++;
         }
-        tot_freq++;
-        it->second.vertical_count_FWD[i]++;
+      //   tot_freq++;
         it->second.vertical_count_rc_REV[i]++;
         it->second.vertical_count_rc[i]++;
       }
@@ -1217,7 +1227,6 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
         if (DS) {
           it_rc->second.vertical_count[i]++;
           it_rc->second.vertical_count_REV[i]++;
-          it_rc->second.vertical_count_rc_FWD[i]++;
         }
       }
 
@@ -1345,6 +1354,7 @@ void MapClass::DMainMapVectorDS() {
            << it->second.horizontal_count_rc << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
+    cout << "\n\n VERTICAL MAP: \n\n" << endl;
     for (unordered_map<string, VerticalClass>::iterator it =
              vector_map_ver[i].begin();
          it != vector_map_ver[i].end(); it++) {

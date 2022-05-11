@@ -46,7 +46,7 @@ string reverse_bases;
 vector<unsigned int> kmers_vector;
 vector<unsigned int> distance_vector;
 vector<unsigned int> len;
-
+unsigned int seed_vertical = 0;
 ////////////////////////PARSER VARIABLES////////////////////////
 string BED_FILE;
 int half_length = 150;
