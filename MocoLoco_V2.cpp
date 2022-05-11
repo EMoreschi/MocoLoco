@@ -113,6 +113,7 @@ void GEP_path() {
               z_test_class Z(H.PWM_hamming, C.GEP, 
                               j + 1, kmers_vector);
               Pval = Z.Zpvalue;
+              cout << "Pvalue: " << Pval << endl;
               //If it is the first cycle of while loop or if the pval is lower 
               //than a certain threshold the z_score and PWM are calculated
               if(Pval == 0 || Pval < pval_threshold){
@@ -149,11 +150,11 @@ void GEP_path() {
 
  // Vector len contains all the lengths of sequences for each kmer 
     for(unsigned int i = 0; i < kmers_vector.size(); i++){
-      len.emplace_back(C.GEP[0].sequence.size() - kmers_vector[i] + 1);
+      len.emplace_back(MULTIFA.GEP[0].sequence.size() - kmers_vector[i] + 1);
     }
     //In this class horizontal and vertical maps are created, these maps will  
     //be useful later on 
-    MapClass M(C.GEP);
+    MapClass M(MULTIFA.GEP);
     //For each kmer
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
       vector<PvalueClass> P_vector;
