@@ -71,13 +71,15 @@ void GEP_path() {
       //For each position in the sequence
       for (unsigned int j = 0; j < len[i]; j++) {
         double Pval = 0;
-        unsigned int size = 1000;
-        // bool flag = true;
+        bool flag = true;
+        unsigned int counter = 0;
+        vector<string> pos_oligo_vec;
         // Loop for eventually other matrices that are hidden by the best motif
         //secondary is a boolean variable
-        // while(secondary && size != 0 && 
-        //          (Pval == 0 || Pval < pval_threshold)) {
+        while(secondary && counter < max_matrix && 
+                 (Pval == 0 || Pval < pval_threshold)) {
           cout << "Position: " << j << endl;
+          
           //For each oligo present in the vertical map
           for (multimap<int, string>::iterator it =
           M.vector_positions_occurrences[i][j].begin();
@@ -102,7 +104,6 @@ void GEP_path() {
                           M.vector_map_ver[i],
                           M.vector_positions_occurrences[i][j],
                           M.vector_map_hor[i], j);
-          size = M.vector_positions_occurrences[i][j].size();
           if (!exp_max.empty()){
             EMClass E(H.cluster_map, H.PWM_hamming, 
                       M.vector_map_hor[i]);
@@ -114,18 +115,31 @@ void GEP_path() {
               z_test_class Z(H.PWM_hamming, C.GEP, 
                               j + 1, kmers_vector);
               Pval = Z.Zpvalue;
+              
               //If it is the first cycle of while loop or if the pval is lower 
               //than a certain threshold the z_score and PWM are calculated
-              // if(flag || Pval < pval_threshold){
-                // cout << "Pvalue: " << Pval << endl;
-                seed_oligo.emplace_back(P_vector[0].oligo);
-                Z_TEST_VECTOR.emplace_back(Z);
-                H_HAMMING_VECTOR.emplace_back(H);
-              // }
+              if(flag || Pval < pval_threshold){
+                //Check reverse seed oligo
+                pos_oligo_vec.emplace_back(P_vector[0].oligo);
+                string rev_oligo = reverse_oligo(P_vector[0].oligo);
+                if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
+                    && P_vector[0].oligo != rev_oligo){
+                  break;
+                }
+                else{
+                  cout << "Pvalue: " << Pval << endl;
+                  seed_oligo.emplace_back(P_vector[0].oligo);
+
+                  Z_TEST_VECTOR.emplace_back(Z);
+                  H_HAMMING_VECTOR.emplace_back(H);
+                }
+              }
             }  
           P_vector.clear(); 
-          // flag = false;
-        // }
+          flag = false;
+          counter++;
+        }
+        pos_oligo_vec.clear();
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
       H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
@@ -187,8 +201,6 @@ void GEP_path() {
             sort(begin(P_vector), end(P_vector), comp);
           }
           // DVector(P_vector, j);
-          //Vector containing all seed oligos for the output files
-          seed_oligo.emplace_back(P_vector[0].oligo);
           //Creation of clusters of oligos at hamming distance
           //and creation of PWM for each position
           HammingClass H(P_vector[0].oligo,
@@ -210,6 +222,8 @@ void GEP_path() {
               //If it is the first cycle of while loop or if the pval is lower 
               //than a certain threshold the z_score and PWM are calculated
               if(Pval == 0 || Pval < pval_threshold){
+                //Vector containing all seed oligos for the output files
+                seed_oligo.emplace_back(P_vector[0].oligo);
                 Z_TEST_VECTOR.emplace_back(Z);
                 H_HAMMING_VECTOR.emplace_back(H);
               }
@@ -263,7 +277,7 @@ void bed_class::extract_seq(TwoBit *tb, unsigned int n_line) {
   // CONTROL: if flag is 1 means that the current line has starting coordinate >
   // end coordinate, so it is correct
   if (flag) {
-
+    
     // Extract the sequence from the object with the twobit_sequence function
     sequence =
         twobit_sequence(tb, chr_coord.c_str(), start_coord, end_coord - 1);
@@ -1109,13 +1123,13 @@ void PvalueClass::TKN1Calc(vector<bed_class> &GEP,
   // cout << "Oligo: " << oligos << endl;
   unordered_map<string, HorizontalClass>::iterator itBigMap =
       vector_map_hor.find(oligo);
-  // unordered_map<string, HorizontalClass>::iterator itBigMap_rc =
-  //     vector_map_hor.find(reverse_oligo(oligo));
+  unordered_map<string, HorizontalClass>::iterator itBigMap_rc =
+      vector_map_hor.find(reverse_oligo(oligo));
   if (itBigMap == vector_map_hor.end()) {
 
-    // if (!itBigMap_rc->second.palindrome) {
-    //   N1 = itBigMap_rc->second.horizontal_count_rc;
-    // }
+    if (!itBigMap_rc->second.palindrome) {
+      N1 = itBigMap_rc->second.horizontal_count_rc;
+    }
   } else {
 
     N1 = itBigMap->second.horizontal_count;
@@ -1312,9 +1326,9 @@ void MapClass::VerticalMapVector() {
         if (it->second.vertical_count[j] > 0) {
           pos.emplace(it->second.vertical_count[j], it->first);
         }
-        // if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
-        //   pos.emplace(it->second.vertical_count_rc[j], it->second.oligo_rc);
-        // }
+        if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
+          pos.emplace(it->second.vertical_count_rc[j], it->second.oligo_rc);
+        }
       }
       positions_occurrences.push_back(pos);
       pos.clear();
@@ -1358,11 +1372,11 @@ void MapClass::DMainMapVectorDS() {
     for (unordered_map<string, VerticalClass>::iterator it =
              vector_map_ver[i].begin();
          it != vector_map_ver[i].end(); it++) {
-      cout << it->first << " " << it->second.vertical_count_FWD[0] << " " 
-           << it->second.vertical_count_REV[0] << " " << it->second.vertical_count[0]
-           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[0]
-           << " " << it->second.vertical_count_rc_REV[0] << " "
-           << it->second.vertical_count_rc[0] << " "
+      cout << it->first << " " << it->second.vertical_count_FWD[49] << " " 
+           << it->second.vertical_count_REV[49] << " " << it->second.vertical_count[49]
+           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[49]
+           << " " << it->second.vertical_count_rc_REV[49] << " "
+           << it->second.vertical_count_rc[49] << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
   }
@@ -1949,8 +1963,9 @@ void print_debug_PWM_hamming_tomtom(ofstream &outfile, unsigned int j,
        position++) {
     PWM_hamming =
         H_HAMMING_MATRIX[j][position].PWM_hamming;
-    outfile << ">Position" << Z_TEST_MATRIX[j][position].local_pos << " "
-            << Z_TEST_MATRIX[j][position].Zpvalue << endl;
+    outfile << ">Position" << Z_TEST_MATRIX[j][position].local_pos << "("
+            << position << ")" << 
+            " " << Z_TEST_MATRIX[j][position].Zpvalue << endl;
     for (unsigned int i = 0; i < PWM_hamming.size(); i++) {
       outfile << ACGT[i] << "\t"
               << "["

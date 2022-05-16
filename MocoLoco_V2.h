@@ -46,7 +46,7 @@ string reverse_bases;
 vector<unsigned int> kmers_vector;
 vector<unsigned int> distance_vector;
 vector<unsigned int> len;
-unsigned int seed_vertical = 0;
+
 ////////////////////////PARSER VARIABLES////////////////////////
 string BED_FILE;
 int half_length = 150;
@@ -66,10 +66,10 @@ string exp_max;
 bool tomtom = false;
 bool err = false;
 bool direction = false;
-
+unsigned int seed_vertical = 0;
 bool secondary = true;
-double pval_threshold = 10e-30;
-unsigned int max_matrix = 5;
+double pval_threshold = 10e-20;
+unsigned int max_matrix = 10;
 
 class Timer {
   public:
