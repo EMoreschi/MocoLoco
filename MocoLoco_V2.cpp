@@ -163,28 +163,28 @@ void GEP_path() {
     // Reading distance parameters in input and saving them into a vector
     distance_vector = generic_vector_creation(dist);
 
-    // map_class MAP(MULTIFA.GEP, kmers_vector, distance_vector);
-
- // Vector len contains all the lengths of sequences for each kmer 
     for(unsigned int i = 0; i < kmers_vector.size(); i++){
       len.emplace_back(MULTIFA.GEP[0].sequence.size() - kmers_vector[i] + 1);
     }
     //In this class horizontal and vertical maps are created, these maps will  
     //be useful later on 
     MapClass M(MULTIFA.GEP);
-    //For each kmer
+    // Vector len contains all the lengths of sequences for each kmer 
     for (unsigned int i = 0; i < kmers_vector.size(); i++) {
       vector<PvalueClass> P_vector;
       vector<string> seed_oligo;
       //For each position in the sequence
       for (unsigned int j = 0; j < len[i]; j++) {
         double Pval = 0;
-        unsigned int size = 1000;
+        bool flag = true;
+        unsigned int counter = 0;
+        vector<string> pos_oligo_vec;
         // Loop for eventually other matrices that are hidden by the best motif
         //secondary is a boolean variable
-        while(secondary && size != 0 && 
+        while(secondary && counter < max_matrix && 
                  (Pval == 0 || Pval < pval_threshold)) {
           cout << "Position: " << j << endl;
+          
           //For each oligo present in the vertical map
           for (multimap<int, string>::iterator it =
           M.vector_positions_occurrences[i][j].begin();
@@ -201,13 +201,14 @@ void GEP_path() {
             sort(begin(P_vector), end(P_vector), comp);
           }
           // DVector(P_vector, j);
+          //Vector containing all seed oligos for the output files
+          
           //Creation of clusters of oligos at hamming distance
           //and creation of PWM for each position
           HammingClass H(P_vector[0].oligo,
                           M.vector_map_ver[i],
                           M.vector_positions_occurrences[i][j],
                           M.vector_map_hor[i], j);
-          size = M.vector_positions_occurrences[i][j].size();
           if (!exp_max.empty()){
             EMClass E(H.cluster_map, H.PWM_hamming, 
                       M.vector_map_hor[i]);
@@ -219,17 +220,31 @@ void GEP_path() {
               z_test_class Z(H.PWM_hamming, MULTIFA.GEP, 
                               j + 1, kmers_vector);
               Pval = Z.Zpvalue;
+              
               //If it is the first cycle of while loop or if the pval is lower 
               //than a certain threshold the z_score and PWM are calculated
-              if(Pval == 0 || Pval < pval_threshold){
-                //Vector containing all seed oligos for the output files
-                seed_oligo.emplace_back(P_vector[0].oligo);
-                Z_TEST_VECTOR.emplace_back(Z);
-                H_HAMMING_VECTOR.emplace_back(H);
+              if(flag || Pval < pval_threshold){
+                //Check reverse seed oligo
+                pos_oligo_vec.emplace_back(P_vector[0].oligo);
+                string rev_oligo = reverse_oligo(P_vector[0].oligo);
+                if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
+                    && P_vector[0].oligo != rev_oligo){
+                  break;
+                }
+                else{
+                  cout << "Pvalue: " << Pval << endl;
+                  seed_oligo.emplace_back(P_vector[0].oligo);
+
+                  Z_TEST_VECTOR.emplace_back(Z);
+                  H_HAMMING_VECTOR.emplace_back(H);
+                }
               }
             }  
           P_vector.clear(); 
+          flag = false;
+          counter++;
         }
+        pos_oligo_vec.clear();
       }
       Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
       H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
@@ -2119,13 +2134,13 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 void command_line_parser(int argc, char **argv) {
 
-  const char *const short_opts = "hp:k:b:j:m:ud:o:f:alrt:n:e:s";
+  const char *const short_opts = "hp:k:b:j:m:ud:o:f:alrt:e:s";
 
   // Specifying the expected options
   const option long_opts[] = {
       {"help", no_argument, nullptr, 'h'},
       {"param", required_argument, nullptr, 'p'},
-      {"ntop", required_argument, nullptr, 'n'},
+      // {"ntop", required_argument, nullptr, 'n'},
       {"kmer", required_argument, nullptr, 'k'},
       {"all", no_argument, nullptr, 'a'},
       {"tomtom", no_argument, nullptr, 'l'},
@@ -2155,9 +2170,9 @@ void command_line_parser(int argc, char **argv) {
     case 'p':
       half_length = stoi(optarg);
       break;
-    case 'n':
-      top_N = stoi(optarg);
-      break;
+    // case 'n':
+    //   top_N = stoi(optarg);
+    //   break;
     case 'b':
       BED_FILE = string(optarg);
       is_file_exist(BED_FILE, "--bed || -b");
