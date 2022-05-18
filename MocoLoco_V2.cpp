@@ -176,7 +176,7 @@ void MULTIFA_path(){
       // vector<string> pos_oligo_vec;
       // Loop for eventually other matrices that are hidden by the best motif
       //secondary is a boolean variable
-      while(secondary && counter < max_matrix && 
+      while(counter < max_matrix && 
                 (Pval == 0 || Pval < pval_threshold)) {
         cout << "Position: " << j << endl;
           
