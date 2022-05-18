@@ -67,9 +67,9 @@ bool tomtom = false;
 bool err = false;
 bool direction = false;
 unsigned int seed_vertical = 0;
-bool secondary = true;
-double pval_threshold = 10e-20;
-unsigned int max_matrix = 10;
+
+double pval_threshold = 10e-30;
+unsigned int max_matrix = 1;
 
 class Timer {
   public:
@@ -597,7 +597,8 @@ void DVector(vector<PvalueClass> &, unsigned int);
 // Comparison function
 bool comp(const PvalueClass &, const PvalueClass &);
 
-void GEP_path();
+void BED_path();
+void MULTIFA_path();
 void command_line_parser(int, char **);
 void display_help();
 bool is_file_exist(string fileName, string buf);
