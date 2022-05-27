@@ -22,22 +22,6 @@ int main(int argc, char *argv[]) {
   //Instrumentor::Get().EndSession();
 }
 
-// Function to analyse the RAM usage of the tool, it returns the maximum amount
-// of memory allocated by the program
-void RAM_usage() {
-  int who = RUSAGE_SELF;
-  struct rusage usage;
-  int ret;
-  ret = getrusage(who, &usage);
-  cout << ret << endl;
-  cout << endl
-       << "Maximum resident set size: " << usage.ru_maxrss / 1000 << " Mb"
-       << endl
-       << "User CPU time used: " << usage.ru_utime.tv_sec << " s" << endl
-       << "System CPU time used: " << usage.ru_stime.tv_usec << " micros"
-       << endl;
-}
-
 // Function to choose the pathway to follow. 2 input options:
 // 1) Bed-Twobit-Jaspar input
 // 2) Multifasta input
@@ -71,7 +55,7 @@ void BED_path() {
       double Pval = 0;
       bool flag = true;
       unsigned int counter = 0;
-      // vector<string> pos_oligo_vec;
+      vector<string> pos_oligo_vec;
       // Loop for eventually other matrices that are hidden by the best motif
       //secondary is a boolean variable
       while(counter < max_matrix && (Pval == 0 || Pval < pval_threshold)) {
@@ -104,38 +88,37 @@ void BED_path() {
           EMClass E(H.cluster_map, H.PWM_hamming, 
                     M.vector_map_hor[i]);
         }
-         
+        
         //If the frequence of seed oligo is higher than a threshold
         //the z_score is calculated
         if(H.freq1 >= freq_treshold){
-            z_test_class Z(H.PWM_hamming, C.GEP, 
-                            j + 1, kmers_vector);
-            Pval = Z.Zpvalue;
+          z_test_class Z(H.PWM_hamming, C.GEP, 
+                          j + 1, kmers_vector);
+          Pval = Z.Zpvalue;
             
-            //If it is the first cycle of while loop or if the pval is lower 
-            //than a certain threshold the z_score and PWM are calculated
-            if(flag || Pval < pval_threshold){
-              //Check reverse seed oligo
-              // pos_oligo_vec.emplace_back(P_vector[0].oligo);
-              // string rev_oligo = reverse_oligo(P_vector[0].oligo);
-              // if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
-              //     && P_vector[0].oligo != rev_oligo){
-              //       cout << "Reverse" << endl;
-              //   break;
-              // }
-              // else{
-                cout << "Pvalue: " << Pval << endl;
-                seed_oligo.emplace_back(P_vector[0].oligo);
-                Z_TEST_VECTOR.emplace_back(Z);
-                H_HAMMING_VECTOR.emplace_back(H);
-            // }
+          //If it is the first cycle of while loop or if the pval is lower 
+          //than a certain threshold the z_score and PWM are calculated
+          if(flag || Pval < pval_threshold){
+            //Check reverse seed oligo
+            pos_oligo_vec.emplace_back(P_vector[0].oligo);
+            string rev_oligo = reverse_oligo(P_vector[0].oligo);
+            if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
+                 && P_vector[0].oligo != rev_oligo){
+                   cout << "Reverse" << endl;
+            }
+            else{
+              cout << "Pvalue: " << Pval << endl;
+              seed_oligo.emplace_back(P_vector[0].oligo);
+              Z_TEST_VECTOR.emplace_back(Z);
+              H_HAMMING_VECTOR.emplace_back(H);
+            }
           }
         }  
         P_vector.clear(); 
         flag = false;
         counter++;
       }
-      // pos_oligo_vec.clear();
+      pos_oligo_vec.clear();
     }
     Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
     H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
@@ -173,7 +156,7 @@ void MULTIFA_path(){
       double Pval = 0;
       bool flag = true;
       unsigned int counter = 0;
-      // vector<string> pos_oligo_vec;
+      vector<string> pos_oligo_vec;
       // Loop for eventually other matrices that are hidden by the best motif
       //secondary is a boolean variable
       while(counter < max_matrix && 
@@ -220,26 +203,25 @@ void MULTIFA_path(){
             //than a certain threshold the z_score and PWM are calculated
             if(flag || Pval < pval_threshold){
               // //Check reverse seed oligo
-              // pos_oligo_vec.emplace_back(P_vector[0].oligo);
-              // string rev_oligo = reverse_oligo(P_vector[0].oligo);
-              // if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
-              //     && P_vector[0].oligo != rev_oligo){
-              //       cout << "Reverse" << endl;
-              //       break;
-              // }
-              // else{
+              pos_oligo_vec.emplace_back(P_vector[0].oligo);
+              string rev_oligo = reverse_oligo(P_vector[0].oligo);
+              if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
+                  && P_vector[0].oligo != rev_oligo){
+                    cout << "Reverse" << endl;
+              }
+              else{
                 cout << "Pvalue: " << Pval << endl;
                 seed_oligo.emplace_back(P_vector[0].oligo);
                 Z_TEST_VECTOR.emplace_back(Z);
                 H_HAMMING_VECTOR.emplace_back(H);
-              // }
+              }
             }
           }  
         P_vector.clear(); 
         flag = false;
         counter++;
       }
-        // pos_oligo_vec.clear();
+      pos_oligo_vec.clear();
     }
     Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
     H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
@@ -254,12 +236,35 @@ void MULTIFA_path(){
 }
 
 
-void bed_class::read_line(string line) {
+void bed_class::read_line(string line, char ** result) {
   // PROFILE_FUNCTION();
   // Split the line word by word and extract chromosome coordinates (chr, start,
   // end)
   istringstream mystream(line);
   mystream >> chr_coord >> start_coord >> end_coord;
+  
+  bool found = false;
+
+	for (int i = 0; result[i] != NULL; i++) {
+		if (result[i] == chr_coord) {
+			found = true;
+      continue;
+		}
+	}
+
+	if (!found) {
+		cerr << endl << "Check out your BED file!" <<endl;
+    cerr << endl << "In the BED file there is chromosome: " << chr_coord << endl;
+    cerr << "This chromosome is not present in 2bit genome." << endl << endl;
+    
+    cout << "Here a list of all the chromosomes present in .2bit file: " << endl << endl;
+    for (int i = 0; result[i] != NULL; i++) {
+      cout << result[i] << endl;
+    }
+    cout << endl;
+    cout << endl << "Be sure that the chromosomes in the bed file are of the same format" << endl;
+    exit(1);
+	}
 }
 
 void bed_class::centering_function(unsigned int start, unsigned int end,
@@ -543,7 +548,7 @@ unsigned int oligo_class::find_best_score() {
 
 
 // Function to read BED and 2Bit files and create GEP (vector of bed class)
-void coordinator_class::GEP_creation(vector<bed_class> &GEP) {
+void coordinator_class::GEP_creation(vector<bed_class> &GEP, char ** result) {
   // PROFILE_FUNCTION();
   // RAM_usage();
   cout << "\n- [1] Extract bed coordinate sequences from reference genome  \n";
@@ -567,7 +572,7 @@ void coordinator_class::GEP_creation(vector<bed_class> &GEP) {
       continue;
     }
 
-    bed_class bed_line(line, tb, n_line);
+    bed_class bed_line(line, tb, n_line, result);
 
     // For each line a bed class is created --> All the bed classes are saved in
     // GEP vector (vector og bed class)
@@ -1894,6 +1899,21 @@ vector<vector<double>> matrix_class::return_log_matrix() {
   return matrix_log;
 }
 
+// Function to analyse the RAM usage of the tool, it returns the maximum amount
+// of memory allocated by the program
+void RAM_usage() {
+  int who = RUSAGE_SELF;
+  struct rusage usage;
+  int ret;
+  ret = getrusage(who, &usage);
+  cout << ret << endl;
+  cout << endl
+       << "Maximum resident set size: " << usage.ru_maxrss / 1000 << " Mb"
+       << endl
+       << "User CPU time used: " << usage.ru_utime.tv_sec << " s" << endl
+       << "System CPU time used: " << usage.ru_stime.tv_usec << " micros"
+       << endl;
+}
 
 // Debug function: Print sequences and coordinates from GEP vector into a .fasta
 // file to check if the sequences extraction is correct
@@ -1980,6 +2000,7 @@ void print_debug_PWM_hamming_tomtom(ofstream &outfile, unsigned int j,
         outfile << round(PWM_hamming[i][j] * 100) << "\t";
       }
       outfile << "]\n";
+  
     }
   }
 }

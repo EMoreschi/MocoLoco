@@ -69,7 +69,7 @@ bool direction = false;
 unsigned int seed_vertical = 0;
 
 double pval_threshold = 10e-30;
-unsigned int max_matrix = 1;
+unsigned int max_matrix = 7;
 
 class Timer {
   public:
@@ -110,7 +110,7 @@ private:
 
 
   friend class MapClass;
-  void read_line(string);
+  void read_line(string, char **);
 
 public:
   string sequence;
@@ -124,10 +124,10 @@ public:
   }
 
   // Bed class constructor if input are Bed-Twobit-Jaspar files
-  bed_class(string line, TwoBit *tb, unsigned int n_line) {
+  bed_class(string line, TwoBit *tb, unsigned int n_line, char ** result) {
 
     // Take line from bed file and extract chr_coord, start_coord and end_coord
-    read_line(line);
+    read_line(line, result);
 
     // Set the new start and end coordinates following p (half_length) input and
     // add overhead to end coordinates
@@ -242,20 +242,21 @@ private:
   vector<vector<double>> matrix_log;
   vector<vector<double>> inverse_matrix_log;
   vector<oligo_class> oligos_vector;
+  char ** result;
 
   void centering_oligo();
   void best_strand();
-  void GEP_creation(vector<bed_class> &);
+  void GEP_creation(vector<bed_class> &, char **);
   void oligos_vector_creation(vector<oligo_class> &, vector<vector<double>> &,
                               vector<vector<double>> &, vector<bed_class> &);
   vector<vector<double>> read_JASPAR();
 
 public:
   coordinator_class() {
-
+    result = twobit_sequence_names(tb);
     // GEP (vector of bed class) creation. An empty GEP vector is passed by
     // reference to be filled and saved in this class
-    GEP_creation(GEP);
+    GEP_creation(GEP, result);
 
     // reading Jaspar file and returning scores as a matrix of double, saved in
     // a variable called matrix
