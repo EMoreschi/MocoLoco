@@ -7,9 +7,9 @@
 #### How to run (2 possibilities)
 
 ``` bash
-./MOCO -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -n <number> (optional) -ss(optional)
+./MOCO -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -o p(optional) -l(optional) -e <number>(optional) -f <number>(optional) -ss(optional)
 
-./MOCO -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -ss(optional)
+./MOCO -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -o p(optional) -l(optional) -e <number>(optional) -f <number>(optional) -ss(optional)
 ```
 ## Multifa random tool
 
