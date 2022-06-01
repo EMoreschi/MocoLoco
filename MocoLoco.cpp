@@ -45,17 +45,21 @@ void GEP_path() {
   // PROFILE_FUNCTION();
 
   // if the input is Bed-Twobit-Jaspar
-  if (MFASTA_FILE.size() == 0) {
+  if (MFASTA_FILE.empty()) {
     tb = twobit_open(TWOBIT_FILE.c_str());
     coordinator_class C;
     twobit_close(tb);
     // Create a .fasta file to check if the coordinates and the sequences
     // extracted are correct
     C.print_GEP(C.GEP);
+        // Reading k-mers in input and saving them into a vector
+    kmers_vector = generic_vector_creation(kmers);
 
+    // Reading distance parameters in input and saving them into a vector
+    distance_vector = generic_vector_creation(dist);
     // Creating map class: input are GEP vector created from bed-twobit
     // analysis, kmers, hamming distance
-    map_class MAP(C.GEP, kmers, dist);
+    map_class MAP(C.GEP, kmers_vector, distance_vector);
 
     RAM_usage();
   }
@@ -64,10 +68,14 @@ void GEP_path() {
   else {
 
     multifasta_class MULTIFA(MFASTA_FILE);
+    // Reading k-mers in input and saving them into a vector
+    kmers_vector = generic_vector_creation(kmers);
 
-    // Creating a Map class: input are GEP vector created from multifasta file
+    // Reading distance parameters in input and saving them into a vector
+    distance_vector = generic_vector_creation(dist);
+    // Creating map class: input are GEP vector created from bed-twobit
     // analysis, kmers, hamming distance
-    map_class MAP(MULTIFA.GEP, kmers, dist);
+    map_class MAP(MULTIFA.GEP, kmers_vector, distance_vector);
     RAM_usage();
   }
 }
@@ -555,7 +563,7 @@ void coordinator_class::centering_oligo() {
 
 // Function able to convert a string (containing numbers separated by ",") into
 // a vector of unsigned int
-vector<unsigned int> map_class::generic_vector_creation(string numbers) {
+vector<unsigned int> generic_vector_creation(string numbers) {
   // PROFILE_FUNCTION();
   int index = 0;
   vector<unsigned int> vec;
@@ -694,14 +702,14 @@ void map_class::check_kmer_dist() {
 void map_class::table_creation_horizontal(vector<bed_class> &GEP) {
   // PROFILE_FUNCTION();
 
-  if (MFASTA_FILE.size() == 0) {
+  if (MFASTA_FILE.empty()) {
     // RAM_usage();
     cout << "- [7] Counting all k-mers occurrences for sequences and making "
-            "orizzontal maps  \n";
+            "horizontal maps  \n";
   } else {
     // RAM_usage();
     cout << "- [4] Counting all k-mers occurrences for sequences and making "
-            "orizzontal maps  \n";
+            "horizontal maps  \n";
   }
   // A map is created for each k-mer inserted as input
   for (unsigned int k = 0; k < kmers_vector.size(); k++) {
@@ -718,26 +726,26 @@ void map_class::table_creation_horizontal(vector<bed_class> &GEP) {
         string bases = GEP[j].sequence.substr(i, kmers_vector[k]);
         // kmer_oligo.emplace_back(bases);
 
-        // Function to fill orizzontal plus/minus maps --> current oligo "bases"
+        // Function to fill horizontal plus/minus maps --> current oligo "bases"
         // is passed as parameter to be inserted into the maps
-        or_ver_kmer_count(bases, orizzontal_plus, orizzontal_minus);
+        or_ver_kmer_count(bases, horizontal_plus, horizontal_minus);
       }
     }
 
     // Once map is created it is saved into a vector of map --> then an analysis
     // with new k value (if any) is performed
-    orizzontal_plus_debug.emplace_back(orizzontal_plus);
-    orizzontal_minus_debug.emplace_back(orizzontal_minus);
+    horizontal_plus_debug.emplace_back(horizontal_plus);
+    horizontal_minus_debug.emplace_back(horizontal_minus);
 
     // Once maps are saved they need to be cleaned to avoid any interference
     // between two different k-mers analysis
-    orizzontal_plus.clear();
-    orizzontal_minus.clear();
+    horizontal_plus.clear();
+    horizontal_minus.clear();
   }
   // RAM_usage();
 }
 
-// Function to fill orizzontal plus/minus maps --> current oligo "bases" is
+// Function to fill horizontal plus/minus maps --> current oligo "bases" is
 // passed as parameter to be inserted into the maps
 void map_class::or_ver_kmer_count(string bases,
                                   unordered_map<string, unsigned int> &plus,
@@ -746,7 +754,7 @@ void map_class::or_ver_kmer_count(string bases,
   unordered_map<string, unsigned int>::iterator it_plus;
   unordered_map<string, unsigned int>::iterator it_minus;
 
-  // Finding the oligo "bases" into the orizzontal plus map (FWD strand)
+  // Finding the oligo "bases" into the horizontal plus map (FWD strand)
   it_plus = plus.find(bases);
 
   // Check if the current oligo "bases" is palindrome --> this function has also
@@ -754,7 +762,7 @@ void map_class::or_ver_kmer_count(string bases,
   // oligo
   check_palindrome(bases, reverse_bases);
 
-  // Finding the oligo "bases" into the orizzontal minus map (REV strand)
+  // Finding the oligo "bases" into the horizontal minus map (REV strand)
   it_minus = minus.find(reverse_bases);
 
   // If the current oligo "bases" is already present into the map --> increase
@@ -773,17 +781,17 @@ void map_class::or_ver_kmer_count(string bases,
     minus.insert({reverse_bases, 1});
   }
 
-  // Clear the string bases and reverse bases to avoid interference from
-  // different oligos
-  bases.clear();
-  reverse_bases.clear();
+  // // Clear the string bases and reverse bases to avoid interference from
+  // // different oligos
+  // bases.clear();
+  // reverse_bases.clear();
 }
 
 // Function to create maps to count oligos occurrences for each sequence
 // position (in this function also frequences are calculated)
 void map_class::table_creation_vertical(vector<bed_class> &GEP) {
   // PROFILE_FUNCTION();
-  if (MFASTA_FILE.size() == 0) {
+  if (MFASTA_FILE.empty()) {
     // RAM_usage();
     cout << "- [8] Counting all k-mers positional occurrences and making "
             "vertical maps  \n";
@@ -810,7 +818,6 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP) {
       // analysis)
       for (unsigned int j = 0; j < GEP.size(); j++) {
 
-        // string sequence = GEP[j].sequence;
         string bases = GEP[j].sequence.substr(i, kmers_vector[k]);
 
         // Calling of function to count oligo occurrences and to create and fill
@@ -848,7 +855,7 @@ void map_class::table_creation_vertical(vector<bed_class> &GEP) {
 
     // The maps vector are cleaved to make a new analysis with new k
     maps_vector_positions_plus.clear();
-
+    tot_freq_vec.clear();
     // RAM_usage();
   }
 }
@@ -914,8 +921,8 @@ void map_class::vertical_kmer_count(
 
   // Clear bases and reverse bases to avoid interference in the next oligo
   // analysis
-  bases.clear();
-  reverse_bases.clear();
+  // bases.clear();
+  // reverse_bases.clear();
 }
 
 // Function to select the best pair (Oligo + RC or RC + Oligo) into vertical
@@ -928,20 +935,16 @@ void map_class::select_best(
   map<pair<string, string>, pair<unsigned int, unsigned int>> copy;
 
   // For every element into the map a comparison is performed
-  for (map<pair<string, string>, pair<unsigned int, unsigned int>>::iterator
+  for (map<pair<string, string>, pair<unsigned int, unsigned int>>::const_iterator
            it = vertical_plus.begin();
        it != vertical_plus.end(); it++) {
 
     // If Oligo occurrences are less then RC occurrences in FWD strand
     if (it->second.first < it->second.second) {
 
-      string oligo1 = it->first.second;
-      string oligo2 = it->first.first;
-      unsigned int occ1 = it->second.second;
-      unsigned int occ2 = it->second.first;
-
       // Insert the pair RC + Oligo in the map "copy"
-      copy.insert({{oligo1, oligo2}, {occ1, occ2}});
+      copy.insert({{it->first.second, it->first.first}, 
+                    {it->second.second, it->second.first}});
     }
 
     // Else if Oligo occurrences are higher then RC occurrences is FWD strand
@@ -964,7 +967,7 @@ void map_class::select_best(
 // 2 dimension = positions)
 void map_class::P_VALUE_MATRIX_creation() {
   // PROFILE_FUNCTION();
-  if (MFASTA_FILE.size() == 0) {
+  if (MFASTA_FILE.empty()) {
     // RAM_usage();
     cout << "- [9] Calculating oligos p_value and flling P_Value class matrix  "
             "\n";
@@ -981,11 +984,11 @@ void map_class::P_VALUE_MATRIX_creation() {
 
     // For each position in sequence
     for (unsigned int i = 0; i < vector_kmers_maps_plus[j].size(); i++) {
-
-      // Create a p_value_class object P passing the vertical and orizzontal
+      
+      // Create a p_value_class object P passing the vertical and horizontal
       // maps, the number of sequences T, i to fix the current position and the
       // outfile to print into the Output file
-      p_value_class P(vector_kmers_maps_plus[j][i], orizzontal_plus_debug[j],
+      p_value_class P(vector_kmers_maps_plus[j][i], horizontal_plus_debug[j],
                       sequences_number_T, i, outfile, tot_freq_matrix[j][i]);
 
       // A vector of p_value classes is created
@@ -1014,7 +1017,7 @@ void map_class::P_VALUE_MATRIX_creation() {
 // 2 dimension = positions)
 void map_class::HAMMING_MATRIX_creation() {
   // PROFILE_FUNCTION();
-  if (MFASTA_FILE.size() == 0) {
+  if (MFASTA_FILE.empty()) {
     // RAM_usage();
     cout << "- [10] Calculating best oligos hamming neighbours and filling "
             "Hamming matrix  \n";
@@ -1035,62 +1038,29 @@ void map_class::HAMMING_MATRIX_creation() {
 
       // Create a hamming_class H passing the vertical multimap, the distance
       // inserted as input, the current position i, the number of different
-      // oligos (contained in tot_freq_matrix), the orizzontal matrix, the
+      // oligos (contained in tot_freq_matrix), the horizontal matrix, the
       // outfile to print the Output file and finally the GEP (which contains
       // the sequences) --> the ordering p or not distinguishes the multimap
       // passed as input
-      
-      // int c = 0;
-      // cout << i +1 << endl;
-      // for (multimap<double, pair<string, string>>::iterator it_pair =
-      //      P_VALUE_MATRIX[j][i].p_value_sort.begin();
-      //  it_pair != P_VALUE_MATRIX[j][i].p_value_sort.end() && c < 1; it_pair++, c++) 
-      //  {
-      //     double P_VAL = it_pair->first;
-      //     string oligo = it_pair->second.first;
-
-      //     if(P_VAL < 1e-20){    
 
             hamming_class H(P_VALUE_MATRIX[j][i].vertical_multimap,
                       vector_kmers_maps_plus[j][i],
                       P_VALUE_MATRIX[j][i].p_value_sort, distance_vector[j], i,
-                      tot_freq_matrix[j][i], orizzontal_plus_debug[j],
-                      orizzontal_minus_debug[j], outfile, kmers_vector);
+                      tot_freq_matrix[j][i], horizontal_plus_debug[j],
+                      horizontal_minus_debug[j], outfile, kmers_vector);
             
 
             // A vector of hamming classes is created
             HAMMING_VECTOR.emplace_back(H);
-            
-          //   map<pair<string, string>, pair<unsigned int, unsigned int>> copy;
-          //   //copy = P_VALUE_MATRIX[j][i].vertical_multimap;
-          //   for(unsigned int i = 0; i < H.similar_oligos.size(); i++){
-
-          //     string oligo = H.similar_oligos[i];
-
-          //     for(map<pair<string, string>, pair<unsigned int, unsigned int>>::iterator it = vector_kmers_maps_plus[j][i].begin(); it != vector_kmers_maps_plus[j][i].end();it++){
-          //       //it->first retrieves key and it->second retrieves value 
-          //       //cout << it -> first.first << "\t" << it -> first.second << "\t" << it->second.first << "\t" << it->second.second << endl;
-          //       if(it->first.first != oligo || it->first.second != oligo){
-          //         copy.insert({{it->first.first, it->first.second}, {it->second.first, it->second.second}});
-          //       }
-          //     }
-          //   }
-          //   vector_kmers_maps_plus[j][i].clear();
-          //   vector_kmers_maps_plus[j][i] = copy;
-          //   copy.clear();
-          // }
-          
-        }
+         }
         HAMMING_MATRIX.emplace_back(HAMMING_VECTOR);
         HAMMING_VECTOR.clear();
         // The vector of hamming_classes is stored into a bigger P_VALUE_MATRIX
-        //HAMMING_3D.emplace_back(HAMMING_MATRIX);
-        //HAMMING_MATRIX.clear();
 
         outfile.close();
-      
+    
   }
-  if (MFASTA_FILE.size() == 0) {
+  if (MFASTA_FILE.empty()) {
     // RAM_usage();
     cout << "- [11] PWM matrices from hit positions calculated \n";
   } else {
@@ -1104,7 +1074,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP) {
   // PROFILE_FUNCTION();
   bool local_max = true;
 
-  if (MFASTA_FILE.size() == 0) {
+  if (MFASTA_FILE.empty()) {
     // RAM_usage();
     cout << "- [12] Calculating Z-test from PWM matrices shifing and filling "
             "Z-test matrix  \n";
@@ -1115,7 +1085,7 @@ void map_class::Z_TEST_MATRIX_creation(vector<bed_class> &GEP) {
   }
   // For every kmer in input
   for (unsigned int i = 0; i < HAMMING_MATRIX.size(); i++) {
-
+    
     // For each position in sequence
     for (unsigned int j = 0; j < HAMMING_MATRIX[i].size(); j++) {
 
@@ -1181,6 +1151,7 @@ void p_value_class::multimap_creation(
        it != pair_map.end(); it++) {
 
     vertical_multimap.insert({it->second, it->first});
+    cout << vertical_multimap.size() << endl;
   }
 }
 
@@ -1188,11 +1159,11 @@ void p_value_class::multimap_creation(
 // all the values present in a map -> accumulate function uses a lambda function
 // (https://en.cppreference.com/w/cpp/algorithm/accumulate)
 void p_value_class::N2_calculation(
-    unordered_map<string, unsigned int> &orizzontal_map) {
+    unordered_map<string, unsigned int> &horizontal_map) {
   // PROFILE_FUNCTION();
   total_oligo_N2 = 0;
   total_oligo_N2 = accumulate(
-      begin(orizzontal_map), end(orizzontal_map), 0,
+      begin(horizontal_map), end(horizontal_map), 0,
       [](unsigned int val, const unordered_map<string, int>::value_type &p) {
         return val + p.second;
       });
@@ -1201,7 +1172,7 @@ void p_value_class::N2_calculation(
 // Function to calculate and store into vectors K,N1,N2 parameters used to find
 // oligos' p-values
 void p_value_class::filling_KNT_vectors(
-    unordered_map<string, unsigned int> &orizzontal_map) {
+    unordered_map<string, unsigned int> &horizontal_map) {
   // PROFILE_FUNCTION();
   unsigned int K;
   unsigned int N1;
@@ -1226,16 +1197,16 @@ void p_value_class::filling_KNT_vectors(
       K = it_rev->first.first;
     }
 
-    // searching the current oligo in orizzontal map to find N1 value (oligo
+    // searching the current oligo in horizontal map to find N1 value (oligo
     // occurrences along all the sequences positions)
-    it_N1_plus = orizzontal_map.find(it_rev->second.first);
-    it_N1_minus = orizzontal_map.find(it_rev->second.second);
+    it_N1_plus = horizontal_map.find(it_rev->second.first);
+    it_N1_minus = horizontal_map.find(it_rev->second.second);
 
-    // If the oligo RC is present in the orizzontal map (and analysis is in DS)
+    // If the oligo RC is present in the horizontal map (and analysis is in DS)
     // the N1 parameter is calculated as the sum of the oligo + oligo RC
-    // occurrences in orizzontal map. Else, only the oligo occurrences can be
+    // occurrences in horizontal map. Else, only the oligo occurrences can be
     // used for the N1 definition.
-    if (it_N1_minus != orizzontal_map.end() && DS) {
+    if (it_N1_minus != horizontal_map.end() && DS) {
 
       N1 = it_N1_plus->second + it_N1_minus->second;
     } else {
@@ -1367,7 +1338,7 @@ void hamming_class::find_best_oligos(
         &vertical_multimap,
     multimap<unsigned int, pair<string, string>> &sum_occurrences_multimap) {
 
-  // PROFILE_FUNCTION();
+ // PROFILE_FUNCTION();
   multimap<unsigned int, pair<string, string>>::reverse_iterator it_rev_DS =
       sum_occurrences_multimap.rbegin();
   multimap<pair<unsigned int, unsigned int>,
@@ -1657,34 +1628,34 @@ double hamming_class::frequence_1_calculation(unsigned int freq) {
 // Function to calculate the frequence_2 (total of similar occurrences / total
 // number of best+hamming occurrences in sequences)
 double hamming_class::frequence_2_calculation(
-    unordered_map<string, unsigned int> &orizzontal_map_plus,
-    unordered_map<string, unsigned int> &orizzontal_map_minus,
+    unordered_map<string, unsigned int> &horizontal_map_plus,
+    unordered_map<string, unsigned int> &horizontal_map_minus,
     unsigned int position) {
   // PROFILE_FUNCTION();
 
-  unsigned int total_orizzontal_occurrences =
-      finding_orizzontal_occurrences(orizzontal_map_plus, orizzontal_map_minus);
-  FREQUENCE_2 = tot_similar_occurrences / total_orizzontal_occurrences;
+  total_horizontal_occurrences =
+      finding_horizontal_occurrences(horizontal_map_plus, horizontal_map_minus);
+  FREQUENCE_2 = tot_similar_occurrences / total_horizontal_occurrences;
   return FREQUENCE_2;
 }
 
 // Function to find total number of best+hamming occurrences in sequences -->
 // useful to calculate Freq_2
-unsigned int hamming_class::finding_orizzontal_occurrences(
-    unordered_map<string, unsigned int> &orizzontal_map_plus,
-    unordered_map<string, unsigned int> &orizzontal_map_minus) {
+unsigned int hamming_class::finding_horizontal_occurrences(
+    unordered_map<string, unsigned int> &horizontal_map_plus,
+    unordered_map<string, unsigned int> &horizontal_map_minus) {
   // PROFILE_FUNCTION();
-  // Search the best oligo in orizzontal map plus
+  // Search the best oligo in horizontal map plus
   unordered_map<string, unsigned int>::iterator it;
   unsigned int total_orizz_occ = 0;
 
-  // search orizzontal occurrences for all the hamming neighbours
+  // search horizontal occurrences for all the hamming neighbours
   for (unsigned int i = 0; i < similar_oligos.size(); i++) {
 
-    it = orizzontal_map_plus.find(similar_oligos[i]);
-    if (it == orizzontal_map_plus.end()) {
+    it = horizontal_map_plus.find(similar_oligos[i]);
+    if (it == horizontal_map_plus.end()) {
 
-      it = orizzontal_map_minus.find(similar_oligos[i]);
+      it = horizontal_map_minus.find(similar_oligos[i]);
     }
     total_orizz_occ = (total_orizz_occ + it->second);
   }
@@ -1747,7 +1718,7 @@ void hamming_class::PWM_hamming_creation() {
   PWM_hamming.emplace_back(vec_T);
 }
 
-void hamming_class::print_PWM(string name, vector<vector<double>> PWM_hamming) {
+void hamming_class::print_PWM(string name, vector<vector<double>> &PWM_hamming) {
   cout << name << endl;
   for (unsigned short int i = 0; i < PWM_hamming.size(); i++) {
     for (unsigned short int j = 0; j < PWM_hamming[i].size(); j++) {
@@ -1795,37 +1766,28 @@ This function is about the expectation step of the expectation-maximization
 algorithm where we obtain the likelihood ratio for each oligo in the vertical
 map
 */
-
 void hamming_class::EM_Epart(
 
-    unordered_map<string, unsigned int> &orizzontal_map_minus,
-    unsigned int position,
-    unordered_map<string, unsigned int> &orizzontal_map_plus) {
+    unordered_map<string, unsigned int> &horizontal_map_minus,
+    unordered_map<string, unsigned int> &horizontal_map_plus) {
   // PROFILE_FUNCTION();
-  /*
-  cout << "---------------------------------" << endl;
-  cout << "#POSITION " << position + 1 << " before Epart"<< endl;
-  cout << "---------------------------------" << endl;
-
-  print_PWM("", PWM_hamming);
-  */
-
+  
   unsigned int sum_hor = 0;
 
   for (map<string, double>::iterator it = similar_oligos_map.begin();
        it != similar_oligos_map.end(); it++) {
     unordered_map<string, unsigned int>::iterator occ_oligo_it =
-        orizzontal_map_plus.begin();
+        horizontal_map_plus.begin();
     unordered_map<string, unsigned int>::iterator occ_oligo_it_rev =
-        orizzontal_map_minus.begin();
+        horizontal_map_minus.begin();
 
-    occ_oligo_it = orizzontal_map_plus.find(it->first);
-    occ_oligo_it_rev = orizzontal_map_minus.find(it->first);
+    occ_oligo_it = horizontal_map_plus.find(it->first);
+    occ_oligo_it_rev = horizontal_map_minus.find(it->first);
 
-    if (occ_oligo_it != orizzontal_map_plus.end()) {
+    if (occ_oligo_it != horizontal_map_plus.end()) {
       sum_hor = sum_hor + occ_oligo_it->second;
     }
-    if (occ_oligo_it_rev != orizzontal_map_minus.end()) {
+    if (occ_oligo_it_rev != horizontal_map_minus.end()) {
       sum_hor = sum_hor + occ_oligo_it_rev->second;
     }
   }
@@ -1838,22 +1800,22 @@ void hamming_class::EM_Epart(
   for (map<string, double>::iterator it = similar_oligos_map.begin();
        it != similar_oligos_map.end(); it++) {
     unordered_map<string, unsigned int>::iterator occ_oligo_it =
-        orizzontal_map_plus.begin();
+        horizontal_map_plus.begin();
     unordered_map<string, unsigned int>::iterator occ_oligo_it_rev =
-        orizzontal_map_minus.begin();
+        horizontal_map_minus.begin();
     string similar_oligo = it->first;
     double P_oligo = 1;
     double P_bg = 0;
     double horizontal_occurences = 0;
     double likelihood_ratio = 0;
 
-    occ_oligo_it = orizzontal_map_plus.find(similar_oligo);
-    occ_oligo_it_rev = orizzontal_map_minus.find(similar_oligo);
+    occ_oligo_it = horizontal_map_plus.find(similar_oligo);
+    occ_oligo_it_rev = horizontal_map_minus.find(similar_oligo);
 
-    if (occ_oligo_it != orizzontal_map_plus.end()) {
+    if (occ_oligo_it != horizontal_map_plus.end()) {
       horizontal_occurences = horizontal_occurences + occ_oligo_it->second;
     }
-    if (occ_oligo_it_rev != orizzontal_map_minus.end()) {
+    if (occ_oligo_it_rev != horizontal_map_minus.end()) {
       horizontal_occurences = horizontal_occurences + occ_oligo_it_rev->second;
     }
 
@@ -1955,14 +1917,8 @@ void hamming_class::EM_Epart(
 // In this function there is the second part of the EM algorithm and this is the
 // maximization part
 void hamming_class::EM_Mpart(
-    unsigned int position,
-    unordered_map<string, unsigned int> &orizzontal_map_plus) {
+    unordered_map<string, unsigned int> &horizontal_map_plus) {
   // PROFILE_FUNCTION();
-  /*
-  cout << "---------------------------------" << endl;
-  cout << "#POSITION " << position + 1 << " before Mpart"<< endl;
-  cout << "---------------------------------" << endl;
-  */
 
   // matrix::get_p()
 
@@ -2034,10 +1990,9 @@ bool hamming_class::EM_convergence(vector<vector<double>> &PWM_old,
 }
 
 void hamming_class::EM_cycle(
-
-    unordered_map<string, unsigned int> &orizzontal_map_minus,
-    unsigned int position,
-    unordered_map<string, unsigned int> &orizzontal_map_plus) {
+    vector<vector<double>> &PWM_hamming,
+    unordered_map<string, unsigned int> &horizontal_map_minus,
+    unordered_map<string, unsigned int> &horizontal_map_plus) {
   // PROFILE_FUNCTION();
   bool conv = true;
   int i = 0;
@@ -2051,8 +2006,8 @@ void hamming_class::EM_cycle(
 
       PWM_old = PWM_hamming;
 
-      EM_Epart(orizzontal_map_minus, position, orizzontal_map_plus);
-      EM_Mpart(position, orizzontal_map_plus);
+      EM_Epart(horizontal_map_minus, horizontal_map_plus);
+      EM_Mpart(horizontal_map_plus);
 
       like_ratio_map.clear();
 
@@ -2065,8 +2020,8 @@ void hamming_class::EM_cycle(
 
     double em = stod(exp_max);
     for (unsigned int i = 0; i < em; i++) {
-      EM_Epart(orizzontal_map_minus, position, orizzontal_map_plus);
-      EM_Mpart(position, orizzontal_map_plus);
+      EM_Epart(horizontal_map_minus, horizontal_map_plus);
+      EM_Mpart(horizontal_map_plus);
 
       like_ratio_map.clear();
     }
@@ -2086,8 +2041,7 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> &GEP) {
     oligo_class SHIFTING_PWM(matrix_log, GEP[i].sequence);
 
     // Return oligo scores calculated from previous shifting
-    oligo_scores_orizzontal_FWD = SHIFTING_PWM.oligo_scores;
-
+    oligo_scores_horizontal_FWD = SHIFTING_PWM.oligo_scores;
     // If analysis is in Double strand
     if (DS) {
 
@@ -2096,34 +2050,33 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> &GEP) {
       oligo_class SHIFTING_PWM_2(inverse_matrix_log, GEP[i].sequence);
 
       // Retrun oligo scores from previous shifting
-      oligo_scores_orizzontal_REV = SHIFTING_PWM_2.oligo_scores;
-
+      oligo_scores_horizontal_REV = SHIFTING_PWM_2.oligo_scores;
       // Select the best scores between FWD and REV strand (for each position)
       check_best_strand_oligo();
 
       // Fill the local scores vector with scores found in position where the
       // matrix has been generated
       all_local_scores.emplace_back(
-          oligo_scores_orizzontal_BEST[local_pos - 1]);
+          oligo_scores_horizontal_BEST[local_pos - 1]);
       // Fill the global scores vector with all scores generated from shifting
       // and selected from check_best_strand_oligo function
       all_global_scores.insert(all_global_scores.end(),
-                               oligo_scores_orizzontal_BEST.begin(),
-                               oligo_scores_orizzontal_BEST.end());
+                               oligo_scores_horizontal_BEST.begin(),
+                               oligo_scores_horizontal_BEST.end());
     }
 
     // If analysis is in Single strand
     else {
 
       // Local best scores are all from FWD strand
-      all_local_scores.emplace_back(oligo_scores_orizzontal_FWD[local_pos - 1]);
+      all_local_scores.emplace_back(oligo_scores_horizontal_FWD[local_pos - 1]);
       all_global_scores.insert(all_global_scores.end(),
-                               oligo_scores_orizzontal_FWD.begin(),
-                               oligo_scores_orizzontal_FWD.end());
+                               oligo_scores_horizontal_FWD.begin(),
+                               oligo_scores_horizontal_FWD.end());
     }
 
-    // Clearing of orizzontal best score for the next sequence cycle
-    oligo_scores_orizzontal_BEST.clear();
+    // Clearing of horizontal best score for the next sequence cycle
+    oligo_scores_horizontal_BEST.clear();
   }
 }
 
@@ -2132,22 +2085,22 @@ void z_test_class::oligos_vector_creation_PWM(vector<bed_class> &GEP) {
 void z_test_class::check_best_strand_oligo() {
   // PROFILE_FUNCTION();
   // For all oligo scores
-  for (unsigned int oligo = 0; oligo < oligo_scores_orizzontal_FWD.size();
+  for (unsigned int oligo = 0; oligo < oligo_scores_horizontal_FWD.size();
        oligo++) {
 
     // If FWD is better than REV
-    if (oligo_scores_orizzontal_FWD[oligo] >=
-        oligo_scores_orizzontal_REV[oligo]) {
+    if (oligo_scores_horizontal_FWD[oligo] >=
+        oligo_scores_horizontal_REV[oligo]) {
 
-      oligo_scores_orizzontal_BEST.emplace_back(
-          oligo_scores_orizzontal_FWD[oligo]);
+      oligo_scores_horizontal_BEST.emplace_back(
+          oligo_scores_horizontal_FWD[oligo]);
     }
 
     // If REV is better than FWD
     else {
 
-      oligo_scores_orizzontal_BEST.emplace_back(
-          oligo_scores_orizzontal_REV[oligo]);
+      oligo_scores_horizontal_BEST.emplace_back(
+          oligo_scores_horizontal_REV[oligo]);
     }
   }
 }
@@ -2228,7 +2181,7 @@ bool check_palindrome(string bases, string &reverse_bases) {
 // If the p value is rounded to 0 assigne it a standar low value
 // of 1.000001e-300 to avoid possible future errors
 double check_p_value(double p, string oligo) {
-  if (p == 0) {
+  if (p == 0|| p <= 1.000001e-300) {
 
     p = 1.000001e-300;
   }
@@ -2498,11 +2451,11 @@ void p_value_class::print_debug_occurrences_SS(
   }
 }
 
-// Function to create an output file of orizzontal map. Oligos are ranked by
+// Function to create an output file of horizontal map. Oligos are ranked by
 // their occurrences
-void map_class::print_debug_orizzontal() {
+void map_class::print_debug_horizontal() {
   // PROFILE_FUNCTION();
-  for (unsigned int i = 0; i < orizzontal_plus_debug.size(); i++) {
+  for (unsigned int i = 0; i < horizontal_plus_debug.size(); i++) {
 
     ofstream outfile;
 
@@ -2516,17 +2469,17 @@ void map_class::print_debug_orizzontal() {
                    alias_file + "_SS.txt");
     }
 
-    multimap<unsigned int, string> orizzontal_output;
+    multimap<unsigned int, string> horizontal_output;
 
     for (unordered_map<string, unsigned int>::iterator it =
-             orizzontal_plus_debug[i].begin();
-         it != orizzontal_plus_debug[i].end(); it++) {
-      orizzontal_output.insert({it->second, it->first});
+             horizontal_plus_debug[i].begin();
+         it != horizontal_plus_debug[i].end(); it++) {
+      horizontal_output.insert({it->second, it->first});
     }
 
     for (multimap<unsigned int, string>::reverse_iterator it_rev =
-             orizzontal_output.rbegin();
-         it_rev != orizzontal_output.rend(); it_rev++) {
+             horizontal_output.rbegin();
+         it_rev != horizontal_output.rend(); it_rev++) {
 
       if (DS) {
         reverse_bases.clear();
@@ -2537,7 +2490,7 @@ void map_class::print_debug_orizzontal() {
         if (!palindrome) {
 
           unordered_map<string, unsigned int>::iterator find_RC =
-              orizzontal_minus_debug[i].find(reverse_bases);
+              horizontal_minus_debug[i].find(reverse_bases);
           outfile << it_rev->second << "\t" << it_rev->first << "\t"
                   << find_RC->first << "\t" << find_RC->second << "\t\n";
 
@@ -2824,7 +2777,7 @@ ofstream map_class::outfile_header_hamming(unsigned int j) {
   outfile << "#For each best oligo in positions, a table representing hamming "
              "distance oligos and 2 different frequences(FREQUENCE_1 = "
              "N.occurrences/N.sequences | FREQUENCE_2 = "
-             "N.occurrences/Orizzontal_occurrences) (for k = "
+             "N.occurrences/horizontal_occurrences) (for k = "
           << kmers_vector[j] << "):\n";
   outfile << "#Position"
           << "\t"
@@ -2846,12 +2799,20 @@ ofstream map_class::outfile_header_hamming(unsigned int j) {
 // Print debug hamming features for each position in hamming output file passed
 // as reference
 void hamming_class::print_debug_hamming(unsigned int position,
-                                        ofstream &outfile) {
+                                        ofstream &outfile, unsigned int total_horizontal_occurrences) {
   // PROFILE_FUNCTION();
   outfile << position + 1 << "\t" << real_best_oligo << "\t"
           << real_best_oligo_occurrences << "\t" << similar_oligos.size() - 1
-          << "\t" << tot_similar_occurrences << "\t" << FREQUENCE_1 << "\t"
+          << "\t" << tot_similar_occurrences << "\t" << FREQUENCE_1 << "\t" << total_horizontal_occurrences << "\t"
           << FREQUENCE_2 << endl;
+  for (unsigned int i = 0; i < similar_oligos.size(); i++){
+    outfile << similar_oligos[i] << endl;
+
+  }
+  outfile << "Best oligos: " << endl;
+  for (unsigned int i = 0; i < best_oligos.size(); i++){
+      outfile << best_oligos[i] << endl;
+  }
 }
 
 // Print debug for PWM_hamming outfile -> Selection of output filename
@@ -2907,7 +2868,7 @@ void map_class::print_debug_PWM_hamming_tomtom(ofstream &outfile,
               << "["
               << "\t";
       for (unsigned int j = 0; j < PWM_hamming[i].size(); j++) {
-        outfile << PWM_hamming[i][j] << "\t";
+        outfile << round(PWM_hamming[i][j] * 100) << "\t";
       }
       outfile << "]\n";
     }
@@ -3061,7 +3022,6 @@ void map_class::print_debug_Z_scores(ofstream &outfile, unsigned int j,
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
-
 void command_line_parser(int argc, char **argv) {
 
   const char *const short_opts = "hp:k:b:j:m:ud:o:f:alrt:n:e:s";
@@ -3196,18 +3156,18 @@ bool is_file_exist(string fileName,
 
 void check_input_file() {
 
-  if (MFASTA_FILE.size() != 0 &&
-      (BED_FILE.size() != 0 || JASPAR_FILE.size() != 0 ||
-       TWOBIT_FILE.size() != 0)) {
+  if (!MFASTA_FILE.empty() &&
+      (!BED_FILE.empty() || !JASPAR_FILE.empty() ||
+       !TWOBIT_FILE.empty())) {
 
     cerr << "FATAL ERROR: Too many input arguments!\nPlease insert Multifasta "
             "file or Bed, Twobit and Jaspar file.\n\n";
     display_help();
     exit(1);
   }
-  if ((TWOBIT_FILE.size() == 0 || JASPAR_FILE.size() == 0 ||
-       BED_FILE.size() == 0) &&
-      MFASTA_FILE.size() == 0) {
+  if ((TWOBIT_FILE.empty() || JASPAR_FILE.empty() ||
+       BED_FILE.empty()) &&
+      MFASTA_FILE.empty()) {
     cerr << "FATAL ERROR: some arguments needed \n" << endl;
     display_help();
     exit(1);
