@@ -2,18 +2,22 @@
 
 ## MocoLoco project
 
+MocoLoco aims to identify positionally-constrained conserved motifs within the genomic regions surrounding TF binding sites identified through ChIP-Seq.
+
+In Genomes folder there are some genomes in 2bit format, Jaspar_2020 contains most of the matrices present in [Jaspar database](https://jaspar.genereg.net) and in Test_Bed there are some bed files from ENCODE.
+
 #### How to compile
 `g++ -Wall -o MOCO  MocoLoco.cpp -lgsl -lgslcblas` 
 #### How to run (2 possibilities)
 
 ``` bash
-./MOCO -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -o p(optional) -l(optional) -e <number>(optional) -f <number>(optional) -ss(optional)
+./MOCO -b <file.bed>  -p <number>(optional) -t <file.2bit> -j <file.JASPAR> -k <number, number, ...>(optional) -o p(optional) -l(optional) -e <number>(optional) -f <number>(optional) -ss(optional) -u(optional) -l(optional)
 
-./MOCO -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -o p(optional) -l(optional) -e <number>(optional) -f <number>(optional) -ss(optional)
+./MOCO -m <file_multifasta.fa>  -p <number>(optional) -k <number, number, ...>(optional) -o p(optional) -l(optional) -e <number>(optional) -f <number>(optional) -ss(optional) -l(optional)
 ```
 ## Multifa random tool
 
-The tool is contained in the Random_multifa_TOOL directory
+The tool is contained in the Random_multifa_TOOL directory and it creates a set of random multifasta files.
 
 #### How to compile
 
