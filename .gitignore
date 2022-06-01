@@ -1,3 +1,5 @@
+*PRE_TESI*
+*TESTING_*
 test
 *.2bit
 a.out
@@ -19,4 +21,21 @@ TESTING_MOCOLOCO/MOCO
 *noImplant_R_test*
 *JUND*
 Test_*
+CooperativeTF
+MocoLoco_noref*
+Old_MOCO
+TESTING_MOCOLOCO/MOCO
+intersect*/
+MIXED*/
+nfy*/
+*.out
+TESTING_MOCOLOCO/*-mers*
+Intersect/
+oligo_class*
+MOCO*
+Test_*/
+*-mers*
+*Test_*
+Result*/
+realdata.sh
 CooperativeTF

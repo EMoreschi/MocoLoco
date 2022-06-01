@@ -414,7 +414,7 @@ void implanting_cycle(unsigned int i){
 			}
 			
 			multifasta_outfile(multiBED_map, "BED_"+to_string(i+1)+".fasta");
-		
+			multiBED_map.clear();
 		}
 	}
 
@@ -554,7 +554,7 @@ void multiBED_map_creation(vector<bed_class> GEP){
 }
   
 void casual_map_filtering(map<unsigned int, string> pre_multiBED_map){
-  
+ 
 	vector<unsigned int> shuffled_vector;
 	mt19937 eng{random_device{}()};
   

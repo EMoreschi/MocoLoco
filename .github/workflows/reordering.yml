@@ -6,10 +6,13 @@ name: CI on brach Dev test NFY myc
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ reordering ]
+    branches: 
+      - reordering
+      - table_creation_reorganization
   pull_request:
-    branches: [ reordering ]
-
+    branches: 
+      - reordering
+      - table_creation_reorganization
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -31,41 +34,69 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
-        run: g++ -o test -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
-      
+        run: g++ -o MOCO -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
+
+      - name: run simple test 
+        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
+          
+      - name: get sample test 
+        run: wget https://gist.githubusercontent.com/AmarettiL/8e840cd1b90afa6d1fe32c77895121e2/raw/df864e4ef71d0f0c6fcebf753caf24397c5ed1d0/Multifasta_test_result.txt
+          
+      - name: test difference between outputs 
+        run: diff Multifasta_test_result.txt 6-mers_Z_scores_fasta_DS.txt
+
+      - name: run kmer test
+        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6,8,10 -d 1,2,3 -f 0.01
+
+      - name: get kmer test
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/4bc4ab52d4fae25fe5edb65ca951df2e/raw/564c4851ffdb489d1b4f81a5a9d6fc012428ad5f/6_mers_multi_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/94e01af9459e8ddf99c625322ad5b98e/raw/81a0730f11426a64edc8208df85aac372ed267aa/8_mers_multi_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/b718763712e5269fb9460ece74d6f75d/raw/88d892793f0024c64c0e9ea737fb69a00c74eecf/10_mers_multi_test.txt
+
+      - name: test difference between outputs
+        run: |
+              diff 6_mers_multi_test.txt 6-mers_Z_scores_fasta_DS.txt && \
+              diff 8_mers_multi_test.txt 8-mers_Z_scores_fasta_DS.txt && \
+              diff 10_mers_multi_test.txt 10-mers_Z_scores_fasta_DS.txt
+
+      - name: hg19 genome download 
+        run: cat get_hg19.script | bash
+        working-directory: Genomes/hg19
+
       - name: Run NFY test
-        run: ls
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
+          
+      - name: get sample test 
+        run: wget https://gist.githubusercontent.com/AmarettiL/57ff3b08d8983a32de46f7cd3ae898a3/raw/9a513a72f2890520c27135a3be3a3794b1a022b7/NFY_bed_result.txt
 
-          #      - name: hg19 genome download 
-          #        run: cat get_hg19.script | bash
-          #        working-directory: Genomes/hg19
-          #
-          #      - name: mm10 genome download 
-          #        run: cat get_mm10.script | bash
-          #        working-directory: Genomes/mm10
-          #
-          #      - name: Run NFY test
-          #        run: ./test -b Test_Bed/nfy_k562_hg19.bed -t Genomes/hg19/hg19.2bit -j Jaspar_2020/MA0060.1.jaspar
-          #
-          #      - name: Run myc test
-          #        run: ./test -b Test_Bed/cMyc_hESC_mm10.bed -t Genomes/mm10/mm10.2bit -j Jaspar_2020/MA0147.2.jaspar
+      - name: test difference between outputs 
+        run: diff NFY_bed_result.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
       
-        # Runs a set of commands using the runners shell
-      - name: Compiling multifasta random tool
-        run: g++ -o random_multifa -Wall $GITHUB_WORKSPACE/Random_multifa_TOOL/Multifa_random_tool.cpp
-        
-      - name: Run multifasta random tool
-        run: ./test -n 1000 -l 300 -j Jaspar_2020/MA000.0_prova.jaspar Jaspar_2020/MA000.0_prova2.jaspar -p 50,125 -o 50,100 -w 2,5 -f 60,90
+      - name: Run EM test
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6,8 -d 1,2 -f 0.01 -e 100
+          
+      - name: get sample test 
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/8b6737e9142edbf7660f6f8a941c107d/raw/141db9a2c4e95808b7bc27373789c776fdca318d/6_mers_EM_test.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/7605ac3a241d9db15adf591d7f5a4a04/raw/9bbd73b740d966486368d93003fd03bc8c042538/8_mers_EM_test.txt
 
-      - name: Run a multi-line script
-        run: g++ -o test -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
+      - name: test difference between outputs 
+        run: |
+              diff 6_mers_EM_test.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt && \
+              diff 8_mers_EM_test.txt 8-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
+      
+      - name: Run unidirection test (with -o)
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6,8 -d 1,2 -f 0.01 -o p -a -e c -u
+          
+      - name: get sample test 
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/d6a33158c23f4f061539028613133e9f/raw/d40d26294bbb3dac3a587a515c449777b7413653/6_mers_unidirection.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/f72df332e05e354b0060d7d44aead8de/raw/b2f21464df38d34cb7b8b812a32f7b44355bf37b/8_mers_unidirection.txt
 
-      - name: Run implanted multifasta test
-        run: ./test -m random_multifa_implanted1.fasta
-      
-      - uses: actions/upload-artifact@v2
-        with:
-          name: testing 
-          path: '*.txt'
-      
+      - name: test difference between outputs 
+        run: |
+              diff 6_mers_unidirection.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt && \
+              diff 8_mers_unidirection.txt 8-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
+
 
