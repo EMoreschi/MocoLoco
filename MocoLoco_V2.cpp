@@ -60,7 +60,7 @@ void BED_path() {
       //secondary is a boolean variable
       while(counter < max_matrix && (Pval == 0 || Pval < pval_threshold)) {
 
-        // cout << "Position: " << j << endl;
+        cout << "Position: " << j << endl;
           
         //For each oligo present in the vertical map
         for (multimap<int, string>::iterator it =
