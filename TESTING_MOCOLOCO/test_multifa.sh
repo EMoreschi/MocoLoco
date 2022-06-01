@@ -209,17 +209,6 @@ else
 	fi
 fi
 
-if [ -z "${Refine}" ]
-then
-
-	mkdir ${Out_dir}_test_k${K}_c${C}_f${F};
-
-else	
-
-	mkdir ${Out_dir}_test_k${K}_c${C}_f${F}_r;
-
-fi 
-
 if [ -z "$E" ]
 then
 
@@ -241,25 +230,14 @@ frequenze=(75 65 55 45 35 25 20 15 10 5);
 
 #frequenze=(9 8 7 6);
 
-if [ -z "${Refine}" ]
+if [ -z "$E" ]
 then
 
 	cd ${Out_dir}_test_k${K}_c${C}_f${F};
 
 else	
 
-	cd ${Out_dir}_test_k${K}_c${C}_f${F}_r;
-
-fi 
-
-if [ -z "$E" ]
-then
-
-	mkdir ${Out_dir}_test_k${K}_c${C}_f${F};
-
-else	
-
-	mkdir ${Out_dir}_test_k${K}_c${C}_f${F}_e${E};
+	cd ${Out_dir}_test_k${K}_c${C}_f${F}_e${E};
 
 fi 
 
@@ -302,7 +280,7 @@ wait
 
 #-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
 
-multi_thread=40
+multi_thread=20
 (
 for freq in ${frequenze[@]}
 do 
@@ -316,31 +294,37 @@ do
 		then		
 			if [ -z "$J" ]
 			then
-				$MOCO -m random_multifa_${j}.fasta -k $K -d $D -f $F $Refine $all &
+				$MOCO -m random_multifa_${j}.fasta -k $K -d $D -f $F $all &
 		
 			else
 
-				$MOCO -m random_multifa_implanted${j}.fasta -k $K -d $D -f $F $Refine $all &
+				$MOCO -m random_multifa_implanted${j}.fasta -k $K -d $D -f $F $all &
                 
 			fi
 		else
 		
-			if [ -z "$J" ]
-			then		
+			if [ -z "$E" ]
+			then	
+				if [ -z "$J" ]
+				then	
 		
-				$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all &
-		
+					$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $all &
+
+				else
+
+					$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $all &
+				fi	
 			else
 
 				if [ -z "$J" ]
 				then		
 		
-					$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $Refine $all -e $E &
+					$MOCO -m BED_${j}.fasta -k $K -d $D -f $F $all -e $E &
 		
 				else
 
-					$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $Refine $all -e $E &
-                fi
+					$MOCO -m BED_implanted${j}.fasta -k $K -d $D -f $F $all -e $E &
+                		fi
 			fi
 		fi
 		
