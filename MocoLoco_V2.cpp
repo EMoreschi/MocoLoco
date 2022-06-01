@@ -60,7 +60,7 @@ void BED_path() {
       //secondary is a boolean variable
       while(counter < max_matrix && (Pval == 0 || Pval < pval_threshold)) {
 
-        cout << "Position: " << j << endl;
+        // cout << "Position: " << j << endl;
           
         //For each oligo present in the vertical map
         for (multimap<int, string>::iterator it =
@@ -104,10 +104,9 @@ void BED_path() {
             string rev_oligo = reverse_oligo(P_vector[0].oligo);
             if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
                  && P_vector[0].oligo != rev_oligo){
-                   cout << "Reverse" << endl;
             }
             else{
-              cout << "Pvalue: " << Pval << endl;
+              // cout << "Pvalue: " << Pval << endl;
               seed_oligo.emplace_back(P_vector[0].oligo);
               Z_TEST_VECTOR.emplace_back(Z);
               H_HAMMING_VECTOR.emplace_back(H);

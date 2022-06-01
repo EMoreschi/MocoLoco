@@ -69,7 +69,7 @@ bool direction = false;
 unsigned int seed_vertical = 0;
 
 double pval_threshold = 10e-30;
-unsigned int max_matrix = 7;
+unsigned int max_matrix = 5;
 
 class Timer {
   public:
