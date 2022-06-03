@@ -1,4 +1,4 @@
-#include "MocoLoco_V2.h"
+#include "MocoLoco.h"
 //#include "Profiling.h"
 #include <sys/resource.h>
 
@@ -13,8 +13,10 @@ int main(int argc, char *argv[]) {
 
       display_help();
     }
+    // Collect all the parameters given as input
     command_line_parser(argc, argv);
 
+    // This line can be read as "If MFASTA_FILE is empty do BED_pat() else do MULTIFA_path()"
     (MFASTA_FILE.empty())? BED_path() : MULTIFA_path();
 
     return 0;
@@ -57,7 +59,6 @@ void BED_path() {
       unsigned int counter = 0;
       vector<string> pos_oligo_vec;
       // Loop for eventually other matrices that are hidden by the best motif
-      //secondary is a boolean variable
       while(counter < max_matrix && (Pval == 0 || Pval < pval_threshold)) {
 
         cout << "Position: " << j << endl;
@@ -76,6 +77,7 @@ void BED_path() {
         if (ordering == "p") {
           sort(begin(P_vector), end(P_vector), comp);
         }
+        // Debug for PValueClass
         // DVector(P_vector, j);
           
         //Creation of clusters of oligos at hamming distance
@@ -84,6 +86,8 @@ void BED_path() {
                         M.vector_map_ver[i],
                         M.vector_positions_occurrences[i][j],
                         M.vector_map_hor[i], j);
+        // Perform the expectation maximization algorithm 
+        // (https://en.wikipedia.org/wiki/Expectation–maximization_algorithm)
         if (!exp_max.empty()){
           EMClass E(H.cluster_map, H.PWM_hamming, 
                     M.vector_map_hor[i]);
@@ -123,7 +127,8 @@ void BED_path() {
     H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
     Z_TEST_VECTOR.clear();
     H_HAMMING_VECTOR.clear();
-
+    
+    //Outfile functions 
     Outfile_PWM_matrices(i, seed_oligo);
     Outfile_Z_score_values(i, seed_oligo);
   }
@@ -206,10 +211,9 @@ void MULTIFA_path(){
               string rev_oligo = reverse_oligo(P_vector[0].oligo);
               if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
                   && P_vector[0].oligo != rev_oligo){
-                    cout << "Reverse" << endl;
               }
               else{
-                cout << "Pvalue: " << Pval << endl;
+                // cout << "Pvalue: " << Pval << endl;
                 seed_oligo.emplace_back(P_vector[0].oligo);
                 Z_TEST_VECTOR.emplace_back(Z);
                 H_HAMMING_VECTOR.emplace_back(H);
@@ -243,7 +247,7 @@ void bed_class::read_line(string line, char ** result) {
   mystream >> chr_coord >> start_coord >> end_coord;
   
   bool found = false;
-
+  // Check out if the format of the BED file chromosomes is the same of the 2bit genome
 	for (int i = 0; result[i] != NULL; i++) {
 		if (result[i] == chr_coord) {
 			found = true;
@@ -256,12 +260,12 @@ void bed_class::read_line(string line, char ** result) {
     cerr << endl << "In the BED file there is chromosome: " << chr_coord << endl;
     cerr << "This chromosome is not present in 2bit genome." << endl << endl;
     
-    cout << "Here a list of all the chromosomes present in .2bit file: " << endl << endl;
+    cerr << "Here a list of all the chromosomes present in .2bit file: " << endl << endl;
     for (int i = 0; result[i] != NULL; i++) {
-      cout << result[i] << endl;
+      cerr << result[i] << endl;
     }
-    cout << endl;
-    cout << endl << "Be sure that the chromosomes in the bed file are of the same format" << endl;
+    cerr << endl;
+    cerr << endl << "Be sure that the chromosomes in the bed file are of the same format" << endl;
     exit(1);
 	}
 }
@@ -642,7 +646,7 @@ void coordinator_class::oligos_vector_creation(
     vector<oligo_class> &oligos_vector, vector<vector<double>> &matrix_log,
     vector<vector<double>> &matrix_log_inverse, vector<bed_class> &GEP) {
   // PROFILE_FUNCTION();
-  // RAM_usage();
+
   cout << "- [5] Analyzing sequences using Jaspar matrix\n";
 
   // For every sequences into GEP vector
@@ -854,6 +858,7 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences) {
   }
 }
 
+// Function used to order the elements of a class (in this case it orders PValueClass elements)
 bool comp(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
   return P1.pvalue < P2.pvalue;
@@ -2153,10 +2158,10 @@ void command_line_parser(int argc, char **argv) {
       {"param", required_argument, nullptr, 'p'},
       // {"ntop", required_argument, nullptr, 'n'},
       {"kmer", required_argument, nullptr, 'k'},
-      {"all", no_argument, nullptr, 'a'},
+      // {"all", no_argument, nullptr, 'a'},
       {"tomtom", no_argument, nullptr, 'l'},
       {"unidirection", no_argument, nullptr, 'u'},
-      {"refine", no_argument, nullptr, 'r'},
+      // {"refine", no_argument, nullptr, 'r'},
       {"freq", required_argument, nullptr, 'f'},
       {"distance", required_argument, nullptr, 'd'},
       {"bed", required_argument, nullptr, 'b'},
