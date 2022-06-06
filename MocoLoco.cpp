@@ -888,7 +888,7 @@ bool comp(const PvalueClass &P1, const PvalueClass &P2) {
 
 bool comp_occ(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
-  return (P1.K == P2.K) ? (P1.N1 == P2.N1)? (P1.oligo < P2.oligo) : (P1.N1 < P2.N1) : (P1.K > P2.K);
+  return (P1.K == P2.K) ? ((P1.N1 == P2.N1)? (P1.oligo < P2.oligo) : (P1.N1 < P2.N1)) : (P1.K > P2.K);
 }
 
 void HammingClass::PWMHammingCalc() {
@@ -1048,15 +1048,15 @@ void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos,
 
 void DVector(vector<PvalueClass> &P_vector, unsigned int j) {
   // PROFILE_FUNCTION();
-  for (unsigned int i = 0; i < P_vector.size() && i < 10; i++) {
+  for (unsigned int c = 0; c < P_vector.size() && c < 10; c++) {
     cout << j + 1 << "\t";
-    cout << i + 1 << "\t";
-    cout << P_vector[i].oligo << "\t";
-    cout << P_vector[i].K << "\t";
-    cout << P_vector[i].N1 << "\t";
-    cout << P_vector[i].N2 << "\t";
-    cout << P_vector[i].pvalue << "\t";
-    cout << log10(P_vector[i].pvalue) * -1 << endl;
+    cout << c + 1 << "\t";
+    cout << P_vector[c].oligo << "\t";
+    cout << P_vector[c].K << "\t";
+    cout << P_vector[c].N1 << "\t";
+    cout << P_vector[c].N2 << "\t";
+    cout << P_vector[c].pvalue << "\t";
+    cout << log10(P_vector[c].pvalue) * -1 << endl;
   }
 }
 

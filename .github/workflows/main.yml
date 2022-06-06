@@ -43,19 +43,13 @@ jobs:
         run: diff SS_fasta.txt 6-mers_Z_scores_fasta_SS.txt
 
       - name: Multifasta test 
-        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6,8,10 -d 1,2,3 -f 0.01
+        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
       
       - name: get kmer test
-        run: |
-              wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/ae4c0103643763d7b5104658155483be09c9c181/6_mers_fasta2.txt && \
-              wget https://gist.githubusercontent.com/AmarettiL/5c7e18535b34979fdba0951203a08ebb/raw/e78269d51455d5549d581d6b3cd38bd3fc360bd8/8_mers_fasta2.txt && \
-              wget https://gist.githubusercontent.com/AmarettiL/efa4ce9ccb006b5dcfea80959eef22cd/raw/23d604a1c1519bb7f9b03b3686e48468220b167c/10_mers_fasta2.txt && \
+        run: wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/831dd8bd3aad695ceccc6d39933c219fa7046555/6_mers_fasta2.txt
       
       - name: test difference between outputs
-        run: |
-              diff 6_mers_fasta2.txt 6-mers_Z_scores_fasta_DS.txt && \
-              diff 8_mers_fasta2.txt 8-mers_Z_scores_fasta_DS.txt && \
-              diff 10_mers_fasta2.txt 10-mers_Z_scores_fasta_DS.txt
+        run: diff 6_mers_fasta2.txt 6-mers_Z_scores_fasta_DS.txt
       
       - name: hg19 genome download 
         run: cat get_hg19.script | bash
@@ -77,6 +71,7 @@ jobs:
         run: |
               wget https://gist.githubusercontent.com/AmarettiL/f26fa0b9a1fa3c4d4e7f01d49185a8db/raw/a78f511a4cc78f9e4984024719970e68c91d0b3e/6_mers_NFY_all.txt && \
               wget https://gist.githubusercontent.com/AmarettiL/95e27df230243e33a9da1ea80f94dc4a/raw/37b6188d3d47ead150c4e22c50b9621d14f18c81/8_mers_NFY_all.txt
+      
       - name: test difference between outputs 
         run: |
               diff 6_mers_NFY_all.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt && \
