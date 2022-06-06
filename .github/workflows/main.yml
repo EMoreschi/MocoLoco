@@ -38,7 +38,7 @@ jobs:
       
       - name: get kmer test
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/b44d95dfd6187f23cd443f56b7c98855941b23f7/SS_fasta.txt
+              wgethttps://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/16d1646da8adb1f0eeee79feee6f2c1c5825585c/SS_fasta.txt
 
       - name: test difference between outputs
         run: |

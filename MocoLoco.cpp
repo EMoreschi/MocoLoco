@@ -203,6 +203,7 @@ void MULTIFA_path(){
         // Debug for PValueClass
         DVector(P_vector, j);
           
+        cout << "Seed: " << P_vector[0].oligo << endl;
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
         HammingClass H(P_vector[0].oligo,
