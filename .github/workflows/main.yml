@@ -37,23 +37,25 @@ jobs:
         run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01 -ss
       
       - name: get kmer test
-        run: |
-              wget https://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/16d1646da8adb1f0eeee79feee6f2c1c5825585c/SS_fasta.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/16d1646da8adb1f0eeee79feee6f2c1c5825585c/SS_fasta.txt
 
       - name: test difference between outputs
-        run: |
-              diff SS_fasta.txt 6-mers_Z_scores_fasta_SS.txt
+        run: diff SS_fasta.txt 6-mers_Z_scores_fasta_SS.txt
 
       - name: Multifasta test 
-        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
+        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6,8,10 -d 1,2,3 -f 0.01
       
       - name: get kmer test
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/b4cc4659501174463fccbb0a53d23bc9bd608c12/6_mers_fasta2.txt
+              wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/ae4c0103643763d7b5104658155483be09c9c181/6_mers_fasta2.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/5c7e18535b34979fdba0951203a08ebb/raw/e78269d51455d5549d581d6b3cd38bd3fc360bd8/8_mers_fasta2.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/efa4ce9ccb006b5dcfea80959eef22cd/raw/23d604a1c1519bb7f9b03b3686e48468220b167c/10_mers_fasta2.txt && \
       
       - name: test difference between outputs
         run: |
-              diff 6_mers_fasta2.txt 6-mers_Z_scores_fasta_DS.txt
+              diff 6_mers_fasta2.txt 6-mers_Z_scores_fasta_DS.txt && \
+              diff 8_mers_fasta2.txt 8-mers_Z_scores_fasta_DS.txt && \
+              diff 10_mers_fasta2.txt 10-mers_Z_scores_fasta_DS.txt
       
       - name: hg19 genome download 
         run: cat get_hg19.script | bash
@@ -63,7 +65,7 @@ jobs:
         run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
           
       - name: get sample test 
-        run: wget https://gist.githubusercontent.com/AmarettiL/9db7479a3d423dc7dbc814e619e81990/raw/a767e5954084c747033b56c36d8872831e302876/NFY_simple_test.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/9db7479a3d423dc7dbc814e619e81990/raw/29b0c3667d8cb3869bab2b221fe71ad5fdc7a175/NFY_simple_test.txt
 
       - name: test difference between outputs 
         run: diff NFY_simple_test.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
@@ -73,8 +75,8 @@ jobs:
           
       - name: get sample test 
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/f26fa0b9a1fa3c4d4e7f01d49185a8db/raw/d7052cc330cf11e29635d83466438f251e280aec/6_mers_NFY_all.txt && \
-              wget https://gist.githubusercontent.com/AmarettiL/95e27df230243e33a9da1ea80f94dc4a/raw/ecbe7ce35852aadfb1051e4709c2d364424a1bb3/8_mers_NFY_all.txt
+              wget https://gist.githubusercontent.com/AmarettiL/f26fa0b9a1fa3c4d4e7f01d49185a8db/raw/a78f511a4cc78f9e4984024719970e68c91d0b3e/6_mers_NFY_all.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/95e27df230243e33a9da1ea80f94dc4a/raw/37b6188d3d47ead150c4e22c50b9621d14f18c81/8_mers_NFY_all.txt
       - name: test difference between outputs 
         run: |
               diff 6_mers_NFY_all.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt && \

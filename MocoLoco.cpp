@@ -883,12 +883,12 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences) {
 // Function used to order the elements of a class (in this case it orders PValueClass elements)
 bool comp(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
-  return P1.pvalue < P2.pvalue;
+  return (P1.pvalue == P2.pvalue) ? (P1.K > P2.K) : (P1.pvalue < P2.pvalue);
 }
 
 bool comp_occ(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
-  return (P1.K == P2.K) ? (P1.N1 == P2.N1)? (P1.oligo<P2.oligo) : (P1.N1 < P2.N1) : (P1.K > P2.K);
+  return (P1.K == P2.K) ? (P1.N1 == P2.N1)? (P1.oligo < P2.oligo) : (P1.N1 < P2.N1) : (P1.K > P2.K);
 }
 
 void HammingClass::PWMHammingCalc() {
