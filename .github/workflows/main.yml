@@ -34,11 +34,11 @@ jobs:
         run: g++ -o MOCO -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
 
       - name: Multifasta test 
-        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01 -o p 
+        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
       
       - name: get kmer test
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/573c7aeb803a104b8f830ef4751ad40acd81edab/6_mers_fasta2.txt
+              wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/b4cc4659501174463fccbb0a53d23bc9bd608c12/6_mers_fasta2.txt
       
       - name: test difference between outputs
         run: |

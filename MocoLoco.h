@@ -571,6 +571,8 @@ void DVector(vector<PvalueClass> &, unsigned int);
 // Comparison function
 bool comp(const PvalueClass &, const PvalueClass &);
 
+bool comp_occ(const PvalueClass &, const PvalueClass &);
+
 void BED_path();
 void MULTIFA_path();
 void command_line_parser(int, char **);

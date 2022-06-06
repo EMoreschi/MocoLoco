@@ -84,11 +84,13 @@ void BED_path() {
         //The element in P_vector are ordered on the basis of pvalues
         //otherwise the normal ordering (by occurrences in vertical map)
         //is maintained
+        sort(begin(P_vector), end(P_vector), comp_occ);
+
         if (ordering == "p") {
           sort(begin(P_vector), end(P_vector), comp);
         }
         // Debug for PValueClass
-        // DVector(P_vector, j);
+        DVector(P_vector, j);
           
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
@@ -192,11 +194,14 @@ void MULTIFA_path(){
         //The element in P_vector are ordered on the basis of pvalues
         //otherwise the normal ordering (by occurrences in vertical map)
         //is maintained
+
+        sort(begin(P_vector), end(P_vector), comp_occ);
+
         if (ordering == "p") {
           sort(begin(P_vector), end(P_vector), comp);
         }
         // Debug for PValueClass
-        // DVector(P_vector, j);
+        DVector(P_vector, j);
           
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
@@ -878,6 +883,11 @@ void multifasta_class::GEP_creation_MF(vector<string> sequences) {
 bool comp(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
   return P1.pvalue < P2.pvalue;
+}
+
+bool comp_occ(const PvalueClass &P1, const PvalueClass &P2) {
+  // PROFILE_FUNCTION();
+  return (P1.K == P2.K) ? (P1.N1 < P2.N1) : (P1.K > P2.K);
 }
 
 void HammingClass::PWMHammingCalc() {
