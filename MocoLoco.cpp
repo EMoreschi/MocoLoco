@@ -17,7 +17,12 @@ int main(int argc, char *argv[]) {
     command_line_parser(argc, argv);
 
     // This line can be read as "If MFASTA_FILE is empty do BED_pat() else do MULTIFA_path()"
-    (MFASTA_FILE.empty())? BED_path() : MULTIFA_path();
+    if (MFASTA_FILE.empty()){
+      BED_path();
+    }
+    else{
+      MULTIFA_path();
+    }
 
     return 0;
   }
