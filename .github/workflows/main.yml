@@ -33,6 +33,17 @@ jobs:
       - name: Run a multi-line script
         run: g++ -o MOCO -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
 
+      - name: SS test 
+        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01 -ss
+      
+      - name: get kmer test
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/b44d95dfd6187f23cd443f56b7c98855941b23f7/SS_fasta.txt
+
+      - name: test difference between outputs
+        run: |
+              diff SS_fasta.txt 6-mers_Z_scores_fasta_SS.txt
+
       - name: Multifasta test 
         run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
       

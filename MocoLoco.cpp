@@ -887,7 +887,7 @@ bool comp(const PvalueClass &P1, const PvalueClass &P2) {
 
 bool comp_occ(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
-  return (P1.K == P2.K) ? ((P1.N1 == P2.N1) ? (P1.oligo < P2.oligo) : (P1.N1 < P2.N1)) : (P1.K > P2.K);
+  return (P1.K == P2.K) ? (P1.N1 < P2.N1) : (P1.K > P2.K);
 }
 
 void HammingClass::PWMHammingCalc() {
@@ -1274,8 +1274,7 @@ void MapClass::VerticalMapVector() {
            it != vector_map_ver[i].end(); it++) {
         if (it->second.vertical_count[j] > 0) {
           pos.emplace(it->second.vertical_count[j], it->first);
-        } 
-        if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
+        } else if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
           pos.emplace(it->second.vertical_count_rc[j], it->second.oligo_rc);
         }
       }
