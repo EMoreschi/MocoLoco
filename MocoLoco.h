@@ -69,7 +69,7 @@ bool direction = false;
 unsigned int seed_vertical = 0;
 
 double pval_threshold = 10e-30;
-unsigned int max_matrix = 5;
+unsigned int max_matrix = 2;
 
 class Timer {
   public:
@@ -397,6 +397,7 @@ public:
 vector<z_test_class> Z_TEST_VECTOR;
 vector<vector<z_test_class>> Z_TEST_MATRIX;
 
+// Class taking into account all occurrences of the oligos in the input file
 class HorizontalClass {
   friend class MapClass;
   friend class PvalueClass;
@@ -410,6 +411,7 @@ class HorizontalClass {
     bool palindrome;
 };
 
+// Class taking into account the occurrences of oligos per columns (pos 1, pos 2, etc.)
 class VerticalClass {
   friend class MapClass;
   friend class PvalueClass;
@@ -447,10 +449,12 @@ public:
   void DVerticalMapVector();
 
   MapClass(vector<bed_class> &GEP) {
+    // Main function where all the maps are constructed 
     MainMapVector(GEP);
+    // FIltered vertical map with only the oligo that are effectively present at
+    // certain position 
     VerticalMapVector();
     // Functions that starts with D are debug functions
-    
     if(DS){
       // DMainMapVectorDS();
     }
@@ -472,45 +476,39 @@ class PvalueClass {
   // elemento vettore vector_map_hor T = Tot oligo della colonna (numero
   // sequenze)position_occurrences[i].size N1
   unsigned int tot_oligos;
+  unsigned int vertical_occurrences;
+  void TKN1Calc(vector<bed_class> &, multimap<int, string>::iterator &,
+                unordered_map<string, HorizontalClass> &, unsigned int);
 
 public:
   unsigned int K, N1, N2;
   double pvalue;
   string oligo;
-  unsigned int vertical_occurrences;
 
-  void TKN1Calc(vector<bed_class> &, multimap<int, string>::iterator &,
-                unordered_map<string, HorizontalClass> &, unsigned int);
-  // int N2Calc(unordered_map<string, KmerClass> &);
-  void DTKN1Calc();
-  void DN2Calc();
-  void Dpvalues();
-  // void N2vFill(unordered_map<string, KmerClass>);
 
   PvalueClass(vector<bed_class> &GEP, multimap<int, string>::iterator &it,
               unordered_map<string, HorizontalClass> &vector_map_hor, unsigned int i) {
-    // N2Calc(vector_map_hor);
+    // Here all the paramters for pvalue are calculated
     TKN1Calc(GEP, it, vector_map_hor, i);
-    // Dpvalues();
-    // DN2Calc();
-    // DTKN1Calc();
+
   }
-};
-
-class SeedClass {
-private:
-public:
-  vector<string> seed_vector; // questo deve diventare mappa posizione seed
-  void FillSeed(vector<PvalueClass> &);
-
-  SeedClass(vector<PvalueClass> &P_vector) { FillSeed(P_vector); }
 };
 
 class HammingClass {
 
 private:
+  string seed;
+  vector<string> hamming_seed;
+  vector<unsigned int> vert_vector;
+  unsigned int hamming_v_occ;
+  unsigned int hamming_H_occ;
+  double freq2;
+  unsigned int tot_freq = 0;
+  unsigned int pos;
+
   void HoccCalc(unordered_map<string, HorizontalClass> &);
-  void CheckSeed(string, unordered_map<string, VerticalClass> &, multimap<int, string, greater<int>> &, unsigned int);
+  void CheckSeed(string, unordered_map<string, VerticalClass> &, multimap<int, string, greater<int>> &,
+                  unsigned int, unsigned int);
   void Freq1Calc();
   void Freq2Calc();
   void PWMHammingCalc();
@@ -519,14 +517,7 @@ private:
                       unordered_map<string, VerticalClass> &, unsigned int);
 
 public:
-  string seed;
-  vector<string> hamming_seed;
-  vector<unsigned int> vert_vector;
-  unsigned int hamming_v_occ;
-  unsigned int hamming_H_occ;
-  double freq1, freq2;
-  unsigned int tot_freq = 0;
-  unsigned int pos;
+  double freq1;
   vector<vector<double>> PWM_hamming;
   map<string, double> cluster_map;
 
@@ -534,11 +525,14 @@ public:
                unordered_map<string, VerticalClass> &map_vertical,
                multimap<int, string, greater<int>> &position_occurrences,
                unordered_map<string, HorizontalClass> &map_horizontal, 
-               unsigned int position) {
+               unsigned int position, unsigned int d) {
     pos = position;
-    CheckSeed(seed, map_vertical, position_occurrences, position);
+    // Creation of oligo cluster 
+    CheckSeed(seed, map_vertical, position_occurrences, position, d);
+    // Calculation of freq 1
     Freq1Calc();
     HoccCalc(map_horizontal);
+    // Calculation of freq 2
     Freq2Calc();
     PWMHammingCalc();
     ClearVertical(position_occurrences, map_vertical, pos);
@@ -551,6 +545,7 @@ vector<vector<HammingClass>> H_HAMMING_MATRIX;
 
 class EMClass{
   private:
+    
     map<string, double> like_ratio_map;
     void EM_Ipwm(vector<vector<double>> &);
     void EM_Epart(map<string,double> &, vector<vector<double>> &,unordered_map<string, HorizontalClass> &);
@@ -558,35 +553,13 @@ class EMClass{
     bool EM_convergence(vector<vector<double>> &, vector<vector<double>> &, bool);
     void EM_cycle(map<string,double> &, vector<vector<double>> &, unordered_map<string, HorizontalClass> &);
     void print_PWM(string, vector<vector<double>> &);
+  
   public:
-    EMClass(map<string,double> &cluster_map, vector<vector<double>> &PWM_hamming, unordered_map<string, HorizontalClass> &map_horizontal){
+    
+    EMClass(map<string,double> &cluster_map, vector<vector<double>> &PWM_hamming, 
+            unordered_map<string, HorizontalClass> &map_horizontal){
       EM_Ipwm(PWM_hamming);
       EM_cycle(cluster_map, PWM_hamming, map_horizontal);
-    }
-};
-
-class ZetaClass{
-  private:
-      void z_score_calculation(vector<double>);
-      void z_score_parameters_calculation(vector<double>,vector<double>);
-  public:
-    double z_score;
-    double Zpvalue;
-
-    double global_mean;
-    double global_dev_std;
-    double local_mean;
-    double local_dev_std;
-    // unsigned int local_pos;
-    
-    ZetaClass(vector<double> all_global_scores, vector<double> all_local_scores){
-      z_score_parameters_calculation(all_global_scores, all_local_scores);
-
-      // Calculating z-score and p-value from it
-      z_score_calculation(all_local_scores);
-      all_local_scores.clear();
-      all_global_scores.clear();
-
     }
 };
 
@@ -615,8 +588,6 @@ void print_debug_PWM_hamming(ofstream &, unsigned int,
                               unsigned int, vector<string> &);
 void print_debug_PWM_hamming_tomtom(ofstream &, unsigned int, 
                                       unsigned int);
-
-vector<double> BestStrandOligo(vector<double>,vector<double>);
 
 void Outfile_Z_score_values(unsigned int, vector<string> &);
 void print_debug_Z_scores(ofstream &, unsigned int, unsigned int, 

@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Basic test MocoLoco
 
 # Controls when the action will run. 
 on:
@@ -26,11 +26,49 @@ jobs:
       - uses: actions/checkout@v2
 
       # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: sudo apt install build-essential
+      - name: install dep for compilation and gsl
+        run: sudo apt install build-essential libgsl-dev
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
-        run: g++ -o test $GITHUB_WORKSPACE/*.cpp 
+        run: g++ -o MOCO -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
+
+      - name: Multifasta test 
+        run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6,8,10 -d 1,2,3 -f 0.01
       
-        
+      - name: get kmer test
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/573c7aeb803a104b8f830ef4751ad40acd81edab/6_mers_fasta2.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/5c7e18535b34979fdba0951203a08ebb/raw/0f2bc0eed19365f015003bd2bba6038cc0723506/8_mers_fasta2.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/efa4ce9ccb006b5dcfea80959eef22cd/raw/dac5b8f99ea7cd8df4a705adcfb1c243f51ee96d/10_mers_fasta2.txt
+      
+      - name: test difference between outputs
+        run: |
+              diff 6_mers_fasta2.txt 6-mers_Z_scores_fasta_DS.txt && \
+              diff 8_mers_fasta2.txt 8-mers_Z_scores_fasta_DS.txt && \
+              diff 10_mers_fasta2.txt 10-mers_Z_scores_fasta_DS.txt
+      
+      - name: hg19 genome download 
+        run: cat get_hg19.script | bash
+        working-directory: Genomes/hg19
+
+      - name: Run NFY test
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
+          
+      - name: get sample test 
+        run: wget https://gist.githubusercontent.com/AmarettiL/9db7479a3d423dc7dbc814e619e81990/raw/a767e5954084c747033b56c36d8872831e302876/NFY_simple_test.txt
+
+      - name: test difference between outputs 
+        run: diff NFY_simple_test.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
+
+      - name: Run unidirection test (with -o)
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6,8 -d 1,2 -f 0.01 -o p -a -e c -u
+          
+      - name: get sample test 
+        run: |
+              wget https://gist.githubusercontent.com/AmarettiL/f26fa0b9a1fa3c4d4e7f01d49185a8db/raw/d7052cc330cf11e29635d83466438f251e280aec/6_mers_NFY_all.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/95e27df230243e33a9da1ea80f94dc4a/raw/ecbe7ce35852aadfb1051e4709c2d364424a1bb3/8_mers_NFY_all.txt
+      - name: test difference between outputs 
+        run: |
+              diff 6_mers_NFY_all.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt && \
+              diff 8_mers_NFY_all.txt 8-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
