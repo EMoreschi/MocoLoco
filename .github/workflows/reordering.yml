@@ -50,13 +50,13 @@ jobs:
 
       - name: get kmer test
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/4bc4ab52d4fae25fe5edb65ca951df2e/raw/564c4851ffdb489d1b4f81a5a9d6fc012428ad5f/6_mers_multi_test.txt && \
+              wget  https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/573c7aeb803a104b8f830ef4751ad40acd81edab/6_mers_fasta2.txt && \
               wget https://gist.githubusercontent.com/AmarettiL/94e01af9459e8ddf99c625322ad5b98e/raw/81a0730f11426a64edc8208df85aac372ed267aa/8_mers_multi_test.txt && \
               wget https://gist.githubusercontent.com/AmarettiL/b718763712e5269fb9460ece74d6f75d/raw/88d892793f0024c64c0e9ea737fb69a00c74eecf/10_mers_multi_test.txt
 
       - name: test difference between outputs
         run: |
-              diff 6_mers_multi_test.txt 6-mers_Z_scores_fasta_DS.txt && \
+              diff 6_mers_fasta2.txt 6-mers_Z_scores_fasta_DS.txt && \
               diff 8_mers_multi_test.txt 8-mers_Z_scores_fasta_DS.txt && \
               diff 10_mers_multi_test.txt 10-mers_Z_scores_fasta_DS.txt
 
