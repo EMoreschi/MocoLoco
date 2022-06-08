@@ -89,7 +89,7 @@ void BED_path() {
           sort(begin(P_vector), end(P_vector), comp);
         }
         // Debug for PValueClass
-        DVector(P_vector, j);
+        // DVector(P_vector, j);
           
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
@@ -113,7 +113,7 @@ void BED_path() {
             
           //If it is the first cycle of while loop or if the pval is lower 
           //than a certain threshold the z_score and PWM are calculated
-          if(Pval < z_pval_threshold){
+          if(Pval <= (z_pval_threshold * len[i])){
             // //Check reverse seed oligo
             // pos_oligo_vec.emplace_back(P_vector[0].oligo);
             // string rev_oligo = reverse_oligo(P_vector[0].oligo);
@@ -223,7 +223,7 @@ void MULTIFA_path(){
             
           //If it is the first cycle of while loop or if the pval is lower 
           //than a certain threshold the z_score and PWM are calculated
-          if(Pval < z_pval_threshold){
+          if(Pval <= (z_pval_threshold*len[i])){
             // //Check reverse seed oligo
             // pos_oligo_vec.emplace_back(P_vector[0].oligo);
             // string rev_oligo = reverse_oligo(P_vector[0].oligo);
