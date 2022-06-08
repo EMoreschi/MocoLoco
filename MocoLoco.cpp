@@ -65,11 +65,10 @@ void BED_path() {
     //For each position in the sequence
     for (unsigned int j = 0; j < len[i]; j++) {
       double Pval = 0;
-      bool flag = true;
       unsigned int counter = 0;
       vector<string> pos_oligo_vec;
       // Loop for eventually other matrices that are hidden by the best motif
-      while(counter < max_matrix && (Pval == 0 || Pval < pval_threshold)) {
+      while(counter < max_matrix /* && Pval < z_pval_threshold*/) {
 
         cout << "Position: " << j << endl;
           
@@ -109,12 +108,12 @@ void BED_path() {
         //the z_score is calculated
         if(H.freq1 >= freq_treshold){
           z_test_class Z(H.PWM_hamming, C.GEP, 
-                          j + 1, kmers_vector);
-          Pval = Z.Zpvalue;
+                          j + 1, len[i]);
+          Pval = Z.Zpvalue_bonf;
             
           //If it is the first cycle of while loop or if the pval is lower 
           //than a certain threshold the z_score and PWM are calculated
-          if(flag || Pval < pval_threshold){
+          if(Pval < z_pval_threshold){
             // //Check reverse seed oligo
             // pos_oligo_vec.emplace_back(P_vector[0].oligo);
             // string rev_oligo = reverse_oligo(P_vector[0].oligo);
@@ -130,7 +129,6 @@ void BED_path() {
           }
         }  
         P_vector.clear(); 
-        flag = false;
         counter++;
       }
       pos_oligo_vec.clear();
@@ -175,11 +173,10 @@ void MULTIFA_path(){
     //For each position in the sequence
     for (unsigned int j = 0; j < len[i]; j++) {
       double Pval = 0;
-      bool flag = true;
       unsigned int counter = 0;
       vector<string> pos_oligo_vec;
       // Loop for eventually other matrices that are hidden by the best motif
-      while(counter < max_matrix && (Pval == 0 || Pval < pval_threshold)) {
+      while(counter < max_matrix) {
 
         cout << "Position: " << j << endl;
           
@@ -221,12 +218,12 @@ void MULTIFA_path(){
         //the z_score is calculated
         if(H.freq1 >= freq_treshold){
           z_test_class Z(H.PWM_hamming, MULTIFA.GEP, 
-                          j + 1, kmers_vector);
-          Pval = Z.Zpvalue;
+                          j + 1, len[i]);
+          Pval = Z.Zpvalue_bonf;
             
           //If it is the first cycle of while loop or if the pval is lower 
           //than a certain threshold the z_score and PWM are calculated
-          if(flag || Pval < pval_threshold){
+          if(Pval < z_pval_threshold){
             // //Check reverse seed oligo
             // pos_oligo_vec.emplace_back(P_vector[0].oligo);
             // string rev_oligo = reverse_oligo(P_vector[0].oligo);
@@ -242,7 +239,6 @@ void MULTIFA_path(){
           }
         }  
         P_vector.clear(); 
-        flag = false;
         counter++;
       }
       pos_oligo_vec.clear();
@@ -1761,7 +1757,7 @@ void z_test_class::z_score_parameters_calculation() {
 }
 
 // Z-score calculation function
-void z_test_class::z_score_calculation() {
+void z_test_class::z_score_calculation(unsigned int len) {
   // PROFILE_FUNCTION();
 
   z_score = ((global_mean - local_mean) /
@@ -1771,6 +1767,8 @@ void z_test_class::z_score_calculation() {
   Zpvalue = gsl_cdf_ugaussian_P(Z);
 
   Zpvalue = check_p_value(Zpvalue, "");
+
+  Zpvalue_bonf = Zpvalue * len;
 }
 
 
@@ -2057,9 +2055,7 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
        position++) {
 
     double Zpvalue_Log10 = abs(log10(Z_TEST_MATRIX[j][position].Zpvalue));
-    double bonferroni =
-        Z_TEST_MATRIX[j][position].Zpvalue * ((half_length * 2) - k);
-    double bonferroni_Log10 = abs(log10(bonferroni));
+    double bonferroni_Log10 = abs(log10(Z_TEST_MATRIX[j][position].Zpvalue_bonf));
 
     // best_oligo = HAMMING_MATRIX[j][local_pos-1].real_best_oligo;
 
@@ -2071,7 +2067,8 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
             << Z_TEST_MATRIX[j][position].global_dev_std << "\t"
             << Z_TEST_MATRIX[j][position].z_score << "\t"
             << Z_TEST_MATRIX[j][position].Zpvalue << "\t" << Zpvalue_Log10
-            << "\t" << bonferroni << "\t" << bonferroni_Log10 << endl;
+            << "\t" << Z_TEST_MATRIX[j][position].Zpvalue_bonf << "\t" 
+            << bonferroni_Log10 << endl;
   }
 }
 
@@ -2080,7 +2077,7 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 void command_line_parser(int argc, char **argv) {
 
-  const char *const short_opts = "hp:k:b:j:m:ud:o:f:lr:t:e:s";
+  const char *const short_opts = "hp:k:b:j:m:ud:o:f:lr:t:e:sz:";
 
   // Specifying the expected options
   const option long_opts[] = {
@@ -2102,6 +2099,7 @@ void command_line_parser(int argc, char **argv) {
       {"ss", no_argument, nullptr, 's'},
       {"exp_maximization", required_argument, nullptr, 'e'},
       {"seconday_matrices", required_argument, nullptr, 'r'},
+      {"z_pval_threshold", required_argument, nullptr, 'z'},
       {nullptr, no_argument, nullptr, 0}};
 
   while (true) {
@@ -2187,6 +2185,8 @@ void command_line_parser(int argc, char **argv) {
     case 'r':
       max_matrix = stoi(optarg);
       break;
+    case 'z':
+      z_pval_threshold = stoi(optarg); 
     case '?': // Unrecognized option
     default:
       display_help();
@@ -2243,8 +2243,6 @@ void display_help() {
   cerr << "\n --jaspar || -j <JASPAR_file>: input JASPAR file\n";
   cerr << "\n --param || -p <half_length>: half_length to select bases number "
           "to keep around the chip seq signal (DEFAULT: 150) \n";
-  cerr << "\n --ntop || -n <number>: to decide the top n oligos to classify in "
-          "positional sequence occurrences (DEFAULT: 10) \n";
   cerr << "\n --mf || -m <multifasta-file>: use multifasta instead of bed file "
           "[ -j,-b,-t,-p options not needed ]\n";
   cerr << "\n -s || --ss as input to make the analysis along the single "
@@ -2255,17 +2253,17 @@ void display_help() {
           "(DEFAULT: 1,2,3)\n";
   cerr << "\n --freq || -f <n1> to set the frequence treshold to calculate the "
           "z_score. (DEFAULT: 0.02)\n";
-  cerr << "\n --all || -a to disable the local maxima filtering\n";
-  cerr << "\n --refine || -r to refine PWM matrices with secondary hamming\n";
   cerr << "\n --exp_maximization || -e to refine PWM matrices with the "
           "expectation maximization method, if you type a number this will be "
           "the number of cycles but if you want to reach convergence you can "
           "type just 'c'\n\n";
-  cerr << "\n --tomtom || -t will give as output a format of matrices adapted "
+  cerr << "\n --tomtom || -l will give as output a format of matrices adapted "
           "for tomtom analysis\n\n";
   cerr << "\n --unidirection || -u parameter orders the sequences based on the "
           "matrix direction \n\n";
-  cerr << "\n --secondary_matrices || -r parameters for secondary matrices \n\n";
+  cerr << "\n --secondary_matrices || -r parameter for secondary matrices \n\n";
+  cerr << "\n --z_pval_threshold || -z parameter to set a threshold for the PWM's "
+          "Z_pvalue (DEFAULT: 1)\n\n";
   exit(EXIT_SUCCESS);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

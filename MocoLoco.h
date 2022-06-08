@@ -46,6 +46,7 @@ string reverse_bases;
 vector<unsigned int> kmers_vector;
 vector<unsigned int> distance_vector;
 vector<unsigned int> len;
+unsigned int seed_vertical = 0;
 
 ////////////////////////PARSER VARIABLES////////////////////////
 string BED_FILE;
@@ -66,9 +67,7 @@ string exp_max;
 bool tomtom = false;
 bool err = false;
 bool direction = false;
-unsigned int seed_vertical = 0;
-
-double pval_threshold = 10e-30;
+double z_pval_threshold = 1;
 unsigned int max_matrix = 1;
 
 class Timer {
@@ -345,14 +344,14 @@ private:
   void print_debug_oligo_vec(vector<vector<double>> &);
   void oligos_vector_creation_PWM(vector<bed_class> &);
   void z_score_parameters_calculation();
-  void z_score_calculation();
+  void z_score_calculation(unsigned int);
   void check_best_strand_oligo();
 
 public:
 
   double z_score;
   double Zpvalue;
-
+  double Zpvalue_bonf;
 
   double global_mean;
   double global_dev_std;
@@ -360,7 +359,7 @@ public:
   double local_dev_std;
   unsigned int local_pos;
   z_test_class(vector<vector<double>> &PWM_hamming, vector<bed_class> &GEP,
-               unsigned int local_p, vector<unsigned int> kmers_vector) {
+               unsigned int local_p, unsigned int len) {
 
     local_pos = local_p;
 
@@ -385,7 +384,7 @@ public:
     z_score_parameters_calculation();
 
     // Calculating z-score and p-value from it
-    z_score_calculation();
+    z_score_calculation(len);
 
     all_local_scores.clear();
     all_global_scores.clear();
