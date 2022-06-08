@@ -115,18 +115,18 @@ void BED_path() {
           //If it is the first cycle of while loop or if the pval is lower 
           //than a certain threshold the z_score and PWM are calculated
           if(flag || Pval < pval_threshold){
-            //Check reverse seed oligo
-            pos_oligo_vec.emplace_back(P_vector[0].oligo);
-            string rev_oligo = reverse_oligo(P_vector[0].oligo);
-            if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
-                 && P_vector[0].oligo != rev_oligo){
-            }
-            else{
+            // //Check reverse seed oligo
+            // pos_oligo_vec.emplace_back(P_vector[0].oligo);
+            // string rev_oligo = reverse_oligo(P_vector[0].oligo);
+            // if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
+            //      && P_vector[0].oligo != rev_oligo){
+            // }
+            // else{
               // cout << "Pvalue: " << Pval << endl;
               seed_oligo.emplace_back(P_vector[0].oligo);
               Z_TEST_VECTOR.emplace_back(Z);
               H_HAMMING_VECTOR.emplace_back(H);
-            }
+            // }
           }
         }  
         P_vector.clear(); 
@@ -201,7 +201,7 @@ void MULTIFA_path(){
           sort(begin(P_vector), end(P_vector), comp);
         }
         // Debug for PValueClass
-        DVector(P_vector, j);
+        // DVector(P_vector, j);
           
         cout << "Seed: " << P_vector[0].oligo << endl;
         //Creation of clusters of oligos at hamming distance
@@ -227,18 +227,18 @@ void MULTIFA_path(){
           //If it is the first cycle of while loop or if the pval is lower 
           //than a certain threshold the z_score and PWM are calculated
           if(flag || Pval < pval_threshold){
-            //Check reverse seed oligo
-            pos_oligo_vec.emplace_back(P_vector[0].oligo);
-            string rev_oligo = reverse_oligo(P_vector[0].oligo);
-            if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
-                 && P_vector[0].oligo != rev_oligo){
-            }
-            else{
+            // //Check reverse seed oligo
+            // pos_oligo_vec.emplace_back(P_vector[0].oligo);
+            // string rev_oligo = reverse_oligo(P_vector[0].oligo);
+            // if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
+            //      && P_vector[0].oligo != rev_oligo){
+            // }
+            // else{
               // cout << "Pvalue: " << Pval << endl;
               seed_oligo.emplace_back(P_vector[0].oligo);
               Z_TEST_VECTOR.emplace_back(Z);
               H_HAMMING_VECTOR.emplace_back(H);
-            }
+            // }
           }
         }  
         P_vector.clear(); 
@@ -2080,7 +2080,7 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 void command_line_parser(int argc, char **argv) {
 
-  const char *const short_opts = "hp:k:b:j:m:ud:o:f:alrt:e:s";
+  const char *const short_opts = "hp:k:b:j:m:ud:o:f:lr:t:e:s";
 
   // Specifying the expected options
   const option long_opts[] = {
@@ -2101,6 +2101,7 @@ void command_line_parser(int argc, char **argv) {
       {"twobit", required_argument, nullptr, 't'},
       {"ss", no_argument, nullptr, 's'},
       {"exp_maximization", required_argument, nullptr, 'e'},
+      {"seconday_matrices", required_argument, nullptr, 'r'},
       {nullptr, no_argument, nullptr, 0}};
 
   while (true) {
@@ -2152,9 +2153,9 @@ void command_line_parser(int argc, char **argv) {
     case 'u':
       direction = true;
       break;
-    case 'r':
-      refining_matrix = true;
-      break;
+    // case 'r':
+    //   refining_matrix = true;
+    //   break;
     case 'e':
       exp_max = string(optarg);
       break;
@@ -2182,6 +2183,9 @@ void command_line_parser(int argc, char **argv) {
     case 'm':
       MFASTA_FILE = string(optarg);
       is_file_exist(MFASTA_FILE, "--mf || -m ");
+      break;
+    case 'r':
+      max_matrix = stoi(optarg);
       break;
     case '?': // Unrecognized option
     default:
@@ -2261,6 +2265,7 @@ void display_help() {
           "for tomtom analysis\n\n";
   cerr << "\n --unidirection || -u parameter orders the sequences based on the "
           "matrix direction \n\n";
+  cerr << "\n --secondary_matrices || -r parameters for secondary matrices \n\n";
   exit(EXIT_SUCCESS);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
