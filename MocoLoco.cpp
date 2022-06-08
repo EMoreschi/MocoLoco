@@ -2077,7 +2077,7 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
 void command_line_parser(int argc, char **argv) {
 
-  const char *const short_opts = "hp:k:b:j:m:ud:o:f:lr:t:e:sz:";
+  const char *const short_opts = "hp:k:b:j:m:ud:o:f:lr:t:e:z:s";
 
   // Specifying the expected options
   const option long_opts[] = {
@@ -2186,7 +2186,8 @@ void command_line_parser(int argc, char **argv) {
       max_matrix = stoi(optarg);
       break;
     case 'z':
-      z_pval_threshold = stoi(optarg); 
+      z_pval_threshold = stod(optarg); 
+      break;
     case '?': // Unrecognized option
     default:
       display_help();

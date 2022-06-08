@@ -31,13 +31,13 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
-        run: g++ -o MOCO -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas
+        run: g++ -o MOCO -Wall $GITHUB_WORKSPACE/MocoLoco.cpp  -lgsl -lgslcblas -O3
 
       - name: SS test 
         run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01 -ss
       
       - name: get kmer test
-        run: wget https://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/16d1646da8adb1f0eeee79feee6f2c1c5825585c/SS_fasta.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/957c27b81973ac826cb4aebf35d53cfdc8fc3c27/SS_fasta.txt
 
       - name: test difference between outputs
         run: diff SS_fasta.txt 6-mers_Z_scores_fasta_SS.txt
@@ -46,7 +46,7 @@ jobs:
         run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
       
       - name: get kmer test
-        run: wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/831dd8bd3aad695ceccc6d39933c219fa7046555/6_mers_fasta2.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/87d19bec3abf33f49b63c7def857e5039398c95b/6_mers_fasta2.txt
       
       - name: test difference between outputs
         run: diff 6_mers_fasta2.txt 6-mers_Z_scores_fasta_DS.txt
@@ -59,7 +59,7 @@ jobs:
         run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
           
       - name: get sample test 
-        run: wget https://gist.githubusercontent.com/AmarettiL/9db7479a3d423dc7dbc814e619e81990/raw/29b0c3667d8cb3869bab2b221fe71ad5fdc7a175/NFY_simple_test.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/9db7479a3d423dc7dbc814e619e81990/raw/e6fa6016ae3de672ad2c78a196a77957c1115a70/NFY_simple_test.txt
 
       - name: test difference between outputs 
         run: diff NFY_simple_test.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
@@ -69,8 +69,8 @@ jobs:
           
       - name: get sample test 
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/f26fa0b9a1fa3c4d4e7f01d49185a8db/raw/a78f511a4cc78f9e4984024719970e68c91d0b3e/6_mers_NFY_all.txt && \
-              wget https://gist.githubusercontent.com/AmarettiL/95e27df230243e33a9da1ea80f94dc4a/raw/37b6188d3d47ead150c4e22c50b9621d14f18c81/8_mers_NFY_all.txt
+              wget https://gist.githubusercontent.com/AmarettiL/f26fa0b9a1fa3c4d4e7f01d49185a8db/raw/074c3499f5233695d165cf9297b0dd8e58ea43cb/6_mers_NFY_all.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/95e27df230243e33a9da1ea80f94dc4a/raw/f6f2cfdad2db2b7e72c2b685c7d93558b51ffe5a/8_mers_NFY_all.txt
       
       - name: test difference between outputs 
         run: |
