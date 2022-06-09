@@ -37,7 +37,7 @@ jobs:
         run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01 -ss
       
       - name: get kmer test
-        run: wget https://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/957c27b81973ac826cb4aebf35d53cfdc8fc3c27/SS_fasta.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/0cba8a28f012ef6136fefe685a31b7af/raw/6df414f5cc836bc78a12d73f9a18df5e2624ab87/SS_fasta.txt
 
       - name: test difference between outputs
         run: diff SS_fasta.txt 6-mers_Z_scores_fasta_SS.txt
@@ -46,7 +46,7 @@ jobs:
         run: ./MOCO -m Test_Bed/random_fasta.fasta -k 6 -d 1 -f 0.01
       
       - name: get kmer test
-        run: wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/87d19bec3abf33f49b63c7def857e5039398c95b/6_mers_fasta2.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/f660d251c1afafad74ac0c4e6b293508/raw/bf7f92bc8f793eaf5a9781c5ca20e2c5614ea45b/6_mers_fasta2.txt
       
       - name: test difference between outputs
         run: diff 6_mers_fasta2.txt 6-mers_Z_scores_fasta_DS.txt
@@ -59,7 +59,7 @@ jobs:
         run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6 -d 1 -f 0.01
           
       - name: get sample test 
-        run: wget https://gist.githubusercontent.com/AmarettiL/9db7479a3d423dc7dbc814e619e81990/raw/e6fa6016ae3de672ad2c78a196a77957c1115a70/NFY_simple_test.txt
+        run: wget https://gist.githubusercontent.com/AmarettiL/9db7479a3d423dc7dbc814e619e81990/raw/3a42a630eaff55250243661a2c5b4e5f08966cf1/NFY_simple_test.txt
 
       - name: test difference between outputs 
         run: diff NFY_simple_test.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
@@ -69,8 +69,8 @@ jobs:
           
       - name: get sample test 
         run: |
-              wget https://gist.githubusercontent.com/AmarettiL/f26fa0b9a1fa3c4d4e7f01d49185a8db/raw/074c3499f5233695d165cf9297b0dd8e58ea43cb/6_mers_NFY_all.txt && \
-              wget https://gist.githubusercontent.com/AmarettiL/95e27df230243e33a9da1ea80f94dc4a/raw/f6f2cfdad2db2b7e72c2b685c7d93558b51ffe5a/8_mers_NFY_all.txt
+              wget https://gist.githubusercontent.com/AmarettiL/f26fa0b9a1fa3c4d4e7f01d49185a8db/raw/c558fd5c2517a0fbe2885d3c5cdc98eb5fecbf9f/6_mers_NFY_all.txt && \
+              wget https://gist.githubusercontent.com/AmarettiL/95e27df230243e33a9da1ea80f94dc4a/raw/e930c4a5270c5cac7de2740a7384025eb8e6d552/8_mers_NFY_all.txt
       
       - name: test difference between outputs 
         run: |

@@ -100,7 +100,6 @@ void BED_path() {
           EMClass E(H.cluster_map, H.PWM_hamming, 
                     M.vector_map_hor[i]);
         }
-        cout << "FREQ: " << freq_vector[i] << endl;
         //If the frequence of seed oligo is higher than a threshold
         //the z_score is calculated
 
@@ -138,14 +137,16 @@ void BED_path() {
 void MULTIFA_path(){
 
   multifasta_class MULTIFA(MFASTA_FILE);
-  // Reading k-mers in input and saving them into a vector
+  // Reading k-mers, dist and freq in input and saving them into vectors
   kmers_vector = generic_vector_creation(kmers);
-
-  // Reading distance parameters in input and saving them into a vector
   distance_vector = generic_vector_creation(dist);
-  if(distance_vector.size() != kmers_vector.size()){
+  freq_vector = freq_vector_creation(freq_threshold);
+  
+  if(distance_vector.size() != kmers_vector.size() ||
+      distance_vector.size() != freq_vector.size() ||
+      kmers_vector.size() != freq_vector.size()){
     cerr << endl 
-    << "WARNING! The number of kmers must be equal to the number of hamming distances!" << endl << endl;
+    << "ERROR! The number of kmers must be equal to the number of hamming distances and frequencies" << endl << endl;
     exit(1);
   }
   // Vector len contains all the lengths of sequences for each kmer 
@@ -189,7 +190,6 @@ void MULTIFA_path(){
         // Debug for PValueClass
         // DVector(P_vector, j);
           
-        cout << "Seed: " << P_vector[0].oligo << endl;
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
         HammingClass H(P_vector[0].oligo,
