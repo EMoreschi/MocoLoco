@@ -17,12 +17,7 @@ int main(int argc, char *argv[]) {
     command_line_parser(argc, argv);
 
     // This line can be read as "If MFASTA_FILE is empty do BED_pat() else do MULTIFA_path()"
-    if (MFASTA_FILE.empty()){
-      BED_path();
-    }
-    else{
-      MULTIFA_path();
-    }
+    (MFASTA_FILE.empty()) ? (BED_path()) : (MULTIFA_path());
 
     return 0;
   }
@@ -41,14 +36,16 @@ void BED_path() {
   // Create a .fasta file to check if the coordinates and the sequences
   // extracted are correct
   C.print_GEP(C.GEP);
-  // Reading k-mers in input and saving them into a vector
+  // Reading k-mers, distance and freq in input and saving them into vectors
   kmers_vector = generic_vector_creation(kmers);
-
-  // Reading distance parameters in input and saving them into a vector
   distance_vector = generic_vector_creation(dist);
-  if(distance_vector.size() != kmers_vector.size()){
+  freq_vector = freq_vector_creation(freq_threshold);
+  
+  if(distance_vector.size() != kmers_vector.size() ||
+      distance_vector.size() != freq_vector.size() ||
+      kmers_vector.size() != freq_vector.size()){
     cerr << endl 
-    << "WARNING! The number of kmers must be equal to the number of hamming distances!" << endl << endl;
+    << "ERROR! The number of kmers must be equal to the number of hamming distances and frequencies" << endl << endl;
     exit(1);
   }
   // Vector len contains all the lengths of sequences for each kmer 
@@ -68,7 +65,7 @@ void BED_path() {
       unsigned int counter = 0;
       vector<string> pos_oligo_vec;
       // Loop for eventually other matrices that are hidden by the best motif
-      while(counter < max_matrix /* && Pval < z_pval_threshold*/) {
+      while(counter < max_matrix) {
 
         cout << "Position: " << j << endl;
           
@@ -103,10 +100,11 @@ void BED_path() {
           EMClass E(H.cluster_map, H.PWM_hamming, 
                     M.vector_map_hor[i]);
         }
-        
+        cout << "FREQ: " << freq_vector[i] << endl;
         //If the frequence of seed oligo is higher than a threshold
         //the z_score is calculated
-        if(H.freq1 >= freq_treshold){
+
+        if(H.freq1 >= freq_vector[i]){
           z_test_class Z(H.PWM_hamming, C.GEP, 
                           j + 1, len[i]);
           Pval = Z.Zpvalue_bonf;
@@ -114,18 +112,9 @@ void BED_path() {
           //If it is the first cycle of while loop or if the pval is lower 
           //than a certain threshold the z_score and PWM are calculated
           if(Pval <= (z_pval_threshold * len[i])){
-            // //Check reverse seed oligo
-            // pos_oligo_vec.emplace_back(P_vector[0].oligo);
-            // string rev_oligo = reverse_oligo(P_vector[0].oligo);
-            // if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
-            //      && P_vector[0].oligo != rev_oligo){
-            // }
-            // else{
-              // cout << "Pvalue: " << Pval << endl;
               seed_oligo.emplace_back(P_vector[0].oligo);
               Z_TEST_VECTOR.emplace_back(Z);
               H_HAMMING_VECTOR.emplace_back(H);
-            // }
           }
         }  
         P_vector.clear(); 
@@ -216,7 +205,7 @@ void MULTIFA_path(){
         
         //If the frequence of seed oligo is higher than a threshold
         //the z_score is calculated
-        if(H.freq1 >= freq_treshold){
+        if(H.freq1 >= freq_vector[i]){
           z_test_class Z(H.PWM_hamming, MULTIFA.GEP, 
                           j + 1, len[i]);
           Pval = Z.Zpvalue_bonf;
@@ -224,18 +213,10 @@ void MULTIFA_path(){
           //If it is the first cycle of while loop or if the pval is lower 
           //than a certain threshold the z_score and PWM are calculated
           if(Pval <= (z_pval_threshold*len[i])){
-            // //Check reverse seed oligo
-            // pos_oligo_vec.emplace_back(P_vector[0].oligo);
-            // string rev_oligo = reverse_oligo(P_vector[0].oligo);
-            // if(find(pos_oligo_vec.begin(), pos_oligo_vec.end(), rev_oligo) != pos_oligo_vec.end()
-            //      && P_vector[0].oligo != rev_oligo){
-            // }
-            // else{
-              // cout << "Pvalue: " << Pval << endl;
+
               seed_oligo.emplace_back(P_vector[0].oligo);
               Z_TEST_VECTOR.emplace_back(Z);
               H_HAMMING_VECTOR.emplace_back(H);
-            // }
           }
         }  
         P_vector.clear(); 
@@ -1651,6 +1632,7 @@ void EMClass::EM_cycle(map<string,double> &cluster_map,
       EM_Mpart(PWM_hamming);
 
       like_ratio_map.clear();
+      
     }
   }
 }
@@ -1933,7 +1915,12 @@ void print_debug_PWM_hamming_tomtom(ofstream &outfile, unsigned int j,
               << "["
               << "\t";
       for (unsigned int j = 0; j < PWM_hamming[i].size(); j++) {
+        if (!exp_max.empty()){
         outfile << round(PWM_hamming[i][j] * 100) << "\t";
+        }
+        else{
+          outfile << PWM_hamming[i][j] << "\t";
+        }
       }
       outfile << "]\n";
   
@@ -2025,7 +2012,7 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
                                      unsigned int k, vector<string> &seed_oligo) {
   // PROFILE_FUNCTION();
   outfile << "#Z_score parameters and p-value for hit positions - k = " << k
-          << endl
+          << " and -f = " << freq_vector[j] << endl
           << endl;
   string best_oligo;
 
@@ -2072,6 +2059,50 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
   }
 }
 
+vector<double> freq_vector_creation(string numbers){
+   // PROFILE_FUNCTION();
+  int index = 0;
+  vector<double> vec;
+
+  // When index is == -1 means that it is pointing to the end character of the
+  // string
+  while (index != -1) {
+
+    // Find the first "," character into the string
+    index = numbers.find(",");
+    double freq = stod(numbers.substr(0, index));
+     if (freq == 0) {
+      cout << "WARNING: frequency threshold 0 inserted\n";
+    }
+
+    if (freq < 0 || freq >= 1) {
+      cerr << "ERROR: please insert a frequency treshold between 0 and "
+              "1.\n\n\n";
+      display_help();
+      exit(1);
+    }
+    // Put everything before "," into a vector
+    vec.emplace_back(freq);
+
+    // Erase from the string the number already inserted and the ","
+    numbers.erase(0, index + 1);
+  }
+
+  return vec;
+  
+  for(unsigned int i = 0; i < freq_vector.size(); i++){
+    if (freq_vector[i] == 0) {
+      cout << "WARNING: frequency threshold 0 inserted\n";
+    }
+
+    if (freq_vector[i] < 0 || freq_vector[i] >= 1) {
+      cerr << "ERROR: please insert a frequency treshold between 0 and "
+              "1.\n\n\n";
+      display_help();
+      exit(1);
+    }
+  }
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////PARSER////////////////////////////////////////////////////////////////////
@@ -2158,18 +2189,8 @@ void command_line_parser(int argc, char **argv) {
       exp_max = string(optarg);
       break;
     case 'f':
-      freq_treshold = stod(optarg);
-      if (freq_treshold == 0) {
-
-        cout << "WARNING: frequency threshold 0 inserted\n";
-      }
-
-      if (freq_treshold < 0 || freq_treshold >= 1) {
-        cerr << "ERROR: please insert a frequency treshold between 0 and "
-                "1.\n\n\n";
-        display_help();
-        exit(1);
-      }
+      freq_threshold.clear();
+      freq_threshold = string(optarg);
       break;
     case 'd':
       dist.clear();
@@ -2252,8 +2273,8 @@ void display_help() {
           "not by occurrences. (DEFAULT: ordering by occurrences)\n";
   cerr << "\n --distance || -d <n1,n2,...,nN> to select the hamming distances. "
           "(DEFAULT: 1,2,3)\n";
-  cerr << "\n --freq || -f <n1> to set the frequence treshold to calculate the "
-          "z_score. (DEFAULT: 0.02)\n";
+  cerr << "\n --freq || -f <n1,n2,...,nN> to set the frequence treshold to "
+          "calculate the z_score. (DEFAULT: 0.006, 0.004, 0.003)\n";
   cerr << "\n --exp_maximization || -e to refine PWM matrices with the "
           "expectation maximization method, if you type a number this will be "
           "the number of cycles but if you want to reach convergence you can "

@@ -45,6 +45,7 @@ double sim_tresh = 0.001;
 string reverse_bases;
 vector<unsigned int> kmers_vector;
 vector<unsigned int> distance_vector;
+vector<double> freq_vector;
 vector<unsigned int> len;
 unsigned int seed_vertical = 0;
 
@@ -60,7 +61,7 @@ bool DS = true;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;
-double freq_treshold = 0.02;
+string freq_threshold = "0.006, 0.004, 0.003";
 bool local_maxima_grouping = false;
 bool refining_matrix = false;
 string exp_max;
@@ -593,4 +594,4 @@ void print_debug_PWM_hamming_tomtom(ofstream &, unsigned int,
 void Outfile_Z_score_values(unsigned int, vector<string> &);
 void print_debug_Z_scores(ofstream &, unsigned int, unsigned int, 
                             vector<string> &);
-
+vector<double> freq_vector_creation(string);
