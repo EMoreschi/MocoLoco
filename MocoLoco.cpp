@@ -1188,7 +1188,7 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
         Ver.vertical_count_rc[i] = 1;
         Ver.vertical_count_FWD[i] = 1, Ver.vertical_count_rc_REV[i] = 1;
         Ver.vertical_count_REV[i] = 0, Ver.vertical_count_rc_FWD[i] = 0;
-        if(it->second.palindrome){
+        if(oligo == oligo_rc){
           Ver.vertical_count_rc_FWD[i] = 1;
           Ver.vertical_count_REV[i] = 1;
           Ver.vertical_count[i] = 2;
@@ -1231,7 +1231,6 @@ string reverse_oligo(string bases) {
 void MapClass::MainMapVector(vector<bed_class> &GEP) {
   // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
-    cout << GEP.size() << endl << endl;
     for (unsigned int j = 0; j < GEP.size(); j++) {
       CountOccurrencesHor(GEP[j].sequence, kmers_vector[i]);
       CountOccurrencesVer(GEP[j].sequence, kmers_vector[i]);
@@ -1246,7 +1245,6 @@ void MapClass::MainMapVector(vector<bed_class> &GEP) {
 void MapClass::VerticalMapVector() {
   // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
-
     for (unsigned int j = 0; j < len[i]; j++) {
       multimap<int, string, greater<int>> pos;
       for (unordered_map<string, VerticalClass>::iterator it =
