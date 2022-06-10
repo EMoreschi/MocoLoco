@@ -1149,6 +1149,8 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
     if (it != vertical_map.end()) {
       it->second.vertical_count[i]++;
       it->second.vertical_count_FWD[i]++;
+      it->second.vertical_count_rc_REV[i]++;
+      it->second.vertical_count_rc[i]++;
       // tot_freq++;
       if (DS) {
         if(it->second.palindrome){         
@@ -1158,8 +1160,7 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
           it->second.vertical_count_rc_FWD[i]++;
         }
       //   tot_freq++;
-        it->second.vertical_count_rc_REV[i]++;
-        it->second.vertical_count_rc[i]++;
+        
       }
     } else if (it_rc != vertical_map.end()) {
       if (!it_rc->second.palindrome) {
@@ -1187,7 +1188,7 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
         Ver.vertical_count_rc[i] = 1;
         Ver.vertical_count_FWD[i] = 1, Ver.vertical_count_rc_REV[i] = 1;
         Ver.vertical_count_REV[i] = 0, Ver.vertical_count_rc_FWD[i] = 0;
-        if(oligo == oligo_rc){
+        if(it->second.palindrome){
           Ver.vertical_count_rc_FWD[i] = 1;
           Ver.vertical_count_REV[i] = 1;
           Ver.vertical_count[i] = 2;
@@ -1230,6 +1231,7 @@ string reverse_oligo(string bases) {
 void MapClass::MainMapVector(vector<bed_class> &GEP) {
   // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
+    cout << GEP.size() << endl << endl;
     for (unsigned int j = 0; j < GEP.size(); j++) {
       CountOccurrencesHor(GEP[j].sequence, kmers_vector[i]);
       CountOccurrencesVer(GEP[j].sequence, kmers_vector[i]);
@@ -1252,7 +1254,8 @@ void MapClass::VerticalMapVector() {
            it != vector_map_ver[i].end(); it++) {
         if (it->second.vertical_count[j] > 0) {
           pos.emplace(it->second.vertical_count[j], it->first);
-        } else if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
+        }
+        if (!it->second.palindrome && it->second.vertical_count_rc[j] > 0) {
           pos.emplace(it->second.vertical_count_rc[j], it->second.oligo_rc);
         }
       }
@@ -1267,15 +1270,19 @@ void MapClass::VerticalMapVector() {
 // Debug function
 void MapClass::DVerticalMapVector() {
   // PROFILE_FUNCTION();
+  
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
     cout << "I: " << i << endl;
     for (unsigned int j = 0; j < vector_positions_occurrences[i].size(); j++) {
       cout << "J: " << j << endl;
+      int sum = 0;
       for (multimap<int, string>::iterator it =
                vector_positions_occurrences[i][j].begin();
            it != vector_positions_occurrences[i][j].end(); it++) {
         cout << it->first << "   " << it->second << endl;
+        sum = sum + it->first;
       }
+      cout << "SOMMA TOTALE VERTICAL: " << sum << endl << endl;
     }
   }
 }
@@ -1298,11 +1305,11 @@ void MapClass::DMainMapVectorDS() {
     for (unordered_map<string, VerticalClass>::iterator it =
              vector_map_ver[i].begin();
          it != vector_map_ver[i].end(); it++) {
-      cout << it->first << " " << it->second.vertical_count_FWD[49] << " " 
-           << it->second.vertical_count_REV[49] << " " << it->second.vertical_count[49]
-           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[49]
-           << " " << it->second.vertical_count_rc_REV[49] << " "
-           << it->second.vertical_count_rc[49] << " "
+      cout << it->first << " " << it->second.vertical_count_FWD[21] << " " 
+           << it->second.vertical_count_REV[21] << " " << it->second.vertical_count[21]
+           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[21]
+           << " " << it->second.vertical_count_rc_REV[21] << " "
+           << it->second.vertical_count_rc[21] << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
   }
@@ -1321,11 +1328,11 @@ void MapClass::DMainMapVectorSS() {
         for (unordered_map<string, VerticalClass>::iterator it =
              vector_map_ver[i].begin();
          it != vector_map_ver[i].end(); it++) {
-      cout << it->first << " " << it->second.vertical_count_FWD[0] << " " 
-           << it->second.vertical_count_REV[0] << " " << it->second.vertical_count[0]
-           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[0]
-           << " " << it->second.vertical_count_rc_REV[0] << " "
-           << it->second.vertical_count_rc[0] << " "
+      cout << it->first << " " << it->second.vertical_count_FWD[21] << " " 
+           << it->second.vertical_count_REV[21] << " " << it->second.vertical_count[21]
+           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[21]
+           << " " << it->second.vertical_count_rc_REV[21] << " "
+           << it->second.vertical_count_rc[21] << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
   }
