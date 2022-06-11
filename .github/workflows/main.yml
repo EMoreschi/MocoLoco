@@ -65,7 +65,7 @@ jobs:
         run: diff NFY_simple_test.txt 6-mers_Z_scores_hg19.2bit_MA0060.1.jaspar_nfy_k562_hg19.bedDS.txt
 
       - name: Run unidirection test (with -o)
-        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6,8 -d 1,2 -f 0.01,0,01 -o p -e c -u
+        run: ./MOCO -b Test_Bed/nfy_k562_hg19.bed -j Jaspar_2020/MA0060.1.jaspar -t Genomes/hg19/hg19.2bit -p 150 -k 6,8 -d 1,2 -f 0.01,0.01 -o p -e c -u
           
       - name: get sample test 
         run: |

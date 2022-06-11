@@ -982,6 +982,10 @@ void HammingClass::CheckSeed(string seed,
 void HammingClass::Freq1Calc() {
   // PROFILE_FUNCTION();
   freq1 = static_cast<double>(seed_vertical) / static_cast<double>(tot_freq);
+  cout << "FREQ: " << freq1 << endl;
+  // double freq_right = static_cast<double>(tot_freq)/static_cast<double>(frequence);
+  // cout << frequence << endl;
+  // cout << "OLD FREQ: " << freq_right << endl;
 }
 
 void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> &map_horizontal) {
