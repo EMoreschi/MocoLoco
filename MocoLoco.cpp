@@ -86,7 +86,7 @@ void BED_path() {
           sort(begin(P_vector), end(P_vector), comp);
         }
         // Debug for PValueClass
-        // DVector(P_vector, j);
+        DVector(P_vector, j);
           
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
@@ -188,7 +188,7 @@ void MULTIFA_path(){
           sort(begin(P_vector), end(P_vector), comp);
         }
         // Debug for PValueClass
-        // DVector(P_vector, j);
+        DVector(P_vector, j);
           
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
@@ -1100,12 +1100,12 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
       it->second.horizontal_count++;
       it->second.horizontal_count_FWD++;
       if (DS) {
-        if(it->second.palindrome){
-          it->second.horizontal_count_REV++;
-          it->second.horizontal_count_rc_FWD++;
-          it->second.horizontal_count++;
-          it->second.horizontal_count_rc++;
-        }
+        // if(it->second.palindrome){
+        //   it->second.horizontal_count_REV++;
+        //   it->second.horizontal_count_rc_FWD++;
+        //   it->second.horizontal_count++;
+        //   it->second.horizontal_count_rc++;
+        // }
         it->second.horizontal_count_rc++;
         it->second.horizontal_count_rc_REV++;
       }
@@ -1130,11 +1130,11 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
         Hor.horizontal_count_FWD = 1, Hor.horizontal_count_rc_FWD = 0;
         Hor.horizontal_count_REV = 0, Hor.horizontal_count_rc_REV = 1;
         Hor.horizontal_count_rc = 1, Hor.horizontal_count = 1;
-        if(oligo == oligo_rc){
-          Hor.horizontal_count_rc_FWD = 1;
-          Hor.horizontal_count_REV = 1;
-          Hor.horizontal_count = 2, Hor.horizontal_count_rc = 2;
-        }
+        // if(oligo == oligo_rc){
+        //   Hor.horizontal_count_rc_FWD = 1;
+        //   Hor.horizontal_count_REV = 1;
+        //   Hor.horizontal_count = 2, Hor.horizontal_count_rc = 2;
+        // }
       }
     
       horizontal_map.emplace(oligo, Hor);
@@ -1157,12 +1157,12 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
       it->second.vertical_count_rc[i]++;
       // tot_freq++;
       if (DS) {
-        if(it->second.palindrome){         
-          it->second.vertical_count[i]++;
-          it->second.vertical_count_rc[i]++;
-          it->second.vertical_count_REV[i]++;
-          it->second.vertical_count_rc_FWD[i]++;
-        }
+        // if(it->second.palindrome){         
+        //   it->second.vertical_count[i]++;
+        //   it->second.vertical_count_rc[i]++;
+        //   it->second.vertical_count_REV[i]++;
+        //   it->second.vertical_count_rc_FWD[i]++;
+        // }
       //   tot_freq++;
         
       }
@@ -1192,12 +1192,12 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
         Ver.vertical_count_rc[i] = 1;
         Ver.vertical_count_FWD[i] = 1, Ver.vertical_count_rc_REV[i] = 1;
         Ver.vertical_count_REV[i] = 0, Ver.vertical_count_rc_FWD[i] = 0;
-        if(oligo == oligo_rc){
-          Ver.vertical_count_rc_FWD[i] = 1;
-          Ver.vertical_count_REV[i] = 1;
-          Ver.vertical_count[i] = 2;
-          Ver.vertical_count_rc[i] = 2;
-        }
+        // if(oligo == oligo_rc){
+        //   Ver.vertical_count_rc_FWD[i] = 1;
+        //   Ver.vertical_count_REV[i] = 1;
+        //   Ver.vertical_count[i] = 2;
+        //   Ver.vertical_count_rc[i] = 2;
+        // }
       }
     
       vertical_map.emplace(oligo, Ver);

@@ -456,12 +456,12 @@ public:
     VerticalMapVector();
     // Functions that starts with D are debug functions
     if(DS){
-      // DMainMapVectorDS();
+      DMainMapVectorDS();
     }
     else{
-      // DMainMapVectorSS();
+      DMainMapVectorSS();
     }
-    // DVerticalMapVector();
+    DVerticalMapVector();
   }
 };
 
