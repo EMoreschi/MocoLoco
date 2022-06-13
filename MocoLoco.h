@@ -125,7 +125,7 @@ public:
 
   // Bed class constructor if input are Bed-Twobit-Jaspar files
   bed_class(string line, TwoBit *tb, unsigned int n_line, char ** result) {
-
+    
     // Take line from bed file and extract chr_coord, start_coord and end_coord
     read_line(line, result);
 
@@ -160,7 +160,7 @@ private:
 
 public:
   matrix_class(vector<vector<double>> &mat) {
-
+    
     // Function to normalize the matrix scores and add a pseudocount
     matrix_normalization_pseudoc(mat);
 
@@ -193,7 +193,7 @@ private:
 
   void find_minmax(vector<vector<double>> &);
   unsigned int find_best_score();
-  void scores_normalization();
+
   friend class coordinator_class;
   friend class z_test_class;
 
@@ -202,6 +202,7 @@ public:
 
   oligo_class(vector<vector<double>> &matrix, string &sequence,
               unsigned int start_coord_GEP) {
+    
 
     // Function to annotate in min_possible_score and max_possible_score the
     // worst and the best score that an oligo can reach based on the current
@@ -211,9 +212,6 @@ public:
     // for each oligo in the current sequence a total score of similarity is
     // calculated against the JASPAR matrix
     shifting(matrix, sequence);
-
-    // Function to normalize the scores with the normalization formula
-    scores_normalization();
 
     // Find the best score position and save it into local_position variable (If
     // find more than one select as best the nearest to the center
@@ -228,7 +226,6 @@ public:
 
     shifting(matrix, sequence);
 
-    scores_normalization();
   }
 
   void shifting(vector<vector<double>> &, string &);
@@ -253,6 +250,7 @@ private:
 
 public:
   coordinator_class() {
+        
     result = twobit_sequence_names(tb);
     // GEP (vector of bed class) creation. An empty GEP vector is passed by
     // reference to be filled and saved in this class
@@ -310,6 +308,7 @@ public:
   vector<bed_class> GEP;
 
   multifasta_class(string MFASTA_FILE) {
+    
 
     // Firstly the fasta sequences from multifasta file are extracted and saved
     // into a vector of strings
@@ -361,6 +360,7 @@ public:
   unsigned int local_pos;
   z_test_class(vector<vector<double>> &PWM_hamming, vector<bed_class> &GEP,
                unsigned int local_p, unsigned int len) {
+    
 
     local_pos = local_p;
 
@@ -449,6 +449,8 @@ public:
   void DVerticalMapVector();
 
   MapClass(vector<bed_class> &GEP) {
+        
+
     // Main function where all the maps are constructed 
     MainMapVector(GEP);
     // FIltered vertical map with only the oligo that are effectively present at
@@ -456,12 +458,12 @@ public:
     VerticalMapVector();
     // Functions that starts with D are debug functions
     if(DS){
-      DMainMapVectorDS();
+      // DMainMapVectorDS();
     }
     else{
-      DMainMapVectorSS();
+      // DMainMapVectorSS();
     }
-    DVerticalMapVector();
+    // DVerticalMapVector();
   }
 };
 
@@ -489,6 +491,7 @@ public:
   PvalueClass(vector<bed_class> &GEP, multimap<int, string>::iterator &it,
               unordered_map<string, HorizontalClass> &vector_map_hor, unsigned int i) {
     // Here all the paramters for pvalue are calculated
+    
     TKN1Calc(GEP, it, vector_map_hor, i);
 
   }
@@ -526,6 +529,8 @@ public:
                multimap<int, string, greater<int>> &position_occurrences,
                unordered_map<string, HorizontalClass> &map_horizontal, 
                unsigned int position, unsigned int d) {
+      
+
     pos = position;
     // Creation of oligo cluster 
     CheckSeed(seed, map_vertical, position_occurrences, position, d);
@@ -558,6 +563,7 @@ class EMClass{
     
     EMClass(map<string,double> &cluster_map, vector<vector<double>> &PWM_hamming, 
             unordered_map<string, HorizontalClass> &map_horizontal){
+          
       EM_Ipwm(PWM_hamming);
       EM_cycle(cluster_map, PWM_hamming, map_horizontal);
     }

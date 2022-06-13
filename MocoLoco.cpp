@@ -1,10 +1,10 @@
 #include "MocoLoco.h"
-//#include "Profiling.h"
+// #include "Profiling.h"
 #include <sys/resource.h>
 
 int main(int argc, char *argv[]) {
   Timer timer;
-  //Instrumentor::Get().BeginSession("MocoLoco");
+  // Instrumentor::Get().BeginSession("MocoLoco");
   {
 
     // If arguments number is 1 means that no input file has been inserted -
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 
     return 0;
   }
-  //Instrumentor::Get().EndSession();
+  // Instrumentor::Get().EndSession();
 }
 
 // Function to choose the pathway to follow. 2 input options:
@@ -86,7 +86,7 @@ void BED_path() {
           sort(begin(P_vector), end(P_vector), comp);
         }
         // Debug for PValueClass
-        DVector(P_vector, j);
+        // DVector(P_vector, j);
           
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
@@ -135,7 +135,7 @@ void BED_path() {
   
 // else if the input is a Multifasta file
 void MULTIFA_path(){
-
+  // PROFILE_FUNCTION();
   multifasta_class MULTIFA(MFASTA_FILE);
   // Reading k-mers, dist and freq in input and saving them into vectors
   kmers_vector = generic_vector_creation(kmers);
@@ -176,7 +176,10 @@ void MULTIFA_path(){
         it != M.vector_positions_occurrences[i][j].end(); it++) {
           //In the PvalueClass to each oligo is associated its pvalue
           PvalueClass P(MULTIFA.GEP, it, M.vector_map_hor[i], i);
-          P_vector.push_back(P);
+          if((P_vector.size() == 0) || (P_vector.size() >= 1 && 
+              (P.oligo != reverse_oligo(P_vector.back().oligo)))){
+            P_vector.push_back(P);
+          }
         }
         //The element in P_vector are ordered on the basis of pvalues
         //otherwise the normal ordering (by occurrences in vertical map)
@@ -188,7 +191,7 @@ void MULTIFA_path(){
           sort(begin(P_vector), end(P_vector), comp);
         }
         // Debug for PValueClass
-        DVector(P_vector, j);
+        // DVector(P_vector, j);
           
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
@@ -475,22 +478,14 @@ void oligo_class::shifting(vector<vector<double>> &matrix, string &sequence) {
       }
     }
 
+    // Best score normalization with normalization formula
+    sum_scores = 1 + ((sum_scores - max_possible_score) / 
+                      (max_possible_score - min_possible_score));
     // The total score of an oligo is saved into an oligo_scores vector
     oligo_scores.emplace_back(sum_scores);
   }
 }
 
-// Best score normalization with normalization formula (The parameter to
-// normalize have already been calculated and saved into the class)
-void oligo_class::scores_normalization() {
-  // PROFILE_FUNCTION();
-
-  for (unsigned int i = 0; i < oligo_scores.size(); i++) {
-
-    oligo_scores[i] = 1 + ((oligo_scores[i] - max_possible_score) /
-                           (max_possible_score - min_possible_score));
-  }
-}
 
 // Function to find the best oligo score. From every sequence from GEP the best
 // oligo is calculated and both oligo and position in the window are saved
@@ -981,11 +976,10 @@ void HammingClass::CheckSeed(string seed,
 
 void HammingClass::Freq1Calc() {
   // PROFILE_FUNCTION();
-  freq1 = static_cast<double>(seed_vertical) / static_cast<double>(tot_freq);
-  cout << "FREQ: " << freq1 << endl;
-  // double freq_right = static_cast<double>(tot_freq)/static_cast<double>(frequence);
-  // cout << frequence << endl;
-  // cout << "OLD FREQ: " << freq_right << endl;
+  double cluster_occ = accumulate(vert_vector.begin(), vert_vector.end(),
+                                decltype(vert_vector)::value_type(0));
+  
+  freq1 = static_cast<double>(cluster_occ) / static_cast<double>(tot_freq);
 }
 
 void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> &map_horizontal) {
@@ -1011,7 +1005,7 @@ void HammingClass::Freq2Calc() {
 
 void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos,
                                   unordered_map<string, VerticalClass> &map_vertical, unsigned int j){
-
+  // PROFILE_FUNCTION();
   for(unsigned int i = 0; i < hamming_seed.size(); i++){
     
     for(multimap<int, string, greater<int>>::iterator it = pos.begin();
@@ -1100,12 +1094,6 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
       it->second.horizontal_count++;
       it->second.horizontal_count_FWD++;
       if (DS) {
-        // if(it->second.palindrome){
-        //   it->second.horizontal_count_REV++;
-        //   it->second.horizontal_count_rc_FWD++;
-        //   it->second.horizontal_count++;
-        //   it->second.horizontal_count_rc++;
-        // }
         it->second.horizontal_count_rc++;
         it->second.horizontal_count_rc_REV++;
       }
@@ -1130,11 +1118,6 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
         Hor.horizontal_count_FWD = 1, Hor.horizontal_count_rc_FWD = 0;
         Hor.horizontal_count_REV = 0, Hor.horizontal_count_rc_REV = 1;
         Hor.horizontal_count_rc = 1, Hor.horizontal_count = 1;
-        // if(oligo == oligo_rc){
-        //   Hor.horizontal_count_rc_FWD = 1;
-        //   Hor.horizontal_count_REV = 1;
-        //   Hor.horizontal_count = 2, Hor.horizontal_count_rc = 2;
-        // }
       }
     
       horizontal_map.emplace(oligo, Hor);
@@ -1155,17 +1138,6 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
       it->second.vertical_count_FWD[i]++;
       it->second.vertical_count_rc_REV[i]++;
       it->second.vertical_count_rc[i]++;
-      // tot_freq++;
-      if (DS) {
-        // if(it->second.palindrome){         
-        //   it->second.vertical_count[i]++;
-        //   it->second.vertical_count_rc[i]++;
-        //   it->second.vertical_count_REV[i]++;
-        //   it->second.vertical_count_rc_FWD[i]++;
-        // }
-      //   tot_freq++;
-        
-      }
     } else if (it_rc != vertical_map.end()) {
       if (!it_rc->second.palindrome) {
         it_rc->second.vertical_count_rc[i]++;
@@ -1175,7 +1147,6 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
           it_rc->second.vertical_count_REV[i]++;
         }
       }
-
     } else {
       VerticalClass Ver;
       Ver.oligo = oligo, Ver.oligo_rc = oligo_rc;
@@ -1192,12 +1163,6 @@ void MapClass::CountOccurrencesVer(string sequence, int k) {
         Ver.vertical_count_rc[i] = 1;
         Ver.vertical_count_FWD[i] = 1, Ver.vertical_count_rc_REV[i] = 1;
         Ver.vertical_count_REV[i] = 0, Ver.vertical_count_rc_FWD[i] = 0;
-        // if(oligo == oligo_rc){
-        //   Ver.vertical_count_rc_FWD[i] = 1;
-        //   Ver.vertical_count_REV[i] = 1;
-        //   Ver.vertical_count[i] = 2;
-        //   Ver.vertical_count_rc[i] = 2;
-        // }
       }
     
       vertical_map.emplace(oligo, Ver);
@@ -1882,7 +1847,7 @@ void coordinator_class::print_GEP(vector<bed_class> &GEP) {
 }
 
 void Outfile_PWM_matrices(unsigned int j, vector<string> &seed_oligo) {
-  // // PROFILE_FUNCTION();
+  // PROFILE_FUNCTION();
   ofstream outfile;
    if (DS) {
      outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
@@ -2069,7 +2034,7 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
 }
 
 vector<double> freq_vector_creation(string numbers){
-   // PROFILE_FUNCTION();
+  // PROFILE_FUNCTION();
   int index = 0;
   vector<double> vec;
 
