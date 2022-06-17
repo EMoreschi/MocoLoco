@@ -2,6 +2,7 @@
 #include "../TwoBit/twobit.h"
 #include <iostream>
 #include <iterator>
+#include <math.h>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -42,19 +43,19 @@ public:
 };
 
 class matrix_c {
-  vector<vector<int>> NLogMatrix;
-  vector<vector<int>> INLogMatrix;
-  const double pseudoc = 0.01;
+  vector<vector<double>> NLogMatrix;
+  vector<vector<double>> INLogMatrix;
   void Norm(double, vector<double>, vector<vector<double>>);
   vector<double> ColSum(vector<vector<double>>);
-  void MakeLog();
+  void MakeLog(vector<vector<double>>);
 
 public:
   matrix_c(vector<vector<double>> JM, double psdcount) {
-    psdcount = 0.01;
+    const double pseudoc = 0.01;
     vector<double> col_sum;
     col_sum = ColSum(JM);
     Norm(psdcount, col_sum, JM);
-    Norm(0, col_sum, JM);
+    Norm(0, col_sum, NLogMatrix);
+    MakeLog(NLogMatrix);
   }
 };

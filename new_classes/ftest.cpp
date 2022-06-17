@@ -87,7 +87,7 @@ void matrix_c::Norm(double psdcount, vector<double> col_sum,
                     vector<vector<double>> JM) {
   for (unsigned int x = 0; x < JM.size(); x++) {
     for (unsigned int i = 0; i < JM[x].size(); i++) {
-      JM[x][i] = JM[x][i] / col_sum[i] + psdcount;
+      NLogMatrix[x][i] = JM[x][i] / col_sum[i] + psdcount;
     }
   }
 }
@@ -105,4 +105,10 @@ vector<double> matrix_c::ColSum(vector<vector<double>> JM) {
   return col_sum;
 }
 
-void matrix_c::MakeLog() {}
+void matrix_c::MakeLog(vector<vector<double>> JM) {
+  for (unsigned int x = 0; x < JM.size(); x++) {
+    for (unsigned int i = 0; i < JM[x].size(); i++) {
+      JM[x][i] = log(JM[x][i]);
+    }
+  }
+}
