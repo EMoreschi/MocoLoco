@@ -44,14 +44,17 @@ public:
 class matrix_c {
   vector<vector<int>> NLogMatrix;
   vector<vector<int>> INLogMatrix;
-  void Norm(int, vector<double>, vector<vector<double>>);
+  const double pseudoc = 0.01;
+  void Norm(double, vector<double>, vector<vector<double>>);
   vector<double> ColSum(vector<vector<double>>);
   void MakeLog();
 
 public:
-  matrix_c(vector<vector<double>> JM, int psdcount) {
+  matrix_c(vector<vector<double>> JM, double psdcount) {
+    psdcount = 0.01;
     vector<double> col_sum;
     col_sum = ColSum(JM);
+    Norm(psdcount, col_sum, JM);
     Norm(0, col_sum, JM);
   }
 };

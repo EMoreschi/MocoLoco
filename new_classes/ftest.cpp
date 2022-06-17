@@ -78,15 +78,16 @@ void JR_c::ReadJ(string JASPAR_FILE) {
   }
   file.close();
 }
+
 vector<vector<double>> JR_c::RJM() { return JM; }
 
 // void matrix_c::Norm(std::vector<double> col_sum,
 // std::vector<std::vector<double>>& ma){
-void matrix_c::Norm(int psdcount, vector<double> col_sum,
+void matrix_c::Norm(double psdcount, vector<double> col_sum,
                     vector<vector<double>> JM) {
   for (unsigned int x = 0; x < JM.size(); x++) {
     for (unsigned int i = 0; i < JM[x].size(); i++) {
-      JM[x][i] = JM[x][i] / col_sum[i];
+      JM[x][i] = JM[x][i] / col_sum[i] + psdcount;
     }
   }
 }
