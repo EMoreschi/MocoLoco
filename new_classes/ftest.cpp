@@ -1,5 +1,7 @@
 #include "ftest.h"
 #include <fstream>
+#include <functional>
+#include <numeric>
 #include <unistd.h>
 
 unsigned int half_length = 150, overhead = 25;
@@ -15,6 +17,12 @@ int main() {
   bed_c B(BED_FILE, tb);
   JR_c J(JASPAR_FILE);
   matrix_c mat(J.RJM(), 0);
+  // double array_d[B.bed_v[0].seq.size()];
+  for (unsigned int i = 0; i < B.bed_v.size(); i++) {
+    score_c score(mat.RNLogMatrix(), B.bed_v[i].seq);
+
+    cout << score.seq_scores[189] << endl;
+  }
   return 0;
 }
 
@@ -34,14 +42,14 @@ void bed_c::ReadB(string BED_FILE, TwoBit *tb) {
       unsigned int center = (bed_in.start + bed_in.end) / 2;
       bed_in.start = center - half_length;
       bed_in.end = center + half_length + overhead;
+      bed_in.seq =
+          twobit_sequence(tb, bed_in.chr.c_str(), bed_in.start, bed_in.end - 1);
+
       bed_v.push_back(bed_in);
     }
   }
-  //  for (unsigned int i = 0; i < bed_v.size(); i++) {
-  //    cout << bed_v[i].chr << '\t' << bed_v[i].start << '\t' << bed_v[i].end
-  //         << endl;
-  //  }
 }
+
 void JR_c::ReadJ(string JASPAR_FILE) {
 
   ifstream file(JASPAR_FILE);
@@ -80,27 +88,30 @@ void JR_c::ReadJ(string JASPAR_FILE) {
 }
 
 vector<vector<double>> JR_c::RJM() { return JM; }
+vector<vector<double>> matrix_c::RNLogMatrix() { return NLogMatrix; }
 
 // void matrix_c::Norm(std::vector<double> col_sum,
 // std::vector<std::vector<double>>& ma){
 void matrix_c::Norm(double psdcount, vector<double> col_sum,
                     vector<vector<double>> JM) {
   for (unsigned int x = 0; x < JM.size(); x++) {
+    vector<double> Elog;
     for (unsigned int i = 0; i < JM[x].size(); i++) {
-      NLogMatrix[x][i] = JM[x][i] / col_sum[i] + psdcount;
+
+      Elog.push_back((JM[x][i] / col_sum[i]) + psdcount);
     }
+    NLogMatrix.emplace_back(Elog);
   }
 }
 
 vector<double> matrix_c::ColSum(vector<vector<double>> JM) {
   vector<double> col_sum;
-  double sum = 0;
   for (unsigned int i = 0; i < JM[0].size(); i++) {
+    double sum = 0;
     for (unsigned int j = 0; j < 2; j++) {
       sum += JM[j][i];
     }
     col_sum.emplace_back(sum);
-    sum = 0;
   }
   return col_sum;
 }
@@ -110,5 +121,69 @@ void matrix_c::MakeLog(vector<vector<double>> JM) {
     for (unsigned int i = 0; i < JM[x].size(); i++) {
       JM[x][i] = log(JM[x][i]);
     }
+  }
+}
+
+void score_c::FindMinMax(vector<vector<double>> &matrix) {
+  vector<double> max_sum;
+  for (unsigned int i = 0; i < matrix[0].size(); i++) {
+    vector<double> column;
+    for (unsigned int j = 0; j < matrix.size(); j++) {
+      column.emplace_back(matrix[j][i]);
+    }
+
+    min_sum.emplace_back(*min_element(column.begin(), column.end()));
+    max_sum.emplace_back(*max_element(column.begin(), column.end()));
+  }
+
+  double min = accumulate(min_sum.begin(), min_sum.end(), 0.0);
+  double max = accumulate(max_sum.begin(), max_sum.end(), 0.0);
+  minmax_v.emplace_back(min);
+  minmax_v.emplace_back(max);
+}
+
+void score_c::Shifting(vector<vector<double>> &matrix, string &sequence) {
+  // PROFILE_FUNCTION();
+  unsigned int max = 0;
+  max = sequence.size() - matrix[0].size();
+  double seq_scores[max];
+  for (unsigned int s_iterator = 0; s_iterator <= max; s_iterator++) {
+    double sum_scores = 0;
+    // For each oligo in the current sequence a score is calculated
+    for (unsigned int i = 0; i < matrix[0].size(); i++) {
+
+      switch (sequence[i + s_iterator]) {
+
+      case 'A':
+
+        sum_scores += matrix[0][i];
+        break;
+
+      case 'C':
+
+        sum_scores += matrix[1][i];
+        break;
+
+      case 'G':
+
+        sum_scores += matrix[2][i];
+        break;
+
+      case 'T':
+
+        sum_scores += matrix[3][i];
+        break;
+
+      default: // Case if there is N
+
+        sum_scores += min_sum[i];
+        break;
+      }
+    }
+
+    // Best score normalization with normalization formula
+    sum_scores = 1 + ((sum_scores - minmax_v[2]) / (minmax_v[2] - minmax_v[1]));
+    seq_scores[s_iterator] = sum_scores;
+    // The total score of an oligo is saved into an oligo_scores vector
   }
 }
