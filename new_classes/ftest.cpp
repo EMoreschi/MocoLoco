@@ -18,10 +18,17 @@ int main() {
   JR_c J(JASPAR_FILE);
   matrix_c mat(J.RJM(), 0);
   // double array_d[B.bed_v[0].seq.size()];
+  double **Gscore = new double *[B.bed_v.size()];
   for (unsigned int i = 0; i < B.bed_v.size(); i++) {
     score_c score(mat.RNLogMatrix(), B.bed_v[i].seq);
 
-    cout << score.seq_scores[189] << endl;
+    Gscore[i] = score.seq_scores;
+  }
+  for (int i = 0; i < B.bed_v.size(); ++i) {
+    for (int j = 0; j < B.bed_v[i].seq.size(); ++j) {
+      std::cout << Gscore[i][j] << '\n';
+    }
+    // std::cout << std::endl;
   }
   return 0;
 }
