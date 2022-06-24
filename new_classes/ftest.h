@@ -46,21 +46,24 @@ public:
 };
 
 class matrix_c {
-  vector<vector<double>> NLogMatrix;
-  vector<vector<double>> INLogMatrix;
-  void Norm(double, vector<double>, vector<vector<double>>);
-  vector<double> ColSum(vector<vector<double>>);
-  void MakeLog(vector<vector<double>>);
+  vector<vector<double>> LogMatrix;
+  void Norm(double, vector<double>, vector<vector<double>> &);
+  vector<double> ColSum(vector<vector<double>> &);
+  void MakeLog(vector<vector<double>> &);
 
 public:
-  vector<vector<double>> RNLogMatrix();
-  matrix_c(vector<vector<double>> JM, double psdcount) {
-    double pseudoc = 0.01;
-    vector<double> col_sum;
-    col_sum = ColSum(JM);
-    Norm(psdcount, col_sum, JM);
-    Norm(0, col_sum, NLogMatrix);
-    MakeLog(NLogMatrix);
+  vector<vector<double>> RMatrix();
+  void print_ma();
+  matrix_c(vector<vector<double>> JM) {
+    const double pseudoc = 0.01;
+    Norm(pseudoc, ColSum(JM), JM);
+    PrintMatrix(JM);
+    cout << '\n';
+    Norm(0, ColSum(JM), JM);
+    PrintMatrix(JM);
+    cout << '\n';
+    MakeLog(JM);
+    PrintMatrix(LogMatrix);
   }
 };
 

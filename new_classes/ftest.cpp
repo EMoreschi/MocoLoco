@@ -10,17 +10,18 @@ int main() {
   /// READING BED
   string BED_FILE = "../Test_Bed/nfy_k562_hg19.bed";
   string TWOBIT_FILE = "../Genomes/hg19/hg19.2bit";
-  string JASPAR_FILE = "../Jaspar_2020/MA0060.1.jaspar";
+  string JASPAR_FILE = "../Jaspar_2020/MA0006.1.jaspar";
   TwoBit *tb;
   char **result;
   tb = twobit_open(TWOBIT_FILE.c_str());
   bed_c B(BED_FILE, tb);
   JR_c J(JASPAR_FILE);
-  matrix_c mat(J.RJM(), 0);
+  //  PrintMatrix(J.RJM());
+  matrix_c mat(J.RJM());
   // double array_d[B.bed_v[0].seq.size()];
   double **Gscore = new double *[B.bed_v.size()];
   for (unsigned int i = 0; i < B.bed_v.size(); i++) {
-    score_c score(mat.RNLogMatrix(), B.bed_v[i].seq);
+    score_c score(mat.RMatrix(), B.bed_v[i].seq);
 
     Gscore[i] = score.seq_scores;
   }
@@ -28,7 +29,6 @@ int main() {
     for (int j = 0; j < B.bed_v[i].seq.size(); ++j) {
       std::cout << Gscore[i][j] << '\n';
     }
-    // std::cout << std::endl;
   }
   return 0;
 }
@@ -95,27 +95,25 @@ void JR_c::ReadJ(string JASPAR_FILE) {
 }
 
 vector<vector<double>> JR_c::RJM() { return JM; }
-vector<vector<double>> matrix_c::RNLogMatrix() { return NLogMatrix; }
+vector<vector<double>> matrix_c::RMatrix() { return LogMatrix; }
 
 // void matrix_c::Norm(std::vector<double> col_sum,
 // std::vector<std::vector<double>>& ma){
 void matrix_c::Norm(double psdcount, vector<double> col_sum,
-                    vector<vector<double>> JM) {
+                    vector<vector<double>> &JM) {
   for (unsigned int x = 0; x < JM.size(); x++) {
-    vector<double> Elog;
     for (unsigned int i = 0; i < JM[x].size(); i++) {
-
-      Elog.push_back((JM[x][i] / col_sum[i]) + psdcount);
+      double *ptr = &JM[x][i];
+      *ptr = (*ptr / col_sum[i] + psdcount);
     }
-    NLogMatrix.emplace_back(Elog);
   }
 }
 
-vector<double> matrix_c::ColSum(vector<vector<double>> JM) {
+vector<double> matrix_c::ColSum(vector<vector<double>> &JM) {
   vector<double> col_sum;
   for (unsigned int i = 0; i < JM[0].size(); i++) {
     double sum = 0;
-    for (unsigned int j = 0; j < 2; j++) {
+    for (unsigned int j = 0; j < 4; j++) {
       sum += JM[j][i];
     }
     col_sum.emplace_back(sum);
@@ -123,12 +121,14 @@ vector<double> matrix_c::ColSum(vector<vector<double>> JM) {
   return col_sum;
 }
 
-void matrix_c::MakeLog(vector<vector<double>> JM) {
+void matrix_c::MakeLog(vector<vector<double>> &JM) {
   for (unsigned int x = 0; x < JM.size(); x++) {
     for (unsigned int i = 0; i < JM[x].size(); i++) {
-      JM[x][i] = log(JM[x][i]);
+      double *ptr = &JM[x][i];
+      *ptr = log(JM[x][i]);
     }
   }
+  LogMatrix = JM;
 }
 
 void score_c::FindMinMax(vector<vector<double>> &matrix) {
@@ -137,8 +137,8 @@ void score_c::FindMinMax(vector<vector<double>> &matrix) {
     vector<double> column;
     for (unsigned int j = 0; j < matrix.size(); j++) {
       column.emplace_back(matrix[j][i]);
+      // cout << matrix[j][i] << endl;
     }
-
     min_sum.emplace_back(*min_element(column.begin(), column.end()));
     max_sum.emplace_back(*max_element(column.begin(), column.end()));
   }
@@ -189,8 +189,16 @@ void score_c::Shifting(vector<vector<double>> &matrix, string &sequence) {
     }
 
     // Best score normalization with normalization formula
-    sum_scores = 1 + ((sum_scores - minmax_v[2]) / (minmax_v[2] - minmax_v[1]));
+    sum_scores = 1 + sum_scores - minmax_v[1] / minmax_v[1] - minmax_v[0];
     seq_scores[s_iterator] = sum_scores;
     // The total score of an oligo is saved into an oligo_scores vector
+  }
+}
+void matrix_c::print_ma() {
+  for (unsigned int i = 0; i < LogMatrix.size(); i++) {
+    for (unsigned int j = 0; j < LogMatrix[0].size(); j++) {
+      cout << LogMatrix[i][j] << " ";
+    }
+    cout << "\n";
   }
 }
