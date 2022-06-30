@@ -1,11 +1,15 @@
 #include "../TwoBit/twobit.c"
 #include "../TwoBit/twobit.h"
 #include <algorithm>
+#include <fstream>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <math.h>
+#include <numeric>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 using namespace std;
@@ -47,13 +51,15 @@ public:
 
 class matrix_c {
   vector<vector<double>> LogMatrix;
+  vector<vector<double>> ICLogMatrix;
   void Norm(double, vector<double>, vector<vector<double>> &);
   vector<double> ColSum(vector<vector<double>> &);
   void MakeLog(vector<vector<double>> &);
+  void InverseMa();
 
 public:
   vector<vector<double>> RMatrix();
-  void print_ma();
+  vector<vector<double>> RICMatrix();
   matrix_c(vector<vector<double>> JM) {
     const double pseudoc = 0.01;
     Norm(pseudoc, ColSum(JM), JM);
@@ -64,6 +70,9 @@ public:
     cout << '\n';
     MakeLog(JM);
     PrintMatrix(LogMatrix);
+    cout << '\n';
+    InverseMa();
+    PrintMatrix(ICLogMatrix);
   }
 };
 
@@ -74,11 +83,12 @@ class score_c {
   vector<double> minmax_v;
 
 public:
-  double *seq_scores;
+  vector<double> seq_scores;
   void FindMinMax(vector<vector<double>> &);
-  void Shifting(vector<vector<double>> &, string &);
+  vector<double> Shifting(vector<vector<double>> &, string &);
   score_c(vector<vector<double>> log_matrix, string seq) {
     FindMinMax(log_matrix);
-    Shifting(log_matrix, seq);
+    seq_scores = Shifting(log_matrix, seq);
+    // cout << *seq_scores;
   }
 };

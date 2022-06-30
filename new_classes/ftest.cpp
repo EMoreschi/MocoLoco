@@ -1,8 +1,4 @@
 #include "ftest.h"
-#include <fstream>
-#include <functional>
-#include <numeric>
-#include <unistd.h>
 
 unsigned int half_length = 150, overhead = 25;
 
@@ -16,19 +12,15 @@ int main() {
   tb = twobit_open(TWOBIT_FILE.c_str());
   bed_c B(BED_FILE, tb);
   JR_c J(JASPAR_FILE);
-  //  PrintMatrix(J.RJM());
   matrix_c mat(J.RJM());
-  // double array_d[B.bed_v[0].seq.size()];
-  double **Gscore = new double *[B.bed_v.size()];
+  vector<vector<double>> Gscore;
+
   for (unsigned int i = 0; i < B.bed_v.size(); i++) {
     score_c score(mat.RMatrix(), B.bed_v[i].seq);
-
-    Gscore[i] = score.seq_scores;
+    Gscore.emplace_back(score.seq_scores);
   }
-  for (int i = 0; i < B.bed_v.size(); ++i) {
-    for (int j = 0; j < B.bed_v[i].seq.size(); ++j) {
-      std::cout << Gscore[i][j] << '\n';
-    }
+  for (unsigned int i = 0; i < B.bed_v.size(); i++) {
+    PrintVector(Gscore[i]);
   }
   return 0;
 }
@@ -96,6 +88,7 @@ void JR_c::ReadJ(string JASPAR_FILE) {
 
 vector<vector<double>> JR_c::RJM() { return JM; }
 vector<vector<double>> matrix_c::RMatrix() { return LogMatrix; }
+vector<vector<double>> matrix_c::RICMatrix() { return ICLogMatrix; }
 
 // void matrix_c::Norm(std::vector<double> col_sum,
 // std::vector<std::vector<double>>& ma){
@@ -149,12 +142,14 @@ void score_c::FindMinMax(vector<vector<double>> &matrix) {
   minmax_v.emplace_back(max);
 }
 
-void score_c::Shifting(vector<vector<double>> &matrix, string &sequence) {
+vector<double> score_c::Shifting(vector<vector<double>> &matrix,
+                                 string &sequence) {
   // PROFILE_FUNCTION();
-  unsigned int max = 0;
+  int max = 0;
   max = sequence.size() - matrix[0].size();
-  double seq_scores[max];
-  for (unsigned int s_iterator = 0; s_iterator <= max; s_iterator++) {
+  vector<double> seq_scores;
+
+  for (int s_iterator = 0; s_iterator <= max; s_iterator++) {
     double sum_scores = 0;
     // For each oligo in the current sequence a score is calculated
     for (unsigned int i = 0; i < matrix[0].size(); i++) {
@@ -189,16 +184,22 @@ void score_c::Shifting(vector<vector<double>> &matrix, string &sequence) {
     }
 
     // Best score normalization with normalization formula
-    sum_scores = 1 + sum_scores - minmax_v[1] / minmax_v[1] - minmax_v[0];
-    seq_scores[s_iterator] = sum_scores;
-    // The total score of an oligo is saved into an oligo_scores vector
+    sum_scores = 1 + (sum_scores - minmax_v[1]) / (minmax_v[1] - minmax_v[0]);
+    seq_scores.emplace_back(sum_scores);
+    // cout << seq_scores[s_iterator];
+    //  cout << *seq_scores[s_iterator] << endl;
+    //  The total score of an oligo is saved into an oligo_scores vector
   }
+  return seq_scores;
 }
-void matrix_c::print_ma() {
-  for (unsigned int i = 0; i < LogMatrix.size(); i++) {
-    for (unsigned int j = 0; j < LogMatrix[0].size(); j++) {
-      cout << LogMatrix[i][j] << " ";
-    }
-    cout << "\n";
+
+void matrix_c::InverseMa() {
+  // PROFILE_FUNCTION();
+  ICLogMatrix = LogMatrix;
+  reverse(ICLogMatrix.begin(), ICLogMatrix.end());
+
+  for (int i = 0; i < 4; i++) {
+
+    reverse(ICLogMatrix[i].begin(), ICLogMatrix[i].end());
   }
 }
