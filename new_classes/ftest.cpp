@@ -337,22 +337,6 @@ unsigned int ScoreClass::BestScore(vector<double> &ScoreMatrix){
   return match;
 }
 
-vector<bool> CheckBestStrand(vector<double> Best_vector){
-  for (unsigned int i = 0; i < Best_vector.size(); i+=2){
-    double best_score_norm_positive = Best_vector[i];
-    double best_score_norm_negative = Best_vector[i + 1];
-
-    if (best_score_norm_positive >= best_score_norm_negative) {
-      Reverse.emplace_back(false);
-    }
-
-    else {
-      Reverse.emplace_back(true);
-    }
-  }
-  return Reverse;
-}
-
 void ReverseCentering(unsigned int center, BedClass::bed_s &GEP, 
                     unsigned int matrix_size){
   

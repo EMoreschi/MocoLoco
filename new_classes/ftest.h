@@ -343,7 +343,6 @@ class Timer {
 };
 
 void RAM_usage();
-vector<bool> CheckBestStrand(vector<double>);
 void ReverseCentering(unsigned int, BedClass::bed_s &,
                   unsigned int);
 void Centering(BedClass::bed_s &, unsigned int, unsigned int);
