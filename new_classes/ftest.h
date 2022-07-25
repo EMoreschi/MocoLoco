@@ -46,7 +46,7 @@ string JASPAR_FILE;
 string alias_file = "multifasta_";
 string MFASTA_FILE;
 string ordering;
-bool DS = false;
+bool DS = true;
 string kmers = "6,8,10";
 string dist = "1,2,3";
 unsigned int top_N = 10;
@@ -103,8 +103,8 @@ class MatrixClass {
   void InversemLogMatrix();
 
 public:
-  vector<vector<double>> ReturnMatrix();
-  vector<vector<double>> ReturnInverseMatrix();
+  vector<vector<double>>& ReturnMatrix();
+  vector<vector<double>>& ReturnInverseMatrix();
   MatrixClass(vector<vector<double>> mJasparMatrix) {
     const double pseudoc = 0.01;
     MatrixNormalization(pseudoc, ColSum(mJasparMatrix), mJasparMatrix);
@@ -128,17 +128,17 @@ class ScoreClass {
   
 public:
   double MaxScore;
-  unsigned int start_coord_oligo;
-  vector<double> seq_scores;
+  unsigned int CenteredStart;
+  vector<double> SeqScores;
   void FindMinMax(vector<vector<double>> &);
   vector<double> Shifting(vector<vector<double>> &, string &);
   unsigned int BestScore(vector<double> &);
 
-  ScoreClass(vector<vector<double>> log_matrix, string seq, unsigned int start_coord_GEP) {
-    FindMinMax(log_matrix);
-    seq_scores = Shifting(log_matrix, seq);
-    mCentralPosition = BestScore(seq_scores);
-    start_coord_oligo = start_coord_GEP + mCentralPosition;
+  ScoreClass(vector<vector<double>> &LogMatrix, string &Sequence, unsigned int StartCoordGEP) {
+    FindMinMax(LogMatrix);
+    SeqScores = Shifting(LogMatrix, Sequence);
+    mCentralPosition = BestScore(SeqScores);
+    CenteredStart = StartCoordGEP + mCentralPosition;
   };
 };
 
@@ -173,9 +173,9 @@ class VerticalClass {
 
 class MapClass {
 
-  friend class PvalueClass;
-  friend class HammingClass;
-
+private:
+  void CountOccurrencesHor(string &, int);
+  void CountOccurrencesVer(string &, int);
 public:
   unordered_map<string, HorizontalClass> horizontal_map;
   vector<unordered_map<string, HorizontalClass>> vector_map_hor;
@@ -184,8 +184,7 @@ public:
   vector<multimap<int, string, greater<int>>> positions_occurrences;
   vector<vector<multimap<int, string, greater<int>>>>
       vector_positions_occurrences;
-  void CountOccurrencesHor(string, int);
-  void CountOccurrencesVer(string, int);
+
   void MainMapVector(vector<BedClass::bed_s> &);
   void VerticalMapVector();
   void DMainMapVectorDS();
@@ -343,7 +342,7 @@ class Timer {
 };
 
 void RAM_usage();
-void ReverseCentering(unsigned int, BedClass::bed_s &,
+void ReCentering(unsigned int, BedClass::bed_s &,
                   unsigned int);
 void Centering(BedClass::bed_s &, unsigned int, unsigned int);
 bool check_palindrome(string, string &);

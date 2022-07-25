@@ -24,29 +24,27 @@ int main(int argc, char *argv[]) {
     
     ScoreClass score(mat.ReturnMatrix(), B.bed_v[i].Sequence, 
                       B.bed_v[i].Start);
-    
-    Centering(B.bed_v[i], score.start_coord_oligo, 
+    if(DS == false){ 
+    	Centering(B.bed_v[i], score.CenteredStart, 
                     mat.ReturnMatrix()[0].size());
-    // if(DS){
-    //   ScoreClass score_rev(mat.ReturnInverseMatrix(), B.bed_v[i].Sequence, 
-    //                     B.bed_v[i].Start);
-          
-    // if(score_rev.MaxScore > score.MaxScore){
-    //   cout << score_rev.MaxScore << endl;
-    //   cout << score_rev.start_coord_oligo << endl;
-    //   Centering(B.bed_v[i], score_rev.start_coord_oligo, 
-    //                 mat.ReturnInverseMatrix()[0].size());
-    //     ReverseCentering(score_rev.start_coord_oligo, B.bed_v[i],
-    //             mat.ReturnInverseMatrix()[0].size());
-    // }
-    // else{
-    //   cout << score.MaxScore << endl;
-    //   cout << score.start_coord_oligo << endl;
-    //     Centering(B.bed_v[i], score.start_coord_oligo, 
-    //                 mat.ReturnMatrix()[0].size());
-    // }
-    // }
-    // cout << B.bed_v[i].Sequence << endl;
+    }
+    else{
+      ScoreClass score_rev(mat.ReturnInverseMatrix(), B.bed_v[i].Sequence, 
+                        B.bed_v[i].Start);
+      if(score_rev.MaxScore > score.MaxScore){
+        Centering(B.bed_v[i], score_rev.CenteredStart, 
+                     mat.ReturnInverseMatrix()[0].size());
+        if(direction){
+          ReCentering(score_rev.CenteredStart, B.bed_v[i],
+                   mat.ReturnInverseMatrix()[0].size());
+        }
+      }
+      else{
+        Centering(B.bed_v[i], score.CenteredStart, 
+                    mat.ReturnMatrix()[0].size());
+      }
+    }
+    cout << B.bed_v[i].Sequence << endl;
   }
   twobit_close(tb);
 
@@ -207,8 +205,8 @@ void JasparClass::ReadJaspar(string JASPAR_FILE) {
 }
 
 vector<vector<double>> JasparClass::ReturnJaspar() { return mJasparMatrix; }
-vector<vector<double>> MatrixClass::ReturnMatrix() { return mLogMatrix; }
-vector<vector<double>> MatrixClass::ReturnInverseMatrix() { return mInverseLogMatrix; }
+vector<vector<double>>& MatrixClass::ReturnMatrix() { return mLogMatrix; }
+vector<vector<double>>& MatrixClass::ReturnInverseMatrix() { return mInverseLogMatrix; }
 
 // void matrix_c::Norm(std::vector<double> col_sum,
 // std::vector<std::vector<double>>& ma){
@@ -324,11 +322,11 @@ void MatrixClass::InversemLogMatrix() {
   }
 }
 
-unsigned int ScoreClass::BestScore(vector<double> &ScoreMatrix){
-  MaxScore = *max_element(ScoreMatrix.begin(), ScoreMatrix.end());
+unsigned int ScoreClass::BestScore(vector<double> &ScoreVector){
+  MaxScore = *max_element(ScoreVector.begin(), ScoreVector.end());
   int match = -25;
-  for (int j = 0; j < ScoreMatrix.size(); j++) {
-    if (ScoreMatrix[j] == MaxScore) {
+  for (int j = 0; j < ScoreVector.size(); j++) {
+    if (ScoreVector[j] == MaxScore) {
       if (abs(j-half_length) < abs(match-half_length)){
         match = j; 
       }
@@ -337,7 +335,7 @@ unsigned int ScoreClass::BestScore(vector<double> &ScoreMatrix){
   return match;
 }
 
-void ReverseCentering(unsigned int center, BedClass::bed_s &GEP, 
+void ReCentering(unsigned int center, BedClass::bed_s &GEP, 
                     unsigned int matrix_size){
   
   check_palindrome(GEP.Sequence, reverse_bases);
@@ -422,7 +420,7 @@ void MapClass::MainMapVector(vector<BedClass::bed_s> &GEP) {
   }
 }
 
-void MapClass::CountOccurrencesHor(string sequence, int k) {
+void MapClass::CountOccurrencesHor(string &sequence, int k) {
   // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
     string oligo = sequence.substr(i, k);
@@ -464,7 +462,7 @@ void MapClass::CountOccurrencesHor(string sequence, int k) {
   }
 }
 
-void MapClass::CountOccurrencesVer(string sequence, int k) {
+void MapClass::CountOccurrencesVer(string &sequence, int k) {
   // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
     // unsigned int tot_freq = 0;
