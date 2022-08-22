@@ -91,39 +91,6 @@ public:
   BedClass(string BED_FILE, string MFASTA_FILE, TwoBit *tb) { ReadBed(BED_FILE, MFASTA_FILE, tb); };
 };
 
-class FastaClass {
-
-private:
-  vector<string> sequences;
-
-  void length_control(vector<string>);
-  void extract_sequences();
-  void GEP_creation_MF(vector<string>);
-  void alias_output_filename();
-
-public:
-  vector<BedClass::bed_s> GEP;
-
-  FastaClass(string MFASTA_FILE) {
-    
-
-    // Firstly the fasta sequences from multifasta file are extracted and saved
-    // into a vector of strings
-    extract_sequences();
-
-    // Then the length control is performed --> All the MF sequences must be of
-    // the same langth
-    length_control(sequences);
-
-    // Function to handle output names
-    alias_output_filename();
-
-    // For every sequence in vector "sequences" a bed class is created to store
-    // the FASTA seqinto a GEP vector
-    GEP_creation_MF(sequences);
-  }
-};
-
 class JasparClass {
 private:
   vector<vector<double>> mJasparMatrix;
