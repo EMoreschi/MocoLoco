@@ -28,6 +28,14 @@ using namespace std;
 #include <algorithm>
 #include <thread>
 
+#define PROFILING 1
+#if PROFILING
+#define PROFILE_SCOPE(name) InstrumentationTimer timer##__LINE__(name)
+#define PROFILE_FUNCTION() PROFILE_SCOPE(__PRETTY_FUNCTION__)
+#else
+#define PROFILE_SCOPE(name)
+#endif
+
 vector<bool> Reverse;
 string reverse_bases;
 const unsigned int overhead = 25;
@@ -78,8 +86,42 @@ public:
     unsigned int Start, End;
   };
   vector<bed_s> bed_v;
-  void ReadBed(string, TwoBit *);
-  BedClass(string BED_FILE, TwoBit *tb) { ReadBed(BED_FILE, tb); };
+
+  void ReadBed(string, string, TwoBit *);
+  BedClass(string BED_FILE, string MFASTA_FILE, TwoBit *tb) { ReadBed(BED_FILE, MFASTA_FILE, tb); };
+};
+
+class FastaClass {
+
+private:
+  vector<string> sequences;
+
+  void length_control(vector<string>);
+  void extract_sequences();
+  void GEP_creation_MF(vector<string>);
+  void alias_output_filename();
+
+public:
+  vector<BedClass::bed_s> GEP;
+
+  FastaClass(string MFASTA_FILE) {
+    
+
+    // Firstly the fasta sequences from multifasta file are extracted and saved
+    // into a vector of strings
+    extract_sequences();
+
+    // Then the length control is performed --> All the MF sequences must be of
+    // the same langth
+    length_control(sequences);
+
+    // Function to handle output names
+    alias_output_filename();
+
+    // For every sequence in vector "sequences" a bed class is created to store
+    // the FASTA seqinto a GEP vector
+    GEP_creation_MF(sequences);
+  }
 };
 
 class JasparClass {
@@ -140,6 +182,10 @@ public:
     mCentralPosition = BestScore(SeqScores);
     CenteredStart = StartCoordGEP + mCentralPosition;
   };
+  ScoreClass(vector<vector<double>> &LogMatrix, string &Sequence){
+    FindMinMax(LogMatrix);
+    SeqScores = Shifting(LogMatrix, Sequence);
+  };
 };
 
 class HorizontalClass {
@@ -150,8 +196,6 @@ class HorizontalClass {
   private:
     string oligo, oligo_rc;                    // TTGCAT - ATGCAA
     int horizontal_count, horizontal_count_rc; // in occorrenze reverse complement
-    int horizontal_count_REV, horizontal_count_rc_REV;
-    int horizontal_count_FWD, horizontal_count_rc_FWD;
     bool palindrome;
 };
 
@@ -164,18 +208,14 @@ class VerticalClass {
     string oligo, oligo_rc;  
     vector<int> vertical_count,
       vertical_count_rc;
-    vector<int> vertical_count_FWD,
-      vertical_count_rc_FWD;
-    vector<int> vertical_count_REV,
-      vertical_count_rc_REV;
     bool palindrome;
 };
 
 class MapClass {
 
 private:
-  void CountOccurrencesHor(string &, int);
-  void CountOccurrencesVer(string &, int);
+  void CountOccurrencesHor(string &, unsigned int);
+  void CountOccurrencesVer(string &, unsigned int);
 public:
   unordered_map<string, HorizontalClass> horizontal_map;
   vector<unordered_map<string, HorizontalClass>> vector_map_hor;
@@ -245,6 +285,7 @@ class HammingClass {
 private:
   string seed;
   vector<string> hamming_seed;
+  vector<string> hamming_seed_rev;
   vector<unsigned int> vert_vector;
   unsigned int hamming_v_occ;
   unsigned int hamming_H_occ;
@@ -283,9 +324,6 @@ public:
     // Calculation of freq 2
     Freq2Calc();
     PWMHammingCalc();
-    // cout << "Size cluster: " << hamming_seed.size() << endl;
-    // cout << "Occurrences: " << accumulate(vert_vector.begin(),vert_vector.end(),0) << endl;
-    // cout << "Seed oligo: " << seed << endl;
     // DPWMHamming(PWM_hamming);
     ClearVertical(position_occurrences, map_vertical, pos);
     
@@ -316,6 +354,69 @@ class EMClass{
     }
 };
 
+class z_test_class {
+
+private:
+  vector<vector<double>> mMatrixLog;
+  vector<vector<double>> mInverseMatrixLog;
+  vector<double> oligo_scores_horizontal_FWD;
+  vector<double> oligo_scores_horizontal_REV;
+  vector<double> oligo_scores_horizontal_BEST;
+  vector<double> all_global_scores;
+  vector<double> all_local_scores;
+
+  void oligos_vector_creation_PWM(vector<BedClass::bed_s> &);
+  void z_score_parameters_calculation();
+  void z_score_calculation(unsigned int);
+  void check_best_strand_oligo();
+  
+public:
+
+  double z_score;
+  double Zpvalue;
+  double Zpvalue_bonf;
+
+  double global_mean;
+  double global_dev_std;
+  double local_mean;
+  double local_dev_std;
+  unsigned int LocalPosition;
+  z_test_class(vector<vector<double>> &PwmHamming, vector<BedClass::bed_s> &GEP,
+               unsigned int local_p, unsigned int len) {
+    
+    LocalPosition = local_p;
+
+    // Calling matrix class constructor passing PWM_hamming matrix
+    MatrixClass PwmHammingMat(PwmHamming);
+
+    // Return from matrix class the log_PWM_hamming matrix
+    mMatrixLog = PwmHammingMat.ReturnMatrix();
+    if (DS) {
+
+      // if analysis is in DS return from matrix class the
+      // inverse_log_PWM_hamming matrix to shift the reverse strand
+      mInverseMatrixLog = PwmHammingMat.ReturnInverseMatrix();
+    }
+    // Function to shift PWM_matrix on sequences using oligo class functions
+    oligos_vector_creation_PWM(GEP);
+
+    // From local and global scores calculated finding all the parameters useful
+    // to z-score calculation
+    z_score_parameters_calculation();
+
+    // Calculating z-score and p-value from it
+    z_score_calculation(len);
+
+    all_local_scores.clear();
+    all_global_scores.clear();
+    oligo_scores_horizontal_FWD.clear();
+    oligo_scores_horizontal_REV.clear();
+  }
+};
+
+vector<z_test_class> Z_TEST_VECTOR;
+vector<vector<z_test_class>> Z_TEST_MATRIX;
+
 class Timer {
   public:
     Timer() { m_StartTimepoint = chrono::high_resolution_clock::now(); }
@@ -342,17 +443,33 @@ class Timer {
 };
 
 void RAM_usage();
+void BED_path();
+void MULTIFA_path();
 void ReCentering(unsigned int, BedClass::bed_s &,
                   unsigned int);
 void Centering(BedClass::bed_s &, unsigned int, unsigned int);
-bool check_palindrome(string, string &);
-string reverse_oligo(string);
+void ReverseString(string, string &);
 // Debug pvalue vector
 void DVector(vector<PvalueClass> &, unsigned int);
 // Comparison function
 bool comp(const PvalueClass &, const PvalueClass &);
 bool comp_occ(const PvalueClass &, const PvalueClass &);
+
+void Outfile_PWM_matrices(unsigned int, vector<string> &);
+
+void print_debug_PWM_hamming(ofstream &, unsigned int, 
+                              unsigned int, vector<string> &);
+void print_debug_PWM_hamming_tomtom(ofstream &, unsigned int, 
+                                      unsigned int);
+
+void Outfile_Z_score_values(unsigned int, vector<string> &);
+void print_debug_Z_scores(ofstream &, unsigned int, unsigned int, 
+                            vector<string> &);
+void print_GEP(vector<BedClass::bed_s> &);
+double check_p_value(double, string);
+void ClearingGEP(vector<BedClass::bed_s> &, vector<double> &);
 //Fare classe debug/error
+
 
 //Parser functions
 void command_line_parser(int, char **);

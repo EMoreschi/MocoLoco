@@ -1,12 +1,13 @@
 #include "ftest.h"
+#include "../Profiling.h"
 #include <sys/resource.h>
 
 int main(int argc, char *argv[]) {
   Timer timer;
-
+  // Instrumentor::Get().BeginSession("MocoLoco");
+  // {
   vector<vector<double>> Gscore;
   vector<double> Best_vector;
-
   // If arguments number is 1 means that no input file has been inserted -
   // display help
   if (argc == 1) {
@@ -14,63 +15,63 @@ int main(int argc, char *argv[]) {
   }
   // Collect all the parameters given as input
   command_line_parser(argc, argv);
-  
-  tb = twobit_open(TWOBIT_FILE.c_str());
-  BedClass B(BED_FILE, tb);
-  JasparClass J(JASPAR_FILE);
-  MatrixClass mat(J.ReturnJaspar());
-
-  for (unsigned int i = 0; i < B.bed_v.size(); i++) {
+  if(MFASTA_FILE.empty()){
+    tb = twobit_open(TWOBIT_FILE.c_str());
+  }
+  else{
+    tb = 0;
+  }
+  BedClass B(BED_FILE, MFASTA_FILE, tb);
+  if(MFASTA_FILE.empty()){
+    JasparClass J(JASPAR_FILE);
+    MatrixClass mat(J.ReturnJaspar());
+    for (unsigned int i = 0; i < B.bed_v.size(); i++) {
     
-    ScoreClass score(mat.ReturnMatrix(), B.bed_v[i].Sequence, 
+      ScoreClass score(mat.ReturnMatrix(), B.bed_v[i].Sequence, 
                       B.bed_v[i].Start);
-    if(DS == false){ 
-    	Centering(B.bed_v[i], score.CenteredStart, 
+      if(DS == false){ 
+        Best_vector.emplace_back(score.MaxScore);
+    	  Centering(B.bed_v[i], score.CenteredStart, 
                     mat.ReturnMatrix()[0].size());
-    }
-    else{
-      ScoreClass score_rev(mat.ReturnInverseMatrix(), B.bed_v[i].Sequence, 
-                        B.bed_v[i].Start);
-      if(score_rev.MaxScore > score.MaxScore){
-        Centering(B.bed_v[i], score_rev.CenteredStart, 
-                     mat.ReturnInverseMatrix()[0].size());
-        if(direction){
-          ReCentering(score_rev.CenteredStart, B.bed_v[i],
-                   mat.ReturnInverseMatrix()[0].size());
-        }
       }
       else{
-        Centering(B.bed_v[i], score.CenteredStart, 
+        ScoreClass score_rev(mat.ReturnInverseMatrix(), B.bed_v[i].Sequence, 
+                        B.bed_v[i].Start);
+        if(score_rev.MaxScore > score.MaxScore){
+          Best_vector.emplace_back(score_rev.MaxScore);
+          Centering(B.bed_v[i], score_rev.CenteredStart, 
+                     mat.ReturnInverseMatrix()[0].size());
+          if(direction){
+            ReCentering(score_rev.CenteredStart, B.bed_v[i],
+                   mat.ReturnInverseMatrix()[0].size());
+          }
+        }
+        else{
+          Best_vector.emplace_back(score.MaxScore);
+          Centering(B.bed_v[i], score.CenteredStart, 
                     mat.ReturnMatrix()[0].size());
+        }
       }
     }
-    cout << B.bed_v[i].Sequence << endl;
+    //Function to delete sequences with low primary motif scores 
+    ClearingGEP(B.bed_v, Best_vector);
+    twobit_close(tb);
+    print_GEP(B.bed_v);
   }
-  twobit_close(tb);
-
   // Vector len contains all the lengths of sequences for each kmer 
-  kmers_vector = generic_vector_creation(kmers);
-  distance_vector = generic_vector_creation(dist);
-  freq_vector = freq_vector_creation(freq_threshold);
-  if(kmers_vector.size() != freq_vector.size()){
-    cerr << endl 
-      << "ERROR! The number of kmers must be equal to the number of hamming distances and frequencies" << endl << endl;
-    exit(1);
-  }
   for(unsigned int i = 0; i < kmers_vector.size(); i++){
     len.emplace_back(B.bed_v[0].Sequence.size() - kmers_vector[i] + 1);
   }
   
   MapClass M(B.bed_v);
   //For each kmer
-  for (unsigned int i = 0, d = 0; i < kmers_vector.size(); i++, d++) {
+  for (unsigned int i = 0; i < kmers_vector.size(); i++) {
     vector<PvalueClass> P_vector;
     vector<string> seed_oligo;
     //For each position in the sequence
     for (unsigned int j = 0; j < len[i]; j++) {
       double Pval = 0;
       unsigned int counter = 0;
-      vector<string> pos_oligo_vec;
       // Loop for eventually other matrices that are hidden by the best motif
       while(counter < max_matrix) {
 
@@ -87,11 +88,9 @@ int main(int argc, char *argv[]) {
         //The element in P_vector are ordered on the basis of pvalues
         //otherwise the normal ordering (by occurrences in vertical map)
         //is maintained
-        sort(begin(P_vector), end(P_vector), comp_occ);
+        (ordering == "p") ? sort(begin(P_vector), end(P_vector), comp) :
+          sort(begin(P_vector), end(P_vector), comp_occ);
 
-        if (ordering == "p") {
-          sort(begin(P_vector), end(P_vector), comp);
-        }
         // Debug for PValueClass
         // DVector(P_vector, j);
           
@@ -100,7 +99,7 @@ int main(int argc, char *argv[]) {
         HammingClass H(P_vector[0].oligo,
                         M.vector_map_ver[i],
                         M.vector_positions_occurrences[i][j],
-                        M.vector_map_hor[i], j, d);
+                        M.vector_map_hor[i], j, i);
         // Perform the expectation maximization algorithm 
         // (https://en.wikipedia.org/wiki/Expectation–maximization_algorithm)
         if (!exp_max.empty()){
@@ -110,65 +109,110 @@ int main(int argc, char *argv[]) {
         //If the frequence of seed oligo is higher than a threshold
         //the z_score is calculated
 
-        // if(H.freq1 >= freq_vector[i]){
-        //   z_test_class Z(H.PWM_hamming, C.GEP, 
-        //                   j + 1, len[i]);
-        //   Pval = Z.Zpvalue_bonf;
-            
-        //   //If it is the first cycle of while loop or if the pval is lower 
-        //   //than a certain threshold the z_score and PWM are calculated
-        //   if(Pval <= (z_pval_threshold * len[i])){
-        //       seed_oligo.emplace_back(P_vector[0].oligo);
-        //       Z_TEST_VECTOR.emplace_back(Z);
-        //       H_HAMMING_VECTOR.emplace_back(H);
-        //   }
-        // }  
+        if(H.freq1 >= freq_vector[i]){
+          z_test_class Z(H.PWM_hamming, B.bed_v, 
+                          j + 1, len[i]);
+          Pval = Z.Zpvalue_bonf;
+          //If it is the first cycle of while loop or if the pval is lower 
+          //than a certain threshold the z_score and PWM are calculated
+          if(Pval <= (z_pval_threshold * len[i])){
+              seed_oligo.emplace_back(P_vector[0].oligo);
+              Z_TEST_VECTOR.emplace_back(Z);
+              H_HAMMING_VECTOR.emplace_back(H);
+          }
+        }  
         P_vector.clear(); 
         counter++;
       }
-      pos_oligo_vec.clear();
     }
-    // Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
+    Z_TEST_MATRIX.emplace_back(Z_TEST_VECTOR);
     H_HAMMING_MATRIX.emplace_back(H_HAMMING_VECTOR);
-    // Z_TEST_VECTOR.clear();
+    Z_TEST_VECTOR.clear();
     H_HAMMING_VECTOR.clear();
     
     //Outfile functions 
-    // Outfile_PWM_matrices(i, seed_oligo);
-    // Outfile_Z_score_values(i, seed_oligo);
+    Outfile_PWM_matrices(i, seed_oligo);
+    Outfile_Z_score_values(i, seed_oligo);
+    seed_oligo.clear();
   }
   RAM_usage();
   return 0;
+// }
+//   Instrumentor::Get().EndSession();
 }
 
-void BedClass::ReadBed(string BED_FILE, TwoBit *tb) {
-  ifstream in(BED_FILE);
+void BedClass::ReadBed(string BED_FILE, string MFASTA_FILE, TwoBit *tb) {
+  // PROFILE_FUNCTION();
   string line;
-  while (getline(in, line)) {
-    if (line.empty() || line[0] == '#') {
-      continue;
-    }
-    istringstream mystream(line);
-    bed_s bed_in;
-    mystream >> bed_in.Chromosome >> bed_in.Start >> bed_in.End;
-    if (bed_in.Start > bed_in.End) {
-      cout << "error " << endl;
-    } 
-  else {
-      int center = (bed_in.Start + bed_in.End) / 2;
-      bed_in.Start = center - half_length;
-      bed_in.End = center + half_length + overhead;
-      bed_in.Sequence =
-          twobit_sequence(tb, bed_in.Chromosome.c_str(), bed_in.Start, 
+  vector<string> sequences;
+  if(MFASTA_FILE.empty()){
+    ifstream in(BED_FILE);
+    while (getline(in, line)) {
+      if (line.empty() || line[0] == '#') {
+        continue;
+      }
+      istringstream mystream(line);
+      bed_s bed_in;
+        mystream >> bed_in.Chromosome >> bed_in.Start >> bed_in.End;
+        if (bed_in.Start > bed_in.End) {
+          cout << "error " << endl;
+        } 
+        else {
+          int center = (bed_in.Start + bed_in.End) / 2;
+          bed_in.Start = center - half_length;
+          bed_in.End = center + half_length + overhead;
+          bed_in.Sequence =
+            twobit_sequence(tb, bed_in.Chromosome.c_str(), bed_in.Start, 
                             bed_in.End - 1);
 
-      bed_v.push_back(bed_in);
+          bed_v.push_back(bed_in);
+        }
     }
+  }
+  else{
+    ifstream file(MFASTA_FILE);
+    string current_sequence;
+    
+    bool first_line = true;
+
+    while (getline(file, line)) {
+      if (line[0] == '>' && !first_line) {
+
+        sequences.emplace_back(current_sequence);
+        current_sequence.clear();
+      }
+
+      else if (!first_line) {
+
+        if (line[0] != ' ' && line.size() != 0) {
+
+        // Before to save the sequence in current_sequence variable the FASTA
+        // characters are capitalized
+          transform(line.begin(), line.end(), line.begin(), ::toupper);
+          current_sequence = current_sequence + line;
+        }
+      }
+
+    // After the first cicle the first line flag is set to 0
+      first_line = false;
+    }
+    sequences.emplace_back(current_sequence);
+  }  
+  for (unsigned int i = 0; i < sequences.size(); i ++){
+    if (sequences[0].size() != sequences[i].size()){
+      cerr << "ERROR! The length of fasta sequences isn't equal in all the file!\n\nCheck it out!\n\n";
+    }
+    bed_s bed_in;
+    bed_in.Chromosome = "MULTIFASTA";
+    bed_in.Start = 0;
+    bed_in.End = 0;
+    bed_in.Sequence = sequences[i];
+    bed_v.push_back(bed_in);
   }
 }
 
 void JasparClass::ReadJaspar(string JASPAR_FILE) {
-
+  // PROFILE_FUNCTION();
   ifstream file(JASPAR_FILE);
   string line;
 
@@ -212,6 +256,7 @@ vector<vector<double>>& MatrixClass::ReturnInverseMatrix() { return mInverseLogM
 // std::vector<std::vector<double>>& ma){
 void MatrixClass::MatrixNormalization(double psdcount, vector<double> col_sum,
                     vector<vector<double>> &mJasparMatrix) {
+  // PROFILE_FUNCTION();
   for (unsigned int x = 0; x < mJasparMatrix.size(); x++) {
     for (unsigned int i = 0; i < mJasparMatrix[x].size(); i++) {
       double *ptr = &mJasparMatrix[x][i];
@@ -221,6 +266,7 @@ void MatrixClass::MatrixNormalization(double psdcount, vector<double> col_sum,
 }
 
 vector<double> MatrixClass::ColSum(vector<vector<double>> &mJasparMatrix) {
+  // PROFILE_FUNCTION();
   vector<double> col_sum;
   for (unsigned int i = 0; i < mJasparMatrix[0].size(); i++) {
     double sum = 0;
@@ -233,6 +279,7 @@ vector<double> MatrixClass::ColSum(vector<vector<double>> &mJasparMatrix) {
 }
 
 void MatrixClass::MatrixLog(vector<vector<double>> &mJasparMatrix) {
+  // PROFILE_FUNCTION();
   for (unsigned int x = 0; x < mJasparMatrix.size(); x++) {
     for (unsigned int i = 0; i < mJasparMatrix[x].size(); i++) {
       double *ptr = &mJasparMatrix[x][i];
@@ -243,6 +290,7 @@ void MatrixClass::MatrixLog(vector<vector<double>> &mJasparMatrix) {
 }
 
 void ScoreClass::FindMinMax(vector<vector<double>> &matrix) {
+  // PROFILE_FUNCTION();
   vector<double> max_sum;
   for (unsigned int i = 0; i < matrix[0].size(); i++) {
     vector<double> column;
@@ -337,8 +385,8 @@ unsigned int ScoreClass::BestScore(vector<double> &ScoreVector){
 
 void ReCentering(unsigned int center, BedClass::bed_s &GEP, 
                     unsigned int matrix_size){
-  
-  check_palindrome(GEP.Sequence, reverse_bases);
+  // PROFILE_FUNCTION();
+  ReverseString(GEP.Sequence, reverse_bases);
   GEP.Sequence = reverse_bases;
   if(matrix_size % 2 == 0){
     unsigned int center_oligo =
@@ -355,12 +403,13 @@ void ReCentering(unsigned int center, BedClass::bed_s &GEP,
   GEP.Sequence =
           twobit_sequence(tb, GEP.Chromosome.c_str(), GEP.Start, 
                             GEP.End - 1);
-  check_palindrome(GEP.Sequence, reverse_bases);
+  ReverseString(GEP.Sequence, reverse_bases);
   GEP.Sequence = reverse_bases;
 }
 
 void Centering(BedClass::bed_s &GEP, unsigned int start_coord, 
                 unsigned int matrix_size){
+  // PROFILE_FUNCTION();
   unsigned int center_oligo =
         start_coord + (matrix_size / 2);
   GEP.Start = center_oligo - half_length;
@@ -370,7 +419,8 @@ void Centering(BedClass::bed_s &GEP, unsigned int start_coord,
                           GEP.End - 1);
 }
 
-bool check_palindrome(string bases, string &reverse_bases) {
+void ReverseString(string bases, string &reverse_bases) {
+  // PROFILE_FUNCTION();
   reverse_bases.clear();
   // For any character of the string insert into another string (called reverse
   // bases) the complementary character
@@ -397,13 +447,6 @@ bool check_palindrome(string bases, string &reverse_bases) {
       break;
     }
   }
-
-  // If they are equal --> it means that the oligo "bases" is palindrome
-  if (reverse_bases == bases) {
-    return true;
-  } else {
-    return false;
-  }
 }
 
 void MapClass::MainMapVector(vector<BedClass::bed_s> &GEP) {
@@ -420,26 +463,23 @@ void MapClass::MainMapVector(vector<BedClass::bed_s> &GEP) {
   }
 }
 
-void MapClass::CountOccurrencesHor(string &sequence, int k) {
+void MapClass::CountOccurrencesHor(string &sequence, unsigned int k) {
   // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
     string oligo = sequence.substr(i, k);
-    string oligo_rc = reverse_oligo(oligo);
+    string oligo_rc;
+    ReverseString(oligo, oligo_rc);
     unordered_map<string, HorizontalClass>::iterator it = horizontal_map.find(oligo);
     unordered_map<string, HorizontalClass>::iterator it_rc = horizontal_map.find(oligo_rc);
     if (it != horizontal_map.end()) {
       it->second.horizontal_count++;
-      it->second.horizontal_count_FWD++;
       if (DS) {
         it->second.horizontal_count_rc++;
-        it->second.horizontal_count_rc_REV++;
       }
     } else if (it_rc != horizontal_map.end()) {
       if (!it_rc->second.palindrome) {
         it_rc->second.horizontal_count_rc++;
-        it_rc->second.horizontal_count_rc_FWD++;
         if (DS) {
-          it_rc->second.horizontal_count_REV++;
           it_rc->second.horizontal_count++;
         }
       }
@@ -449,11 +489,7 @@ void MapClass::CountOccurrencesHor(string &sequence, int k) {
       Hor.oligo = oligo, Hor.oligo_rc = oligo_rc;
       Hor.palindrome = bool(oligo == oligo_rc);
       Hor.horizontal_count = 1, Hor.horizontal_count_rc = 0;
-      Hor.horizontal_count_FWD = 1, Hor.horizontal_count_rc_FWD = 0;
-      Hor.horizontal_count_REV = 0, Hor.horizontal_count_rc_REV = 0;
       if (DS) {
-        Hor.horizontal_count_FWD = 1, Hor.horizontal_count_rc_FWD = 0;
-        Hor.horizontal_count_REV = 0, Hor.horizontal_count_rc_REV = 1;
         Hor.horizontal_count_rc = 1, Hor.horizontal_count = 1;
       }
     
@@ -462,26 +498,25 @@ void MapClass::CountOccurrencesHor(string &sequence, int k) {
   }
 }
 
-void MapClass::CountOccurrencesVer(string &sequence, int k) {
+void MapClass::CountOccurrencesVer(string &sequence, unsigned int k) {
   // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < (sequence.size() - k + 1); i++) {
     // unsigned int tot_freq = 0;
     string oligo = sequence.substr(i, k);
-    string oligo_rc = reverse_oligo(oligo);
+    string oligo_rc;
+    ReverseString(oligo, oligo_rc);
     unordered_map<string, VerticalClass>::iterator it = vertical_map.find(oligo);
     unordered_map<string, VerticalClass>::iterator it_rc = vertical_map.find(oligo_rc);
     if (it != vertical_map.end()) {
       it->second.vertical_count[i]++;
-      it->second.vertical_count_FWD[i]++;
-      it->second.vertical_count_rc_REV[i]++;
-      it->second.vertical_count_rc[i]++;
+      if(DS){
+        it->second.vertical_count_rc[i]++;
+      }
     } else if (it_rc != vertical_map.end()) {
       if (!it_rc->second.palindrome) {
         it_rc->second.vertical_count_rc[i]++;
-        it_rc->second.vertical_count_rc_FWD[i]++;
         if (DS) {
           it_rc->second.vertical_count[i]++;
-          it_rc->second.vertical_count_REV[i]++;
         }
       }
     } else {
@@ -490,16 +525,9 @@ void MapClass::CountOccurrencesVer(string &sequence, int k) {
       Ver.palindrome = bool(oligo == oligo_rc);
       Ver.vertical_count.resize(((sequence.size() - k) + 1), 0);
       Ver.vertical_count_rc.resize(((sequence.size() - k) + 1), 0);
-      Ver.vertical_count_FWD.resize(((sequence.size() - k) + 1), 0);
-      Ver.vertical_count_rc_FWD.resize(((sequence.size() - k) + 1), 0);
-      Ver.vertical_count_REV.resize(((sequence.size() - k) + 1), 0);
-      Ver.vertical_count_rc_REV.resize(((sequence.size() - k) + 1), 0);
-      Ver.vertical_count_FWD[i] = 1;
       Ver.vertical_count[i] = 1;
       if (DS) {
-        Ver.vertical_count_rc[i] = 1;
-        Ver.vertical_count_FWD[i] = 1, Ver.vertical_count_rc_REV[i] = 1;
-        Ver.vertical_count_REV[i] = 0, Ver.vertical_count_rc_FWD[i] = 0;
+        Ver.vertical_count_rc[i] = 1;        
       }
     
       vertical_map.emplace(oligo, Ver);
@@ -532,7 +560,7 @@ void MapClass::VerticalMapVector() {
 
 // Debug function
 void MapClass::DVerticalMapVector() {
-  // PROFILE_FUNCTION();
+  // // PROFILE_FUNCTION();
   
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
     cout << "I: " << i << endl;
@@ -552,35 +580,31 @@ void MapClass::DVerticalMapVector() {
 
 // Debug function
 void MapClass::DMainMapVectorDS() {
-  // PROFILE_FUNCTION();
+  // // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
 
     for (unordered_map<string, HorizontalClass>::iterator it =
              vector_map_hor[i].begin();
          it != vector_map_hor[i].end(); it++) {
-      cout << it->first << " " << it->second.horizontal_count_FWD << " " 
-           << it->second.horizontal_count_REV << " " << it->second.horizontal_count
-           << "\t" << it->second.oligo_rc << " " << it->second.horizontal_count_rc_FWD
-           << " " << it->second.horizontal_count_rc_REV << " "
-           << it->second.horizontal_count_rc << " "
+      cout << it->first << " " << it->second.horizontal_count
+           << "\t" << it->second.oligo_rc
+           << " " << it->second.horizontal_count_rc << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
     cout << "\n\n VERTICAL MAP: \n\n" << endl;
     for (unordered_map<string, VerticalClass>::iterator it =
              vector_map_ver[i].begin();
          it != vector_map_ver[i].end(); it++) {
-      cout << it->first << " " << it->second.vertical_count_FWD[21] << " " 
-           << it->second.vertical_count_REV[21] << " " << it->second.vertical_count[21]
-           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[21]
-           << " " << it->second.vertical_count_rc_REV[21] << " "
-           << it->second.vertical_count_rc[21] << " "
+      cout << it->first << " " << it->second.vertical_count[0]
+           << "\t" << it->second.oligo_rc << " "
+           << it->second.vertical_count_rc[0] << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
   }
 }
 
 void MapClass::DMainMapVectorSS() {
-  // PROFILE_FUNCTION();
+  // // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
     for (unordered_map<string, HorizontalClass>::iterator it =
              vector_map_hor[i].begin();
@@ -592,10 +616,8 @@ void MapClass::DMainMapVectorSS() {
         for (unordered_map<string, VerticalClass>::iterator it =
              vector_map_ver[i].begin();
          it != vector_map_ver[i].end(); it++) {
-      cout << it->first << " " << it->second.vertical_count_FWD[21] << " " 
-           << it->second.vertical_count_REV[21] << " " << it->second.vertical_count[21]
-           << "\t" << it->second.oligo_rc << " " << it->second.vertical_count_rc_FWD[21]
-           << " " << it->second.vertical_count_rc_REV[21] << " "
+      cout << it->first << " " << it->second.vertical_count[21]
+           << "\t" << it->second.oligo_rc << " "
            << it->second.vertical_count_rc[21] << " "
            << " " << boolalpha << it->second.palindrome << noboolalpha << endl;
     }
@@ -621,11 +643,12 @@ void PvalueClass::TKN1Calc(vector<BedClass::bed_s> &GEP,
   N1 = 0;
   K = it->first;
   oligo = it->second;
-
+  string oligo_rc;
+  ReverseString(oligo, oligo_rc);
   unordered_map<string, HorizontalClass>::iterator itBigMap =
       vector_map_hor.find(oligo);
   unordered_map<string, HorizontalClass>::iterator itBigMap_rc =
-      vector_map_hor.find(reverse_oligo(oligo));
+      vector_map_hor.find(oligo_rc);
   if (itBigMap == vector_map_hor.end()) {
 
     if (!itBigMap_rc->second.palindrome) {
@@ -702,7 +725,7 @@ void HammingClass::PWMHammingCalc() {
 }
 
 void HammingClass::DPWMHamming(vector<vector<double>> &PWM_hamming){
-  // PROFILE_FUNCTION();
+  // // PROFILE_FUNCTION();
   for (unsigned short int i = 0; i < PWM_hamming.size(); i++) {
     for (unsigned short int j = 0; j < PWM_hamming[i].size(); j++) {
       cout << PWM_hamming[i][j] << "\t";
@@ -737,24 +760,19 @@ void HammingClass::CheckSeed(string seed,
     // the oligo is added to the cluster and all the occurrences of the oligos present in the 
     // cluster are set to zero (for secondary matrix analysis)
     if (count <= distance_vector[d]) {
-
-      string reverse_o = reverse_oligo(oligo);
+      
+      string reverse_o;
+      ReverseString(oligo, reverse_o);
       unordered_map<string, VerticalClass>::iterator it_ver = map_vertical.find(oligo);
       unordered_map<string, VerticalClass>::iterator it_ver_rc = map_vertical.find(reverse_o);
       if (it_ver != map_vertical.end()) {
-        hamming_v_occ += it_ver->second.vertical_count_FWD[position];
+        hamming_v_occ += it_ver->second.vertical_count[position];
       } else {
-        hamming_v_occ += it_ver_rc->second.vertical_count_rc_FWD[position];
+        hamming_v_occ += it_ver_rc->second.vertical_count_rc[position];
       }        
-      if(DS){
-        if (it_ver != map_vertical.end()) {
-          hamming_v_occ += it_ver->second.vertical_count_REV[position];
-        } else {
-          hamming_v_occ += it_ver_rc->second.vertical_count_FWD[position];
-        } 
-      }
       vert_vector.push_back(hamming_v_occ);
       hamming_seed.push_back(oligo);
+      hamming_seed_rev.push_back(reverse_o);
     }
   }
 }
@@ -772,7 +790,8 @@ void HammingClass::HoccCalc(unordered_map<string, HorizontalClass> &map_horizont
   hamming_H_occ = 0;
   for (unsigned int i = 0; i < hamming_seed.size(); i++) {
     string oligo = hamming_seed[i];
-    string reverse_o = reverse_oligo(oligo);
+    string reverse_o;
+    ReverseString(oligo, reverse_o);
     unordered_map<string, HorizontalClass>::iterator it = map_horizontal.find(oligo);
     unordered_map<string, HorizontalClass>::iterator itrc = map_horizontal.find(reverse_o);
     if (it != map_horizontal.end()) {
@@ -797,8 +816,21 @@ void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos,
       it != pos.end(); ++it){
       
       string oligo = it->second;
-    
+
       if(oligo == hamming_seed[i]){
+        pos.erase(it);
+        break;
+      }
+    }
+  }
+  for(unsigned int i = 0; i < hamming_seed_rev.size(); i++){
+    
+    for(multimap<int, string, greater<int>>::iterator it = pos.begin();
+      it != pos.end(); ++it){
+      
+      string oligo = it->second;
+
+      if(oligo == hamming_seed_rev[i]){
         pos.erase(it);
         break;
       }
@@ -855,7 +887,9 @@ void EMClass::EM_Epart(map<string,double> &cluster_map, vector<vector<double>> &
     unordered_map<string, HorizontalClass>::iterator occ_oligo_it_rev =
         map_horizontal.begin();
     occ_oligo_it = map_horizontal.find(it->first);
-    occ_oligo_it_rev = map_horizontal.find(reverse_oligo(it->first));
+    string oligo_rc;
+    ReverseString(it->first, oligo_rc);
+    occ_oligo_it_rev = map_horizontal.find(oligo_rc);
 
     if (occ_oligo_it != map_horizontal.end()) {
       sum_hor = sum_hor + occ_oligo_it->second.horizontal_count;
@@ -883,7 +917,9 @@ void EMClass::EM_Epart(map<string,double> &cluster_map, vector<vector<double>> &
     double likelihood_ratio = 0;
 
     occ_oligo_it = map_horizontal.find(it->first);
-    occ_oligo_it_rev = map_horizontal.find(reverse_oligo(it->first));
+    string oligo_rc;
+    ReverseString(it->first, oligo_rc);
+    occ_oligo_it_rev = map_horizontal.find(oligo_rc);
 
     if (occ_oligo_it != map_horizontal.end()) {
       horizontal_occurences = horizontal_occurences + occ_oligo_it->second.horizontal_count;
@@ -1100,22 +1136,43 @@ void EMClass::EM_cycle(map<string,double> &cluster_map,
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+void ClearingGEP(vector<BedClass::bed_s> &GEP, vector<double> &ScoreVector){
+  int count = 0;
+  //Copy of GEP to keep just the sequences with good scores
+  vector<BedClass::bed_s> ClearedGEP;
+  //Calculation of standard deviation
+  double SumScores =
+      accumulate(ScoreVector.begin(), ScoreVector.end(), 0.0);
+  double Mean = SumScores / ScoreVector.size();
+  double SquareSumScores =
+      inner_product(ScoreVector.begin(), ScoreVector.end(),
+                    ScoreVector.begin(), 0.0);
+  double StdDev = sqrt(SquareSumScores / ScoreVector.size() -
+                        Mean * Mean);
+  //This is the value used as threshold equal to the mean of the scores 
+  //minus two times the standard deviation
+  double Comparison = Mean - (2 * StdDev);
+  //For each sequence
+  for (unsigned int i = 0; i < GEP.size(); i++){
+    //If the score of the sequence is higher than the threshold the BedClass structure is loaded in the new vector
+    if(ScoreVector[i] > Comparison){
+      ClearedGEP.emplace_back(GEP[i]);
+    }
+    else{
+      cerr << "The sequence " << i + 1 << " is not taken into account because low score \n\n"; 
+      count += 1;
+    }
+    cout << Mean << "\t" << StdDev << endl << endl;
+    
+  }
+  cerr << count << " sequences are eliminated \n\n";
+  //The old GEP is cleared and replaced with the new GEP
+  GEP.clear();
+  GEP = ClearedGEP;
+}
 
 void DVector(vector<PvalueClass> &P_vector, unsigned int j) {
-  // PROFILE_FUNCTION();
+  // // PROFILE_FUNCTION();
   for (unsigned int c = 0; c < P_vector.size() && c < 10; c++) {
     cout << j + 1 << "\t";
     cout << c + 1 << "\t";
@@ -1137,33 +1194,6 @@ bool comp(const PvalueClass &P1, const PvalueClass &P2) {
 bool comp_occ(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
   return (P1.K == P2.K) ? ((P1.N1 == P2.N1)? (P1.oligo < P2.oligo) : (P1.N1 < P2.N1)) : (P1.K > P2.K);
-}
-
-string reverse_oligo(string bases) {
-  // PROFILE_FUNCTION();
-  string reverse_string;
-  for (int i = bases.length() - 1; i >= 0; i--) {
-
-    switch (bases[i]) {
-
-    case 'A':
-      reverse_string.append("T");
-      break;
-    case 'T':
-      reverse_string.append("A");
-      break;
-    case 'G':
-      reverse_string.append("C");
-      break;
-    case 'C':
-      reverse_string.append("G");
-      break;
-    case 'N':
-      reverse_string.append("N");
-      break;
-    }
-  }
-  return reverse_string;
 }
 
 vector<unsigned int> generic_vector_creation(string numbers) {
@@ -1247,9 +1277,327 @@ void RAM_usage() {
        << endl;
 }
 
+void z_test_class::oligos_vector_creation_PWM(vector<BedClass::bed_s> &GEP) {
+  // PROFILE_FUNCTION();
+  // For every sequence
+  for (unsigned int i = 0; i < GEP.size(); i++) {
 
+    // Calling oligo class to accede to all functions useful to shift a matrix
+    // on sequences --> Shifting on FWD strand
+    ScoreClass SHIFTING_PWM(mMatrixLog, GEP[i].Sequence);
 
+    // Return oligo scores calculated from previous shifting
+    oligo_scores_horizontal_FWD = SHIFTING_PWM.SeqScores;
 
+    // If analysis is in Double strand
+    if (DS) {
+
+      // Make the shifting also on reverse strand, putting as input the
+      // inverse_log_matrix --> Shifting on REV strand
+      ScoreClass SHIFTING_PWM_2(mInverseMatrixLog, GEP[i].Sequence);
+
+      // Retrun oligo scores from previous shifting
+      oligo_scores_horizontal_REV = SHIFTING_PWM_2.SeqScores;
+
+      // Select the best scores between FWD and REV strand (for each position)
+      check_best_strand_oligo();
+
+      // Fill the local scores vector with scores found in position where the
+      // matrix has been generated
+      all_local_scores.emplace_back(oligo_scores_horizontal_BEST[LocalPosition - 1]);
+      // Fill the global scores vector with all scores generated from shifting
+      all_global_scores.insert(all_global_scores.end(),
+                               oligo_scores_horizontal_BEST.begin(),
+                               oligo_scores_horizontal_BEST.end());
+    }
+
+    // If analysis is in Single strand
+    else {
+
+      // Local best scores are all from FWD strand
+      all_local_scores.emplace_back(oligo_scores_horizontal_FWD[i]);
+      all_global_scores.insert(all_global_scores.end(),
+                               oligo_scores_horizontal_FWD.begin(),
+                               oligo_scores_horizontal_FWD.end());
+    }
+
+    // Clearing of horizontal best score for the next sequence cycle
+    oligo_scores_horizontal_BEST.clear();
+  }
+}
+
+void z_test_class::check_best_strand_oligo() {
+  // PROFILE_FUNCTION();
+  // For all oligo scores
+  for (unsigned int oligo = 0; oligo < oligo_scores_horizontal_FWD.size();
+       oligo++) {
+
+    (oligo_scores_horizontal_FWD[oligo] >= oligo_scores_horizontal_REV[oligo]) ? 
+        oligo_scores_horizontal_BEST.emplace_back(oligo_scores_horizontal_FWD[oligo]) : 
+        oligo_scores_horizontal_BEST.emplace_back(oligo_scores_horizontal_REV[oligo]);
+  }
+}
+
+// Function to calculate all the parameters useul to z-score calculation
+void z_test_class::z_score_parameters_calculation() {
+  // PROFILE_FUNCTION();
+  double local_sum =
+      accumulate(all_local_scores.begin(), all_local_scores.end(), 0.0);
+  double global_sum =
+      accumulate(all_global_scores.begin(), all_global_scores.end(), 0.0);
+  double tot_sq_sum_global =
+      inner_product(all_global_scores.begin(), all_global_scores.end(),
+                    all_global_scores.begin(), 0.0);
+
+  double tot_sq_sum_local =
+      inner_product(all_local_scores.begin(), all_local_scores.end(),
+                    all_local_scores.begin(), 0.0);
+  global_mean = global_sum / all_global_scores.size();
+  local_mean = local_sum / all_local_scores.size();
+  global_dev_std = sqrt(tot_sq_sum_global / all_global_scores.size() -
+                        global_mean * global_mean);
+  local_dev_std = sqrt(tot_sq_sum_local / all_local_scores.size() -
+                       local_mean * local_mean);
+
+  // global_dev_std = sqrt((tot_sq_sum_global - ((global_sum * global_sum) /
+  //                       all_global_scores.size()))/(all_global_scores.size() - 1));
+  // local_dev_std = sqrt((tot_sq_sum_local - ((local_sum * local_sum) / 
+  //                   all_local_scores.size()))/(all_local_scores.size() - 1));   
+}
+
+// Z-score calculation function
+void z_test_class::z_score_calculation(unsigned int len) {
+  // // PROFILE_FUNCTION();
+
+  // z_score = ((local_mean - global_mean) /
+  //            (global_dev_std / sqrt(all_local_scores.size())));
+  z_score = ((global_mean - local_mean) /
+             (global_dev_std / sqrt(all_local_scores.size())));
+  const double Z = z_score;
+  Zpvalue = gsl_cdf_ugaussian_P(Z);
+
+  Zpvalue = check_p_value(Zpvalue, "");
+
+  Zpvalue_bonf = Zpvalue * len;
+}
+
+// If the p value is rounded to 0 assigne it a standar low value
+// of 1.000001e-300 to avoid possible future errors
+double check_p_value(double p, string oligo) {
+  if (p == 0 || p <= 1.000001e-300) {
+
+    p = 1.000001e-300;
+  }
+  if (oligo.find("N") != string::npos) {
+    p = 1;
+  }
+  return p;
+}
+
+void Outfile_PWM_matrices(unsigned int j, vector<string> &seed_oligo) {
+  // PROFILE_FUNCTION();
+  ofstream outfile;
+   if (DS) {
+     outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
+                   alias_file + "DS.txt");
+    if (tomtom) {
+      print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
+    } else {
+      print_debug_PWM_hamming(outfile, j, kmers_vector[j], seed_oligo);
+    }
+    outfile.close();
+  }
+
+  else {
+    outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
+                 alias_file + "SS.txt");
+    if (tomtom) {
+      print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
+    } else {
+      print_debug_PWM_hamming(outfile, j, kmers_vector[j], seed_oligo);
+    }
+    outfile.close();
+  }
+}
+
+void print_debug_PWM_hamming_tomtom(ofstream &outfile, unsigned int j, 
+                                  unsigned int k) {
+  // PROFILE_FUNCTION();
+  vector<vector<double>> PWM_hamming;
+  string ACGT = "ACGT";
+  for (unsigned int position = 0; position < Z_TEST_MATRIX[j].size();
+       position++) {
+    PWM_hamming =
+        H_HAMMING_MATRIX[j][position].PWM_hamming;
+    outfile << ">Position" << Z_TEST_MATRIX[j][position].LocalPosition << "("
+            << position << ")" << 
+            " " << Z_TEST_MATRIX[j][position].Zpvalue << endl;
+    for (unsigned int i = 0; i < PWM_hamming.size(); i++) {
+      outfile << ACGT[i] << "\t"
+              << "["
+              << "\t";
+      for (unsigned int j = 0; j < PWM_hamming[i].size(); j++) {
+        if (!exp_max.empty()){
+        outfile << round(PWM_hamming[i][j] * 100) << "\t";
+        }
+        else{
+          outfile << PWM_hamming[i][j] << "\t";
+        }
+      }
+      outfile << "]\n";
+  
+    }
+  }
+}
+// PWM_matrices, parameters to calculate z-score, z-score and p-value printing
+void print_debug_PWM_hamming(ofstream &outfile, unsigned int j, 
+                              unsigned int k, vector<string> &seed_oligo) {
+  // PROFILE_FUNCTION();
+  outfile << "#PWM Matrices calculated from the best oligo for each position "
+             "and his hamming distanced oligos - k = "
+          << k << endl
+          << endl;
+
+  vector<vector<double>> PWM_hamming;
+  string ACGT = "ACGT";
+
+  for (unsigned int position = 0; position < Z_TEST_MATRIX[j].size();
+       position++) {
+
+    PWM_hamming =
+        H_HAMMING_MATRIX[j][position].PWM_hamming;
+
+    outfile << "#Position " << Z_TEST_MATRIX[j][position].LocalPosition
+            << ": \n#PWM calculated from oligo "
+            << seed_oligo[position]
+            << "\n\n";
+
+    for (unsigned int i = 0; i < PWM_hamming.size(); i++) {
+
+      outfile << ACGT[i] << "\t"
+              << "["
+              << "\t";
+
+      for (unsigned int j = 0; j < PWM_hamming[i].size(); j++) {
+
+        outfile << PWM_hamming[i][j] << "\t";
+      }
+      outfile << "]\n";
+    }
+
+    outfile << endl;
+    outfile << "The global mean is: " << Z_TEST_MATRIX[j][position].global_mean
+            << endl;
+    outfile << "The global standard deviation is: "
+            << Z_TEST_MATRIX[j][position].global_dev_std << endl;
+    outfile << "The local mean is: " << Z_TEST_MATRIX[j][position].local_mean
+            << endl;
+    outfile << "The local standard deviation is: "
+            << Z_TEST_MATRIX[j][position].local_dev_std << endl
+            << endl;
+    outfile << "The zscore calculated is: "
+            << Z_TEST_MATRIX[j][position].z_score << endl
+            << endl;
+    outfile << "The pvalue calculated from the Z score is: "
+            << Z_TEST_MATRIX[j][position].Zpvalue << endl
+            << endl;
+    outfile
+        << "-------------------------------------------------------------------"
+        << endl;
+  }
+}
+
+// // Print debug for PWM_hamming outfile -> Selection of output filename
+void Outfile_Z_score_values(unsigned int j, vector<string> &seed_oligo) {
+  // PROFILE_FUNCTION();
+  ofstream outfile;
+    if (DS) {
+
+      outfile.open(to_string(kmers_vector[j]) + "-mers_Z_scores_" + alias_file +
+                   "DS.txt");
+      print_debug_Z_scores(outfile, j, kmers_vector[j], seed_oligo);
+      outfile.close();
+    }
+
+    else {
+
+      outfile.open(to_string(kmers_vector[j]) + "-mers_Z_scores_" + alias_file +
+                   "SS.txt");
+
+      print_debug_Z_scores(outfile, j, kmers_vector[j], seed_oligo);
+      outfile.close();
+    }
+}
+
+// // PWM_matrices, parameters to calculate z-score, z-score and p-value printing
+void print_debug_Z_scores(ofstream &outfile, unsigned int j,
+                                     unsigned int k, vector<string> &seed_oligo) {
+  // PROFILE_FUNCTION();
+  outfile << "#Z_score parameters and p-value for hit positions - k = " << k
+          << " and -f = " << freq_vector[j] << endl
+          << endl;
+  string best_oligo;
+
+  outfile << "#Position\tbest_oligo\tLocal_mean\tGlobal_mean\tLocal_std_dev"
+          << "\tGlobal_std_dev\tZ_score\tP-value\tP-value_Log10"
+          << "\tBonferroni P-value\tBonferroni_Log10\n";
+
+  for (unsigned int position = 0; position < Z_TEST_MATRIX[j].size();
+       position++) {
+
+    double Zpvalue_Log10 = abs(log10(Z_TEST_MATRIX[j][position].Zpvalue));
+    double bonferroni_Log10 = abs(log10(Z_TEST_MATRIX[j][position].Zpvalue_bonf));
+
+    // best_oligo = HAMMING_MATRIX[j][LocalPosition-1].real_best_oligo;
+    outfile << Z_TEST_MATRIX[j][position].LocalPosition << "\t"
+            << seed_oligo[position] << "\t" 
+            << Z_TEST_MATRIX[j][position].local_mean << "\t"
+            << Z_TEST_MATRIX[j][position].global_mean << "\t"
+            << Z_TEST_MATRIX[j][position].local_dev_std << "\t"
+            << Z_TEST_MATRIX[j][position].global_dev_std << "\t"
+            << Z_TEST_MATRIX[j][position].z_score << "\t"
+            << Z_TEST_MATRIX[j][position].Zpvalue << "\t" << Zpvalue_Log10
+            << "\t" << Z_TEST_MATRIX[j][position].Zpvalue_bonf << "\t" 
+            << bonferroni_Log10 << endl;
+  }
+}
+
+void print_GEP(vector<BedClass::bed_s> &GEP) {
+  // PROFILE_FUNCTION();
+  // Twobit_JASPAR_Bed used to create GEP vector saved into alias file to name
+  // the outputs
+  alias_file = (TWOBIT_FILE.erase(0, TWOBIT_FILE.find_last_of("/") + 1) + "_" +
+                JASPAR_FILE.erase(0, JASPAR_FILE.find_last_of("/") + 1) + "_" +
+                BED_FILE.erase(0, BED_FILE.find_last_of("/") + 1));
+
+  // Output file .bed carrying the centered coordinates
+  ofstream outfile;
+  JASPAR_FILE =
+      JASPAR_FILE.erase(JASPAR_FILE.find_last_of("."), JASPAR_FILE.size());
+  outfile.open(alias_file);
+
+  for (unsigned int i = 0; i < GEP.size(); i++) {
+
+    outfile << GEP[i].Chromosome << ":" << GEP[i].Start << "-"
+            << GEP[i].End << endl;
+  }
+
+  outfile.close();
+
+  // Output file .fasta carrying the centered coordinates and the sequences
+  // extracted
+  BED_FILE = BED_FILE.erase(BED_FILE.find_last_of("."), BED_FILE.size());
+  outfile.open(alias_file + ".fasta");
+
+  for (unsigned int i = 0; i < GEP.size(); i++) {
+
+    outfile << ">" << GEP[i].Chromosome << ":" << GEP[i].Start << "-"
+            << GEP[i].End << endl;
+    outfile << GEP[i].Sequence << endl;
+  }
+
+  outfile.close();
+}
 
 void command_line_parser(int argc, char **argv) {
 
@@ -1314,6 +1662,7 @@ void command_line_parser(int argc, char **argv) {
     case 'k':
       kmers.clear();
       kmers = string(optarg);
+      kmers_vector = generic_vector_creation(kmers);
       break;
     case 'a':
       local_maxima_grouping = true;
@@ -1330,11 +1679,22 @@ void command_line_parser(int argc, char **argv) {
     case 'f':
       freq_threshold.clear();
       freq_threshold = string(optarg);
-      
+      freq_vector = freq_vector_creation(freq_threshold);
+      if(kmers_vector.size() != freq_vector.size()){
+        cerr << endl 
+            << "ERROR! The number of kmers must be equal to the number of hamming distances and frequencies" << endl << endl;
+        exit(1);
+      }
       break;
     case 'd':
       dist.clear();
       dist = string(optarg);
+      distance_vector = generic_vector_creation(dist);
+      if(kmers_vector.size() != distance_vector.size()){
+    cerr << endl 
+      << "ERROR! The number of kmers must be equal to the number of hamming distances and frequencies" << endl << endl;
+    exit(1);
+  }
       break;
     case 's':
       DS = false;
