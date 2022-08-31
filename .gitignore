@@ -41,3 +41,5 @@ realdata.sh
 CooperativeTF
 .vscode/
 models/
+TESTING_MOCOLOCO/test_multifa.sh
+Test_Bed/
