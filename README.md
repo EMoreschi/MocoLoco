@@ -56,12 +56,12 @@ In this repository there are some useful folders for the usage of MocoLoco:
 * **Jaspar_2020** contains most of the matrices present in [Jaspar database](https://jaspar.genereg.net)
 * **Test_Bed** is a folder with some bed files from ENCODE that can be used as test files
 * **Random_multifa_TOOL** contains an important tool used during MocoLoco testing, this tool is explained in the next chapter.
-* **TESTING_MOCOLOCO** is a folder with some bash scripts used during MocoLoco testing, as for Multifa random tool also these scripts are explained in the next chapter.
+* **TESTING_MOCOLOCO** is a folder with some bash scripts used during MocoLoco testing.
 
 # **Testing tools**
 ## **Multifa random tool**
 
-The tool creates a set of random multifasta files.
+It is a tool able to generate multifasta files with user-defined TFBSs motifs implanted at specific positions.
 
 #### How to compile
 
@@ -88,7 +88,3 @@ The tool creates a set of random multifasta files.
 | -w    | --wobble  |The implanting position, for every oligo, will be randomly choosen between *p-w* and *p+w* interval (DEFAULT: 0)|
 | -c    | --cycles  |How many random multifasta files this tool will produce (DEFAULT: 1)|
 | -f    | --freq    |Percentage of fwd/rev strand to select for the implants. (DEFAULT: 50)|
-
-## **Test multifasta**
-
-## **Test Bed**
