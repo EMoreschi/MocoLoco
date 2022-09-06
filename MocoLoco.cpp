@@ -4,9 +4,9 @@
 
 int main(int argc, char *argv[]) {
   Timer timer;
+  //This refers to profiling function 
   // Instrumentor::Get().BeginSession("MocoLoco");
   // {
-  vector<double> Best_vector;
   // If arguments number is 1 means that no input file has been inserted -
   // display help
   if (argc == 1) {
@@ -20,19 +20,29 @@ int main(int argc, char *argv[]) {
   (MFASTA_FILE.empty()) ? tb = twobit_open(TWOBIT_FILE.c_str()) : tb = 0;
   //In BedClass is created a vector of structures with sequence and coordinates
   BedClass B(BED_FILE, MFASTA_FILE, tb);
-
+  //If the input file is a BED file the tool check in which position there is
+  //the best score of similarity with the matrix of primary motif
   if(MFASTA_FILE.empty()){
+    //The JasparClass read the Jaspar file in input 
     JasparClass J(JASPAR_FILE);
+    //The MatrixClass return a matrix from the Jaspar file
     MatrixClass mat(J.ReturnJaspar());
+    //For each sequence
     for (unsigned int i = 0; i < B.bed_v.size(); i++) {
-    
+      //Initially the ScoreClass is performed only in the forward strand
+      //and it returns a vector with all the scores for each position
       ScoreClass score(mat.ReturnMatrix(), B.bed_v[i].Sequence, 
                       B.bed_v[i].Start);
+      //If the analysis is performed only in single strand only the 
+      //max score is stored in a new vector and then the sequence
+      //is centered to the position with max score
       if(DS == false){ 
         Best_vector.emplace_back(score.MaxScore);
     	  Centering(B.bed_v[i], score.CenteredStart, 
                     mat.ReturnMatrix()[0].size());
       }
+      //If the anlysis is performed in double strand also the reverse 
+      //strand is analysed
       else{
         ScoreClass score_rev(mat.ReturnInverseMatrix(), B.bed_v[i].Sequence, 
                         B.bed_v[i].Start);
@@ -40,6 +50,8 @@ int main(int argc, char *argv[]) {
           Best_vector.emplace_back(score_rev.MaxScore);
           Centering(B.bed_v[i], score_rev.CenteredStart, 
                      mat.ReturnInverseMatrix()[0].size());
+          //When the unidirection option is present the reverse strand must
+          //be transformed into forward strand and it is recentered 
           if(direction){
             ReCentering(score_rev.CenteredStart, B.bed_v[i],
                    mat.ReturnInverseMatrix()[0].size());
@@ -52,8 +64,10 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    //Function to delete sequences with low primary motif scores 
-    ClearingGEP(B.bed_v, Best_vector);
+    if(cleaning){
+      //Function to delete sequences with low primary motif scores 
+      ClearingGEP(B.bed_v, Best_vector);
+    }
     twobit_close(tb);
     print_GEP(B.bed_v);
   }
@@ -61,7 +75,7 @@ int main(int argc, char *argv[]) {
   for(unsigned int i = 0; i < kmers_vector.size(); i++){
     len.emplace_back(B.bed_v[0].Sequence.size() - kmers_vector[i] + 1);
   }
-  
+  //In MapClass all the maps used for the tool are created, we have horizontal and vertical maps
   MapClass M(B.bed_v);
   //For each kmer
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
@@ -71,7 +85,7 @@ int main(int argc, char *argv[]) {
     for (unsigned int j = 0; j < len[i]; j++) {
       double Pval = 0;
       unsigned int counter = 0;
-      // Loop for eventually other matrices that are hidden by the best motif
+      // Loop for eventually other matrixes that are hidden by the best motif
       while(counter < max_matrix) {
 
         cout << "Position: " << j << endl;
@@ -130,7 +144,7 @@ int main(int argc, char *argv[]) {
     H_HAMMING_VECTOR.clear();
 
     //Outfile functions 
-    Outfile_PWM_matrices(i, seed_oligo);
+    Outfile_PWM_matrixes(i, seed_oligo);
     Outfile_Z_score_values(i, seed_oligo);
     seed_oligo.clear();
   }
@@ -140,16 +154,20 @@ int main(int argc, char *argv[]) {
 //   Instrumentor::Get().EndSession();
 }
 
+//This function read Bed or Multifasta file in input and create the BedClass
 void BedClass::ReadBed(string BED_FILE, string MFASTA_FILE, TwoBit *tb) {
   // PROFILE_FUNCTION();
   string line;
   vector<string> sequences;
   if(MFASTA_FILE.empty()){
     ifstream in(BED_FILE);
+    //Ignore empty line or header 
     while (getline(in, line)) {
       if (line.empty() || line[0] == '#') {
         continue;
       }
+      //istringstream is a string class object which is used to stream the string 
+      //into different variables and similarly files can be stream into strings
       istringstream mystream(line);
       bed_s bed_in;
         mystream >> bed_in.Chromosome >> bed_in.Start >> bed_in.End;
@@ -252,13 +270,11 @@ void JasparClass::ReadJaspar(string JASPAR_FILE) {
   }
   file.close();
 }
-
+//These are functions that return variable because they are private in their classes
 vector<vector<double>> JasparClass::ReturnJaspar() { return mJasparMatrix; }
 vector<vector<double>>& MatrixClass::ReturnMatrix() { return mLogMatrix; }
 vector<vector<double>>& MatrixClass::ReturnInverseMatrix() { return mInverseLogMatrix; }
 
-// void matrix_c::Norm(std::vector<double> col_sum,
-// std::vector<std::vector<double>>& ma){
 void MatrixClass::MatrixNormalization(double psdcount, vector<double> col_sum,
                     vector<vector<double>> &mJasparMatrix) {
   // PROFILE_FUNCTION();
@@ -293,7 +309,7 @@ void MatrixClass::MatrixLog(vector<vector<double>> &mJasparMatrix) {
   }
   mLogMatrix = mJasparMatrix;
 }
-
+//This function find the maximum and minimum value for each column of the matrix
 void ScoreClass::FindMinMax(vector<vector<double>> &matrix) {
   // PROFILE_FUNCTION();
   vector<double> max_sum;
@@ -301,7 +317,6 @@ void ScoreClass::FindMinMax(vector<vector<double>> &matrix) {
     vector<double> column;
     for (unsigned int j = 0; j < matrix.size(); j++) {
       column.emplace_back(matrix[j][i]);
-      // cout << matrix[j][i] << endl;
     }
     mMinColumnSum.emplace_back(*min_element(column.begin(), column.end()));
     max_sum.emplace_back(*max_element(column.begin(), column.end()));
@@ -312,7 +327,7 @@ void ScoreClass::FindMinMax(vector<vector<double>> &matrix) {
   mVectorMinMax.emplace_back(min);
   mVectorMinMax.emplace_back(max);
 }
-
+//Here the score for each kmer is calculated by using the normalized log matrix values
 vector<double> ScoreClass::Shifting(vector<vector<double>> &matrix,
                                  string &sequence) {
   // PROFILE_FUNCTION();
@@ -357,9 +372,6 @@ vector<double> ScoreClass::Shifting(vector<vector<double>> &matrix,
     // Best score normalization with normalization formula
     sum_scores = 1 + (sum_scores - mVectorMinMax[1]) / (mVectorMinMax[1] - mVectorMinMax[0]);
     seq_scores.emplace_back(sum_scores);
-    // cout << seq_scores[s_iterator];
-    //  cout << *seq_scores[s_iterator] << endl;
-    //  The total score of an oligo is saved into an oligo_scores vector
   }
   return seq_scores;
 }
@@ -368,18 +380,21 @@ void MatrixClass::InversemLogMatrix() {
   // PROFILE_FUNCTION();
   mInverseLogMatrix = mLogMatrix;
   reverse(mInverseLogMatrix.begin(), mInverseLogMatrix.end());
-
   for (int i = 0; i < 4; i++) {
-
     reverse(mInverseLogMatrix[i].begin(), mInverseLogMatrix[i].end());
   }
 }
 
 unsigned int ScoreClass::BestScore(vector<double> &ScoreVector){
+  //The MaxScore for the vector with all scores is stored
   MaxScore = *max_element(ScoreVector.begin(), ScoreVector.end());
   int match = -25;
   for (int j = 0; j < ScoreVector.size(); j++) {
+    //If in the vector there is a value equal to MaxScore
     if (ScoreVector[j] == MaxScore) {
+      /*We check if the distance of the position of max score from the center 
+        is less than the previous value the new position is accepted as position
+        with max score*/
       if (abs(j-half_length) < abs(match-half_length)){
         match = j; 
       }
@@ -388,11 +403,15 @@ unsigned int ScoreClass::BestScore(vector<double> &ScoreVector){
   return match;
 }
 
+//This function refers to an option of MocoLoco where all the sequences are
+//switched to the forward strand 
 void ReCentering(unsigned int center, BedClass::bed_s &GEP, 
                     unsigned int matrix_size){
   // PROFILE_FUNCTION();
   ReverseString(GEP.Sequence, reverse_bases);
   GEP.Sequence = reverse_bases;
+  //if the matrix is even the center is the same
+  //but if the matrix is odd and the sequence is switched we need to shift the center
   if(matrix_size % 2 == 0){
     unsigned int center_oligo =
             (center + matrix_size / 2);
@@ -488,7 +507,6 @@ void MapClass::CountOccurrencesHor(string &sequence, unsigned int k) {
           it_rc->second.horizontal_count++;
         }
       }
-
     } else {
       HorizontalClass Hor;
       Hor.oligo = oligo, Hor.oligo_rc = oligo_rc;
@@ -497,7 +515,6 @@ void MapClass::CountOccurrencesHor(string &sequence, unsigned int k) {
       if (DS) {
         Hor.horizontal_count_rc = 1, Hor.horizontal_count = 1;
       }
-    
       horizontal_map.emplace(oligo, Hor);
     }
   }
@@ -534,7 +551,6 @@ void MapClass::CountOccurrencesVer(string &sequence, unsigned int k) {
       if (DS) {
         Ver.vertical_count_rc[i] = 1;        
       }
-    
       vertical_map.emplace(oligo, Ver);
     }
   }
@@ -607,7 +623,7 @@ void MapClass::DMainMapVectorDS() {
     }
   }
 }
-
+// Debug function
 void MapClass::DMainMapVectorSS() {
   // // PROFILE_FUNCTION();
   for (unsigned int i = 0; i < kmers_vector.size(); i++) {
@@ -728,7 +744,7 @@ void HammingClass::PWMHammingCalc() {
   PWM_hamming.emplace_back(vec_G);
   PWM_hamming.emplace_back(vec_T);
 }
-
+//Debug function
 void HammingClass::DPWMHamming(vector<vector<double>> &PWM_hamming){
   // // PROFILE_FUNCTION();
   for (unsigned short int i = 0; i < PWM_hamming.size(); i++) {
@@ -777,7 +793,10 @@ void HammingClass::CheckSeed(string seed,
       }        
       vert_vector.push_back(hamming_v_occ);
       hamming_seed.push_back(oligo);
-      hamming_seed_rev.push_back(reverse_o);
+      //If double strand analysis also the reverse seed oligo is stored
+      if(DS){
+        hamming_seed_rev.push_back(reverse_o);     
+      }
     }
   }
 }
@@ -811,7 +830,8 @@ void HammingClass::Freq2Calc() {
   // PROFILE_FUNCTION();
   freq2 = static_cast<double>(seed_vertical) / static_cast<double>(hamming_H_occ);
 }
-
+//Useful for secondary matrixes, this function clear the oligos used for the
+//previous matrixes
 void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos,
                                   unordered_map<string, VerticalClass> &map_vertical, unsigned int j){
   // PROFILE_FUNCTION();
@@ -845,24 +865,17 @@ void HammingClass::ClearVertical(multimap<int, string, greater<int>> &pos,
 
 void EMClass::EM_Ipwm(vector<vector<double>> &PWM_hamming) {
   // PROFILE_FUNCTION();
-
-  // matrix::normalize()
-
   double sum = 0;
   double corr = 0;
-
   for (unsigned int j = 0; j < PWM_hamming.size(); j++) {
     sum = sum + PWM_hamming[j][0];
   }
-
   corr = sqrt(sum);
-
   for (unsigned int x = 0; x < PWM_hamming.size(); x++) {
     for (unsigned int y = 0; y < PWM_hamming[0].size(); y++) {
       PWM_hamming[x][y] = PWM_hamming[x][y] + corr;
     }
   }
-
   sum = 0;
   for (unsigned int j = 0; j < PWM_hamming.size(); j++) {
     sum += PWM_hamming[j][0];
@@ -986,8 +999,6 @@ void EMClass::EM_Epart(map<string,double> &cluster_map, vector<vector<double>> &
     like_ratio_map.insert(pair<string, double>(oligo[i], LR[i]));
   }
 
-  // matrix::squash()
-
   double total = 0;
 
   bool renorm = true;
@@ -1032,8 +1043,6 @@ void EMClass::EM_Epart(map<string,double> &cluster_map, vector<vector<double>> &
 // maximization part
 void EMClass::EM_Mpart(vector<vector<double>> &PWM_hamming) {
   // PROFILE_FUNCTION();
-
-  // matrix::get_p()
 
   for (unsigned int x = 0; x < PWM_hamming.size(); x++) {
     for (unsigned int y = 0; y < PWM_hamming[0].size(); y++) {
@@ -1140,7 +1149,7 @@ void EMClass::EM_cycle(map<string,double> &cluster_map,
     }
   }
 }
-
+//This function clear sequences with low primary motif score 
 void ClearingGEP(vector<BedClass::bed_s> &GEP, vector<double> &ScoreVector){
   int count = 0;
   //Copy of GEP to keep just the sequences with good scores
@@ -1167,8 +1176,6 @@ void ClearingGEP(vector<BedClass::bed_s> &GEP, vector<double> &ScoreVector){
       cerr << "The sequence " << i + 1 << " is not taken into account because low score \n\n"; 
       count += 1;
     }
-    cout << Mean << "\t" << StdDev << endl << endl;
-    
   }
   cerr << count << " sequences are eliminated \n\n";
   //The old GEP is cleared and replaced with the new GEP
@@ -1176,6 +1183,7 @@ void ClearingGEP(vector<BedClass::bed_s> &GEP, vector<double> &ScoreVector){
   GEP = ClearedGEP;
 }
 
+//debug function
 void DVector(vector<PvalueClass> &P_vector, unsigned int j) {
   // // PROFILE_FUNCTION();
   for (unsigned int c = 0; c < P_vector.size() && c < 10; c++) {
@@ -1195,7 +1203,7 @@ bool comp(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
   return (P1.pvalue == P2.pvalue) ? (P1.K > P2.K) : (P1.pvalue < P2.pvalue);
 }
-
+// Function used to order the elements of a class (in this case it orders PValueClass elements)
 bool comp_occ(const PvalueClass &P1, const PvalueClass &P2) {
   // PROFILE_FUNCTION();
   return (P1.K == P2.K) ? ((P1.N1 == P2.N1)? (P1.oligo < P2.oligo) : (P1.N1 < P2.N1)) : (P1.K > P2.K);
@@ -1267,7 +1275,7 @@ vector<double> freq_vector_creation(string numbers){
     }
   }
 }
-
+//Function to monitor RAM usage by MocoLoco
 void RAM_usage() {
   int who = RUSAGE_SELF;
   struct rusage usage;
@@ -1318,9 +1326,8 @@ void z_test_class::oligos_vector_creation_PWM(vector<BedClass::bed_s> &GEP) {
 
     // If analysis is in Single strand
     else {
-
       // Local best scores are all from FWD strand
-      all_local_scores.emplace_back(oligo_scores_horizontal_FWD[i]);
+      all_local_scores.emplace_back(oligo_scores_horizontal_FWD[LocalPosition - 1]);
       all_global_scores.insert(all_global_scores.end(),
                                oligo_scores_horizontal_FWD.begin(),
                                oligo_scores_horizontal_FWD.end());
@@ -1391,11 +1398,11 @@ double check_p_value(double p, string oligo) {
   return p;
 }
 
-void Outfile_PWM_matrices(unsigned int j, vector<string> &seed_oligo) {
+void Outfile_PWM_matrixes(unsigned int j, vector<string> &seed_oligo) {
   // PROFILE_FUNCTION();
   ofstream outfile;
    if (DS) {
-     outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
+     outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrixes_" +
                    alias_file + "DS.txt");
     if (tomtom) {
       print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
@@ -1406,7 +1413,7 @@ void Outfile_PWM_matrices(unsigned int j, vector<string> &seed_oligo) {
   }
 
   else {
-    outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrices_" +
+    outfile.open(to_string(kmers_vector[j]) + "-mers_PWM_hamming_matrixes_" +
                  alias_file + "SS.txt");
     if (tomtom) {
       print_debug_PWM_hamming_tomtom(outfile, j, kmers_vector[j]);
@@ -1446,11 +1453,11 @@ void print_debug_PWM_hamming_tomtom(ofstream &outfile, unsigned int j,
     }
   }
 }
-// PWM_matrices, parameters to calculate z-score, z-score and p-value printing
+// PWM_matrixes, parameters to calculate z-score, z-score and p-value printing
 void print_debug_PWM_hamming(ofstream &outfile, unsigned int j, 
                               unsigned int k, vector<string> &seed_oligo) {
   // PROFILE_FUNCTION();
-  outfile << "#PWM Matrices calculated from the best oligo for each position "
+  outfile << "#PWM matrixes calculated from the best oligo for each position "
              "and his hamming distanced oligos - k = "
           << k << endl
           << endl;
@@ -1526,7 +1533,7 @@ void Outfile_Z_score_values(unsigned int j, vector<string> &seed_oligo) {
     }
 }
 
-// // PWM_matrices, parameters to calculate z-score, z-score and p-value printing
+// // PWM_matrixes, parameters to calculate z-score, z-score and p-value printing
 void print_debug_Z_scores(ofstream &outfile, unsigned int j,
                                      unsigned int k, vector<string> &seed_oligo) {
   // PROFILE_FUNCTION();
@@ -1598,18 +1605,15 @@ void print_GEP(vector<BedClass::bed_s> &GEP) {
 
 void command_line_parser(int argc, char **argv) {
 
-  const char *const short_opts = "hp:k:b:j:m:ud:o:f:lr:t:e:z:s";
+  const char *const short_opts = "hp:k:b:j:m:ud:o:f:lr:t:e:z:sa";
 
   // Specifying the expected options
   const option long_opts[] = {
       {"help", no_argument, nullptr, 'h'},
       {"param", required_argument, nullptr, 'p'},
-      // {"ntop", required_argument, nullptr, 'n'},
       {"kmer", required_argument, nullptr, 'k'},
-      // {"all", no_argument, nullptr, 'a'},
       {"tomtom", no_argument, nullptr, 'l'},
       {"unidirection", no_argument, nullptr, 'u'},
-      // {"refine", no_argument, nullptr, 'r'},
       {"freq", required_argument, nullptr, 'f'},
       {"distance", required_argument, nullptr, 'd'},
       {"bed", required_argument, nullptr, 'b'},
@@ -1618,8 +1622,9 @@ void command_line_parser(int argc, char **argv) {
       {"mf", required_argument, nullptr, 'm'},
       {"twobit", required_argument, nullptr, 't'},
       {"ss", no_argument, nullptr, 's'},
+      {"cleaning", no_argument, nullptr, 'a'},
       {"exp_maximization", required_argument, nullptr, 'e'},
-      {"seconday_matrices", required_argument, nullptr, 'r'},
+      {"seconday_matrixes", required_argument, nullptr, 'r'},
       {"z_pval_threshold", required_argument, nullptr, 'z'},
       {nullptr, no_argument, nullptr, 0}};
 
@@ -1660,9 +1665,6 @@ void command_line_parser(int argc, char **argv) {
       kmers.clear();
       kmers = string(optarg);
       kmers_vector = generic_vector_creation(kmers);
-      break;
-    case 'a':
-      local_maxima_grouping = true;
       break;
     case 'l':
       tomtom = true;
@@ -1705,6 +1707,9 @@ void command_line_parser(int argc, char **argv) {
       break;
     case 'z':
       z_pval_threshold = stod(optarg); 
+      break;
+    case 'a':
+      cleaning = false;
       break;
     case '?': // Unrecognized option
     default:
@@ -1772,16 +1777,17 @@ void display_help() {
           "(DEFAULT: 1,2,3)\n";
   cerr << "\n --freq || -f <n1,n2,...,nN> to set the frequence treshold to "
           "calculate the z_score. (DEFAULT: 0.006, 0.004, 0.003)\n";
-  cerr << "\n --exp_maximization || -e to refine PWM matrices with the "
+  cerr << "\n --exp_maximization || -e to refine PWM matrixes with the "
           "expectation maximization method, if you type a number this will be "
           "the number of cycles but if you want to reach convergence you can "
           "type just 'c'\n\n";
-  cerr << "\n --tomtom || -l will give as output a format of matrices adapted "
+  cerr << "\n --tomtom || -l will give as output a format of matrixes adapted "
           "for tomtom analysis\n\n";
   cerr << "\n --unidirection || -u parameter orders the sequences based on the "
           "matrix direction \n\n";
-  cerr << "\n --secondary_matrices || -r parameter for secondary matrices \n\n";
+  cerr << "\n --secondary_matrixes || -r parameter for secondary matrixes \n\n";
   cerr << "\n --z_pval_threshold || -z parameter to set a threshold for the PWM's "
           "Z_pvalue (DEFAULT: 1)\n\n";
+  cerr << "\n --cleaning || -a if enabled the tool doesn't clear sequences with bad scores (DEFAULT: disabled) \n\n";
   exit(EXIT_SUCCESS);
 }

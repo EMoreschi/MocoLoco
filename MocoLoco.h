@@ -46,6 +46,7 @@ vector<double> freq_vector;
 vector<unsigned int> len;
 unsigned int seed_vertical = 0;
 double sim_tresh = 0.001;
+vector<double> Best_vector;
 /////////////////////////////PARSER VARIABLES/////////////////////////////
 string BED_FILE;
 int half_length = 150;
@@ -67,13 +68,15 @@ bool err = false;
 bool direction = false;
 double z_pval_threshold = 1;
 unsigned int max_matrix = 1;
+bool cleaning = true;
 
+//Template used to print vectors
 template <typename T> void PrintVector(const T &t) {
   copy(t.cbegin(), t.cend(),
        ostream_iterator<typename T::value_type>(cout, ", "));
   cout << '\n';
 }
-
+//Template used to print matrixes
 template <typename T> void PrintMatrix(const T &t) {
   for_each(t.cbegin(), t.cend(), PrintVector<typename T::value_type>);
 }
@@ -86,8 +89,8 @@ public:
     unsigned int Start, End;
   };
   vector<bed_s> bed_v;
-
   void ReadBed(string, string, TwoBit *);
+
   BedClass(string BED_FILE, string MFASTA_FILE, TwoBit *tb) { ReadBed(BED_FILE, MFASTA_FILE, tb); };
 };
 
@@ -422,7 +425,7 @@ void DVector(vector<PvalueClass> &, unsigned int);
 bool comp(const PvalueClass &, const PvalueClass &);
 bool comp_occ(const PvalueClass &, const PvalueClass &);
 
-void Outfile_PWM_matrices(unsigned int, vector<string> &);
+void Outfile_PWM_matrixes(unsigned int, vector<string> &);
 
 void print_debug_PWM_hamming(ofstream &, unsigned int, 
                               unsigned int, vector<string> &);
