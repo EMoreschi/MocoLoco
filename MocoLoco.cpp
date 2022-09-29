@@ -14,7 +14,6 @@ int main(int argc, char *argv[]) {
   }
   // Collect all the parameters given as input
   command_line_parser(argc, argv);
-
   //If multifasta is not provided the input file is BED file and twobit file 
   //is opened, otherwise if the input is multifasta the tb variable has value 0
   (MFASTA_FILE.empty()) ? tb = twobit_open(TWOBIT_FILE.c_str()) : tb = 0;
@@ -150,8 +149,8 @@ int main(int argc, char *argv[]) {
   }
   RAM_usage();
   return 0;
-// }
-//   Instrumentor::Get().EndSession();
+//  }
+//    Instrumentor::Get().EndSession();
 }
 
 //This function read Bed or Multifasta file in input and create the BedClass
@@ -170,20 +169,20 @@ void BedClass::ReadBed(string BED_FILE, string MFASTA_FILE, TwoBit *tb) {
       //into different variables and similarly files can be stream into strings
       istringstream mystream(line);
       bed_s bed_in;
-        mystream >> bed_in.Chromosome >> bed_in.Start >> bed_in.End;
-        if (bed_in.Start > bed_in.End) {
-          cout << "error " << endl;
-        } 
-        else {
-          int center = (bed_in.Start + bed_in.End) / 2;
-          bed_in.Start = center - half_length;
-          bed_in.End = center + half_length + overhead;
-          bed_in.Sequence =
+      mystream >> bed_in.Chromosome >> bed_in.Start >> bed_in.End;
+      if (bed_in.Start > bed_in.End) {
+        cerr << "Error, start coordinate is higher than end coordinate\n\n";
+      } 
+      else {
+        int center = (bed_in.Start + bed_in.End) / 2;
+        bed_in.Start = center - half_length;
+        bed_in.End = center + half_length + overhead;
+        bed_in.Sequence =
             twobit_sequence(tb, bed_in.Chromosome.c_str(), bed_in.Start, 
                             bed_in.End - 1);
 
-          bed_v.push_back(bed_in);
-        }
+        bed_v.push_back(bed_in);
+      }
     }
   }
   else{
@@ -386,6 +385,7 @@ void MatrixClass::InversemLogMatrix() {
 }
 
 unsigned int ScoreClass::BestScore(vector<double> &ScoreVector){
+  // PROFILE_FUNCTION();
   //The MaxScore for the vector with all scores is stored
   MaxScore = *max_element(ScoreVector.begin(), ScoreVector.end());
   int match = -25;
@@ -1152,6 +1152,7 @@ void EMClass::EM_cycle(map<string,double> &cluster_map,
 //This function clear sequences with low primary motif score 
 void ClearingGEP(vector<BedClass::bed_s> &GEP, vector<double> &ScoreVector){
   int count = 0;
+  unordered_set<string> s;
   //Copy of GEP to keep just the sequences with good scores
   vector<BedClass::bed_s> ClearedGEP;
   //Calculation of standard deviation
@@ -1168,13 +1169,15 @@ void ClearingGEP(vector<BedClass::bed_s> &GEP, vector<double> &ScoreVector){
   double Comparison = Mean - (2 * StdDev);
   //For each sequence
   for (unsigned int i = 0; i < GEP.size(); i++){
+    string sampleStr = GEP[i].Chromosome + "\t" + to_string(GEP[i].Start);
     //If the score of the sequence is higher than the threshold the BedClass structure is loaded in the new vector
-    if(ScoreVector[i] > Comparison){
-      ClearedGEP.emplace_back(GEP[i]);
+    if(ScoreVector[i] < Comparison ||  s.find(sampleStr) != s.end()){
+      cerr << "The sequence " << i + 1 << " is not taken into account because it is a duplicate or it has low score \n\n"; 
+      count += 1;
     }
     else{
-      cerr << "The sequence " << i + 1 << " is not taken into account because low score \n\n"; 
-      count += 1;
+      s.insert(sampleStr);
+      ClearedGEP.emplace_back(GEP[i]);
     }
   }
   cerr << count << " sequences are eliminated \n\n";
