@@ -105,7 +105,9 @@ int main(int argc, char *argv[]) {
 
         // Debug for PValueClass
         // DVector(P_vector, j);
-          
+        if(max_matrix > P_vector.size()){
+          max_matrix = P_vector.size();
+        }
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
         HammingClass H(P_vector[0].oligo,
