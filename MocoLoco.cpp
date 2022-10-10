@@ -1249,11 +1249,11 @@ vector<double> freq_vector_creation(string numbers){
     index = numbers.find(",");
     double freq = stod(numbers.substr(0, index));
      if (freq == 0) {
-      cout << "WARNING: frequency threshold 0 inserted\n";
+      cout << "WARNING: frequence threshold 0 inserted\n";
     }
 
     if (freq < 0 || freq >= 1) {
-      cerr << "ERROR: please insert a frequency treshold between 0 and "
+      cerr << "ERROR: please insert a frequence treshold between 0 and "
               "1.\n\n\n";
       display_help();
       exit(1);
@@ -1269,11 +1269,11 @@ vector<double> freq_vector_creation(string numbers){
   
   for(unsigned int i = 0; i < freq_vector.size(); i++){
     if (freq_vector[i] == 0) {
-      cout << "WARNING: frequency threshold 0 inserted\n";
+      cout << "WARNING: frequence threshold 0 inserted\n";
     }
 
     if (freq_vector[i] < 0 || freq_vector[i] >= 1) {
-      cerr << "ERROR: please insert a frequency treshold between 0 and "
+      cerr << "ERROR: please insert a frequence treshold between 0 and "
               "1.\n\n\n";
       display_help();
       exit(1);
@@ -1549,7 +1549,7 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
 
   outfile << "#Position\tbest_oligo\tLocal_mean\tGlobal_mean\tLocal_std_dev"
           << "\tGlobal_std_dev\tZ_score\tP-value\tP-value_Log10"
-          << "\tBonferroni P-value\tBonferroni_Log10\n";
+          << "\tBonferroni P-value\tBonferroni_Log10\tFrequence\n";
 
   for (unsigned int position = 0; position < Z_TEST_MATRIX[j].size();
        position++) {
@@ -1567,7 +1567,8 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
             << Z_TEST_MATRIX[j][position].z_score << "\t"
             << Z_TEST_MATRIX[j][position].Zpvalue << "\t" << Zpvalue_Log10
             << "\t" << Z_TEST_MATRIX[j][position].Zpvalue_bonf << "\t" 
-            << bonferroni_Log10 << endl;
+            << bonferroni_Log10 << "\t"
+            << H_HAMMING_MATRIX[j][position].freq1 << endl;
   }
 }
 
