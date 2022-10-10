@@ -14,7 +14,6 @@ int main(int argc, char *argv[]) {
   }
   // Collect all the parameters given as input
   command_line_parser(argc, argv);
-
   //If multifasta is not provided the input file is BED file and twobit file 
   //is opened, otherwise if the input is multifasta the tb variable has value 0
   (MFASTA_FILE.empty()) ? tb = twobit_open(TWOBIT_FILE.c_str()) : tb = 0;
@@ -106,7 +105,9 @@ int main(int argc, char *argv[]) {
 
         // Debug for PValueClass
         // DVector(P_vector, j);
-          
+        if(max_matrix > P_vector.size()){
+          max_matrix = P_vector.size();
+        }
         //Creation of clusters of oligos at hamming distance
         //and creation of PWM for each position
         HammingClass H(P_vector[0].oligo,
@@ -150,8 +151,8 @@ int main(int argc, char *argv[]) {
   }
   RAM_usage();
   return 0;
-// }
-//   Instrumentor::Get().EndSession();
+//  }
+//    Instrumentor::Get().EndSession();
 }
 
 //This function read Bed or Multifasta file in input and create the BedClass
@@ -170,20 +171,20 @@ void BedClass::ReadBed(string BED_FILE, string MFASTA_FILE, TwoBit *tb) {
       //into different variables and similarly files can be stream into strings
       istringstream mystream(line);
       bed_s bed_in;
-        mystream >> bed_in.Chromosome >> bed_in.Start >> bed_in.End;
-        if (bed_in.Start > bed_in.End) {
-          cout << "error " << endl;
-        } 
-        else {
-          int center = (bed_in.Start + bed_in.End) / 2;
-          bed_in.Start = center - half_length;
-          bed_in.End = center + half_length + overhead;
-          bed_in.Sequence =
+      mystream >> bed_in.Chromosome >> bed_in.Start >> bed_in.End;
+      if (bed_in.Start > bed_in.End) {
+        cerr << "Error, start coordinate is higher than end coordinate\n\n";
+      } 
+      else {
+        int center = (bed_in.Start + bed_in.End) / 2;
+        bed_in.Start = center - half_length;
+        bed_in.End = center + half_length + overhead;
+        bed_in.Sequence =
             twobit_sequence(tb, bed_in.Chromosome.c_str(), bed_in.Start, 
                             bed_in.End - 1);
 
-          bed_v.push_back(bed_in);
-        }
+        bed_v.push_back(bed_in);
+      }
     }
   }
   else{
@@ -386,6 +387,7 @@ void MatrixClass::InversemLogMatrix() {
 }
 
 unsigned int ScoreClass::BestScore(vector<double> &ScoreVector){
+  // PROFILE_FUNCTION();
   //The MaxScore for the vector with all scores is stored
   MaxScore = *max_element(ScoreVector.begin(), ScoreVector.end());
   int match = -25;
@@ -1152,6 +1154,7 @@ void EMClass::EM_cycle(map<string,double> &cluster_map,
 //This function clear sequences with low primary motif score 
 void ClearingGEP(vector<BedClass::bed_s> &GEP, vector<double> &ScoreVector){
   int count = 0;
+  unordered_set<string> s;
   //Copy of GEP to keep just the sequences with good scores
   vector<BedClass::bed_s> ClearedGEP;
   //Calculation of standard deviation
@@ -1168,13 +1171,15 @@ void ClearingGEP(vector<BedClass::bed_s> &GEP, vector<double> &ScoreVector){
   double Comparison = Mean - (2 * StdDev);
   //For each sequence
   for (unsigned int i = 0; i < GEP.size(); i++){
+    string sampleStr = GEP[i].Chromosome + "\t" + to_string(GEP[i].Start);
     //If the score of the sequence is higher than the threshold the BedClass structure is loaded in the new vector
-    if(ScoreVector[i] > Comparison){
-      ClearedGEP.emplace_back(GEP[i]);
+    if(ScoreVector[i] < Comparison ||  s.find(sampleStr) != s.end()){
+      cerr << "The sequence " << i + 1 << " is not taken into account because it is a duplicate or it has low score \n\n"; 
+      count += 1;
     }
     else{
-      cerr << "The sequence " << i + 1 << " is not taken into account because low score \n\n"; 
-      count += 1;
+      s.insert(sampleStr);
+      ClearedGEP.emplace_back(GEP[i]);
     }
   }
   cerr << count << " sequences are eliminated \n\n";
@@ -1244,11 +1249,11 @@ vector<double> freq_vector_creation(string numbers){
     index = numbers.find(",");
     double freq = stod(numbers.substr(0, index));
      if (freq == 0) {
-      cout << "WARNING: frequency threshold 0 inserted\n";
+      cout << "WARNING: frequence threshold 0 inserted\n";
     }
 
     if (freq < 0 || freq >= 1) {
-      cerr << "ERROR: please insert a frequency treshold between 0 and "
+      cerr << "ERROR: please insert a frequence treshold between 0 and "
               "1.\n\n\n";
       display_help();
       exit(1);
@@ -1264,11 +1269,11 @@ vector<double> freq_vector_creation(string numbers){
   
   for(unsigned int i = 0; i < freq_vector.size(); i++){
     if (freq_vector[i] == 0) {
-      cout << "WARNING: frequency threshold 0 inserted\n";
+      cout << "WARNING: frequence threshold 0 inserted\n";
     }
 
     if (freq_vector[i] < 0 || freq_vector[i] >= 1) {
-      cerr << "ERROR: please insert a frequency treshold between 0 and "
+      cerr << "ERROR: please insert a frequence treshold between 0 and "
               "1.\n\n\n";
       display_help();
       exit(1);
@@ -1544,7 +1549,7 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
 
   outfile << "#Position\tbest_oligo\tLocal_mean\tGlobal_mean\tLocal_std_dev"
           << "\tGlobal_std_dev\tZ_score\tP-value\tP-value_Log10"
-          << "\tBonferroni P-value\tBonferroni_Log10\n";
+          << "\tBonferroni P-value\tBonferroni_Log10\tFrequence\n";
 
   for (unsigned int position = 0; position < Z_TEST_MATRIX[j].size();
        position++) {
@@ -1562,7 +1567,8 @@ void print_debug_Z_scores(ofstream &outfile, unsigned int j,
             << Z_TEST_MATRIX[j][position].z_score << "\t"
             << Z_TEST_MATRIX[j][position].Zpvalue << "\t" << Zpvalue_Log10
             << "\t" << Z_TEST_MATRIX[j][position].Zpvalue_bonf << "\t" 
-            << bonferroni_Log10 << endl;
+            << bonferroni_Log10 << "\t"
+            << H_HAMMING_MATRIX[j][position].freq1 << endl;
   }
 }
 
