@@ -171,7 +171,7 @@ fi
 #----------DIRECTORIES PREPARATION & INPUT PARAMETERS CONTROL-------------------------------------------------------------------------   
 
 RMC=$(realpath RMC)
-MOCO=$(realpath MOCO)
+MOCO=$(realpath NewMoco)
 #Creation of the path for the output file with the best pvalue for each cycle in each frequence
 path_out=$(realpath $O)
 #Creation of the path for the output file with all the pvalue obtained by our script
@@ -280,7 +280,7 @@ wait
 
 #-------RUNNING MOCOLOCO ON IMPLANTED MULTIFASTA-------------------------------------------------------------
 
-multi_thread=20
+multi_thread=40
 (
 for freq in ${frequenze[@]}
 do 
